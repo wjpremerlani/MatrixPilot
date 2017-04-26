@@ -90,6 +90,19 @@ void dcm_run_init_step(uint16_t count)
 			dcm_flags._.init_finished = 1;
 		}
 	}
+#if ( BOARD_TYPE == UDB4_BOARD )
+	if ( count == CALIB_COUNT - 40 ) // auto zero on
+	{
+//		_LATC4 = 1 ;
+//		_LATB14 = 1 ;
+	}
+	if ( count == CALIB_COUNT - 39 ) // auto zero off
+	{
+//		_LATC4 = 0 ;
+//		_LATB14 = 0 ;
+	}
+
+#endif // UDB4_BOARD
 }
 
 #if (BAROMETER_ALTITUDE == 1)

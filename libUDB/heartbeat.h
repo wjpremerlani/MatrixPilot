@@ -35,6 +35,7 @@
 // Read-only value increments with each heartbeat
 extern uint16_t udb_heartbeat_counter;
 
+extern int16_t gps_count , gps_delay , gps_count_previous ;
 
 inline void heartbeat(void);
 inline uint16_t heartbeat_cnt(void);

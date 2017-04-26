@@ -283,32 +283,39 @@ PLUGIN_API int XPluginStart(char* outName,
 	fTextColour[2] = 1.0;
 
 	XPLMRegisterFlightLoopCallback(GetBodyRates, 1.0, NULL);
+
+	/*
 	XPLMRegisterDrawCallback(
 	    DrawStrings,
 	    xplm_Phase_Window,      // Draw when sim is doing objects
 	    0,                      // After objects
 	    NULL);                  // No refcon needed
+		*/
 
 //	XPLMSetDatai(drOverRide, 1);// Now overide surfaces, not yaw, roll, pitch
 
 	// Register our hot key for the new view
+	/*
 	gHotKey = XPLMRegisterHotKey(
 	    XPLM_VK_F8,
 	    xplm_DownFlag, 
 	    "Circling External View",
 	    MyHotKeyCallback,
 	    NULL);
-
+		*/
+/*
 	XPLMRegisterDrawCallback(
 	    MyDrawCallback,
 	    xplm_Phase_Objects,     // Draw when sim is doing objects
 	    0,                      // After objects
 	    NULL);                  // No refcon needed
-
+		*/
+/*
 	XPLMRegisterKeySniffer(
 		MyKeySniffer,           // Our callback
 		1,                      // Receive input before plugin windows
 		0);                     // Refcon - not used
+		*/
 
 	memset(&CamPath, 0, sizeof(float) * 3 * CamPathLength);
 	return 1;
@@ -322,6 +329,7 @@ PLUGIN_API int XPluginStart(char* outName,
  * keys being held down.
  *
  */
+/*
 int MyKeySniffer(char         inChar,
                  XPLMKeyFlags inFlags,
                  char         inVirtualKey,
@@ -337,6 +345,7 @@ int MyKeySniffer(char         inChar,
 	}
 	return 1;       // Return 1 to pass the keystroke to plugin windows and X-Plane
 }
+*/
 /*
 Page Up    0 | 33
 Page Down  0 | 34

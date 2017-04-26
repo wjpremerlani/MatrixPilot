@@ -37,6 +37,8 @@ uint16_t wind_gain;
 
 void manualPassthrough(void);
 
+extern void serial_output_40hz( void ) ;
+
 void init_servoPrepare(void) // initialize the PWM
 {
 	int16_t i;
@@ -118,6 +120,9 @@ void dcm_heartbeat_callback(void)
 			serial_output_8hz();
 		}
 #endif // SERIAL_OUTPUT_FORMAT
+#if ( SERIAL_OUTPUT_FORMAT == SERIAL_DEBUG_HILSIM )
+		serial_output_40hz() ;
+#endif // SERIAL_DEBUG_HILSIM
 	}
 
 	osd_run_step();

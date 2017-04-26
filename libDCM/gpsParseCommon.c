@@ -25,6 +25,7 @@
 #include "mathlibNAV.h"
 #include "rmat.h"
 #include "../libUDB/interrupt.h"
+#include "../libUDB/heartbeat.h"
 #include <string.h>
 
 
@@ -242,8 +243,9 @@ static void udb_background_callback_triggered(void)
 		// in the following code. Since this method is called at the GPS reporting rate
 		// it must be assumed to be one reporting interval?
 
-		if (dcm_flags._.gps_history_valid)
+		if ( (dcm_flags._.gps_history_valid) && ! ( HILSIM==1))
 		{
+	
 			cog_delta = cog_circular - cog_previous;
 			sog_delta = sog_gps.BB - sog_previous;
 			climb_rate_delta = climb_gps.BB - climb_rate_previous;
@@ -254,8 +256,12 @@ static void udb_background_callback_triggered(void)
 		}
 		else
 		{
-			cog_delta = sog_delta = climb_rate_delta = 0;
-			location_deltaXY.x = location_deltaXY.y = location_deltaZ = 0;
+			cog_delta = 0 ;
+			sog_delta = 0 ;
+			climb_rate_delta = 0;
+			location_deltaXY.x = 0 ;
+			location_deltaXY.y = 0 ;
+			location_deltaZ = 0;
 		}
 		dcm_flags._.gps_history_valid = 1;
 		actual_dir = cog_circular + cog_delta;
@@ -308,6 +314,10 @@ static void udb_background_callback_triggered(void)
 #endif
 
 		velocity_previous = air_speed_3DGPS;
+
+		gps_count = udb_heartbeat_counter ;
+		gps_delay = ( gps_count - gps_count_previous ) % HEARTBEAT_HZ ;
+		gps_count_previous = gps_count ;
 
 		estimateWind();
 		estAltitude();

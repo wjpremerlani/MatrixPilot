@@ -48,6 +48,8 @@
 
 #include <stdarg.h>
 
+extern int32_t speed_height ;
+extern union longww heightError ;
 
 union intbb voltage_milis = {0};
 union intbb voltage_temp;
@@ -639,7 +641,9 @@ void serial_output_8hz(void)
 #if (MAG_YAW_DRIFT == 1)
 				    magFieldEarth[0], magFieldEarth[1], magFieldEarth[2],
 #else
-				    (int16_t)0, (int16_t)0, (int16_t)0,
+//				    (int16_t)0, (int16_t)0, (int16_t)0,
+//					gps_delay , forward_acceleration , (int16_t)0,
+					forward_ground_speed , (int16_t)(speed_height>>16)  , heightError._.W0 ,
 #endif // MAG_YAW_DRIFT
 				    svs, hdop);
 
@@ -810,3 +814,14 @@ void serial_output_8hz(void)
 
 #endif
 #endif // (SERIAL_OUTPUT_FORMAT != SERIAL_MAVLINK)
+
+extern int16_t omegacorrI[3] , omegacorrP[3] ;
+
+void serial_output_40hz(void)
+{
+	serial_output( "%i, %i, %i, %i, %i, %i, %i, %i, %i\r\n",
+	omegagyro[0] , omegagyro[1] , omegagyro[2] ,
+	omegacorrI[0] , omegacorrI[1] , omegacorrI[2] ,
+	omegacorrP[0] , omegacorrP[1] , omegacorrP[2] ) ;
+}
+

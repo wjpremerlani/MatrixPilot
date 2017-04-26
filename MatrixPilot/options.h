@@ -18,6 +18,51 @@
 // You should have received a copy of the GNU General Public License
 // along with MatrixPilot.  If not, see <http://www.gnu.org/licenses/>.
 
+#define ANGLE_OF_ATTACK_NORMAL				( -0.27 )
+#define ANGLE_OF_ATTACK_INVERTED			( -2.08 )
+#define ELEVATOR_TRIM_NORMAL				( -0.23 )
+#define ELEVATOR_TRIM_INVERTED				( -0.45 )
+#define CRUISE_SPEED						( 12.0 )
+
+//#define CUSTOM_OFFSETS
+// board 1
+/*
+#define XACCEL_OFFSET	( 27 )
+#define YACCEL_OFFSET	( -83 )
+#define ZACCEL_OFFSET	( -569 )
+#define XRATE_OFFSET	( -58 )
+#define YRATE_OFFSET	( 103 )
+#define ZRATE_OFFSET	( 29 )
+*/
+
+// board 2
+/*
+#define XACCEL_OFFSET	( 65 )
+#define YACCEL_OFFSET	( -107 )
+#define ZACCEL_OFFSET	( -1047 )
+#define XRATE_OFFSET	( -62 )
+#define YRATE_OFFSET	( -55 )
+#define ZRATE_OFFSET	( -12 )
+*/
+// board 3
+/*
+#define XACCEL_OFFSET	( 235 )
+#define YACCEL_OFFSET	( -52 )
+#define ZACCEL_OFFSET	( -225 )
+#define XRATE_OFFSET	( -45 )
+#define YRATE_OFFSET	( 20 )
+#define ZRATE_OFFSET	( -77 )
+*/
+// board 4
+/*
+#define XACCEL_OFFSET	( 340 )
+#define YACCEL_OFFSET	( -2 )
+#define ZACCEL_OFFSET	( -707 )
+#define XRATE_OFFSET	( -223 )
+#define YRATE_OFFSET	( -27 )
+#define ZRATE_OFFSET	( -13 )
+*/
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // options.h
@@ -83,9 +128,9 @@
 #define YAW_STABILIZATION_AILERON           0
 
 // Aileron and Rudder Navigation
-// Set either of these to 1 to enable helical turn control for navigation.
+// Set either of these to 0 to disable use of that control surface for navigation.
 #define AILERON_NAVIGATION                  1
-#define RUDDER_NAVIGATION                   1
+#define RUDDER_NAVIGATION                   0
 
 // Cross track margin, in meters
 // This is used when the cross track option is attached to a waypoint
@@ -121,7 +166,7 @@
 // If you define SPEED_CONTROL to be 1, MatrixPilot will take air speed into account
 // in the altitude controls, and will trim the throttle and pitch to maintain air speed.
 // Define DESIRED_SPEED to be the air speed that you want, in meters/second.
-#define SPEED_CONTROL                       0
+#define SPEED_CONTROL                       1
 #define DESIRED_SPEED                       10.0    // meters/second
 
 // Inverted flight
@@ -207,11 +252,11 @@
 // Use as is, or edit to match your setup.
 //   - If you're set up to use Rudder Navigation (like MatrixNav), then you may want to swap
 //     the aileron and rudder channels so that rudder is CHANNEL_1, and aileron is 5.
-#define THROTTLE_INPUT_CHANNEL              CHANNEL_3
-#define AILERON_INPUT_CHANNEL               CHANNEL_1
-#define ELEVATOR_INPUT_CHANNEL              CHANNEL_2
-#define RUDDER_INPUT_CHANNEL                CHANNEL_5
-#define MODE_SWITCH_INPUT_CHANNEL           CHANNEL_4
+#define THROTTLE_INPUT_CHANNEL              CHANNEL_1
+#define AILERON_INPUT_CHANNEL               CHANNEL_2
+#define ELEVATOR_INPUT_CHANNEL              CHANNEL_3
+#define RUDDER_INPUT_CHANNEL                CHANNEL_4
+#define MODE_SWITCH_INPUT_CHANNEL           CHANNEL_5
 #define CAMERA_PITCH_INPUT_CHANNEL          CHANNEL_UNUSED
 #define CAMERA_YAW_INPUT_CHANNEL            CHANNEL_UNUSED
 #define CAMERA_MODE_INPUT_CHANNEL           CHANNEL_UNUSED
@@ -226,7 +271,7 @@
 // For UDB4/5 boards: Set to 3-8 (or up to 10 using pins RA4 and RA1.)
 // For AUAV3 boards:  Set to 3-8 (or up to 11 using pins RE1, RA6 and RA7.)
 //                               (this needs developing, so contact the list)
-#define NUM_OUTPUTS                         4
+#define NUM_OUTPUTS                         5
 
 // Channel numbers for each output
 // Use as is, or edit to match your setup.
@@ -239,11 +284,11 @@
 // connect THROTTLE_OUTPUT_CHANNEL to one of the built-in Outputs (1, 2, or 3) to make
 // sure your board gets power.
 //
-#define THROTTLE_OUTPUT_CHANNEL             CHANNEL_3
+#define THROTTLE_OUTPUT_CHANNEL             CHANNEL_4
 #define AILERON_OUTPUT_CHANNEL              CHANNEL_1
-#define ELEVATOR_OUTPUT_CHANNEL             CHANNEL_2
-#define RUDDER_OUTPUT_CHANNEL               CHANNEL_4
-#define AILERON_SECONDARY_OUTPUT_CHANNEL    CHANNEL_UNUSED
+#define ELEVATOR_OUTPUT_CHANNEL             CHANNEL_3
+#define RUDDER_OUTPUT_CHANNEL               CHANNEL_5
+#define AILERON_SECONDARY_OUTPUT_CHANNEL    CHANNEL_2
 #define CAMERA_PITCH_OUTPUT_CHANNEL         CHANNEL_UNUSED
 #define CAMERA_YAW_OUTPUT_CHANNEL           CHANNEL_UNUSED
 #define TRIGGER_OUTPUT_CHANNEL              CHANNEL_UNUSED
@@ -258,8 +303,8 @@
 // For any of these that are set to 1, that servo will be sent reversed controls.
 // Note that your servo reversing settings here should match what you set on your transmitter.
 #define AILERON_CHANNEL_REVERSED            0
-#define ELEVATOR_CHANNEL_REVERSED           0
-#define RUDDER_CHANNEL_REVERSED             0
+#define ELEVATOR_CHANNEL_REVERSED           1
+#define RUDDER_CHANNEL_REVERSED             1
 #define AILERON_SECONDARY_CHANNEL_REVERSED  0
 #define THROTTLE_CHANNEL_REVERSED           0
 #define CAMERA_PITCH_CHANNEL_REVERSED       0
@@ -301,8 +346,8 @@
 //
 // FAILSAFE_INPUT_MIN and _MAX define the range within which we consider the radio on.
 // Normal signals should fall within about 2000 - 4000.
-#define FAILSAFE_INPUT_CHANNEL              THROTTLE_INPUT_CHANNEL
-#define FAILSAFE_INPUT_MIN                  1500
+#define FAILSAFE_INPUT_CHANNEL              MODE_SWITCH_INPUT_CHANNEL
+#define FAILSAFE_INPUT_MIN                  2000
 #define FAILSAFE_INPUT_MAX                  4500
 
 // FAILSAFE_TYPE controls the UDB's behavior when in failsafe mode due to loss of transmitter
@@ -343,19 +388,19 @@
 // SERIAL_UDB_MAG outputs the automatically calculated offsets and raw magnetometer data.
 // Note that SERIAL_MAVLINK defaults to using a baud rate of 57600 baud (other formats default to 19200)
 
-#define SERIAL_OUTPUT_FORMAT                SERIAL_NONE
+#define SERIAL_OUTPUT_FORMAT                SERIAL_UDB_EXTRA
 
 ////////////////////////////////////////////////////////////////////////////////
 // Serial Output BAUD rate for either standard telemetry streams or MAVLink
 //  19200, 38400, 57600, 115200, 230400, 460800, 921600 // yes, it really will work at this rate
-//#define SERIAL_BAUDRATE                     19200
+#define SERIAL_BAUDRATE                     57600
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// MAVLink requires an aircraft Identifier (I.D) as it is designed to control multiple aircraft
+// MAVLink requires an aircraft Identifier (I.D) as it is deaigned to control multiple aircraft
 // Each aircraft in the sky will need a unique I.D. in the range from 0-255
-#define MAVLINK_SYSID                       1
+#define MAVLINK_SYSID                       55
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -459,9 +504,8 @@
 // All gains should be positive real numbers.
 // Proportional gains should be less than 4.0.
 // Rate gains should be less than 0.8.
-// With the new helical turn control, rate gains are not even needed, try setting them all to zero.
-// Proportional gains include ROLLKP, YAWKP_AILERON, PITCHGAIN,
-// ELEVATOR_BOOST, YAWKP_RUDDER, ROLLKP_RUDDER,
+// Proportional gains include ROLLKP, YAWKP_AILERON, AILERON_BOOST, PITCHGAIN,
+// RUDDER_ELEV_MIX, ROLL_ELEV_MIX, ELEVATOR_BOOST, YAWKP_RUDDER, ROLLKP_RUDDER,
 // MANUAL_AILERON_RUDDER_MIX, RUDDER_BOOST, HOVER_ROLLKP, HOVER_PITCHGAIN, HOVER_YAWKP
 // Rate gains include ROLLKD, YAWKD_AILERON, PITCHKD, YAWKD_RUDDER, ROLLKD_RUDDER,
 // HOVER_ROLLKD, HOVER_PITCHKD, HOVER_YAWKD
@@ -470,12 +514,14 @@
 // set it to 1.0 if you want full servo throw, otherwise set it to the portion that you want
 #define SERVOSAT                            1.0
 
+
 // FEED_FORWARD is a feed forward gain for deflecting control surfaces for turn rate.
 // The KP gains for each axis are multiplied by FEED_FORWARD to determine
 // the feed forward gain for that axis.
 // For each axis, a deflection term is added equal to the feed forward gain for that axis
 // times projection of the desired earth vertical rotation rate onto that axis
-#define FEED_FORWARD						1.0
+//#define FEED_FORWARD						1.0
+#define FEED_FORWARD						0.8
 
 // TURN_RATE_NAV and TURN_RATE_FBW set the gains of the helical turn control for
 // waypoint navigation mode and fly by wire mode respectively.
@@ -487,61 +533,51 @@
 // Aileron/Roll Control Gains
 // ROLLKP is the proportional gain, approximately 0.25
 // ROLLKD is the derivative (gyro) gain, approximately 0.125
-// YAWKP_AILERON is the proportional feedback gain for ailerons in response to yaw error.
-// use it only if there is no rudder.
-// YAWKD_AILERON is the derivative feedback gain for ailerons in response to yaw rotation.
-// use it only if there is no rudder.
-#define ROLLKP                              0.20
-#define ROLLKD                              0.05
-#define YAWKP_AILERON                       0.00
-#define YAWKD_AILERON                       0.00
+// YAWKP_AILERON is the proportional feedback gain for ailerons in response to yaw error
+// YAWKD_AILERON is the derivative feedback gain for ailerons in response to yaw rotation
+#define KD_ON_OFF						  ( 0.0  )
+//#define ROLLKP                              0.3
+#define ROLLKP                              0.4
+#define ROLLKD                              0.05*KD_ON_OFF
+#define YAWKP_AILERON                       0.10*0.0
+#define YAWKD_AILERON                       0.05*0.0
 
 // Elevator/Pitch Control Gains
 // PITCHGAIN is the pitch stabilization gain, typically around 0.125
 // PITCHKD feedback gain for pitch damping, around 0.0625
+// RUDDER_ELEV_MIX is the degree of elevator adjustment for rudder and banking
+// AILERON_ELEV_MIX is the degree of elevator adjustment for aileron
 // ELEVATOR_BOOST is the additional gain multiplier for the manually commanded elevator deflection
-#define PITCHGAIN                           0.30
-#define PITCHKD                             0.00
-#define ELEVATOR_BOOST                      0.50
+//#define PITCHGAIN                           0.35
+//#define PITCHKD                             0.06
+#define PITCHGAIN                           0.7
+#define PITCHKD                             0.12*KD_ON_OFF
+//#define RUDDER_ELEV_MIX                     0.0
+//#define ROLL_ELEV_MIX                       0.0
+//#define ELEVATOR_BOOST                        0.5
+#define ELEVATOR_BOOST                        2.0
 
-// Parameters below are used in the computation of angle of attack and pitch trim.
-// ( INVERTED_NEUTRAL_PITCH is no longer used and should not be used.)
-// If these parameters are not defined, angle of attack and pitch trim will be set to zero.
-// CRUISE_SPEED                         The nominal speed in meters per second at which the parameters are defined.
-// ANGLE_OF_ATTACK_NORMAL               Angle of attack in degrees in the body frame for normal straight and level flight at cruise speed.
-// ANGLE_OF_ATTACK_INVERTED             Angle of attack in degrees in the body frame for inverted straight and level flight at cruise speed.
-// Note: ANGLE_OF_ATTACK_INVERTED is usually negative, with typical values in the -5 to -10 degree range.
-// ELEVATOR_TRIM_NORMAL                 Elevator trim in fractional servo units (-1.0 to 1.0 ) for normal straight and level flight at cruise speed.
-// ELEVATOR_TRIM_INVERTED               Elevator trim in fractional servo units (-1.0 to 1.0 ) for inverted straight and level flight at cruise speed.
-// Note: ELEVATOR_TRIM_INVERTED is usually negative, with typical values in the -0.5 to -1.0 range.
-
-// The following are the values for HILSIM EasyStar2:
-#define CRUISE_SPEED                      ( 12.0 )
-#define ANGLE_OF_ATTACK_NORMAL            ( -0.8 )
-#define ANGLE_OF_ATTACK_INVERTED          ( -7.2 )
-#define ELEVATOR_TRIM_NORMAL              ( -0.03 )
-#define ELEVATOR_TRIM_INVERTED            ( -0.67 )
+// Neutral pitch angle of the plane (in degrees) when flying inverted
+// Use this to add extra "up" elevator while the plane is inverted, to avoid losing altitude.
+//#define INVERTED_NEUTRAL_PITCH              8.0
 
 // Rudder/Yaw Control Gains
-// YAWKP_RUDDER is the proportional feedback gain for rudder control of yaw orientation.
-// YAWKD_RUDDER is the yaw gyro feedback gain for the rudder in reponse to yaw rotation.
-// ROLLKP_RUDDER is the feedback gain for the rudder in response to the current roll angle,
-// use it only if there are no ailerons.
-// ROLLKD_RUDDER is the feedback gain for the rudder in response to the rate of change roll angle,
-// use it only if there are no ailerons.
+// YAWKP_RUDDER is the proportional feedback gain for rudder navigation
+// YAWKD_RUDDER is the yaw gyro feedback gain for the rudder in reponse to yaw rotation
+// ROLLKP_RUDDER is the feedback gain for the rudder in response to the current roll angle
+// ROLLKD_RUDDER is the feedback gain for the rudder in response to the rate of change roll angle
 // MANUAL_AILERON_RUDDER_MIX is the fraction of manual aileron control to mix into the rudder when
 // in stabilized or waypoint mode.  This mainly helps aileron-initiated turning while in stabilized.
-// MANUAL_AILERON_RUDDER_MIX is no longer needed with the new controls, it should be set to zero.
 // RUDDER_BOOST is the additional gain multiplier for the manually commanded rudder deflection
-#define YAWKP_RUDDER                        0.30
-#define YAWKD_RUDDER                        0.00
-#define ROLLKP_RUDDER                       0.00
-#define ROLLKD_RUDDER                       0.00
+//#define YAWKP_RUDDER                        0.20*KP_ON_OFF
+#define YAWKP_RUDDER                        0.40
+#define YAWKD_RUDDER                        0.05*KD_ON_OFF
+#define ROLLKP_RUDDER                       0.20*0.0
+#define ROLLKD_RUDDER                       0.05*0.0
 #define MANUAL_AILERON_RUDDER_MIX           0.00
-#define RUDDER_BOOST                        0.50
+#define RUDDER_BOOST                        0.5
 
 // Gains for Hovering
-// These are still here from the previous version of the controls, because the new controls have not yet been set up for hovering.
 // Gains are named based on plane's frame of reference (roll means ailerons)
 // HOVER_ROLLKP is the roll-proportional feedback gain applied to the ailerons while navigating a hover
 // HOVER_ROLLKD is the roll gyro feedback gain applied to ailerons while stabilizing a hover
@@ -637,20 +673,20 @@
 // These settings are only used when Altitude Hold is enabled above.
 
 // Min and Max target heights in meters.  These only apply to stabilized mode.
-#define HEIGHT_TARGET_MIN                   25.0
+#define HEIGHT_TARGET_MIN                   -20.0
 #define HEIGHT_TARGET_MAX                   100.0
 
 // The range of altitude within which to linearly vary the throttle
 // and pitch to maintain altitude.  A bigger value makes altitude hold
 // smoother, and is suggested for very fast planes.
-#define HEIGHT_MARGIN                       10
+#define HEIGHT_MARGIN                       20
 
 // Use ALT_HOLD_THROTTLE_MAX when below HEIGHT_MARGIN of the target height.
 // Interpolate between ALT_HOLD_THROTTLE_MAX and ALT_HOLD_THROTTLE_MIN
 // when within HEIGHT_MARGIN of the target height.
 // Use ALT_HOLD_THROTTLE_MIN when above HEIGHT_MARGIN of the target height.
 // Throttle values are from 0.0 - 1.0.
-#define ALT_HOLD_THROTTLE_MIN               0.35
+#define ALT_HOLD_THROTTLE_MIN               0.0
 #define ALT_HOLD_THROTTLE_MAX               1.0
 
 // Use ALT_HOLD_PITCH_MAX when below HEIGHT_MARGIN of the target height.
@@ -658,9 +694,9 @@
 // within HEIGHT_MARGIN of the target height.
 // Use ALT_HOLD_PITCH_HIGH when above HEIGHT_MARGIN of the target height.
 // Pitch values are in degrees.  Negative values pitch the plane down.
-#define ALT_HOLD_PITCH_MIN                 -15.0
-#define ALT_HOLD_PITCH_MAX                  15.0
-#define ALT_HOLD_PITCH_HIGH                -15.0
+#define ALT_HOLD_PITCH_MIN                 -20.0
+#define ALT_HOLD_PITCH_MAX                  20.0
+#define ALT_HOLD_PITCH_HIGH                -20.0
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -710,10 +746,10 @@
 //#define ID_VEHICLE_REGISTRATION "TW2-PDH-UK"
 //#define ID_LEAD_PILOT "Pete Hollands"
 //#define ID_DIY_DRONES_URL "http://www.diydrones.com/profile/PeterHollands"
-#define ID_VEHICLE_MODEL_NAME               "Not Defined"
-#define ID_VEHICLE_REGISTRATION             "Not Defined"
-#define ID_LEAD_PILOT                       "Not Defined"
-#define ID_DIY_DRONES_URL                   "http://www.diydrones.com"
+#define ID_VEHICLE_MODEL_NAME               "EZ*2, board4"
+#define ID_VEHICLE_REGISTRATION             "helical r3565"
+#define ID_LEAD_PILOT                       "WJP"
+#define ID_DIY_DRONES_URL                   ""
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -735,7 +771,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 // Optionally enable the new power saving idle mode of the MCU during mainloop
-#define USE_MCU_IDLE                        1
+// #define USE_MCU_IDLE                        0
 
 
 ////////////////////////////////////////////////////////////////////////////////

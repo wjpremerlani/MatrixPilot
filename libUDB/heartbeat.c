@@ -30,7 +30,10 @@
 #include "NV_memory.h"
 #endif
 
-int one_hertz_flag = 0;
+int16_t gps_count , gps_delay , gps_count_previous ;
+
+int16_t one_hertz_flag = 0;
+
 uint16_t udb_heartbeat_counter = 0;
 #define HEARTBEAT_MAX 57600 // Evenly divisible by many common values: 2^8 * 3^2 * 5^2
 
@@ -86,8 +89,10 @@ static void pulse(void)
 	LED_BLUE = LED_OFF;     // indicates logfile activity
 
 #if (NORADIO != 1)
-	// 20Hz testing of radio link
-	if ((udb_heartbeat_counter % (HEARTBEAT_HZ/20)) == 1)
+//	// 20Hz testing of radio link
+//	if ((udb_heartbeat_counter % (HEARTBEAT_HZ/20)) == 1)
+	// 5Hz testing of radio link
+	if ((udb_heartbeat_counter % (HEARTBEAT_HZ/5)) == 1)
 	{
 		radioIn_failsafe_check();
 	}

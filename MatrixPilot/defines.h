@@ -147,6 +147,7 @@ void mavlink_output_40hz(void);
 #define SERIAL_UDB_EXTRA    7    // Extra Telemetry beyond that provided by SERIAL_UDB for higher bandwidth connections
 #define SERIAL_CAM_TRACK    8    // Output Location in a format usable by a 2nd UDB to target its camera at this plane
 #define SERIAL_MAVLINK      9    // The Micro Air Vehicle Link protocol from the PixHawk Project
+#define SERIAL_DEBUG_HILSIM 10   // Used to debug HILSIM issue : too much scenary causes crash
 
 
 ////////////////////////////////////////////////////////////////////////////////

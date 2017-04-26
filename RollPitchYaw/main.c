@@ -129,8 +129,9 @@ void send_debug_line(void)
 	if( RECORD_OFFSETS == 1 )
 	{
 		int16_t gravity2x = (int16_t) 2*GRAVITY ;
-		sprintf( debug_buffer , "%i, %i, %i, %i, %i, %i, %i\r\n" , 
-			gravity2x, udb_xaccel.value , udb_yaccel.value , udb_zaccel.value , udb_xrate.value , udb_yrate.value , udb_zrate.value ) ; 
+		sprintf( debug_buffer , "%i, %i, %i, %i, %i, %i, %i, %i, %i, %i\r\n" , 
+			gravity2x, udb_xaccel.value , udb_yaccel.value , udb_zaccel.value , udb_xrate.value , udb_yrate.value , udb_zrate.value ,
+			 ( PORTCbits.RC4 == 1 ? 1 : 0 ) , ( _TRISC4 == 1 ? 1 : 0 ) , ( _LATC4 == 1 ? 1 : 0 ) ) ; 
 	}
 	else
 	{

@@ -33,8 +33,11 @@
 #if (ALTITUDE_GAINS_VARIABLE != 1)
 
 union longww throttleFiltered = { 0 };
-
+#if ( HILSIM == 1 )
+#define THROTTLEFILTSHIFT   9
+#else
 #define THROTTLEFILTSHIFT   12
+#endif // HILSIM
 
 #define DEADBAND            150
 
@@ -212,13 +215,16 @@ void setTargetAltitude(int16_t targetAlt)
 //	printf("setTargetAltitude(%u)\r\n", desiredHeight);
 }
 
+union longww heightError = { 0 } ;
+
+
 static void normalAltitudeCntrl(void)
 {
 	union longww throttleAccum;
 	union longww pitchAccum;
 	int16_t throttleIn;
 	int16_t throttleInOffset;
-	union longww heightError = { 0 };
+	heightError.WW = 0 ;
 
 	speed_height = excess_energy_height(); // equivalent height of the airspeed
 	if (udb_flags._.radio_on == 1)
@@ -275,17 +281,17 @@ if (ALTITUDEHOLD_STABILIZED == AH_PITCH_ONLY) {
 		{
 			heightError._.W1 = -desiredHeight;
 			heightError.WW = (heightError.WW + IMUlocationz.WW + speed_height) >> 13;
-			if (heightError._.W0 < (-(int16_t)(HEIGHT_MARGIN*8.0)))
+			if (heightError.WW < (-(int32_t)(HEIGHT_MARGIN*8.0)))
 			{
 				throttleAccum.WW = (int16_t)(MAXTHROTTLE);
 			}
-			else if (heightError._.W0 > (int16_t)(HEIGHT_MARGIN*8.0))
+			else if (heightError.WW > (int32_t)(HEIGHT_MARGIN*8.0))
 			{
 				throttleAccum.WW = 0;
 			}
 			else
 			{
-				throttleAccum.WW = (int16_t)(MAXTHROTTLE) + (__builtin_mulss((int16_t)(THROTTLEHEIGHTGAIN), (-heightError._.W0 - (int16_t)(HEIGHT_MARGIN*8.0))) >> 3);
+			throttleAccum.WW = (int16_t)(MAXTHROTTLE) + ((__builtin_mulss((int16_t)(THROTTLEHEIGHTGAIN), (-heightError._.W0 - (int16_t)(HEIGHT_MARGIN*8.0)))) >> 3);
 				if (throttleAccum.WW > (int16_t)(MAXTHROTTLE))throttleAccum.WW = (int16_t)(MAXTHROTTLE);
 			}
 			heightError._.W1 = - desiredHeight;

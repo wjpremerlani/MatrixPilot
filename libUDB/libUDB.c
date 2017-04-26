@@ -66,7 +66,7 @@ void udb_init(void)
 
 	init_analogs();
 
-	udb_init_ADC();
+//	udb_init_ADC();
 	init_events();
 #if (USE_I2C1_DRIVER == 1)
 	I2C1_Init();
@@ -147,9 +147,15 @@ void udb_a2d_record_offsets(void)
 	udb_xaccel.offset = XACCEL_OFFSET ;
 	udb_yaccel.offset = YACCEL_OFFSET ;
 	udb_zaccel.offset = ZACCEL_OFFSET ;
+#if ( BOARD_TYPE == UDB4_BOARD )
+	udb_xrate.offset  = udb_xrate.value;
+	udb_yrate.offset  = udb_yrate.value;
+	udb_zrate.offset  = udb_zrate.value;
+#else
 	udb_xrate.offset = XRATE_OFFSET ;
 	udb_yrate.offset = YRATE_OFFSET ;
 	udb_zrate.offset = ZRATE_OFFSET ;
+#endif // UDB4_BOARD
 #else
 	// almost ready to turn the control on, save the input offsets
 	UDB_XACCEL.offset = UDB_XACCEL.value;

@@ -367,9 +367,13 @@ the overlay itself.
 			var letter = String.fromCharCode("A".charCodeAt(0) + index);
 			///alert("About to add waypoint " + index + " (" + letter + ") at (" + lat +", "+lng+", "+flags+", "+camView);
 			/////      var myIcon = new GIcon(baseIcon);
-			
-			var myImage = "http://gmaps-samples.googlecode.com/svn/trunk/markers/red/marker" + (index+1) + ".png"; // TODO: Set image based on flags
-			
+			//var myImage = "http://gmaps-samples.googlecode.com/svn/trunk/markers/red/marker" + (index+1) + ".png"; // TODO: Set image based on flags
+			//var myImage = "http://github.com/googlemaps/js-v2-samples/blob/gh-pages/markers/red/marker" + (index+1) + ".png"; // TODO: Set image based on flags
+			//var myImage = "https://github.com/googlemaps/js-v2-samples/blob/gh-pages/markers/red/marker1.png" ;
+			//var myImage = "https://github.com/googlemaps/js-v2-samples/tree/gh-pages/markers/red/marker1.png" ;
+			//var myImage = "https://github.com/googlemaps/js-v2-samples/markers/red/marker1.png" ;
+			//var myImage = "marker1.png";
+			var myImage = "https://raw.githubusercontent.com/googlemaps/js-v2-samples/gh-pages/markers/red/marker" + (index+1) + ".png"; 
 			var latlng;
 			
 			if(flags.indexOf("F_ABSOLUTE") > -1) {
