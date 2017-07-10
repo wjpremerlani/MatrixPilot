@@ -52,15 +52,21 @@ static fractional ggain[] =  { GGAIN, GGAIN, GGAIN };
 static uint16_t spin_rate = 0;
 static fractional spin_axis[] = { 0, 0, RMAX };
 
+#if (CENTRIFUGAL_WITHOUT_GPS == 1)
+#define KI_ONOFF 0.0
+#else
+#define KI_ONOFF 1.0
+#endif // #if (CENTRIFUGAL_WITHOUT_GPS == 1)
+
 #if (BOARD_TYPE == AUAV3_BOARD || BOARD_TYPE == UDB5_BOARD || BOARD_TYPE == PX4_BOARD)
 // modified gains for MPU6000
 #define KPROLLPITCH (ACCEL_RANGE * 1280/3)
-#define KIROLLPITCH (ACCEL_RANGE * 3400 / HEARTBEAT_HZ)
+#define KIROLLPITCH (KI_ONOFF*ACCEL_RANGE * 3400 / HEARTBEAT_HZ)
 
 #elif (BOARD_TYPE == UDB4_BOARD)
 // Paul's gains for 6G accelerometers
 #define KPROLLPITCH (256*5)
-#define KIROLLPITCH (10240/HEARTBEAT_HZ) // 256
+#define KIROLLPITCH (KI_ONOFF*10240/HEARTBEAT_HZ) // 256
 
 #else
 #error Unsupported BOARD_TYPE
@@ -68,7 +74,7 @@ static fractional spin_axis[] = { 0, 0, RMAX };
 
 #define KPYAW 256*4
 //#define KIYAW 32
-#define KIYAW (1280/HEARTBEAT_HZ)
+#define KIYAW (KI_ONOFF*1280/HEARTBEAT_HZ)
 
 #define GYROSAT 15000
 // threshold at which gyros may be saturated
@@ -143,9 +149,6 @@ fractional dirOverGndHrmat[] = { 0, RMAX, 0 };
 static fractional errorRP[] = { 0, 0, 0 };
 static fractional errorYawground[] = { 0, 0, 0 };
 static fractional errorYawplane[]  = { 0, 0, 0 };
-
-// measure of error in orthogonality, used for debugging purposes:
-static fractional error = 0;
 
 void yaw_drift_reset(void)
 {
@@ -348,7 +351,7 @@ static void adj_accel(int16_t angleOfAttack)
 	accum.WW = (__builtin_mulss(omega_times_velocity , rotation_axis[1] ) ) << 2;
 	gravity_vector_plane[0] = gplane[0] - accum._.W1;
 	accum.WW = (__builtin_mulss(omega_times_velocity , rotation_axis[0] ) ) << 2;
-	gravity_vector_plane[0] = gplane[0] + accum._.W1;
+	gravity_vector_plane[2] = gplane[2] + accum._.W1;
 }
 #else
 static void adj_accel(int16_t angleOfAttack)
@@ -422,17 +425,16 @@ static void normalize(void)
 
 	fractional norm;    // actual magnitude
 	fractional renorm;  // renormalization factor
-	fractional rbuff[9];
-	// compute -1/2 of the dot product between rows 1 and 2
-	error =  - VectorDotProduct(3, &rmat[0], &rmat[3]); // note, 1/2 is built into 2.14
-	// scale rows 1 and 2 by the error
-	VectorScale(3, &rbuff[0], &rmat[3], error);
-	VectorScale(3, &rbuff[3], &rmat[0], error);
-	// update the first 2 rows to make them closer to orthogonal:
-	VectorAdd(3, &rbuff[0], &rbuff[0], &rmat[0]);
-	VectorAdd(3, &rbuff[3], &rbuff[3], &rmat[3]);
-	// use the cross product of the first 2 rows to get the 3rd row
-	VectorCross(&rbuff[6], &rbuff[0], &rbuff[3]);
+	fractional rbuff[9]; // array buffer for temporary values
+    VectorCopy( 9 , rbuff , rmat ); // copy direction cosine matrix into buffer
+
+    // Leave the bottom row alone, it is usually the most accurate.
+    // Compute the first row as the cross product of second row with third row.
+    VectorCross(&rbuff[0], &rbuff[3] , &rbuff[6]);
+    // First row is now perpendicular to the second and third row.
+    // Compute the second row as the cross product of the third row with the first row.
+    VectorCross(&rbuff[3], &rbuff[6] , &rbuff[0]);
+    // All three rows are now mutually perpendicular.
 
 	// Use a Taylor's expansion for 1/sqrt(X*X) to avoid division in the renormalization
 

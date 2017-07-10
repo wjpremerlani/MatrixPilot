@@ -220,6 +220,8 @@ void helicalTurnCntrl(void)
 	state_flags._.GPS_steering = 0;   // turn off navigation
 	state_flags._.pitch_feedback = 1; // turn on stabilization
 	airSpeed = 981; // for testing purposes, an airspeed is needed
+#elif (CENTRIFUGAL_WITHOUT_GPS == 1)
+    airSpeed = (uint16_t) (100.0*turns.RefSpeed);
 #else
 	airSpeed = air_speed_3DIMU;
 	if (airSpeed < TURN_CALC_MINIMUM_AIRSPEED) airSpeed = TURN_CALC_MINIMUM_AIRSPEED;
