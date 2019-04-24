@@ -89,8 +89,13 @@ void init_navigation(void)
 {
 	yawkpail = (uint16_t)(gains.YawKPAileron*RMAX);
 	yawkprud = (uint16_t)(gains.YawKPRudder*RMAX);
+#if ( SLOW_TURN_RATE_SCALING == 1 )
+	turngainnav = (uint16_t) ((8.0*TURN_RATE_NAV/57.3)*RMAX);
+	turngainfbw = (uint16_t) ((8.0*TURN_RATE_FBW/57.3)*RMAX);
+#else
 	turngainnav = (uint16_t)((turns.TurnRateNav/57.3)*RMAX);
 	turngainfbw = (uint16_t)((turns.TurnRateFBW/57.3)*RMAX);
+#endif // SLOW_TURN_RATE_SCALING
 }
 
 void save_navigation(void)
@@ -304,6 +309,7 @@ static void cross_track(void)
 	// This sets the time constant of the exponential decay to about 6 seconds
 	crossVector[0]._.W1 = navgoal.x;
 	crossVector[1]._.W1 = navgoal.y;
+	
 	crossVector[0].WW -= IMUlocationx.WW + ((IMUintegralAccelerationx.WW) >> 4);
 	crossVector[1].WW -= IMUlocationy.WW + ((IMUintegralAccelerationy.WW) >> 4);
 
