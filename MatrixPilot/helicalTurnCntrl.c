@@ -292,7 +292,7 @@ void helicalTurnCntrl(void)
 	if (accum.WW >(int32_t) 2*(int32_t) RMAX - 1) accum.WW =(int32_t) 2*(int32_t) RMAX - 1;
 	if (accum.WW <  -(int32_t) 2*(int32_t) RMAX + 1) accum.WW = -(int32_t) 2*(int32_t) RMAX + 1;
 
-	desiredTurnRateRadians = accum._.W0;
+	desiredTurnRateRadians = accum._.W0; // if the slow rate turn scaling has been selected, this really 8*rate
 
 	// compute the desired tilt from desired turn rate and air speed
 	// range for acceleration is plus minus 4 times gravity
@@ -307,6 +307,9 @@ void helicalTurnCntrl(void)
 
 	desiredTilt.WW = - __builtin_mulsu(desiredTurnRateRadians, airSpeed);
 	desiredTilt.WW /= GRAVITYCMSECSEC;
+#if (SLOW_TURN_RATE_SCALING == 1)
+	desiredTilt.WW /= 8 ;
+#endif // SLOW_TURN_RATE_SCALING
 
 	// limit the lateral acceleration to +- 4 times gravity, total wing loading approximately 4.12 times gravity
 
@@ -315,14 +318,22 @@ void helicalTurnCntrl(void)
 		desiredTilt.WW = (int32_t)2 * (int32_t)RMAX - 1;
 		accum.WW = __builtin_mulsu(-desiredTilt._.W0, GRAVITYCMSECSEC);
 		accum.WW /= airSpeed;
+#if (SLOW_TURN_RATE_SCALING == 1)
+		desiredTurnRateRadians = 8*accum._.W0;
+#else
 		desiredTurnRateRadians = accum._.W0;
+#endif
 	}
 	else if (desiredTilt.WW < -(int32_t)2 * (int32_t)RMAX + 1)
 	{
 		desiredTilt.WW = -(int32_t)2 * (int32_t)RMAX + 1;
 		accum.WW = __builtin_mulsu(-desiredTilt._.W0, GRAVITYCMSECSEC);
 		accum.WW /= airSpeed;
+#if (SLOW_TURN_RATE_SCALING == 1)
+		desiredTurnRateRadians = 8*accum._.W0;
+#else
 		desiredTurnRateRadians = accum._.W0;
+#endif
 	}
 
 	// Compute the amount of lift needed to perform the desired turn
@@ -369,8 +380,12 @@ void helicalTurnCntrl(void)
 //	SetAofA(angleOfAttack); // removed by helicalTurns
 
 	// convert desired turn rate from radians/second to gyro units
-
+	
+#if (SLOW_TURN_RATE_SCALING == 1)
+	accum.WW = (((int32_t)desiredTurnRateRadians) << 1);
+#else
 	accum.WW = (((int32_t)desiredTurnRateRadians) << 4);  // desired turn rate in radians times 16 to provide resolution for the divide to follow
+#endif // SLOW_TURN_RATE_SCALING	
 	accum.WW = accum.WW / RADSTOGYRO; // at this point accum._.W0 has 2 times the required gyro signal for the turn.
 
 	// compute desired rotation rate vector in body frame, scaling is same as gyro signal
@@ -378,8 +393,10 @@ void helicalTurnCntrl(void)
 	VectorScale(3, desiredRotationRateGyro, &rmat[6], accum._.W0); // this operation has side effect of dividing by 2
 
 	// compute desired rotation rate vector in body frame, scaling is in RMAX/2*radians/sec
-
-	VectorScale(3, desiredRotationRateRadians, &rmat[6], desiredTurnRateRadians); // this produces half of what we want
+#if (SLOW_TURN_RATE_SCALING == 1)
+#else
+	VectorScale(3, desiredRotationRateRadians, &rmat[6], desiredTurnRateRadians/8); // this produces half of what we want
+#endif // SLOW_TURN_RATE_SCALING
 	VectorAdd(3, desiredRotationRateRadians, desiredRotationRateRadians, desiredRotationRateRadians); // double
 
 	// incorporate roll into desired tilt vector
