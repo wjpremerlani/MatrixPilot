@@ -27,6 +27,20 @@
 
 //  math libraray
 
+uint16_t gps_cog_to_16bit_circular(uint16_t input_angle)
+// converts a GPS COG in a format that is 100*degrees to a 16 bit "circular"
+// 2*1024/1125 is exactly equal to 2**16/36000
+{
+	if ( input_angle < 36000 )
+	{
+		return __builtin_divud( __builtin_muluu( input_angle , 1024),1125)*2 ;
+	}
+	else
+	{
+		return 0 ;
+	}
+}
+
 #define RADIANTOCIRCULAR 10430
 
 //  sine table for angles from zero to pi/2 with an increment of pi/128 radian.
