@@ -22,10 +22,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Waypoint handling
 
-//NOTE: WAYPOINT_PROXIMITY_RADIUS, USE_FIXED_ORIGIN, FIXED_ORIGIN_LOCATION are defined in options.h
-
 // Move on to the next waypoint when getting within this distance of the current goal (in meters)
-// e.g. in options.h you may find the following #define WAYPOINT_PROXIMITY_RADIUS	25
+//#define WAYPOINT_RADIUS         250
+
+#define CAM_VIEW_LAUNCH         { 0, 0, 0 }
 
 // Origin Location
 // When using relative waypoints, the default is to interpret those waypoints as relative to the
@@ -47,9 +47,9 @@
 // examine the telemetry after a flight, take a look in the .csv file, it will be easy to spot the
 // altitude, expressed in meters.
 
-// For example in options.h you may find:-
-//      #define USE_FIXED_ORIGIN        0
-//      #define FIXED_ORIGIN_LOCATION   { 113480854, 472580108, 578 }    // Innsbruck
+//#define USE_FIXED_ORIGIN        0
+//#define FIXED_ORIGIN_LOCATION   { -1219950467, 374124664, 30.0 }    // A point in Baylands Park in Sunnyvale, CA
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Waypoint definitions
@@ -124,9 +124,6 @@
 // This is the same as a fixed or absolute waypoint.
 // Finally, do not mix relative waypoints and absolute camera viewpoint in the same line. A line should
 // either use both a fixed waypoint and fixed camera viewpoint, or both relative.
-
-#define CAM_VIEW_LAUNCH         { 0, 0, 0 }
-
 // 
 // 
 // You do not need to specify how many points you have, the compiler will count them for you.
@@ -134,29 +131,29 @@
 //
 // To use waypoints, make sure FLIGHT_PLAN_TYPE is set to FP_WAYPOINTS in options.h.
 
+const struct waypointDef waypoints[] = {
+	{ { -738146403, 431230295, 1219 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 1
+	{ { -738103019, 429509530, 1219 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 2
+	{ { -738078181, 428556789, 609 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 3
+	{ { -738051732, 427597984, 40 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 4
+	{ { -738048513, 427535031, 20 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 5
+	{ { -738040533, 427347466, 0 } , F_ABSOLUTE + F_LAND + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 6
+};
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // waypoints[]
 // 
-// By default the only waypoint is defined to be 75 meters above the starting point.
 
-#if (HILSIM == 1)
+/*const struct waypointDef waypoints[] = {
+{ {   0 ,   30000 , 2500 } , F_NORMAL, CAM_VIEW_LAUNCH } ,
+{ {   -30000,   30000 , 2500 } , F_NORMAL, CAM_VIEW_LAUNCH } ,
+{ {   -30000,   -30000 , 2500 } , F_NORMAL, CAM_VIEW_LAUNCH } ,
+{ {   30000,   -30000 , 2500 } , F_NORMAL, CAM_VIEW_LAUNCH } ,
+{ {   30000,   30000 , 2500 } , F_NORMAL, CAM_VIEW_LAUNCH } ,			
+};*/
 
-// Innsbruck inverted/reversed T3 course
-const struct waypointDef waypoints[] = {
-		{ {  113236490, 472496320, 350 } , F_ABSOLUTE, CAM_VIEW_LAUNCH } ,
-		{ {  113236490, 472638400, 350 } , F_ABSOLUTE, CAM_VIEW_LAUNCH } ,
-		{ {  113579820, 472496320, 350 } , F_ABSOLUTE, CAM_VIEW_LAUNCH } ,
-		{ {  113579820, 472638400, 350 } , F_ABSOLUTE, CAM_VIEW_LAUNCH } ,
-};
 
-#else
-
-const struct waypointDef waypoints[] = {
-		{ {   0,   0, 75 } , F_NORMAL, CAM_VIEW_LAUNCH } ,  // return to, and loiter 75 meters above the startup position
-};
-
-#endif
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -169,12 +166,36 @@ const struct waypointDef waypoints[] = {
 // 
 // WARNING: If you set this not to include the F_LAND flag, then be very careful during ground testing
 // and after flights, since turning off the transmitter will cause the throttle to come on.
-
+/*
 const struct waypointDef rtlWaypoints[] = {
 		{ { 0, 0,  50 } , F_LOITER + F_LAND, CAM_VIEW_LAUNCH } ,
 };
+*/
+/*const struct waypointDef rtlWaypoints[] = {
+{ {   0 ,   30000 , 2500 } , F_NORMAL, CAM_VIEW_LAUNCH } ,
+{ {   -30000,   30000 , 2500 } , F_NORMAL, CAM_VIEW_LAUNCH } ,
+{ {   -30000,   -30000 , 2500 } , F_NORMAL, CAM_VIEW_LAUNCH } ,
+{ {   30000,   -30000 , 2500 } , F_NORMAL, CAM_VIEW_LAUNCH } ,
+{ {   30000,   30000 , 2500 } , F_NORMAL, CAM_VIEW_LAUNCH } ,					
+};*/
 
+/*const struct waypointDef rtlWaypoints[] = {
+	{ { -738146403, 431230295, 1219 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 1
+	{ { -738103019, 429509530, 1219 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 2
+	{ { -738078181, 428556789, 609 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 3
+	{ { -738052162, 427605862, 60 } , F_ABSOLUTE   + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 4
+	{ { -738047227, 427482090, 60 } , F_ABSOLUTE + F_LAND + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 5
+	{ { -738043109, 427391280, 60 } , F_ABSOLUTE + F_LAND + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 6
+};*/
 
+const struct waypointDef rtlWaypoints[] = {
+	{ { -738146403, 431230295, 1219 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 1
+	{ { -738103019, 429509530, 1219 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 2
+	{ { -738078181, 428556789, 609 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 3
+	{ { -738051732, 427597984, 40 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 4
+	{ { -738048513, 427535031, 20 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 5
+	{ { -738040533, 427347466, 0 } , F_ABSOLUTE + F_LAND + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 6
+};
 ////////////////////////////////////////////////////////////////////////////////
 // Example waypoint lists
 //
