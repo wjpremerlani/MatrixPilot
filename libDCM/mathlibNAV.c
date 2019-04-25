@@ -32,15 +32,21 @@ uint16_t gps_cog_to_16bit_circular(uint16_t input_angle)
 // to a 16 bit "circular" measured CCW from east
 // 2*1024/1125 is exactly equal to 2**16/36000
 {
-	if ( input_angle < 36000 )
+	uint16_t angle ;
+	angle = input_angle ;
+	if ( angle > 36000)
 	{
-		if ( input_angle <= 9000)
+		angle = angle - 36000 ;
+	}
+	if ( angle < 36000 )
+	{
+		if ( angle <= 9000)
 		{
-			return __builtin_divud( __builtin_muluu( 9000 - input_angle , 1024),1125)*2 ;
+			return __builtin_divud( __builtin_muluu( 9000 - angle , 1024),1125)*2 ;
 		}
 		else
 		{
-			return __builtin_divud( __builtin_muluu( 45000 - input_angle , 1024),1125)*2 ;
+			return __builtin_divud( __builtin_muluu( 45000 - angle , 1024),1125)*2 ;
 		}
 	}
 	else
