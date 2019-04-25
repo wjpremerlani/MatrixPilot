@@ -19,6 +19,8 @@
 // along with MatrixPilot.  If not, see <http://www.gnu.org/licenses/>.
 
 uint16_t gps_cog_to_16bit_circular(uint16_t angle);
+int16_t sine16( uint16_t angle);
+int16_t cosine16( uint16_t angle);
 
 int16_t sine(int8_t angle);
 int8_t arcsine(int16_t y);  // arcsine takes the y coordinate of an x,y point and returns an angle
