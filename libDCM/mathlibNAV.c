@@ -55,6 +55,44 @@ uint16_t gps_cog_to_16bit_circular(uint16_t input_angle)
 	}
 }
 
+int16_t sine16( uint16_t angle)
+{
+	uint16_t index1 , index2 , fraction ;
+	int16_t sine1 , sine2 , deltasine ;
+	union longww accum;
+	index1 = angle >> 8 ;
+	index2 = index1+1 ;
+	if ( index2 > 255 )
+	{
+		index2 = 0 ;
+	}
+	fraction = angle << 8 ;
+	sine1 = sine(index1);
+	sine2 = sine(index2);
+	deltasine = sine2 - sine1 ;
+	accum.WW = __builtin_mulsu( deltasine , fraction ) ;
+	return sine1 + accum._.W1 ;
+}
+
+int16_t cosine16( uint16_t angle)
+{
+	uint16_t index1 , index2 , fraction ;
+	int16_t cosine1 , cosine2 , deltacosine ;
+	union longww accum;
+	index1 = angle >> 8 ;
+	index2 = index1+1 ;
+	if ( index2 > 255 )
+	{
+		index2 = 0 ;
+	}
+	fraction = angle << 8 ;
+	cosine1 = cosine(index1);
+	cosine2 = cosine(index2);
+	deltacosine = cosine2 - cosine1 ;
+	accum.WW = __builtin_mulsu( deltacosine , fraction ) ;
+	return cosine1 + accum._.W1 ;
+}
+
 #define RADIANTOCIRCULAR 10430
 
 //  sine table for angles from zero to pi/2 with an increment of pi/128 radian.
