@@ -45,15 +45,19 @@ void estYawDrift(void)
 		if ((estimatedWind[0] == 0 && estimatedWind[1] == 0) ||
 		    (air_speed_magnitudeXY < WIND_NAV_AIR_SPEED_MIN))
 		{
-			dirOverGndHGPS[0] = -cosine(actual_dir);
-			dirOverGndHGPS[1] = sine(actual_dir);
+			dirOverGndHGPS[0] = -cosine16(actual_dir_16);
+			dirOverGndHGPS[1] = sine16(actual_dir_16);
 			dirOverGndHGPS[2] = 0;
 		}
 		else
-		{
+		{/* TODO : need to improve resolution of the following and sub for what is below
 			dirOverGndHGPS[0] = -cosine(calculated_heading);
 			dirOverGndHGPS[1] = sine(calculated_heading);
 			dirOverGndHGPS[2] = 0;
+		 */
+			dirOverGndHGPS[0] = -cosine16(actual_dir_16);
+			dirOverGndHGPS[1] = sine16(actual_dir_16);
+			dirOverGndHGPS[2] = 0;				
 		}
 	}
 }

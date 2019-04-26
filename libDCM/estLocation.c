@@ -67,6 +67,7 @@ static void location_plane(int16_t* location)
 void estLocation(void)
 {
 	static int8_t cog_previous = 64;
+	static uint16_t cog_previous_16 = 16384;
 	static int16_t sog_previous = 0;
 	static int16_t climb_rate_previous = 0;
 	static uint16_t velocity_previous = 0;
@@ -75,7 +76,9 @@ void estLocation(void)
 	union longbbbb accum;
 	union longww accum_velocity;
 	int8_t cog_circular;
+	uint16_t cog_circular_16;
 	int8_t cog_delta;
+	int16_t cog_delta_16;
 	int16_t sog_delta;
 	int16_t climb_rate_delta;
 #ifdef USE_EXTENDED_NAV
@@ -94,6 +97,7 @@ void estLocation(void)
 	accum.WW = __builtin_muluu(COURSEDEG_2_BYTECIR, cog_gps.BB) + 0x00008000;
 	// re-orientate from compass (clockwise) to maths (anti-clockwise) with 0 degrees in East
 	cog_circular = -accum.__.B2 + 64;
+	cog_circular_16 = gps_cog_to_16bit_circular(cog_gps.BB);
 
 	// compensate for GPS reporting latency.
 	// The dynamic model of the EM406 and uBlox is not well known.
@@ -122,13 +126,16 @@ void estLocation(void)
 	}
 #else
 	cog_delta = 0;
+	cog_delta_16 = 0 ;
 	sog_delta = 0;
 	climb_rate_delta = 0;
 	location_deltaXY.x = location_deltaXY.y = location_deltaZ = 0;
 #endif //#if (HILSIM != 1)
 	dcm_flags._.gps_history_valid = 1;
 	actual_dir = cog_circular + cog_delta;
+	actual_dir_16 = cog_circular_16 + cog_delta_16;
 	cog_previous = cog_circular;
+	cog_previous_16 = cog_circular_16 ;
 
 	// Note that all these velocities are in centimeters / second
 
@@ -138,10 +145,10 @@ void estLocation(void)
 	GPSvelocity.z = climb_gps.BB + climb_rate_delta;
 	climb_rate_previous = climb_gps.BB;
 
-	accum_velocity.WW = (__builtin_mulss(cosine(actual_dir), ground_velocity_magnitudeXY) << 2) + 0x00008000;
+	accum_velocity.WW = (__builtin_mulss(cosine16(actual_dir_16), ground_velocity_magnitudeXY) << 2) ;
 	GPSvelocity.x = accum_velocity._.W1;
 
-	accum_velocity.WW = (__builtin_mulss(sine(actual_dir), ground_velocity_magnitudeXY) << 2) + 0x00008000;
+	accum_velocity.WW = (__builtin_mulss(sine16(actual_dir_16), ground_velocity_magnitudeXY) << 2) ;
 	GPSvelocity.y = accum_velocity._.W1;
 
 	rotate_2D(&location_deltaXY, cog_delta); // this is a key step to account for rotation effects!!

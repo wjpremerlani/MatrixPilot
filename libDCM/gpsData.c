@@ -33,6 +33,7 @@ struct relative3D GPSvelocity = { 0, 0, 0 };
 int16_t cos_lat = 0;
 int16_t gps_data_age;
 int8_t actual_dir;
+uint16_t actual_dir_16;
 uint16_t ground_velocity_magnitudeXY = 0;
 int16_t forward_acceleration = 0;
 uint16_t air_speed_magnitudeXY = 0;
