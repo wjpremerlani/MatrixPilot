@@ -31,6 +31,7 @@
 //#define CROSS_TRACK_MARGIN                  32
 //#define CROSS_TRACK_MARGIN                  128
 #define CROSS_TRACK_MARGIN                  64
+//#define CROSS_TRACK_MARGIN                  256
 
 #define WIND_GAIN_ADJUSTMENT                0
 

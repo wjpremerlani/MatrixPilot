@@ -29,6 +29,7 @@ extern struct relative3D GPSvelocity;
 extern int16_t cos_lat;
 extern int16_t gps_data_age;
 extern int8_t actual_dir;
+extern uint16_t actual_dir_16;
 extern uint16_t ground_velocity_magnitudeXY;
 extern int16_t forward_acceleration;
 extern uint16_t air_speed_magnitudeXY;
