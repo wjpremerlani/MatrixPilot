@@ -60,7 +60,7 @@ static void hoverAltitudeCntrl(void);
 
 int16_t pitchAltitudeAdjust = 0;
 boolean filterManual = false;
-int16_t desiredHeight;
+union longww desiredHeight32 ;
 
 // Variables required for mavlink.  Used in AltitudeCntrlVariable and airspeedCntrl
 int16_t height_target_min;
@@ -243,7 +243,7 @@ static void normalAltitudeCntrl(void)
 		}
 		if (state_flags._.GPS_steering)
 		{
-			desiredHeight = navigate_desired_height();
+			desiredHeight32 = navigate_desired_height();
 //			if (desired_behavior._.takeoff || desired_behavior._.altitude)
 //			{
 //				desiredHeight = goal.height;
@@ -294,7 +294,7 @@ static void normalAltitudeCntrl(void)
 				throttleAccum.WW = (int16_t)(MAXTHROTTLE) + (__builtin_mulss((int16_t)(THROTTLEHEIGHTGAIN), (-heightError._.W0 - (int16_t)(altit.HeightMargin*8.0))) >> 3);
 				if (throttleAccum.WW > (int16_t)(MAXTHROTTLE))throttleAccum.WW = (int16_t)(MAXTHROTTLE);
 			}
-			heightError._.W1 = - desiredHeight;
+			heightError.WW = - desiredHeight32.WW ;
 			heightError.WW = (heightError.WW + IMUlocationz.WW - speed_height) >> 13;
 			if (heightError._.W0 < (- (int16_t)(altit.HeightMargin*8.0)))
 			{

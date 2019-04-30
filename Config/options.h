@@ -29,9 +29,12 @@
 #define RUDDER_NAVIGATION                   0
 
 //#define CROSS_TRACK_MARGIN                  32
-//#define CROSS_TRACK_MARGIN                  128
 #define CROSS_TRACK_MARGIN                  64
+//#define CROSS_TRACK_MARGIN                  128
 //#define CROSS_TRACK_MARGIN                  256
+//#define CROSS_TRACK_MARGIN                  511
+//#define CROSS_TRACK_MARGIN                  1023
+//#define CROSS_TRACK_MARGIN		    2047
 
 #define WIND_GAIN_ADJUSTMENT                0
 
@@ -42,6 +45,7 @@
 #define SPEED_CONTROL                       1
 //#define DESIRED_SPEED                       150.0    // meters/second
 #define DESIRED_SPEED                       50.0    // meters/second
+//#define DESIRED_SPEED                       75.0    // meters/second
 
 #define INVERTED_FLIGHT_STABILIZED_MODE     0
 #define INVERTED_FLIGHT_WAYPOINT_MODE       0
@@ -167,12 +171,12 @@
 //#define TURN_RATE_FBW							60.0
 #define TURN_RATE_NAV							10.0
 #define TURN_RATE_FBW							20.0
-
 //#define TURN_RATE_NAV							5.0
 //#define TURN_RATE_FBW							10.0
 
 #define KD_ON_OFF						  ( 1.0  )
-#define ROLLKP                              0.6
+//#define ROLLKP                              0.6
+#define ROLLKP                              1.0
 //#define ROLLKP                              0.2
 //#define ROLLKD                              0.00*KD_ON_OFF
 //#define ROLLKD                              0.05*KD_ON_OFF
@@ -200,8 +204,8 @@
  
 //#define INVERTED_NEUTRAL_PITCH             ( 8.0 ) // not needed with AoA model
 
-#define YAWKP_RUDDER                        0.4
-//#define YAWKP_RUDDER                        0.10
+//#define YAWKP_RUDDER                        0.4
+#define YAWKP_RUDDER                        0.10
 //#define YAWKD_RUDDER                        0.05*KD_ON_OFF
 #define YAWKD_RUDDER                        0.2*KD_ON_OFF
 #define ROLLKP_RUDDER                       0.20*0.0
@@ -253,6 +257,7 @@
 //#define HEIGHT_MARGIN                       20
 //#define HEIGHT_MARGIN                       25
 #define HEIGHT_MARGIN                       30
+//#define HEIGHT_MARGIN				100
 
 #define ALT_HOLD_THROTTLE_MIN               0.0
 #define ALT_HOLD_THROTTLE_MAX               1.0

@@ -39,7 +39,7 @@ void navigate_set_goal_height(int16_t z);
 void navigate_compute_bearing_to_goal(void);
 void navigate_process_flightplan(void);
 int16_t navigate_determine_deflection(char navType);
-int16_t navigate_desired_height(void);
+union longww navigate_desired_height(void);
 
 // NEW STUFF:
 int16_t navigate_get_goal(vect3_16t* goal);

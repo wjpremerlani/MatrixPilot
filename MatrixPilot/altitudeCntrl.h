@@ -22,9 +22,9 @@
 #ifndef ALTITUDECNTRL_H
 #define ALTITUDECNTRL_H
 
-
+#define desiredHeight ( desiredHeight32._.W1 )
 extern boolean filterManual;
-extern int16_t desiredHeight;
+extern union longww desiredHeight32 ;
 // Variables required for mavlink.  Used in AltitudeCntrlVariable and airspeedCntrl
 extern int16_t height_target_min;
 extern int16_t height_target_max;

@@ -241,48 +241,48 @@ void navigate_process_flightplan(void)
 static int16_t compute_progress_to_goal(int16_t totalDist, int16_t remainingDist)
 {
 	// progress is the fraction of the distance from the start to the finish of
-	// the current waypoint leg, that is still remaining. it ranges from 0 - 1<<12 (4096).
+	// the current waypoint leg, that is still remaining. it ranges from 0 -(  1<<15 - 1) (32767).
 	int16_t progress;
-
-	if (totalDist > 0)
+	union longww progress_distance ;
+	progress_distance._.W1 = (totalDist - remainingDist) ;
+	progress_distance._.W0 = 0 ;
+	if ( ( totalDist <= 0 ) || ( remainingDist <= 0) )
 	{
-		progress = (((int32_t)totalDist - remainingDist) << 12) / totalDist;
-		if (progress < 0)
-		{
-			progress = 0;
-		}
-		if (progress > (int32_t)1 << 12)
-		{
-			progress = (int32_t)1 << 12;
-		}
+		progress = 32767 ;
+	}
+	else if( progress_distance._.W1 <= 0)
+	{
+		progress = 0 ;
 	}
 	else
 	{
-		progress = (int32_t)1 << 12;
+		progress = __builtin_divud(progress_distance.WW,totalDist);
 	}
 	return progress;
 }
 
-int16_t navigate_desired_height(void)
+union longww navigate_desired_height(void)
 {
-	int16_t height;
+	union longww height;
 
 	if (desired_behavior._.takeoff || desired_behavior._.altitude)
 	{
-		height = navgoal.height;
+		height._.W1 = navgoal.height;
+		height._.W0 = 0 ;
 	}
 	else
 	{
 		int16_t progress_to_goal; // Fraction of the way to the goal in the range 0-4096 (2^12)
 		progress_to_goal = compute_progress_to_goal(navgoal.legDist, tofinish_line);
-		height = navgoal.fromHeight + (((navgoal.height - navgoal.fromHeight) * (int32_t)progress_to_goal) >> 12);
+		height._.W1 = navgoal.fromHeight ;
+		height.WW += 2*__builtin_mulsu((navgoal.height - navgoal.fromHeight), progress_to_goal );
 	}
-	return height;
+	return height ;
 }
-
+int16_t xtrack ;
 static void cross_track(void)
 {
-// INPUTS: navgoal, IMUlocation, IMUintegralAcceleration
+// INPUTS: navgoal, IMUlocation, IMUvelocity
 // OUTPUT: desired_bearing_over_ground_vector
 //
 
@@ -292,8 +292,8 @@ static void cross_track(void)
 	// Using Cross Tracking
 	// CROSS_TRACK_MARGIN is the value of cross track error in meters
 	// beyond which cross tracking correction saturates at 45 degrees 
-#if (CROSS_TRACK_MARGIN >= 1024)
-#error ("CTMARGIN is too large, it must be less than 1024")
+#if (CROSS_TRACK_MARGIN >= 2048)
+#error ("CTMARGIN is too large, it must be less than 2048")
 #endif
 	union longww crossVector[2];
 	int16_t cross_rotate[2];
@@ -310,13 +310,14 @@ static void cross_track(void)
 	crossVector[0]._.W1 = navgoal.x;
 	crossVector[1]._.W1 = navgoal.y;
 	
-	crossVector[0].WW -= IMUlocationx.WW + ((IMUintegralAccelerationx.WW) >> 4);
-	crossVector[1].WW -= IMUlocationy.WW + ((IMUintegralAccelerationy.WW) >> 4);
+	crossVector[0].WW -= IMUlocationx.WW + ((IMUvelocityx.WW) >> 4);
+	crossVector[1].WW -= IMUlocationy.WW + ((IMUvelocityy.WW) >> 4);
 
 	// The following rotation transforms the cross track error vector into the
 	// frame of the desired course track
 	rotate_2D_long_vector_by_vector(&crossVector[0].WW, cross_rotate);
 	crosstrack = crossVector[1]._.W1;
+	xtrack = crosstrack ; // TODO for debugging purposes, remove later
 
 	// Compute the adjusted desired bearing over ground.
 	// Start with the straight line between waypoints.
@@ -324,12 +325,12 @@ static void cross_track(void)
 	desired_bearing_over_ground_vector[1] = navgoal.sinphi;
 
 	// Determine if the crosstrack error is within saturation limit.
-	// If so, then multiply by 64 to pick up an extra 6 bits of resolution.
+	// If so, then multiply by 16 to pick up an extra 4 bits of resolution.
 	if (abs(crosstrack) < ((uint16_t)(CROSS_TRACK_MARGIN)))
 	{
-		crossVector[1].WW <<= 6;
+		crossVector[1].WW <<= 4;
 		cross_rotate[1] = crossVector[1]._.W1;
-		cross_rotate[0] = 64*((uint16_t)(CROSS_TRACK_MARGIN));
+		cross_rotate[0] = 16*((uint16_t)(CROSS_TRACK_MARGIN));
 		vector2_normalize(cross_rotate, cross_rotate);
 		// At this point, the implicit angle of the cross correction rotation
 		// is atan of (the cross error divided by the cross margin).
@@ -372,8 +373,8 @@ void navigate_compute_bearing_to_goal(void)
 	// Determine if aircraft is making forward progress.
 	// If not, do not apply cross track correction.
 	// This is done to prevent "waggles" during a 180 degree turn.
-	temporary.WW = (__builtin_mulss(IMUintegralAccelerationx._.W1, navgoal.cosphi)
-	              + __builtin_mulss(IMUintegralAccelerationy._.W1, navgoal.sinphi));
+	temporary.WW = (__builtin_mulss(IMUvelocityx._.W1, navgoal.cosphi)
+	              + __builtin_mulss(IMUvelocityy._.W1, navgoal.sinphi));
 	if ((desired_behavior._.cross_track) && (temporary._.W1 > 0))
 	{
 		cross_track();
@@ -460,8 +461,9 @@ int16_t navigate_determine_deflection(char navType)
 	if (forward_ground_speed > ((air_speed_magnitudeXY >> 2) + WIND_NAV_AIR_SPEED_MIN))
 	{
 		// The following uses IMU values to get actual course over ground
-		actualXY[0] = -IMUintegralAccelerationx._.W1;
-		actualXY[1] =  IMUintegralAccelerationy._.W1;
+		actualXY[0] = -IMUvelocityx._.W1;
+		actualXY[1] =  IMUvelocityy._.W1;
+		
 		vector2_normalize(actualXY, actualXY);
 		actualX = actualXY[0];
 		actualY = actualXY[1];
