@@ -310,8 +310,8 @@ static void cross_track(void)
 	crossVector[0]._.W1 = navgoal.x;
 	crossVector[1]._.W1 = navgoal.y;
 	
-	crossVector[0].WW -= IMUlocationx.WW ;//+ ((IMUvelocityx.WW) >> 4);
-	crossVector[1].WW -= IMUlocationy.WW ;//+ ((IMUvelocityy.WW) >> 4);
+	crossVector[0].WW -= IMUlocationx.WW + ((IMUvelocityx.WW) >> 4);
+	crossVector[1].WW -= IMUlocationy.WW + ((IMUvelocityy.WW) >> 4);
 
 	// The following rotation transforms the cross track error vector into the
 	// frame of the desired course track
