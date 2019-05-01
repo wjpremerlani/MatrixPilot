@@ -279,7 +279,7 @@ static void normalAltitudeCntrl(void)
 		}
 		else
 		{
-			heightError._.W1 = -desiredHeight;
+			heightError.WW = - desiredHeight32.WW ;
 			heightError.WW = (heightError.WW + IMUlocationz.WW + speed_height) >> 13;
 			if (heightError._.W0 < (-(int16_t)(altit.HeightMargin*8.0)))
 			{
