@@ -241,43 +241,43 @@ void navigate_process_flightplan(void)
 static int16_t compute_progress_to_goal(int16_t totalDist, int16_t remainingDist)
 {
 	// progress is the fraction of the distance from the start to the finish of
-	// the current waypoint leg, that is still remaining. it ranges from 0 - 1<<12 (4096).
+	// the current waypoint leg, that is still remaining. it ranges from 0 -(  1<<15 - 1) (32767).
 	int16_t progress;
-
-	if (totalDist > 0)
+	union longww progress_distance ;
+	progress_distance._.W1 = (totalDist - remainingDist) ;
+	progress_distance._.W0 = 0 ;
+	if ( ( totalDist <= 0 ) || ( remainingDist <= 0) )
 	{
-		progress = (((int32_t)totalDist - remainingDist) << 12) / totalDist;
-		if (progress < 0)
-		{
-			progress = 0;
-		}
-		if (progress > (int32_t)1 << 12)
-		{
-			progress = (int32_t)1 << 12;
-		}
+		progress = 32767 ;
+	}
+	else if( progress_distance._.W1 <= 0)
+	{
+		progress = 0 ;
 	}
 	else
 	{
-		progress = (int32_t)1 << 12;
+		progress = __builtin_divud(progress_distance.WW,totalDist);
 	}
 	return progress;
 }
 
-int16_t navigate_desired_height(void)
+union longww navigate_desired_height(void)
 {
-	int16_t height;
+	union longww height;
 
 	if (desired_behavior._.takeoff || desired_behavior._.altitude)
 	{
-		height = navgoal.height;
+		height._.W1 = navgoal.height;
+		height._.W0 = 0 ;
 	}
 	else
 	{
 		int16_t progress_to_goal; // Fraction of the way to the goal in the range 0-4096 (2^12)
 		progress_to_goal = compute_progress_to_goal(navgoal.legDist, tofinish_line);
-		height = navgoal.fromHeight + (((navgoal.height - navgoal.fromHeight) * (int32_t)progress_to_goal) >> 12);
+		height._.W1 = navgoal.fromHeight ;
+		height.WW += 2*__builtin_mulsu((navgoal.height - navgoal.fromHeight), progress_to_goal );
 	}
-	return height;
+	return height ;
 }
 int16_t xtrack ;
 static void cross_track(void)
@@ -317,7 +317,7 @@ static void cross_track(void)
 	// frame of the desired course track
 	rotate_2D_long_vector_by_vector(&crossVector[0].WW, cross_rotate);
 	crosstrack = crossVector[1]._.W1;
-	xtrack = crosstrack ;
+	xtrack = crosstrack ; // TODO for debugging purposes, remove later
 
 	// Compute the adjusted desired bearing over ground.
 	// Start with the straight line between waypoints.
