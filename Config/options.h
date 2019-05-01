@@ -169,10 +169,10 @@
 
 //#define TURN_RATE_NAV							30.0
 //#define TURN_RATE_FBW							60.0
-#define TURN_RATE_NAV							10.0
-#define TURN_RATE_FBW							20.0
-//#define TURN_RATE_NAV							5.0
-//#define TURN_RATE_FBW							10.0
+//#define TURN_RATE_NAV							10.0
+//#define TURN_RATE_FBW							20.0
+#define TURN_RATE_NAV							5.0
+#define TURN_RATE_FBW							10.0
 
 #define KD_ON_OFF						  ( 1.0  )
 //#define ROLLKP                              0.6

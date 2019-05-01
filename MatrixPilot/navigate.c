@@ -241,14 +241,14 @@ void navigate_process_flightplan(void)
 static int16_t compute_progress_to_goal(int16_t totalDist, int16_t remainingDist)
 {
 	// progress is the fraction of the distance from the start to the finish of
-	// the current waypoint leg, that is still remaining. it ranges from 0 -(  1<<15 - 1) (32767).
+	// the current waypoint leg, that is still remaining. it ranges from 0 -(  2^16 - 1) (65535).
 	int16_t progress;
 	union longww progress_distance ;
 	progress_distance._.W1 = (totalDist - remainingDist) ;
 	progress_distance._.W0 = 0 ;
 	if ( ( totalDist <= 0 ) || ( remainingDist <= 0) )
 	{
-		progress = 32767 ;
+		progress = 65535 ;
 	}
 	else if( progress_distance._.W1 <= 0)
 	{
@@ -272,10 +272,11 @@ union longww navigate_desired_height(void)
 	}
 	else
 	{
-		int16_t progress_to_goal; // Fraction of the way to the goal in the range 0-4096 (2^12)
+		int16_t progress_to_goal; // Fraction of the way to the goal in the range 0-65535 (2^16-1)
 		progress_to_goal = compute_progress_to_goal(navgoal.legDist, tofinish_line);
 		height._.W1 = navgoal.fromHeight ;
-		height.WW += 2*__builtin_mulsu((navgoal.height - navgoal.fromHeight), progress_to_goal );
+		height._.W0 = 0 ;
+		height.WW += __builtin_mulsu((navgoal.height - navgoal.fromHeight), progress_to_goal );
 	}
 	return height ;
 }
