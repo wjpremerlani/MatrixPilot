@@ -293,8 +293,8 @@ static void cross_track(void)
 	// Using Cross Tracking
 	// CROSS_TRACK_MARGIN is the value of cross track error in meters
 	// beyond which cross tracking correction saturates at 45 degrees 
-#if (CROSS_TRACK_MARGIN >= 2048)
-#error ("CTMARGIN is too large, it must be less than 2048")
+#if (CROSS_TRACK_MARGIN >= 512)
+#error ("CTMARGIN is too large, it must be less than 512")
 #endif
 	union longww crossVector[2];
 	int16_t cross_rotate[2];
@@ -326,12 +326,12 @@ static void cross_track(void)
 	desired_bearing_over_ground_vector[1] = navgoal.sinphi;
 
 	// Determine if the crosstrack error is within saturation limit.
-	// If so, then multiply by 16 to pick up an extra 4 bits of resolution.
+	// If so, then multiply by 64 to pick up an extra 6 bits of resolution.
 	if (abs(crosstrack) < ((uint16_t)(CROSS_TRACK_MARGIN)))
 	{
-		crossVector[1].WW <<= 4;
+		crossVector[1].WW <<= 6;
 		cross_rotate[1] = crossVector[1]._.W1;
-		cross_rotate[0] = 16*((uint16_t)(CROSS_TRACK_MARGIN));
+		cross_rotate[0] = 64*((uint16_t)(CROSS_TRACK_MARGIN));
 		vector2_normalize(cross_rotate, cross_rotate);
 		// At this point, the implicit angle of the cross correction rotation
 		// is atan of (the cross error divided by the cross margin).
