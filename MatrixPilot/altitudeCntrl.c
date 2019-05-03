@@ -295,7 +295,8 @@ static void normalAltitudeCntrl(void)
 				if (throttleAccum.WW > (int16_t)(MAXTHROTTLE))throttleAccum.WW = (int16_t)(MAXTHROTTLE);
 			}
 			heightError.WW = - desiredHeight32.WW ;
-			heightError.WW = (heightError.WW + IMUlocationz.WW - speed_height) >> 13;
+//			heightError.WW = (heightError.WW + IMUlocationz.WW - speed_height) >> 13; // pitch performance is better without this
+			heightError.WW = (heightError.WW + IMUlocationz.WW) >> 13;
 			if (heightError._.W0 < (- (int16_t)(altit.HeightMargin*8.0)))
 			{
 				pitchAltitudeAdjust = (int16_t)(PITCHATMAX);
