@@ -341,7 +341,11 @@ static void normalAltitudeCntrl(void)
 			// Servo reversing is handled in servoMix.c
 			int16_t throttleOut = udb_servo_pulsesat(udb_pwTrim[THROTTLE_INPUT_CHANNEL] + throttleAccum.WW);
 			throttleFiltered.WW += (((int32_t)(throttleOut - throttleFiltered._.W1)) << THROTTLEFILTSHIFT);
+#if ( HILSIM ==1 ) // filtering not needed in HILSIM
+			set_throttle_control(throttleOut - throttleIn);		
+#else
 			set_throttle_control(throttleFiltered._.W1 - throttleIn);
+#endif // HILSIM
 			filterManual = true;
 		}
 		if (!state_flags._.altitude_hold_pitch)
