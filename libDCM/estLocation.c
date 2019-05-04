@@ -98,6 +98,8 @@ void estLocation(void)
 	// re-orientate from compass (clockwise) to maths (anti-clockwise) with 0 degrees in East
 	cog_circular = -accum.__.B2 + 64;
 	cog_circular_16 = gps_cog_to_16bit_circular(cog_gps.BB);
+	// TOTO : eventually cog_circular and actual_dir need to be retired.
+	// For now, keep them because they are used in the wind estimation, in which 8 bits is sufficient
 
 	// compensate for GPS reporting latency.
 	// The dynamic model of the EM406 and uBlox is not well known.

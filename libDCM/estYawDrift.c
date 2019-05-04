@@ -50,14 +50,10 @@ void estYawDrift(void)
 			dirOverGndHGPS[2] = 0;
 		}
 		else
-		{/* TODO : need to improve resolution of the following and sub for what is below
+		{// TODO : eventually need to improve resolution of the following
 			dirOverGndHGPS[0] = -cosine(calculated_heading);
 			dirOverGndHGPS[1] = sine(calculated_heading);
-			dirOverGndHGPS[2] = 0;
-		 */
-			dirOverGndHGPS[0] = -cosine16(actual_dir_16);
-			dirOverGndHGPS[1] = sine16(actual_dir_16);
-			dirOverGndHGPS[2] = 0;				
+			dirOverGndHGPS[2] = 0;	
 		}
 	}
 }
