@@ -130,18 +130,29 @@
 // You can use the facilities of the compiler to do some simple calculations in defining the course.
 //
 // To use waypoints, make sure FLIGHT_PLAN_TYPE is set to FP_WAYPOINTS in options.h.
-
+/*
 const struct waypointDef waypoints[] = {
 	{ { -738146403, 431230295, 1219 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 1
 	{ { -738103019, 429509530, 1219 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 2
-	{ { -738078181, 428556789, 609 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 3
-	{ { -738051732, 427597984, 25 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 4
-	{ { -738048513, 427535031, 10 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 5
+	{ { -738078181, 428556789, 200 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 3
+	{ { -738051732, 427597984, 10 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 4
+	{ { -738048513, 427535031, 0 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 5
 	{ { -738040533, 427347466, 0 } , F_ABSOLUTE + F_LAND + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 6
 };
+*/
+const struct waypointDef waypoints[] = {
+	{ { -738146403, 431230295, 1219 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 1
+	{ { -738103019, 429509530, 1219 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 2
+	{ { -738078181, 428556789, 600 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 3
+	{ { -738052027, 427597964, 10 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 4
+	{ { -738049639, 427535031, 10 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 5
+	{ { -738041336, 427347504, 200 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 6
+	{ { -738018646, 426355035, 400 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 7
+	{ { -735883179, 426360087, 600 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 8
+	{ { -735787048, 427470414, 800 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 9
+};
 
-
-////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////W////////////////////////
 // waypoints[]
 // 
 
@@ -191,10 +202,13 @@ const struct waypointDef rtlWaypoints[] = {
 const struct waypointDef rtlWaypoints[] = {
 	{ { -738146403, 431230295, 1219 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 1
 	{ { -738103019, 429509530, 1219 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 2
-	{ { -738078181, 428556789, 609 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 3
-	{ { -738051732, 427597984, 30 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 4
-	{ { -738048513, 427535031, 15 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 5
-	{ { -738040533, 427347466, 0 } , F_ABSOLUTE + F_LAND + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 6
+	{ { -738078181, 428556789, 600 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 3
+	{ { -738052027, 427597964, 10 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 4
+	{ { -738049639, 427535031, 10 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 5
+	{ { -738041336, 427347504, 200 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 6
+	{ { -738018646, 426355035, 400 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 7
+	{ { -735883179, 426360087, 600 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 8
+	{ { -735787048, 427470414, 800 } , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 9
 };
 ////////////////////////////////////////////////////////////////////////////////
 // Example waypoint lists

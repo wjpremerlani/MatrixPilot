@@ -107,11 +107,11 @@ void estWind(int16_t angleOfAttack)
 	{
 		longaccum._.W1 = magVelocityDiff >> 2;
 		longaccum._.W0 = 0;
-#if (HILSIM == 1)
-		estimatedAirspeed = hilsim_airspeed.BB; // use the simulation as a pitot tube
+#if ((HILSIM == 1)&&(USE_HILSIM_PITOT==1))
+		estimatedAirspeed = hilsim_airspeed.BB; // use the simulation as a pitot tube in wind estimation
 #else
 		estimatedAirspeed = __builtin_divud(longaccum.WW, magDirectionDiff);
-#endif
+#endif // USING PITOT IN HILSIM
 		longaccum.WW = (__builtin_mulss(costhetaDiff, fuselageDirectionSum[0])
 		              - __builtin_mulss(sinthetaDiff, fuselageDirectionSum[1])) << 2;
 		longaccum.WW = (__builtin_mulus(estimatedAirspeed, longaccum._.W1)) << 2;
