@@ -42,10 +42,10 @@
 
 #define WIND_GAIN_ADJUSTMENT                0
 
-//#define ALTITUDEHOLD_STABILIZED             AH_FULL
-//#define ALTITUDEHOLD_WAYPOINT               AH_FULL
-#define ALTITUDEHOLD_STABILIZED             AH_NONE
-#define ALTITUDEHOLD_WAYPOINT               AH_NONE
+#define ALTITUDEHOLD_STABILIZED             AH_FULL
+#define ALTITUDEHOLD_WAYPOINT               AH_FULL
+//#define ALTITUDEHOLD_STABILIZED             AH_NONE
+//#define ALTITUDEHOLD_WAYPOINT               AH_NONE
 
 
 
@@ -200,14 +200,14 @@
 #define ELEVATOR_BOOST                        0.5
 
 // 747
-//#define ANGLE_OF_ATTACK_NORMAL				( 5 )
-//#define ANGLE_OF_ATTACK_INVERTED			( -5 )
-//#define ELEVATOR_TRIM_NORMAL				( .4 )
-//#define ELEVATOR_TRIM_INVERTED				( -.4 )
-#define ANGLE_OF_ATTACK_NORMAL				( 0.0 )
-#define ANGLE_OF_ATTACK_INVERTED			( 0.0 )
-#define ELEVATOR_TRIM_NORMAL				( 0.0 )
-#define ELEVATOR_TRIM_INVERTED				( 0.0 )
+#define ANGLE_OF_ATTACK_NORMAL				( 5 )
+#define ANGLE_OF_ATTACK_INVERTED			( -5 )
+#define ELEVATOR_TRIM_NORMAL				( .4 )
+#define ELEVATOR_TRIM_INVERTED				( -.4 )
+//#define ANGLE_OF_ATTACK_NORMAL				( 0.0 )
+//#define ANGLE_OF_ATTACK_INVERTED			( 0.0 )
+//#define ELEVATOR_TRIM_NORMAL				( 0.0 )
+//#define ELEVATOR_TRIM_INVERTED				( 0.0 )
 //#define REFERENCE_SPEED 						( 177.0 )
 #define REFERENCE_SPEED 						( 50.0 )
 
