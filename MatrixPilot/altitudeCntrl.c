@@ -295,8 +295,11 @@ static void normalAltitudeCntrl(void)
 				if (throttleAccum.WW > (int16_t)(MAXTHROTTLE))throttleAccum.WW = (int16_t)(MAXTHROTTLE);
 			}
 			heightError.WW = - desiredHeight32.WW ;
-//			heightError.WW = (heightError.WW + IMUlocationz.WW - speed_height) >> 13; // pitch performance is better without this
-			heightError.WW = (heightError.WW + IMUlocationz.WW) >> 13;
+#if ( USE_SPEED_IN_HEIGHT_CONTROL == 0 )
+			heightError.WW = (heightError.WW + IMUlocationz.WW ) >> 13; // pitch performance is better without this
+#else			
+			heightError.WW = (heightError.WW + IMUlocationz.WW - speed_height) >> 13;
+#endif // using speed in height control
 			if (heightError._.W0 < (- (int16_t)(altit.HeightMargin*8.0)))
 			{
 				pitchAltitudeAdjust = (int16_t)(PITCHATMAX);
@@ -341,11 +344,11 @@ static void normalAltitudeCntrl(void)
 			// Servo reversing is handled in servoMix.c
 			int16_t throttleOut = udb_servo_pulsesat(udb_pwTrim[THROTTLE_INPUT_CHANNEL] + throttleAccum.WW);
 			throttleFiltered.WW += (((int32_t)(throttleOut - throttleFiltered._.W1)) << THROTTLEFILTSHIFT);
-#if ( HILSIM ==1 ) // filtering not needed in HILSIM
+#if ( USE_THROTTLE_FILTER == 0 ) 
 			set_throttle_control(throttleOut - throttleIn);		
 #else
 			set_throttle_control(throttleFiltered._.W1 - throttleIn);
-#endif // HILSIM
+#endif // use of throttle filter
 			filterManual = true;
 		}
 		if (!state_flags._.altitude_hold_pitch)
