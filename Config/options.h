@@ -252,9 +252,9 @@
 //#define ALT_HOLD_PITCH_MAX                  15.0
 //#define ALT_HOLD_PITCH_HIGH                -15.0
 
-#define ALT_HOLD_PITCH_MIN                 -15.0
-#define ALT_HOLD_PITCH_MAX                  15.0
-#define ALT_HOLD_PITCH_HIGH                -15.0
+#define ALT_HOLD_PITCH_MIN                 -10.0
+#define ALT_HOLD_PITCH_MAX                  10.0
+#define ALT_HOLD_PITCH_HIGH                -10.0
 
 #define RTL_PITCH_DOWN                      0.0
 
