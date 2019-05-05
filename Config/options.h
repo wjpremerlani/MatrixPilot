@@ -1,3 +1,7 @@
+#define USE_HILSIM_PITOT		    1
+#define USE_SPEED_IN_HEIGHT_CONTROL	    0
+#define USE_THROTTLE_FILTER		    0
+
 #define GNSS_HDOP_REQUIRED_FOR_STARTUP       20  //  Horizontal Dilution of Precision
 #define GNSS_VDOP_REQUIRED_FOR_STARTUP	     60  //  Vertical Dilution of Precision
 #define GNSS_SVS_REQUIRED_FOR_STARTUP	      6  //  Number of Sattelites in View
