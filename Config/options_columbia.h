@@ -38,17 +38,17 @@
 
 #define WIND_GAIN_ADJUSTMENT                0
 
-//#define ALTITUDEHOLD_STABILIZED             AH_FULL
-//#define ALTITUDEHOLD_WAYPOINT               AH_FULL
-#define ALTITUDEHOLD_STABILIZED             AH_NONE
-#define ALTITUDEHOLD_WAYPOINT               AH_NONE
+#define ALTITUDEHOLD_STABILIZED             AH_FULL
+#define ALTITUDEHOLD_WAYPOINT               AH_FULL
+//#define ALTITUDEHOLD_STABILIZED             AH_NONE
+//#define ALTITUDEHOLD_WAYPOINT               AH_NONE
 
 
 
 #define SPEED_CONTROL                       1
 //#define DESIRED_SPEED                       150.0    // meters/second
-#define DESIRED_SPEED                       50.0    // meters/second
-//#define DESIRED_SPEED                       75.0    // meters/second
+//#define DESIRED_SPEED                       55.0    // meters/second
+#define DESIRED_SPEED                       70.0    // meters/second
 
 #define INVERTED_FLIGHT_STABILIZED_MODE     0
 #define INVERTED_FLIGHT_WAYPOINT_MODE       0
@@ -178,12 +178,8 @@
 #define TURN_RATE_FBW							10.0
 
 #define KD_ON_OFF						  ( 1.0  )
-//#define ROLLKP                              0.6
-#define ROLLKP                              1.0
-//#define ROLLKP                              0.2
-//#define ROLLKD                              0.00*KD_ON_OFF
-//#define ROLLKD                              0.05*KD_ON_OFF
-#define ROLLKD                              1.0*KD_ON_OFF
+#define ROLLKP                              0.4
+#define ROLLKD                              0.2*KD_ON_OFF
 #define YAWKP_AILERON                       0.10*0.0
 #define YAWKD_AILERON                       0.05*0.0
 
@@ -195,17 +191,13 @@
 #define PITCHKD                             0.2*KD_ON_OFF
 #define ELEVATOR_BOOST                        0.5
 
-// 747
-//#define ANGLE_OF_ATTACK_NORMAL				( 5 )
-//#define ANGLE_OF_ATTACK_INVERTED			( -5 )
-//#define ELEVATOR_TRIM_NORMAL				( .4 )
-//#define ELEVATOR_TRIM_INVERTED				( -.4 )
-#define ANGLE_OF_ATTACK_NORMAL				( 0.0 )
-#define ANGLE_OF_ATTACK_INVERTED			( 0.0 )
+//Columbia
+#define ANGLE_OF_ATTACK_NORMAL				( 2.0 )
+#define ANGLE_OF_ATTACK_INVERTED			( -8.0 )
 #define ELEVATOR_TRIM_NORMAL				( 0.0 )
-#define ELEVATOR_TRIM_INVERTED				( 0.0 )
+#define ELEVATOR_TRIM_INVERTED				( -.89 )
 //#define REFERENCE_SPEED 						( 177.0 )
-#define REFERENCE_SPEED 						( 50.0 )
+#define REFERENCE_SPEED 						( 55.0 )
 
 
  
@@ -269,9 +261,14 @@
 #define ALT_HOLD_THROTTLE_MIN               0.0
 #define ALT_HOLD_THROTTLE_MAX               1.0
 
-#define ALT_HOLD_PITCH_MIN                 -15.0
-#define ALT_HOLD_PITCH_MAX                  15.0
-#define ALT_HOLD_PITCH_HIGH                -15.0
+//#define ALT_HOLD_PITCH_MIN                 -15.0
+//#define ALT_HOLD_PITCH_MAX                  15.0
+//#define ALT_HOLD_PITCH_HIGH                -15.0
+
+#define ALT_HOLD_PITCH_MIN                 -10.0
+#define ALT_HOLD_PITCH_MAX                  10.0
+#define ALT_HOLD_PITCH_HIGH                -10.0
+
 
 //#define ALT_HOLD_PITCH_MIN                 -7.5
 //#define ALT_HOLD_PITCH_MAX                  7.5
@@ -286,7 +283,7 @@
 #define FLIGHT_PLAN_TYPE                    FP_WAYPOINTS
 
 //#define ID_DIY_DRONES_URL "http://www.diydrones.com/profile/PeterHollands"
-#define ID_VEHICLE_MODEL_NAME               "reaper HILSIM"
+#define ID_VEHICLE_MODEL_NAME               "Columbia HILSIM"
 #define ID_VEHICLE_REGISTRATION             "WJP_MP_March_2019"
 #define ID_LEAD_PILOT                       "Mike"
 #define ID_DIY_DRONES_URL                   ""

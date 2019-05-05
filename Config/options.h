@@ -28,13 +28,7 @@
 #define AILERON_NAVIGATION                  1
 #define RUDDER_NAVIGATION                   0
 
-//#define CROSS_TRACK_MARGIN                  32
-#define CROSS_TRACK_MARGIN                  64
-//#define CROSS_TRACK_MARGIN                  128
-//#define CROSS_TRACK_MARGIN                  256
-//#define CROSS_TRACK_MARGIN                  511
-//#define CROSS_TRACK_MARGIN                  1023
-//#define CROSS_TRACK_MARGIN		    2047
+#define CROSS_TRACK_MARGIN                  511
 
 #define WIND_GAIN_ADJUSTMENT                0
 
@@ -43,9 +37,7 @@
 
 
 #define SPEED_CONTROL                       1
-//#define DESIRED_SPEED                       150.0    // meters/second
-#define DESIRED_SPEED                       50.0    // meters/second
-//#define DESIRED_SPEED                       75.0    // meters/second
+#define DESIRED_SPEED                       110.0    // meters/second
 
 #define INVERTED_FLIGHT_STABILIZED_MODE     0
 #define INVERTED_FLIGHT_WAYPOINT_MODE       0
@@ -77,8 +69,8 @@
 #define AILERON_INPUT_CHANNEL               CHANNEL_1
 #define ELEVATOR_INPUT_CHANNEL              CHANNEL_2
 #define RUDDER_INPUT_CHANNEL                CHANNEL_4
-//#define MODE_SWITCH_INPUT_CHANNEL           CHANNEL_3
 #define MODE_SWITCH_INPUT_CHANNEL           CHANNEL_5
+//#define MODE_SWITCH_INPUT_CHANNEL           CHANNEL_5
 #define CAMERA_PITCH_INPUT_CHANNEL          CHANNEL_UNUSED
 #define CAMERA_YAW_INPUT_CHANNEL            CHANNEL_UNUSED
 #define CAMERA_MODE_INPUT_CHANNEL           CHANNEL_UNUSED
@@ -164,23 +156,17 @@
 
 #define SERVOSAT                            1.0
 
-//#define FEED_FORWARD						0.8
-#define FEED_FORWARD						0.0
+#define FEED_FORWARD						0.8
 
 //#define TURN_RATE_NAV							30.0
 //#define TURN_RATE_FBW							60.0
-//#define TURN_RATE_NAV							10.0
-//#define TURN_RATE_FBW							20.0
-#define TURN_RATE_NAV							5.0
-#define TURN_RATE_FBW							10.0
+#define TURN_RATE_NAV							3.0
+#define TURN_RATE_FBW							6.0
 
 #define KD_ON_OFF						  ( 1.0  )
-//#define ROLLKP                              0.6
-#define ROLLKP                              1.0
+#define ROLLKP                              0.6
 //#define ROLLKP                              0.2
-//#define ROLLKD                              0.00*KD_ON_OFF
-//#define ROLLKD                              0.05*KD_ON_OFF
-#define ROLLKD                              1.0*KD_ON_OFF
+#define ROLLKD                              0.00*KD_ON_OFF
 #define YAWKP_AILERON                       0.10*0.0
 #define YAWKD_AILERON                       0.05*0.0
 
@@ -193,21 +179,20 @@
 #define ELEVATOR_BOOST                        0.5
 
 // 747
-#define ANGLE_OF_ATTACK_NORMAL				( 5 )
-#define ANGLE_OF_ATTACK_INVERTED			( -5 )
-#define ELEVATOR_TRIM_NORMAL				( .4 )
-#define ELEVATOR_TRIM_INVERTED				( -.4 )
-//#define REFERENCE_SPEED 						( 177.0 )
-#define REFERENCE_SPEED 						( 50.0 )
+#define ANGLE_OF_ATTACK_NORMAL				( 0.0 )
+#define ANGLE_OF_ATTACK_INVERTED			( 0.0 )
+#define ELEVATOR_TRIM_NORMAL				( 0.0 )
+#define ELEVATOR_TRIM_INVERTED				( 0.0 )
+//#define CRUISE_SPEED						( 177.0 )
+#define REFERENCE_SPEED						( 110.0 )
 
 
  
 //#define INVERTED_NEUTRAL_PITCH             ( 8.0 ) // not needed with AoA model
 
-//#define YAWKP_RUDDER                        0.4
-#define YAWKP_RUDDER                        0.10
-//#define YAWKD_RUDDER                        0.05*KD_ON_OFF
-#define YAWKD_RUDDER                        0.2*KD_ON_OFF
+#define YAWKP_RUDDER                        0.4
+//#define YAWKP_RUDDER                        0.10
+#define YAWKD_RUDDER                        0.05*KD_ON_OFF
 #define ROLLKP_RUDDER                       0.20*0.0
 #define ROLLKD_RUDDER                       0.05*0.0
 #define MANUAL_AILERON_RUDDER_MIX           0.00
@@ -249,26 +234,23 @@
 
 #define CAM_USE_EXTERNAL_TARGET_DATA        0
 
-#define HEIGHT_TARGET_MIN                   10.0
+#define HEIGHT_TARGET_MIN                   100.0
 #define HEIGHT_TARGET_MAX                   1200.0
 
 //#define HEIGHT_MARGIN                       100
 //#define HEIGHT_MARGIN                       1000
-//#define HEIGHT_MARGIN                       20
-//#define HEIGHT_MARGIN                       25
-#define HEIGHT_MARGIN                       30
-//#define HEIGHT_MARGIN				100
+#define HEIGHT_MARGIN                       50
 
 #define ALT_HOLD_THROTTLE_MIN               0.0
 #define ALT_HOLD_THROTTLE_MAX               1.0
 
+//#define ALT_HOLD_PITCH_MIN                 -15.0
+//#define ALT_HOLD_PITCH_MAX                  15.0
+//#define ALT_HOLD_PITCH_HIGH                -15.0
+
 #define ALT_HOLD_PITCH_MIN                 -15.0
 #define ALT_HOLD_PITCH_MAX                  15.0
 #define ALT_HOLD_PITCH_HIGH                -15.0
-
-//#define ALT_HOLD_PITCH_MIN                 -7.5
-//#define ALT_HOLD_PITCH_MAX                  7.5
-//#define ALT_HOLD_PITCH_HIGH                -7.5
 
 #define RTL_PITCH_DOWN                      0.0
 
@@ -279,9 +261,9 @@
 #define FLIGHT_PLAN_TYPE                    FP_WAYPOINTS
 
 //#define ID_DIY_DRONES_URL "http://www.diydrones.com/profile/PeterHollands"
-#define ID_VEHICLE_MODEL_NAME               "reaper HILSIM"
-#define ID_VEHICLE_REGISTRATION             "WJP_MP_March_2019"
-#define ID_LEAD_PILOT                       "Mike"
+#define ID_VEHICLE_MODEL_NAME               "Cirrus HILSIM"
+#define ID_VEHICLE_REGISTRATION             "helical version, body frame pitch"
+#define ID_LEAD_PILOT                       "WJP"
 #define ID_DIY_DRONES_URL                   ""
 
 #define FLY_BY_DATALINK_ENABLED             0
