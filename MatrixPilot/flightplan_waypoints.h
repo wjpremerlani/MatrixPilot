@@ -32,7 +32,7 @@ vect3_32t getWaypoint3D(uint16_t wp);
 int16_t waypoint_count(void);
 void set_waypoint(int16_t index);
 void clear_flightplan(void);
-void add_waypoint(struct waypoint3D wp, int16_t flags);
+void add_waypoint(struct waypoint3D wp, int16_t flags, uint16_t speed , int16_t flaps );
 
 void flightplan_waypoints_init(void);
 void flightplan_waypoints_begin(int16_t flightplanNum);

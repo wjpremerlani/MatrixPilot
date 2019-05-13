@@ -35,11 +35,11 @@
 
 
 #ifdef USE_EXTENDED_NAV
-struct relWaypointDef { struct relative3D_32 loc; int16_t flags; struct relative3D viewpoint; };
+struct relWaypointDef { struct relative3D_32 loc; uint16_t speed; int16_t flaps; int16_t flags; struct relative3D viewpoint; };
 #else
-struct relWaypointDef { struct relative3D loc; int16_t flags; struct relative3D viewpoint; };
+struct relWaypointDef { struct relative3D loc; uint16_t speed; int16_t flaps; int16_t flags; struct relative3D viewpoint; };
 #endif // USE_EXTENDED_NAV
-struct waypointDef { struct waypoint3D loc; int16_t flags; struct waypoint3D viewpoint; };
+struct waypointDef { struct waypoint3D loc; uint16_t speed; int16_t flaps; int16_t flags; struct waypoint3D viewpoint; };
 
 #include "flightplan-waypoints.h"
 
@@ -97,6 +97,8 @@ static struct relWaypointDef wp_to_relative(struct waypointDef wp)
 		rel.viewpoint.z = wp.viewpoint.z;
 		rel.flags = wp.flags;
 	}
+	rel.speed = wp.speed ;
+	rel.flaps = wp.flaps ;
 	return rel;
 }
 
@@ -132,9 +134,10 @@ void clear_flightplan(void)
 // Y is Latitude in degrees * 10^7
 // Z is altitude above sea level, in meters, as a floating point value.
 
-void add_waypoint(struct waypoint3D wp, int16_t flags)
+void add_waypoint(struct waypoint3D wp, int16_t flags , uint16_t speed , int16_t flaps )
 {
 #ifdef USE_DYNAMIC_WAYPOINTS
+#error "TODO: this routine needs to be revised to recognize speed and flaps"
 	DPRINT("add_waypoint(%li, %li, %i\r\n", wp.x, wp.y, wp.z);
 	if (numPointsInCurrentSet < MAX_WAYPOINTS)
 	{
@@ -156,6 +159,7 @@ void add_waypoint(struct waypoint3D wp, int16_t flags)
 /*
 void add_waypoint(int32_t x, int32_t y, int16_t z, int16_t flags)
 {
+#error "TODO: this routine needs to be revised to recognize speed and flaps"
 	DPRINT("add_waypoint(%li, %li, %li\r\n", x, y, z);
 	if (numPointsInCurrentSet < MAX_WAYPOINTS)
 	{
