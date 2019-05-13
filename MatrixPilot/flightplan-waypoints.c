@@ -35,11 +35,11 @@
 
 
 #ifdef USE_EXTENDED_NAV
-struct relWaypointDef { struct relative3D_32 loc; int16_t flags; struct relative3D viewpoint; };
+struct relWaypointDef { struct relative3D_32 loc; int16_t speed; int16_t flaps; int16_t flags; struct relative3D viewpoint; };
 #else
-struct relWaypointDef { struct relative3D loc; int16_t flags; struct relative3D viewpoint; };
+struct relWaypointDef { struct relative3D loc; int16_t speed; int16_t flaps; int16_t flags; struct relative3D viewpoint; };
 #endif // USE_EXTENDED_NAV
-struct waypointDef { struct waypoint3D loc; int16_t flags; struct waypoint3D viewpoint; };
+struct waypointDef { struct waypoint3D loc; int16_t speed; int16_t flaps; int16_t flags; struct waypoint3D viewpoint; };
 
 #include "flightplan-waypoints.h"
 
@@ -57,6 +57,10 @@ static int16_t numPointsInCurrentSet = 0;
 static const struct waypointDef* currentWaypointSet = (struct waypointDef*)waypoints;
 static int16_t numPointsInCurrentSet = NUMBER_POINTS;
 #endif
+
+int16_t goal_speed ;
+int16_t goal_flaps ;
+int16_t prev_speed , next_speed , prev_flaps , next_flaps ;
 
 static struct relWaypointDef current_waypoint;
 static struct waypointDef wp_inject;
@@ -97,6 +101,8 @@ static struct relWaypointDef wp_to_relative(struct waypointDef wp)
 		rel.viewpoint.z = wp.viewpoint.z;
 		rel.flags = wp.flags;
 	}
+	rel.speed = wp.speed ;
+	rel.flaps = wp.flaps ;
 	return rel;
 }
 
@@ -132,9 +138,10 @@ void clear_flightplan(void)
 // Y is Latitude in degrees * 10^7
 // Z is altitude above sea level, in meters, as a floating point value.
 
-void add_waypoint(struct waypoint3D wp, int16_t flags)
+void add_waypoint(struct waypoint3D wp, int16_t flags , uint16_t speed , int16_t flaps )
 {
 #ifdef USE_DYNAMIC_WAYPOINTS
+#error "TODO: this routine needs to be revised to recognize speed and flaps"
 	DPRINT("add_waypoint(%li, %li, %i\r\n", wp.x, wp.y, wp.z);
 	if (numPointsInCurrentSet < MAX_WAYPOINTS)
 	{
@@ -156,6 +163,7 @@ void add_waypoint(struct waypoint3D wp, int16_t flags)
 /*
 void add_waypoint(int32_t x, int32_t y, int16_t z, int16_t flags)
 {
+#error "TODO: this routine needs to be revised to recognize speed and flaps"
 	DPRINT("add_waypoint(%li, %li, %li\r\n", x, y, z);
 	if (numPointsInCurrentSet < MAX_WAYPOINTS)
 	{
@@ -240,6 +248,8 @@ void flightplan_waypoints_begin(int16_t flightplanNum)
 	navigate_set_goal(GPSlocation, current_waypoint.loc);
 	set_camera_view(current_waypoint.viewpoint);
 	setBehavior(current_waypoint.flags);
+	prev_speed = next_speed = current_waypoint.speed ;
+	prev_flaps = next_flaps = current_waypoint.flaps ;
 	// udb_background_trigger();    // trigger navigation immediately
 }
 
@@ -261,6 +271,14 @@ void mavlink_waypoint_reached(int16_t waypoint);
 void mavlink_waypoint_changed(int16_t waypoint);
 #endif
 
+void next_speed_flaps ( int16_t speed , int16_t flaps )
+{
+	prev_speed = next_speed ;
+	next_speed= speed ;
+	prev_flaps = next_flaps ;
+	next_flaps = flaps ;
+}
+
 void set_waypoint(int16_t index)
 {
 	DPRINT("set_waypoint(%u)\r\n", index);
@@ -279,12 +297,14 @@ void set_waypoint(int16_t index)
 				current_waypoint  = wp_to_relative(currentWaypointSet[0]);
 				navigate_set_goal(previous_waypoint.loc, current_waypoint.loc);
 				set_camera_view(current_waypoint.viewpoint);
+				next_speed_flaps ( current_waypoint.speed , current_waypoint.flaps  ) ;
 			}
 			else
 			{
 				current_waypoint = wp_to_relative(currentWaypointSet[0]);
 				navigate_set_goal(GPSlocation, current_waypoint.loc);
 				set_camera_view(current_waypoint.viewpoint);
+				next_speed_flaps ( current_waypoint.speed , current_waypoint.flaps  ) ;
 			}
 			setBehavior(currentWaypointSet[0].flags);
 		}
@@ -295,6 +315,7 @@ void set_waypoint(int16_t index)
 			navigate_set_goal(previous_waypoint.loc, current_waypoint.loc);
 			set_camera_view(current_waypoint.viewpoint);
 			setBehavior(current_waypoint.flags);
+			next_speed_flaps ( current_waypoint.speed , current_waypoint.flaps  ) ;
 		}
 #if (DEADRECKONING == 0)
 		navigate_compute_bearing_to_goal();
@@ -348,6 +369,7 @@ static void next_waypoint(void)
 	else
 	{
 		navigate_set_goal(GPSlocation, current_waypoint.loc);
+		next_speed_flaps ( current_waypoint.speed , current_waypoint.flaps  ) ;
 #if (DEADRECKONING == 0)
 		navigate_compute_bearing_to_goal();
 #endif
@@ -362,6 +384,7 @@ void flightplan_waypoints_update(void)
 	{
 		current_waypoint = wp_to_relative(wp_inject);
 		navigate_set_goal(GPSlocation, current_waypoint.loc);
+		next_speed_flaps ( current_waypoint.speed , current_waypoint.flaps  ) ;
 		set_camera_view(current_waypoint.viewpoint);
 		setBehavior(current_waypoint.flags);
 		navigate_compute_bearing_to_goal();

@@ -264,19 +264,33 @@ static int16_t compute_progress_to_goal(int16_t totalDist, int16_t remainingDist
 union longww navigate_desired_height(void)
 {
 	union longww height;
+	union longww accum;
 
 	if (desired_behavior._.takeoff || desired_behavior._.altitude)
 	{
 		height._.W1 = navgoal.height;
 		height._.W0 = 0 ;
+		goal_flaps = next_flaps ;
+		goal_speed = next_speed ;
 	}
 	else
 	{
 		int16_t progress_to_goal; // Fraction of the way to the goal in the range 0-65535 (2^16-1)
 		progress_to_goal = compute_progress_to_goal(navgoal.legDist, tofinish_line);
+		// interpolate target height
 		height._.W1 = navgoal.fromHeight ;
 		height._.W0 = 0 ;
 		height.WW += __builtin_mulsu((navgoal.height - navgoal.fromHeight), progress_to_goal );
+		// interpolate target flaps
+		accum._.W1 = prev_flaps ;
+		accum._.W0 = 0 ;
+		accum.WW += __builtin_mulsu((next_flaps - prev_flaps ), progress_to_goal );
+		goal_flaps = accum._.W1 ;
+		// interpolate target speed 
+		accum._.W1 = prev_speed ;
+		accum._.W0 = 0 ;
+		accum.WW += __builtin_mulsu((next_speed - prev_speed ), progress_to_goal );
+		goal_speed = accum._.W1 ;
 	}
 	return height ;
 }
