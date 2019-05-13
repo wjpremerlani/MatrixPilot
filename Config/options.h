@@ -67,13 +67,14 @@
 #define PPM_SIGNAL_INVERTED                 0
 #define PPM_ALT_OUTPUT_PINS                 0
 
-#define NUM_INPUTS                          5
+#define NUM_INPUTS                          6
 
 #define THROTTLE_INPUT_CHANNEL              CHANNEL_3
 #define AILERON_INPUT_CHANNEL               CHANNEL_1
 #define ELEVATOR_INPUT_CHANNEL              CHANNEL_2
 #define RUDDER_INPUT_CHANNEL                CHANNEL_4
 #define MODE_SWITCH_INPUT_CHANNEL           CHANNEL_5
+#define FLAPS_INPUT_CHANNEL		    CHANNEL_6
 //#define MODE_SWITCH_INPUT_CHANNEL           CHANNEL_5
 #define CAMERA_PITCH_INPUT_CHANNEL          CHANNEL_UNUSED
 #define CAMERA_YAW_INPUT_CHANNEL            CHANNEL_UNUSED
@@ -84,12 +85,13 @@
 #define PASSTHROUGH_C_INPUT_CHANNEL         CHANNEL_UNUSED
 #define PASSTHROUGH_D_INPUT_CHANNEL         CHANNEL_UNUSED
 
-#define NUM_OUTPUTS                         4
+#define NUM_OUTPUTS                         5
 
 #define THROTTLE_OUTPUT_CHANNEL             CHANNEL_3
 #define AILERON_OUTPUT_CHANNEL              CHANNEL_1
 #define ELEVATOR_OUTPUT_CHANNEL             CHANNEL_2
 #define RUDDER_OUTPUT_CHANNEL               CHANNEL_4
+#define FLAPS_OUTPUT_CHANNEL		    CHANNEL_5
 #define AILERON_SECONDARY_OUTPUT_CHANNEL    CHANNEL_UNUSED
 #define CAMERA_PITCH_OUTPUT_CHANNEL         CHANNEL_UNUSED
 #define CAMERA_YAW_OUTPUT_CHANNEL           CHANNEL_UNUSED
@@ -182,7 +184,7 @@
 #define PITCHKD                             0.2*KD_ON_OFF
 #define ELEVATOR_BOOST                        0.5
 
-// 747
+// Cirrus : needs to be revised
 #define ANGLE_OF_ATTACK_NORMAL				( 0.0 )
 #define ANGLE_OF_ATTACK_INVERTED			( 0.0 )
 #define ELEVATOR_TRIM_NORMAL				( 0.0 )
@@ -248,13 +250,13 @@
 #define ALT_HOLD_THROTTLE_MIN               0.0
 #define ALT_HOLD_THROTTLE_MAX               1.0
 
-//#define ALT_HOLD_PITCH_MIN                 -15.0
-//#define ALT_HOLD_PITCH_MAX                  15.0
-//#define ALT_HOLD_PITCH_HIGH                -15.0
+#define ALT_HOLD_PITCH_MIN                 -15.0
+#define ALT_HOLD_PITCH_MAX                  15.0
+#define ALT_HOLD_PITCH_HIGH                -15.0
 
-#define ALT_HOLD_PITCH_MIN                 -10.0
-#define ALT_HOLD_PITCH_MAX                  10.0
-#define ALT_HOLD_PITCH_HIGH                -10.0
+//#define ALT_HOLD_PITCH_MIN                 -10.0
+//#define ALT_HOLD_PITCH_MAX                  10.0
+//#define ALT_HOLD_PITCH_HIGH                -10.0
 
 #define RTL_PITCH_DOWN                      0.0
 
