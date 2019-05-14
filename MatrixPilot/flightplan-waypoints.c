@@ -58,6 +58,9 @@ static const struct waypointDef* currentWaypointSet = (struct waypointDef*)waypo
 static int16_t numPointsInCurrentSet = NUMBER_POINTS;
 #endif
 
+uint16_t goal_speed ;
+int16_t goal_flaps ;
+
 static struct relWaypointDef current_waypoint;
 static struct waypointDef wp_inject;
 static uint8_t wp_inject_pos = 0;
@@ -244,6 +247,8 @@ void flightplan_waypoints_begin(int16_t flightplanNum)
 	navigate_set_goal(GPSlocation, current_waypoint.loc);
 	set_camera_view(current_waypoint.viewpoint);
 	setBehavior(current_waypoint.flags);
+	goal_speed = current_waypoint.speed ;
+	goal_flaps = current_waypoint.flaps ;
 	// udb_background_trigger();    // trigger navigation immediately
 }
 
@@ -283,12 +288,17 @@ void set_waypoint(int16_t index)
 				current_waypoint  = wp_to_relative(currentWaypointSet[0]);
 				navigate_set_goal(previous_waypoint.loc, current_waypoint.loc);
 				set_camera_view(current_waypoint.viewpoint);
+				goal_speed = current_waypoint.speed ;
+				goal_flaps = current_waypoint.flaps ;
+
 			}
 			else
 			{
 				current_waypoint = wp_to_relative(currentWaypointSet[0]);
 				navigate_set_goal(GPSlocation, current_waypoint.loc);
 				set_camera_view(current_waypoint.viewpoint);
+				goal_speed = current_waypoint.speed ;
+				goal_flaps = current_waypoint.flaps ;
 			}
 			setBehavior(currentWaypointSet[0].flags);
 		}
@@ -299,6 +309,8 @@ void set_waypoint(int16_t index)
 			navigate_set_goal(previous_waypoint.loc, current_waypoint.loc);
 			set_camera_view(current_waypoint.viewpoint);
 			setBehavior(current_waypoint.flags);
+			goal_speed = current_waypoint.speed ;
+			goal_flaps = current_waypoint.flaps ;
 		}
 #if (DEADRECKONING == 0)
 		navigate_compute_bearing_to_goal();

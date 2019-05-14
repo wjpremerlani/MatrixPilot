@@ -27,6 +27,8 @@
 #define MAX_WAYPOINTS 20
 
 extern int16_t waypointIndex;
+extern uint16_t goal_speed ;
+extern int16_t goal_flaps ;
 
 vect3_32t getWaypoint3D(uint16_t wp);
 int16_t waypoint_count(void);
