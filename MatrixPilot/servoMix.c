@@ -27,6 +27,7 @@
 #include "states.h"
 #include "cameraCntrl.h"
 #include "../libUDB/servoOut.h"
+#include "flightplan_waypoints.h"
 
 #if (AIRFRAME_TYPE == AIRFRAME_GLIDER)
 #include "airspeedCntrl.h"
@@ -186,7 +187,14 @@ void servoMix(void)
 			udb_pwOut[THROTTLE_OUTPUT_CHANNEL] = udb_servo_pulsesat(temp);
 		}
 #if ( FLAPS_INPUT_CHANNEL != 0)
-		udb_pwOut[FLAPS_OUTPUT_CHANNEL] = udb_pwIn[FLAPS_INPUT_CHANNEL] ;
+		if (state_flags._.GPS_steering)
+		{
+			udb_pwOut[FLAPS_OUTPUT_CHANNEL]= udb_servo_pulsesat(2000+20*goal_flaps) ;
+		}
+		else
+		{
+			udb_pwOut[FLAPS_OUTPUT_CHANNEL] = udb_pwIn[FLAPS_INPUT_CHANNEL] ;
+		}
 #endif // FLAPS_INPUT_CHANNEL
 #endif // AIRFRAME_STANDARD
 

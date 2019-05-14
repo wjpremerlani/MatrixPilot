@@ -33,6 +33,7 @@
 #include "../libDCM/deadReckoning.h"
 #include "../libUDB/servoOut.h"
 #include "options_mavlink.h"
+#include "flightplan_waypoints.h"
 
 #if (ALTITUDE_GAINS_VARIABLE != 1)
 
@@ -105,7 +106,15 @@ void save_altitudeCntrl(void)
 
 static int32_t excess_energy_height(void) // computes (1/2gravity)*(actual_speed^2 - desired_speed^2)
 {
-	int16_t speedAccum = 6 * desiredSpeed;
+	int16_t speedAccum ;
+	if ( state_flags._.GPS_steering )
+	{
+		speedAccum = 60 * goal_speed ; // waypoint speed is in meters per second 
+	}
+	else
+	{
+		speedAccum = 6 * desiredSpeed ; // desiredSpeed is in 10ths of meters per second
+	}
 	int32_t equivalent_energy_air_speed = -(__builtin_mulss(speedAccum, speedAccum));
 	int32_t equivalent_energy_ground_speed = equivalent_energy_air_speed;
 	int16_t speed_component;
