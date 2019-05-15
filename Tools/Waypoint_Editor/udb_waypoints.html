@@ -482,6 +482,8 @@ the overlay itself.
                 flags += "F_TRIGGER + ";
 				if (form.flag_f_altitude_goal.checked)
                 flags += "F_ALTITUDE_GOAL + ";
+                if (form.flag_f_cross_track.checked)
+                flags += "F_CROSS_TRACK + ";       
 				/*
 				 if (form..checked)
 				 flags += " + ";
@@ -628,6 +630,13 @@ the overlay itself.
             s += " checked='YES' " 
         }
         s += "/></td><td>F_ALTITUDE_GOAL</td>";
+        s += "</tr>";
+        s += "<tr>";
+        s += "<td><input type='checkbox' name='flag_f_cross_track' id='flag_f_cross_track'";
+        if (flags.indexOf("F_CROSS_TRACK") > -1) {
+            s += " checked='YES' " 
+        }
+        s += "/></td><td>F_CROSS_TRACK</td>"; 
         s += "</tr>";
         s += "</table>";
         return s;
