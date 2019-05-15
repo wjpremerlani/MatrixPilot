@@ -224,6 +224,8 @@ the overlay itself.
 			for (var i = 0; i < waypoints.length; i++) {
 				var latLng = waypoints[i].getPosition();
 				var alt = waypoints[i].UDBalt;
+                var speed = waypoints[i].UDBspeed;
+                var flaps = waypoints[i].UDBflaps;
 				var flags = waypoints[i].UDBflags;
 				var camView = waypoints[i].UDBcamView;
 				var lng = 0;
@@ -247,7 +249,7 @@ the overlay itself.
 					 }
 					 */
 				}
-				myWaypoints = myWaypoints + indent + "{ { " + lng + ", " + lat + ", " + alt + " } , " + flags + " , " + camView + " } , //Waypoint " + (i+1) + "\n";
+				myWaypoints = myWaypoints + indent + "{ { " + lng + ", " + lat + ", " + alt + " } , " + speed + " , " + flaps + " , "+ flags + " , " + camView + " } , //Waypoint " + (i+1) + "\n";
 			}
 			myWaypoints += "};\n";
 			///alert(myWaypoints);
@@ -283,7 +285,7 @@ the overlay itself.
 			///alert(def);
 			waypointDefIndex = m.index;
 			waypointDefLen = def.length;
-			rWaypoint = /(?:\s*[^/\S]*\s*){\s*{\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*}\s*,\s*(.+?)\s*,\s*(.+?)\s*}/gi;
+			rWaypoint = /(?:\s*[^/\S]*\s*){\s*{\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*}\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(.+?)\s*,\s*(.+?)\s*}/gi;
 			var ma; // this seems to solve strange behavior on Chrome...
 			while ((ma = rWaypoint.exec(def)) != null) {// match each of the waypoints in the definition found above
 				///var s = "Length :" + ma.length + "\n";
@@ -293,10 +295,12 @@ the overlay itself.
 				///alert(s);
 				var lng = parseInt(ma[1]);
 				var lat = parseInt(ma[2]);
+                var speed = parseInt(ma[4]);
+                var flaps = parseInt(ma[5]);
 				var alt = ma[3];
-				var flags = ma[4];
-				var camView = ma[5]
-				addWaypoint(lat, lng, alt, flags, camView);
+				var flags = ma[6];
+				var camView = ma[7];
+				addWaypoint(lat, lng, alt, speed, flaps, flags, camView);
 			}
 		}
 		
@@ -354,15 +358,17 @@ the overlay itself.
 			var defaultAlt = document.form1.defaults_altitude.value;
 			var defaultCamView = document.form1.defaults_camview.value;
 			var defaultFlags = getFlagsFromCode(document.form1);
+            var defaultSpeed = document.form1.defaults_speed.value;
+            var defaultFlaps = document.form1.defaults_flaps.value;
 			if (defaultFlags.indexOf("F_ABSOLUTE") > -1) { // Absolute waypoint
-				addWaypoint(latLng.lat() * 10000000, latLng.lng() * 10000000, defaultAlt, defaultFlags, defaultCamView);
+				addWaypoint(latLng.lat() * 10000000, latLng.lng() * 10000000, defaultAlt, defaultSpeed , defaultFlaps, defaultFlags, defaultCamView);
 			} else { // relative waypoint
 				var l = absoluteToRelative(latLng);
-				addWaypoint(l.sn, l.we, defaultAlt, defaultFlags, defaultCamView);        
+				addWaypoint(l.sn, l.we, defaultAlt, defaultSpeed , defaultFlaps, defaultFlags, defaultCamView);        
 			}
 		}
 		
-		function addWaypoint(lat, lng, alt, flags, camView){
+		function addWaypoint(lat, lng, alt, speed, flaps, flags, camView){
 			var index = waypoints.length;
 			var letter = String.fromCharCode("A".charCodeAt(0) + index);
 			///alert("About to add waypoint " + index + " (" + letter + ") at (" + lat +", "+lng+", "+flags+", "+camView);
@@ -385,6 +391,8 @@ the overlay itself.
 			marker.UDBalt = alt;
 			marker.UDBflags = flags;
 			marker.UDBcamView = camView;
+            marker.UDBspeed = speed;
+            marker.UDBflaps = flaps;
 			if((marker.UDBcamView.indexOf("_ABS") == marker.UDBcamView.length - 4) | (marker.UDBcamView.indexOf("_REL") == marker.UDBcamView.length - 4)) {
 				marker.UDBcamView = marker.UDBcamView.substr(0, marker.UDBcamView.length - 4);
 			}
@@ -429,6 +437,8 @@ the overlay itself.
 		var wpEditAlt;
 		var wpEditFlags;
 		var wpEditCamView;
+        var wpEditSpeed;
+        var wpEditFlaps;
 		
 		function changeWaypoint(){
 			if (wpEditIndex == null){
@@ -440,6 +450,8 @@ the overlay itself.
 			marker.UDBalt = editForm.alt.value;
 			marker.UDBflags = getFlagsFromCode(editForm);
 			marker.UDBcamView = editForm.camView.value;
+            marker.UDBspeed = editForm.speed.value;
+            marker.UDBflaps = editForm.flaps.value;
 			//TODO: Update marker icon for new color.
 			closeInfoWindow();
 			wpEditIndex = wpEditAlt = wpEditFlags = wpEditCamView = null;
@@ -557,6 +569,8 @@ the overlay itself.
     var wpEditAlt;
     var wpEditFlags;
     var wpEditCamView;
+    var wpEditSpeed;
+    var wpEditFlaps;
 
     function cameraClick(){
       showInfoWindow(this, this.UDBName + "<br />(" + this.UDBRelName + "<br />" + this.UDBAbsName +")");
@@ -567,9 +581,13 @@ the overlay itself.
       wpEditAlt = this.UDBalt;
       wpEditFlags = this.UDBflags;
       wpEditCamView = this.UDBcamView;
+      wpEditSpeed = this.UDBspeed;
+      wpEditFlaps = this.UDBflaps;
       var s = "<form name='editMarker' value='editMarker' action='javascript:void(0);'><table>";
       s += "<tr><td colspan='2'>Waypoint #" + (wpEditIndex + 1) + "</td></tr>";
       s += "<tr><td colspan='2'>Altitude: <input type='text' name='alt' id='alt' value='" + wpEditAlt + "'/></td></tr>";
+      s += "<tr><td colspan='2'>Speed: <input type='text' name='speed' id='speed' value='" + wpEditSpeed + "'/></td></tr>"; 
+      s += "<tr><td colspan='2'>Flaps: <input type='text' name='flaps' id='flaps' value='" + wpEditFlaps + "'/></td></tr>"; 
       s += "<tr><td>";
       s += writeFlagsCode(wpEditFlags);
       s += "</td></tr>";
@@ -805,18 +823,19 @@ function do_resize() {
 // The pattern will keep repeating as long as the UDB is in waypoint mode.
 
 const struct waypointDef waypoints[] = {
-	{ { 50, -50, 75 } , F_NORMAL , CAM_VIEW_LAUNCH } , //Waypoint 1
-	{ { 50, 50, 75 } , F_NORMAL , CAM_VIEW_LAUNCH } , //Waypoint 2
-	{ { -50, 50, 75 } , F_INVERTED , CAM_VIEW_LAUNCH } , //Waypoint 3
-	{ { -50, -50, 75 } , F_NORMAL , CAM_VIEW_LAUNCH } , //Waypoint 4
+	{ { 50, -50, 75 } , 20 , 0 , F_NORMAL , CAM_VIEW_LAUNCH } , //Waypoint 1
+	{ { 50, 50, 75 } , 20 , 0 , F_NORMAL , CAM_VIEW_LAUNCH } , //Waypoint 2
+	{ { -50, 50, 75 } , 20 , 0 , F_INVERTED , CAM_VIEW_LAUNCH } , //Waypoint 3
+	{ { -50, -50, 75 } , 20 , 0 , F_NORMAL , CAM_VIEW_LAUNCH } , //Waypoint 4
 };
 </textarea>
 		
 		<div id="udb_options" style="">
 			<h3>New Waypoint Default Settings</h3>
 			<script language="javascript" type="text/javascript">document.write(writeFlagsCode("F_NORMAL"));</script> <br/>
+           	Altitude <input type="text" name="defaults_altitude" id="defaults_altitude" value="50" /> <br/>
             Speed  <input type="text" name="speed" id="defaults_speed" value="20" /> <br/>
-			Altitude <input type="text" name="defaults_altitude" id="defaults_altitude" value="50" /> <br/>
+            Flaps  <input type="text" name="flaps" id="defaults_flaps" value="0" /> <br/>
 			Camera View Point <input type="text" name="defaults_camview" id="defaults_camview" value="CAM_VIEW_LAUNCH"/>
 		</div>
 	</td>
