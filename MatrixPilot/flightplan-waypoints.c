@@ -35,11 +35,11 @@
 
 
 #ifdef USE_EXTENDED_NAV
-struct relWaypointDef { struct relative3D_32 loc; uint16_t speed; int16_t flaps; int16_t flags; struct relative3D viewpoint; };
+struct relWaypointDef { struct relative3D_32 loc; int16_t speed; int16_t flaps; int16_t flags; struct relative3D viewpoint; };
 #else
-struct relWaypointDef { struct relative3D loc; uint16_t speed; int16_t flaps; int16_t flags; struct relative3D viewpoint; };
+struct relWaypointDef { struct relative3D loc; int16_t speed; int16_t flaps; int16_t flags; struct relative3D viewpoint; };
 #endif // USE_EXTENDED_NAV
-struct waypointDef { struct waypoint3D loc; uint16_t speed; int16_t flaps; int16_t flags; struct waypoint3D viewpoint; };
+struct waypointDef { struct waypoint3D loc; int16_t speed; int16_t flaps; int16_t flags; struct waypoint3D viewpoint; };
 
 #include "flightplan-waypoints.h"
 
@@ -58,8 +58,9 @@ static const struct waypointDef* currentWaypointSet = (struct waypointDef*)waypo
 static int16_t numPointsInCurrentSet = NUMBER_POINTS;
 #endif
 
-uint16_t goal_speed ;
+int16_t goal_speed ;
 int16_t goal_flaps ;
+int16_t prev_speed , next_speed , prev_flaps , next_flaps ;
 
 static struct relWaypointDef current_waypoint;
 static struct waypointDef wp_inject;
@@ -247,8 +248,8 @@ void flightplan_waypoints_begin(int16_t flightplanNum)
 	navigate_set_goal(GPSlocation, current_waypoint.loc);
 	set_camera_view(current_waypoint.viewpoint);
 	setBehavior(current_waypoint.flags);
-	goal_speed = current_waypoint.speed ;
-	goal_flaps = current_waypoint.flaps ;
+	prev_speed = next_speed = current_waypoint.speed ;
+	prev_flaps = next_flaps = current_waypoint.flaps ;
 	// udb_background_trigger();    // trigger navigation immediately
 }
 
@@ -270,6 +271,14 @@ void mavlink_waypoint_reached(int16_t waypoint);
 void mavlink_waypoint_changed(int16_t waypoint);
 #endif
 
+void next_speed_flaps ( int16_t speed , int16_t flaps )
+{
+	prev_speed = next_speed ;
+	next_speed= speed ;
+	prev_flaps = next_flaps ;
+	next_flaps = flaps ;
+}
+
 void set_waypoint(int16_t index)
 {
 	DPRINT("set_waypoint(%u)\r\n", index);
@@ -288,17 +297,14 @@ void set_waypoint(int16_t index)
 				current_waypoint  = wp_to_relative(currentWaypointSet[0]);
 				navigate_set_goal(previous_waypoint.loc, current_waypoint.loc);
 				set_camera_view(current_waypoint.viewpoint);
-				goal_speed = current_waypoint.speed ;
-				goal_flaps = current_waypoint.flaps ;
-
+				next_speed_flaps ( current_waypoint.speed , current_waypoint.flaps  ) ;
 			}
 			else
 			{
 				current_waypoint = wp_to_relative(currentWaypointSet[0]);
 				navigate_set_goal(GPSlocation, current_waypoint.loc);
 				set_camera_view(current_waypoint.viewpoint);
-				goal_speed = current_waypoint.speed ;
-				goal_flaps = current_waypoint.flaps ;
+				next_speed_flaps ( current_waypoint.speed , current_waypoint.flaps  ) ;
 			}
 			setBehavior(currentWaypointSet[0].flags);
 		}
@@ -309,8 +315,7 @@ void set_waypoint(int16_t index)
 			navigate_set_goal(previous_waypoint.loc, current_waypoint.loc);
 			set_camera_view(current_waypoint.viewpoint);
 			setBehavior(current_waypoint.flags);
-			goal_speed = current_waypoint.speed ;
-			goal_flaps = current_waypoint.flaps ;
+			next_speed_flaps ( current_waypoint.speed , current_waypoint.flaps  ) ;
 		}
 #if (DEADRECKONING == 0)
 		navigate_compute_bearing_to_goal();
@@ -364,6 +369,7 @@ static void next_waypoint(void)
 	else
 	{
 		navigate_set_goal(GPSlocation, current_waypoint.loc);
+		next_speed_flaps ( current_waypoint.speed , current_waypoint.flaps  ) ;
 #if (DEADRECKONING == 0)
 		navigate_compute_bearing_to_goal();
 #endif
@@ -378,6 +384,7 @@ void flightplan_waypoints_update(void)
 	{
 		current_waypoint = wp_to_relative(wp_inject);
 		navigate_set_goal(GPSlocation, current_waypoint.loc);
+		next_speed_flaps ( current_waypoint.speed , current_waypoint.flaps  ) ;
 		set_camera_view(current_waypoint.viewpoint);
 		setBehavior(current_waypoint.flags);
 		navigate_compute_bearing_to_goal();
