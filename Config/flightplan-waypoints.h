@@ -145,12 +145,14 @@ const struct waypointDef waypoints[] = {
 	{ { -738103019, 429509530, 1219 } , 120 , 0 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 2
 	{ { -738078181, 428556789, 600 } , 85 , 50 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 3
 	{ { -738052027, 427597964, 5 } , 85 , 50 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 4
-	{ { -738049639, 427535031, 5 } , 85 , 50 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 5
-	{ { -738040906, 427337417, 200 } , 120 , 50 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 6
-	{ { -738018645, 426355035, 400 } , 120 , 0 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 7
-	{ { -735883178, 426360087, 600 } , 120 , 0 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 8
-	{ { -735896911, 427450243, 800 } , 120 , 0 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 9
+	{ { -738051705, 427589692, 0 } , 85 , 50 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 5
+	{ { -738049639, 427535031, 0 } , 85 , 50 , F_ABSOLUTE + F_LAND + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 6
+	{ { -738041978, 427365470, 0 } , 85 , 50 , F_ABSOLUTE + F_LAND + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 7
+	{ { -738018644, 426355035, 400 } , 120 , 0 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 8
+	{ { -735883178, 426360087, 600 } , 120 , 0 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 9
+	{ { -735896910, 427450243, 800 } , 120 , 0 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 10
 };
+
 
 ////////////////////////////////////////////////////////W////////////////////////
 // waypoints[]
@@ -204,12 +206,14 @@ const struct waypointDef rtlWaypoints[] = {
 	{ { -738103019, 429509530, 1219 } , 120 , 0 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 2
 	{ { -738078181, 428556789, 600 } , 85 , 50 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 3
 	{ { -738052027, 427597964, 5 } , 85 , 50 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 4
-	{ { -738049639, 427535031, 5 } , 85 , 50 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 5
-	{ { -738040906, 427337417, 200 } , 120 , 50 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 6
-	{ { -738018645, 426355035, 400 } , 120 , 0 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 7
-	{ { -735883178, 426360087, 600 } , 120 , 0 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 8
-	{ { -735896911, 427450243, 800 } , 120 , 0 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 9
+	{ { -738051705, 427589692, 0 } , 85 , 50 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 5
+	{ { -738049639, 427535031, 0 } , 85 , 50 , F_ABSOLUTE + F_LAND + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 6
+	{ { -738041978, 427365470, 0 } , 85 , 50 , F_ABSOLUTE + F_LAND + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 7
+	{ { -738018644, 426355035, 400 } , 120 , 0 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 8
+	{ { -735883178, 426360087, 600 } , 120 , 0 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 9
+	{ { -735896910, 427450243, 800 } , 120 , 0 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 10
 };
+
 ////////////////////////////////////////////////////////////////////////////////
 // Example waypoint lists
 //
