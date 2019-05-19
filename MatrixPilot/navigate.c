@@ -270,8 +270,8 @@ union longww navigate_desired_height(void)
 	{
 		height._.W1 = navgoal.height;
 		height._.W0 = 0 ;
-		goal_flaps = next_flaps ;
-		goal_speed = next_speed ;
+		goal_flaps = 20*next_flaps ; // goal flaps is in units of PWM
+		goal_speed = 10*next_speed ; // goal speed is in units of decimeters
 	}
 	else
 	{
@@ -282,14 +282,14 @@ union longww navigate_desired_height(void)
 		height._.W0 = 0 ;
 		height.WW += __builtin_mulsu((navgoal.height - navgoal.fromHeight), progress_to_goal );
 		// interpolate target flaps
-		accum._.W1 = prev_flaps ;
+		accum._.W1 = 20*prev_flaps ;
 		accum._.W0 = 0 ;
-		accum.WW += __builtin_mulsu((next_flaps - prev_flaps ), progress_to_goal );
+		accum.WW += __builtin_mulsu(20*(next_flaps - prev_flaps ), progress_to_goal );
 		goal_flaps = accum._.W1 ;
 		// interpolate target speed 
-		accum._.W1 = prev_speed ;
+		accum._.W1 = 10*prev_speed ;
 		accum._.W0 = 0 ;
-		accum.WW += __builtin_mulsu((next_speed - prev_speed ), progress_to_goal );
+		accum.WW += __builtin_mulsu(10*(next_speed - prev_speed ), progress_to_goal );
 		goal_speed = accum._.W1 ;
 	}
 	return height ;
@@ -325,8 +325,8 @@ static void cross_track(void)
 	crossVector[0]._.W1 = navgoal.x;
 	crossVector[1]._.W1 = navgoal.y;
 	
-	crossVector[0].WW -= IMUlocationx.WW + ((IMUvelocityx.WW) >> 4);
-	crossVector[1].WW -= IMUlocationy.WW + ((IMUvelocityy.WW) >> 4);
+	crossVector[0].WW -= IMUlocationx.WW + ((IMUvelocityx.WW) >> 2);
+	crossVector[1].WW -= IMUlocationy.WW + ((IMUvelocityy.WW) >> 2);
 
 	// The following rotation transforms the cross track error vector into the
 	// frame of the desired course track
