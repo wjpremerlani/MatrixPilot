@@ -109,7 +109,7 @@ static int32_t excess_energy_height(void) // computes (1/2gravity)*(actual_speed
 	int16_t speedAccum ;
 	if ( state_flags._.GPS_steering )
 	{
-		speedAccum = 60 * goal_speed ; // waypoint speed is in meters per second 
+		speedAccum = 6 * goal_speed ; // waypoint speed is in 10ths meters per second 
 	}
 	else
 	{

@@ -189,7 +189,7 @@ void servoMix(void)
 #if ( FLAPS_INPUT_CHANNEL != 0)
 		if (state_flags._.GPS_steering)
 		{
-			udb_pwOut[FLAPS_OUTPUT_CHANNEL]= udb_servo_pulsesat(2000+20*goal_flaps) ;
+			udb_pwOut[FLAPS_OUTPUT_CHANNEL]= udb_servo_pulsesat(2000+goal_flaps) ;
 		}
 		else
 		{
