@@ -185,10 +185,10 @@
 #define ELEVATOR_BOOST                        0.5
 
 // Cirrus : needs to be revised
-#define ANGLE_OF_ATTACK_NORMAL				( 0.0 )
-#define ANGLE_OF_ATTACK_INVERTED			( 0.0 )
-#define ELEVATOR_TRIM_NORMAL				( 0.0 )
-#define ELEVATOR_TRIM_INVERTED				( 0.0 )
+#define ANGLE_OF_ATTACK_NORMAL				( -3.4 )
+#define ANGLE_OF_ATTACK_INVERTED			( -3.4 )
+#define ELEVATOR_TRIM_NORMAL				( -.1 )
+#define ELEVATOR_TRIM_INVERTED				( -.1)
 //#define CRUISE_SPEED						( 177.0 )
 #define REFERENCE_SPEED						( 110.0 )
 
@@ -243,16 +243,16 @@
 #define HEIGHT_TARGET_MIN                   100.0
 #define HEIGHT_TARGET_MAX                   1200.0
 
-//#define HEIGHT_MARGIN                       100
-//#define HEIGHT_MARGIN                       1000
-#define HEIGHT_MARGIN                       50
+//#define HEIGHT_MARGIN                     100
+//#define HEIGHT_MARGIN                       50
+#define HEIGHT_MARGIN                       20
 
-#define ALT_HOLD_THROTTLE_MIN               0.0
+#define ALT_HOLD_THROTTLE_MIN               0.4
 #define ALT_HOLD_THROTTLE_MAX               1.0
 
-#define ALT_HOLD_PITCH_MIN                 -15.0
-#define ALT_HOLD_PITCH_MAX                  15.0
-#define ALT_HOLD_PITCH_HIGH                -15.0
+#define ALT_HOLD_PITCH_MIN                 -18.0
+#define ALT_HOLD_PITCH_MAX                  12.0
+#define ALT_HOLD_PITCH_HIGH                -18.0
 
 //#define ALT_HOLD_PITCH_MIN                 -10.0
 //#define ALT_HOLD_PITCH_MAX                  10.0
