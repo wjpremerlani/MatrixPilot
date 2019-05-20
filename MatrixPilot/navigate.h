@@ -43,6 +43,7 @@ union longww navigate_desired_height(void);
 
 // NEW STUFF:
 int16_t navigate_get_goal(vect3_16t* goal);
+int16_t flight_path_angle(void);
 
 uint16_t wind_gain_adjustment(void);
 
