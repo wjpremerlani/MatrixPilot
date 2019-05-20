@@ -35,6 +35,8 @@
 #include "options_mavlink.h"
 #include "flightplan_waypoints.h"
 
+#define SPEED_MARGIN		4
+
 #if (ALTITUDE_GAINS_VARIABLE != 1)
 
 union longww throttleFiltered = { 0 };
@@ -289,7 +291,7 @@ static void normalAltitudeCntrl(void)
 		else
 		{
 			heightError.WW = - desiredHeight32.WW ;
-			heightError.WW = (heightError.WW + IMUlocationz.WW + speed_height) >> 13;
+			heightError.WW = ((heightError.WW + IMUlocationz.WW + speed_height) >> (13+SPEED_MARGIN));
 			if (heightError._.W0 < (-(int16_t)(altit.HeightMargin*8.0)))
 			{
 				throttleAccum.WW = (int16_t)(MAXTHROTTLE);
