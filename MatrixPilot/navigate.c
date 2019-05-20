@@ -66,6 +66,7 @@ struct waypointparameters {
 	int16_t height;
 	int16_t fromHeight;
 	int16_t legDist;
+    int16_t flight_path_angle;
 };
 
 static struct waypointparameters navgoal;
@@ -73,6 +74,11 @@ static int16_t desired_bearing_over_ground_vector[2];
 
 struct relative2D togoal = { 0, 0 };
 int8_t desired_bearing_over_ground;
+
+int16_t flight_path_angle(void)
+{
+    return navgoal.flight_path_angle ;
+}
 
 int16_t navigate_get_goal(vect3_16t* _goal)
 {
@@ -148,7 +154,7 @@ void navigate_set_goal(struct relative3D fromPoint, struct relative3D toPoint)
 #endif // USE_EXTENDED_NAV
 {
 	struct relative2D courseLeg;
-	int16_t courseDirection[2];
+	int16_t courseDirection[3];
 
 #ifdef USE_EXTENDED_NAV
 	union longww from_to_x;
@@ -219,6 +225,13 @@ void navigate_set_goal(struct relative3D fromPoint, struct relative3D toPoint)
 	vector2_normalize(&courseDirection[0], &courseDirection[0]);
 	navgoal.cosphi = courseDirection[0];
 	navgoal.sinphi = courseDirection[1];
+  
+    // compute flight path angle
+    courseDirection[0] = courseLeg.x;
+	courseDirection[1] = courseLeg.y;
+    courseDirection[2] = toPoint.z - fromPoint.z;
+    vector3_normalize(&courseDirection[0], &courseDirection[0]);
+    navgoal.flight_path_angle = courseDirection[2] ;
 }
 
 void navigate_set_goal_height(int16_t z)
