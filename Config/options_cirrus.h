@@ -244,8 +244,8 @@
 #define HEIGHT_TARGET_MAX                   1200.0
 
 //#define HEIGHT_MARGIN                     100
-#define HEIGHT_MARGIN                       50
-//#define HEIGHT_MARGIN                       20
+//#define HEIGHT_MARGIN                       50
+#define HEIGHT_MARGIN                       25
 
 #define ALT_HOLD_THROTTLE_MIN               0.4
 #define ALT_HOLD_THROTTLE_MAX               1.0
