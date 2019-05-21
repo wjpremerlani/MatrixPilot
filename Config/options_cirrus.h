@@ -250,9 +250,9 @@
 #define ALT_HOLD_THROTTLE_MIN               0.4
 #define ALT_HOLD_THROTTLE_MAX               1.0
 
-#define ALT_HOLD_PITCH_MIN                 -13.0
-#define ALT_HOLD_PITCH_MAX                  7.0
-#define ALT_HOLD_PITCH_HIGH                -13.0
+#define ALT_HOLD_PITCH_MIN                 -18.0
+#define ALT_HOLD_PITCH_MAX                  12.0
+#define ALT_HOLD_PITCH_HIGH                -18.0
 
 //#define ALT_HOLD_PITCH_MIN                 -10.0
 //#define ALT_HOLD_PITCH_MAX                  10.0
