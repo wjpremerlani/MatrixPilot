@@ -324,8 +324,8 @@ static void normalAltitudeCntrl(void)
 				pitchAccum.WW = __builtin_mulss((int16_t)(PITCHHEIGHTGAIN), - heightError._.W0 - (int16_t)(altit.HeightMargin*8.0)) >> 3;
 				pitchAltitudeAdjust = flight_path_angle() + (int16_t)(PITCHATMAX) + pitchAccum._.W0;
                 pitchAccum.WW = __builtin_mulss(flight_path_angle(), ground_velocity_magnitudeXY ) ;
-                int16_t flight_path_error = pitchAccum._.W1 - IMUvelocityz._.W1/4 ;
-                pitchAltitudeAdjust += ( flight_path_error >> 4 ) ;
+                int16_t flight_path_error = 4*pitchAccum._.W1 - IMUvelocityz._.W1 ;
+                pitchAltitudeAdjust += ( flight_path_error ) ;
 			}
 //#if (RACING_MODE == 1)
 			if (settings._.RacingMode == 1)
