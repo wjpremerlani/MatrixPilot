@@ -350,7 +350,11 @@ static void normalAltitudeCntrl(void)
 			}
 			
 			throttleFiltered.WW += (((int32_t)(udb_pwTrim[THROTTLE_INPUT_CHANNEL] - throttleFiltered._.W1)) << THROTTLEFILTSHIFT);
+#if ( USE_THROTTLE_FILTER == 0 ) 
+			set_throttle_control( - throttleIn);
+#else			
 			set_throttle_control(throttleFiltered._.W1 - throttleIn);
+#endif
 			filterManual = true;
 		}
 		else
