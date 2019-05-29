@@ -24,7 +24,7 @@
 #define AILERON_NAVIGATION                  1
 #define RUDDER_NAVIGATION                   0
 
-#define CROSS_TRACK_MARGIN                  32
+#define CROSS_TRACK_MARGIN                  128
 
 #define WIND_GAIN_ADJUSTMENT                0
 
