@@ -335,11 +335,16 @@ static void cross_track(void)
 	// IMU velocity is in centimeters per second, so right shifting by 4 produces
 	// about 6 times the IMU velocity in meters per second.
 	// This sets the time constant of the exponential decay to about 6 seconds
+    // Other values of the right shift will produce other corresponding time constants
 	crossVector[0]._.W1 = navgoal.x;
 	crossVector[1]._.W1 = navgoal.y;
+    
+#ifndef X_TRACK_V_SHIFT
+#define X_TRACK_V_SHIFT 2
+#endif // X_TRACK_V_SHIFT
 	
-	crossVector[0].WW -= IMUlocationx.WW + ((IMUvelocityx.WW) >> 2);
-	crossVector[1].WW -= IMUlocationy.WW + ((IMUvelocityy.WW) >> 2);
+	crossVector[0].WW -= IMUlocationx.WW + ((IMUvelocityx.WW) >> X_TRACK_V_SHIFT );
+	crossVector[1].WW -= IMUlocationy.WW + ((IMUvelocityy.WW) >> X_TRACK_V_SHIFT );
 
 	// The following rotation transforms the cross track error vector into the
 	// frame of the desired course track

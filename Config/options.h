@@ -10,6 +10,7 @@
 
 #define CAM_VIEW_LAUNCH         { 0, 0, 0 }
 
+#define X_TRACK_V_SHIFT                     4
 
 #define BOARD_ORIENTATION                   ORIENTATION_FORWARDS
 #define AIRFRAME_TYPE                       AIRFRAME_STANDARD
