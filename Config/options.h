@@ -1,12 +1,6 @@
-#define USE_HILSIM_PITOT		    1
-#define USE_SPEED_IN_HEIGHT_CONTROL	    0
-#define USE_THROTTLE_FILTER		    0
-
 #define GNSS_HDOP_REQUIRED_FOR_STARTUP       20  //  Horizontal Dilution of Precision
 #define GNSS_VDOP_REQUIRED_FOR_STARTUP	     60  //  Vertical Dilution of Precision
 #define GNSS_SVS_REQUIRED_FOR_STARTUP	      6  //  Number of Sattelites in View
-
-#define SLOW_TURN_RATE_SCALING 1
 
 #define USE_FIXED_ORIGIN	    0
 //#define FIXED_ORIGIN_LOCATION	    { -1219950467, 374124664, 30.0 }	// A point in Baylands Park in Sunnyvale, CA
@@ -21,8 +15,6 @@
 #define AIRFRAME_TYPE                       AIRFRAME_STANDARD
 #define GPS_TYPE                            GPS_STD
 
-#define USE_EXTENDED_NAV
-
 #define ROLL_STABILIZATION_AILERONS         1
 #define ROLL_STABILIZATION_RUDDER           0
 #define PITCH_STABILIZATION                 1
@@ -32,7 +24,7 @@
 #define AILERON_NAVIGATION                  1
 #define RUDDER_NAVIGATION                   0
 
-#define CROSS_TRACK_MARGIN                  511
+#define CROSS_TRACK_MARGIN                  128
 
 #define WIND_GAIN_ADJUSTMENT                0
 
@@ -41,10 +33,10 @@
 
 
 #define SPEED_CONTROL                       1
-#define DESIRED_SPEED                       110.0    // meters/second
+#define DESIRED_SPEED                       12.5    // meters/second
 
-#define INVERTED_FLIGHT_STABILIZED_MODE     0
-#define INVERTED_FLIGHT_WAYPOINT_MODE       0
+#define INVERTED_FLIGHT_STABILIZED_MODE     1
+#define INVERTED_FLIGHT_WAYPOINT_MODE       1
 
 #define HOVERING_STABILIZED_MODE            0
 #define HOVERING_WAYPOINT_MODE              0
@@ -67,15 +59,14 @@
 #define PPM_SIGNAL_INVERTED                 0
 #define PPM_ALT_OUTPUT_PINS                 0
 
-#define NUM_INPUTS                          6
+#define NUM_INPUTS                          5
 
 #define THROTTLE_INPUT_CHANNEL              CHANNEL_3
 #define AILERON_INPUT_CHANNEL               CHANNEL_1
 #define ELEVATOR_INPUT_CHANNEL              CHANNEL_2
 #define RUDDER_INPUT_CHANNEL                CHANNEL_4
 #define MODE_SWITCH_INPUT_CHANNEL           CHANNEL_5
-#define FLAPS_INPUT_CHANNEL		    CHANNEL_6
-//#define MODE_SWITCH_INPUT_CHANNEL           CHANNEL_5
+#define FLAP_INPUT_CHANNEL		    CHANNEL_UNUSED
 #define CAMERA_PITCH_INPUT_CHANNEL          CHANNEL_UNUSED
 #define CAMERA_YAW_INPUT_CHANNEL            CHANNEL_UNUSED
 #define CAMERA_MODE_INPUT_CHANNEL           CHANNEL_UNUSED
@@ -85,13 +76,13 @@
 #define PASSTHROUGH_C_INPUT_CHANNEL         CHANNEL_UNUSED
 #define PASSTHROUGH_D_INPUT_CHANNEL         CHANNEL_UNUSED
 
-#define NUM_OUTPUTS                         5
+#define NUM_OUTPUTS                         4
 
 #define THROTTLE_OUTPUT_CHANNEL             CHANNEL_3
 #define AILERON_OUTPUT_CHANNEL              CHANNEL_1
 #define ELEVATOR_OUTPUT_CHANNEL             CHANNEL_2
 #define RUDDER_OUTPUT_CHANNEL               CHANNEL_4
-#define FLAPS_OUTPUT_CHANNEL		    CHANNEL_5
+#define FLAP_OUTPUT_CHANNEL		    CHANNEL_UNUSED
 #define AILERON_SECONDARY_OUTPUT_CHANNEL    CHANNEL_UNUSED
 #define CAMERA_PITCH_OUTPUT_CHANNEL         CHANNEL_UNUSED
 #define CAMERA_YAW_OUTPUT_CHANNEL           CHANNEL_UNUSED
@@ -111,20 +102,14 @@
 
 #define ELEVON_VTAIL_SURFACES_REVERSED      0
 
-//#define MODE_SWITCH_THRESHOLD_LOW           2000
-//#define MODE_SWITCH_THRESHOLD_HIGH          4500
-
 #define MODE_SWITCH_THRESHOLD_LOW           2666
-#define MODE_SWITCH_THRESHOLD_HIGH          3334
+#define MODE_SWITCH_THRESHOLD_HIGH          3333
 
 #define MODE_SWITCH_TWO_POSITION            0
 
 #define FAILSAFE_INPUT_CHANNEL              MODE_SWITCH_INPUT_CHANNEL
 #define FAILSAFE_INPUT_MIN                  2000
 #define FAILSAFE_INPUT_MAX                  4500
-
-//#define FAILSAFE_INPUT_MIN                  1500
-//#define FAILSAFE_INPUT_MAX                  4500
 
 #define FAILSAFE_TYPE                       FAILSAFE_RTL
 
@@ -164,39 +149,42 @@
 
 #define FEED_FORWARD						0.8
 
-//#define TURN_RATE_NAV							30.0
-//#define TURN_RATE_FBW							60.0
-#define TURN_RATE_NAV							3.0
-#define TURN_RATE_FBW							6.0
+#define TURN_RATE_NAV							30.0
+#define TURN_RATE_FBW							60.0
 
-#define KD_ON_OFF						  ( 1.0  )
-#define ROLLKP                              0.6
-//#define ROLLKP                              0.2
-#define ROLLKD                              0.00*KD_ON_OFF
+
+#define KD_ON_OFF						  ( 0.0  )
+//#define ROLLKP                              0.4
+#define ROLLKP                              0.2
+#define ROLLKD                              0.05*KD_ON_OFF
 #define YAWKP_AILERON                       0.10*0.0
 #define YAWKD_AILERON                       0.05*0.0
 
 
 //#define PITCHGAIN                           0.5
-//#define PITCHGAIN                           0.6
-#define PITCHGAIN                           0.4
-//#define PITCHKD                             0.04*KD_ON_OFF
-#define PITCHKD                             0.2*KD_ON_OFF
+#define PITCHGAIN                           0.25
+#define PITCHKD                             0.04*KD_ON_OFF
 #define ELEVATOR_BOOST                        0.5
 
-// Cirrus : needs to be revised
-#define ANGLE_OF_ATTACK_NORMAL				( -3.4 )
-#define ANGLE_OF_ATTACK_INVERTED			( -3.4 )
-#define ELEVATOR_TRIM_NORMAL				( -.1 )
-#define ELEVATOR_TRIM_INVERTED				( -.1)
-//#define CRUISE_SPEED						( 177.0 )
-#define REFERENCE_SPEED						( 110.0 )
+// Peter's values
+#define ANGLE_OF_ATTACK_NORMAL				( -0.8 )
+#define ANGLE_OF_ATTACK_INVERTED			( -7.2 )
+#define ELEVATOR_TRIM_NORMAL				( -0.03 )
+#define ELEVATOR_TRIM_INVERTED				( -0.67 )
+#define REFERENCE_SPEED						( 12.0 )
 
-
+// Bill's values
+/*
+#define ANGLE_OF_ATTACK_NORMAL				( 1.5 )
+#define ANGLE_OF_ATTACK_INVERTED			( -11.5 )
+#define ELEVATOR_TRIM_NORMAL				( -0.1 )
+#define ELEVATOR_TRIM_INVERTED				( -0.5 )
+#define CRUISE_SPEED						( 12.0 )
+*/
  
 //#define INVERTED_NEUTRAL_PITCH             ( 8.0 ) // not needed with AoA model
 
-#define YAWKP_RUDDER                        0.4
+#define YAWKP_RUDDER                        0.20
 //#define YAWKP_RUDDER                        0.10
 #define YAWKD_RUDDER                        0.05*KD_ON_OFF
 #define ROLLKP_RUDDER                       0.20*0.0
@@ -240,23 +228,18 @@
 
 #define CAM_USE_EXTERNAL_TARGET_DATA        0
 
-#define HEIGHT_TARGET_MIN                   100.0
-#define HEIGHT_TARGET_MAX                   1200.0
+#define HEIGHT_TARGET_MIN                   -20.0
+#define HEIGHT_TARGET_MAX                   100.0
 
-//#define HEIGHT_MARGIN                     100
-//#define HEIGHT_MARGIN                       50
-#define HEIGHT_MARGIN                       25
+//#define HEIGHT_MARGIN                       100
+#define HEIGHT_MARGIN                       10
 
-#define ALT_HOLD_THROTTLE_MIN               0.4
+#define ALT_HOLD_THROTTLE_MIN               0.0
 #define ALT_HOLD_THROTTLE_MAX               1.0
 
-#define ALT_HOLD_PITCH_MIN                 -18.0
-#define ALT_HOLD_PITCH_MAX                  12.0
-#define ALT_HOLD_PITCH_HIGH                -18.0
-
-//#define ALT_HOLD_PITCH_MIN                 -10.0
-//#define ALT_HOLD_PITCH_MAX                  10.0
-//#define ALT_HOLD_PITCH_HIGH                -10.0
+#define ALT_HOLD_PITCH_MIN                 -20.0
+#define ALT_HOLD_PITCH_MAX                  20.0
+#define ALT_HOLD_PITCH_HIGH                -20.0
 
 #define RTL_PITCH_DOWN                      0.0
 
@@ -267,9 +250,9 @@
 #define FLIGHT_PLAN_TYPE                    FP_WAYPOINTS
 
 //#define ID_DIY_DRONES_URL "http://www.diydrones.com/profile/PeterHollands"
-#define ID_VEHICLE_MODEL_NAME               "Cirrus HILSIM"
-#define ID_VEHICLE_REGISTRATION             "helical version, body frame pitch"
-#define ID_LEAD_PILOT                       "WJP"
+#define ID_VEHICLE_MODEL_NAME               "EZ*2 HILSIM"
+#define ID_VEHICLE_REGISTRATION             "WJP_MP_Master, March 2019"
+#define ID_LEAD_PILOT                       "Mike"
 #define ID_DIY_DRONES_URL                   ""
 
 #define FLY_BY_DATALINK_ENABLED             0
