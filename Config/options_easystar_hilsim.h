@@ -6,7 +6,7 @@
 //#define FIXED_ORIGIN_LOCATION	    { -1219950467, 374124664, 30.0 }	// A point in Baylands Park in Sunnyvale, CA
 #define FIXED_ORIGIN_LOCATION	    { 113480854, 472580108, 578 }	// Innsbruck, useful for X-Plane flight simulator
 
-#define WAYPOINT_PROXIMITY_RADIUS   (5)
+#define WAYPOINT_PROXIMITY_RADIUS   (25)
 
 #define CAM_VIEW_LAUNCH         { 0, 0, 0 }
 
@@ -25,7 +25,8 @@
 #define AILERON_NAVIGATION                  1
 #define RUDDER_NAVIGATION                   0
 
-#define CROSS_TRACK_MARGIN                  128
+//#define CROSS_TRACK_MARGIN                  128
+#define CROSS_TRACK_MARGIN                  64
 
 #define WIND_GAIN_ADJUSTMENT                0
 
@@ -252,7 +253,7 @@
 
 //#define ID_DIY_DRONES_URL "http://www.diydrones.com/profile/PeterHollands"
 #define ID_VEHICLE_MODEL_NAME               "EZ*2 HILSIM"
-#define ID_VEHICLE_REGISTRATION             "WJP_MP_Master, March 2019"
+#define ID_VEHICLE_REGISTRATION             "WJP_MP_Master, May 2019"
 #define ID_LEAD_PILOT                       "Mike"
 #define ID_DIY_DRONES_URL                   ""
 
