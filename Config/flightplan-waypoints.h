@@ -5,34 +5,31 @@
 #define TRACK_OPTION 0
 
 const struct waypointDef waypoints[] = {
-	{ { -738042715, 427377643, 50 } , 12.5 , 0 , F_ABSOLUTE , CAM_VIEW_LAUNCH } , //Waypoint 1
-	{ { -738043896, 427412156, 50 } , 12.5 , 0 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 2
-	{ { -738018145, 427413101, 50 } , 12.5 , 0 , F_ABSOLUTE , CAM_VIEW_LAUNCH } , //Waypoint 3
-	{ { -738010850, 427322321, 50 } , 12.5 , 0 , F_ABSOLUTE , CAM_VIEW_LAUNCH } , //Waypoint 4
-	{ { -738041318, 427320667, 50 } , 12.5 , 0 , F_ABSOLUTE , CAM_VIEW_LAUNCH } , //Waypoint 5
-	{ { -738042821, 427377642, 50 } , 12.5 , 0 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 6
-	{ { -738044218, 427412318, 50 } , 12.5 , 0 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 7
-	{ { -738018146, 427413100, 50 } , 12.5 , 0 , F_ABSOLUTE , CAM_VIEW_LAUNCH } , //Waypoint 8
-	{ { -738011172, 427321455, 25 } , 12.5 , 0 , F_ABSOLUTE , CAM_VIEW_LAUNCH } , //Waypoint 9
-	{ { -738041211, 427321928, 25 } , 12.5 , 0 , F_ABSOLUTE , CAM_VIEW_LAUNCH } , //Waypoint 10
-	{ { -738042661, 427377633, 5 } , 5 , 0 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 11
-	{ { -738044003, 427412156, -20 } , 0 , 0 , F_ABSOLUTE + F_LAND + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 12
+	{ { 0, 4, 50 } , 10 , 0 , F_NORMAL , CAM_VIEW_LAUNCH } , //Waypoint 1
+	{ { -6, 170, 50 } , 10 , 0 , F_NORMAL + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 2
+	{ { 94, 173, 50 } , 10 , 0 , F_NORMAL , CAM_VIEW_LAUNCH } , //Waypoint 3
+	{ { 104, -134, 50 } , 10 , 0 , F_NORMAL + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 4
+	{ { 3, -135, 50 } , 10 , 0 , F_NORMAL , CAM_VIEW_LAUNCH } , //Waypoint 5
+	{ { -5, 170, 50 } , 10 , 0 , F_NORMAL + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 6
+	{ { 94, 173, 50 } , 10 , 0 , F_NORMAL , CAM_VIEW_LAUNCH } , //Waypoint 7
+	{ { 104, -133, 25 } , 10 , 0 , F_NORMAL + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 8
+	{ { 3, -138, 25 } , 10 , 0 , F_NORMAL , CAM_VIEW_LAUNCH } , //Waypoint 9
+	{ { 0, -7, 25 } , 0 , 0 , F_NORMAL + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 10
+	{ { -8, 257, 25 } , 10 , 0 , F_NORMAL + F_LAND + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 11
 };
 
 
-
 const struct waypointDef rtlWaypoints[] = {
-	{ { -738042715, 427377643, 50 } , 12.5 , 0 , F_ABSOLUTE , CAM_VIEW_LAUNCH } , //Waypoint 1
-	{ { -738043896, 427412156, 50 } , 12.5 , 0 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 2
-	{ { -738018145, 427413101, 50 } , 12.5 , 0 , F_ABSOLUTE , CAM_VIEW_LAUNCH } , //Waypoint 3
-	{ { -738010850, 427322321, 50 } , 12.5 , 0 , F_ABSOLUTE , CAM_VIEW_LAUNCH } , //Waypoint 4
-	{ { -738041318, 427320667, 50 } , 12.5 , 0 , F_ABSOLUTE , CAM_VIEW_LAUNCH } , //Waypoint 5
-	{ { -738042821, 427377642, 50 } , 12.5 , 0 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 6
-	{ { -738044218, 427412318, 50 } , 12.5 , 0 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 7
-	{ { -738018146, 427413100, 50 } , 12.5 , 0 , F_ABSOLUTE , CAM_VIEW_LAUNCH } , //Waypoint 8
-	{ { -738011172, 427321455, 25 } , 12.5 , 0 , F_ABSOLUTE , CAM_VIEW_LAUNCH } , //Waypoint 9
-	{ { -738041211, 427321928, 25 } , 12.5 , 0 , F_ABSOLUTE , CAM_VIEW_LAUNCH } , //Waypoint 10
-	{ { -738042661, 427377633, 5 } , 5 , 0 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 11
-	{ { -738044003, 427412156, -20 } , 0 , 0 , F_ABSOLUTE + F_LAND + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 12
+	{ { 0, 4, 50 } , 10 , 0 , F_NORMAL , CAM_VIEW_LAUNCH } , //Waypoint 1
+	{ { -6, 170, 50 } , 10 , 0 , F_NORMAL + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 2
+	{ { 94, 173, 50 } , 10 , 0 , F_NORMAL , CAM_VIEW_LAUNCH } , //Waypoint 3
+	{ { 104, -134, 50 } , 10 , 0 , F_NORMAL + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 4
+	{ { 3, -135, 50 } , 10 , 0 , F_NORMAL , CAM_VIEW_LAUNCH } , //Waypoint 5
+	{ { -5, 170, 50 } , 10 , 0 , F_NORMAL + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 6
+	{ { 94, 173, 50 } , 10 , 0 , F_NORMAL , CAM_VIEW_LAUNCH } , //Waypoint 7
+	{ { 104, -133, 25 } , 10 , 0 , F_NORMAL + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 8
+	{ { 3, -138, 25 } , 10 , 0 , F_NORMAL , CAM_VIEW_LAUNCH } , //Waypoint 9
+	{ { 0, -7, 25 } , 0 , 0 , F_NORMAL + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 10
+	{ { -8, 257, 25 } , 10 , 0 , F_NORMAL + F_LAND + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 11
 };
 
