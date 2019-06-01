@@ -14,8 +14,8 @@ const struct waypointDef waypoints[] = {
 	{ { 94, 173, 50 } , 10 , 0 , F_NORMAL , CAM_VIEW_LAUNCH } , //Waypoint 7
 	{ { 104, -133, 25 } , 10 , 0 , F_NORMAL + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 8
 	{ { 3, -138, 25 } , 10 , 0 , F_NORMAL , CAM_VIEW_LAUNCH } , //Waypoint 9
-	{ { 0, -7, 25 } , 0 , 0 , F_NORMAL + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 10
-	{ { -8, 257, 25 } , 10 , 0 , F_NORMAL + F_LAND + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 11
+	{ { 0, -7, 0 } , 0 , 0 , F_NORMAL + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 10
+	{ { -8, 257, 0 } , 0 , 0 , F_NORMAL + F_LAND + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 11
 };
 
 
@@ -29,7 +29,7 @@ const struct waypointDef rtlWaypoints[] = {
 	{ { 94, 173, 50 } , 10 , 0 , F_NORMAL , CAM_VIEW_LAUNCH } , //Waypoint 7
 	{ { 104, -133, 25 } , 10 , 0 , F_NORMAL + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 8
 	{ { 3, -138, 25 } , 10 , 0 , F_NORMAL , CAM_VIEW_LAUNCH } , //Waypoint 9
-	{ { 0, -7, 25 } , 0 , 0 , F_NORMAL + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 10
-	{ { -8, 257, 25 } , 10 , 0 , F_NORMAL + F_LAND + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 11
+	{ { 0, -7, 0 } , 0 , 0 , F_NORMAL + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 10
+	{ { -8, 257, 0 } , 0 , 0 , F_NORMAL + F_LAND + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 11
 };
 
