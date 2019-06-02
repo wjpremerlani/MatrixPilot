@@ -78,7 +78,7 @@ void estLocation(void)
 	int8_t cog_circular;
 	uint16_t cog_circular_16;
 	int8_t cog_delta;
-	int16_t cog_delta_16;
+	int16_t cog_delta_16 ;
 	int16_t sog_delta;
 	int16_t climb_rate_delta;
 #ifdef USE_EXTENDED_NAV
@@ -112,6 +112,7 @@ void estLocation(void)
 	if (dcm_flags._.gps_history_valid)
 	{
 		cog_delta = cog_circular - cog_previous;
+		cog_delta_16 = cog_circular_16 - cog_previous_16 ;
 		sog_delta = sog_gps.BB - sog_previous;
 		climb_rate_delta = climb_gps.BB - climb_rate_previous;
 
@@ -122,6 +123,7 @@ void estLocation(void)
 	else
 	{
 		cog_delta = 0;
+		cog_delta_16 = 0 ;
 		sog_delta = 0;
 		climb_rate_delta = 0;
 		location_deltaXY.x = location_deltaXY.y = location_deltaZ = 0;
