@@ -35,8 +35,6 @@
 #include "options_mavlink.h"
 #include "flightplan_waypoints.h"
 
-#define SPEED_MARGIN		4
-
 #if (ALTITUDE_GAINS_VARIABLE != 1)
 
 union longww throttleFiltered = { 0 };
