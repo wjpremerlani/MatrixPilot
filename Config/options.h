@@ -16,9 +16,9 @@
 
 #define ANGLE_OF_ATTACK_NORMAL				( -2.0 )
 #define ANGLE_OF_ATTACK_INVERTED			( -4.0 )
-#define ELEVATOR_TRIM_NORMAL				( -0.2 )
-#define ELEVATOR_TRIM_INVERTED				( -0.4 )
-#define REFERENCE_SPEED						( 12.0 )
+#define ELEVATOR_TRIM_NORMAL				( 0.0 )
+#define ELEVATOR_TRIM_INVERTED				( -0.5 )
+#define REFERENCE_SPEED						( 10.0 )
 
 #define CUSTOM_OFFSETS
 // board 1
