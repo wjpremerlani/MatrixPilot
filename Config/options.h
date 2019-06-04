@@ -10,7 +10,8 @@
 
 #define CAM_VIEW_LAUNCH         { 0, 0, 0 }
 
-#define X_TRACK_V_SHIFT                     4
+#define X_TRACK_V_SHIFT                     4 // cross track velocity shift parameter
+#define SPEED_MARGIN		0 // speed control margin shift parameter
 
 
 #define ANGLE_OF_ATTACK_NORMAL				( -2.0 )
@@ -674,7 +675,7 @@
 // The range of altitude within which to linearly vary the throttle
 // and pitch to maintain altitude.  A bigger value makes altitude hold
 // smoother, and is suggested for very fast planes.
-#define HEIGHT_MARGIN                       20
+#define HEIGHT_MARGIN                       15
 
 // Use ALT_HOLD_THROTTLE_MAX when below HEIGHT_MARGIN of the target height.
 // Interpolate between ALT_HOLD_THROTTLE_MAX and ALT_HOLD_THROTTLE_MIN

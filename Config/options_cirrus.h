@@ -8,6 +8,8 @@
 
 #define SLOW_TURN_RATE_SCALING 1
 
+#define SPEED_MARGIN		4
+
 #define USE_FIXED_ORIGIN	    0
 //#define FIXED_ORIGIN_LOCATION	    { -1219950467, 374124664, 30.0 }	// A point in Baylands Park in Sunnyvale, CA
 #define FIXED_ORIGIN_LOCATION	    { 113480854, 472580108, 578 }	// Innsbruck, useful for X-Plane flight simulator
