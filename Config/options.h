@@ -13,6 +13,7 @@
 #define X_TRACK_V_SHIFT                     4 // cross track velocity shift parameter
 #define SPEED_MARGIN		0 // speed control margin shift parameter
 
+#define USE_THROTTLE_FILTER 1
 
 #define ANGLE_OF_ATTACK_NORMAL				( -2.0 )
 #define ANGLE_OF_ATTACK_INVERTED			( -4.0 )
