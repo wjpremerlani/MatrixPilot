@@ -6,7 +6,7 @@
 //#define FIXED_ORIGIN_LOCATION	    { -1219950467, 374124664, 30.0 }	// A point in Baylands Park in Sunnyvale, CA
 #define FIXED_ORIGIN_LOCATION	    { 113480854, 472580108, 578 }	// Innsbruck, useful for X-Plane flight simulator
 
-#define WAYPOINT_PROXIMITY_RADIUS   (25)
+#define WAYPOINT_PROXIMITY_RADIUS   (1)
 
 #define CAM_VIEW_LAUNCH         { 0, 0, 0 }
 
