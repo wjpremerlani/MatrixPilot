@@ -243,8 +243,8 @@ void navigate_process_flightplan(void)
 {
 	if (gps_nav_valid() && state_flags._.GPS_steering)
 	{
+        flightplan_update(); // was called run_flightplan();
 		navigate_compute_bearing_to_goal();
-		flightplan_update(); // was called run_flightplan();
 		compute_camera_view();
 	}
 }
