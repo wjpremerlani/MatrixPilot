@@ -2,6 +2,17 @@
 #define GNSS_VDOP_REQUIRED_FOR_STARTUP	     60  //  Vertical Dilution of Precision
 #define GNSS_SVS_REQUIRED_FOR_STARTUP	      6  //  Number of Sattelites in View
 
+////////////////////////////////////////////////////////////////////////////////
+// Hardware In the Loop Simulation
+// Only set this to 1 for testing in the simulator.  Do not try to fly with this set to 1!
+// See the MatrixPilot wiki for more info on using HILSIM.
+// HILSIM_BAUD is the serial speed for communications with the X-Plane plugin.  Default is
+// now 38400.  Make sure the X-Plane plugin's Setup file has its speed set to match.
+#define HILSIM                              1
+#define HILSIM_USB                          0           // AUAV3 only (under development)
+#define HILSIM_BAUD                         38400
+
+
 #define USE_FIXED_ORIGIN	    0
 //#define FIXED_ORIGIN_LOCATION	    { -1219950467, 374124664, 30.0 }	// A point in Baylands Park in Sunnyvale, CA
 #define FIXED_ORIGIN_LOCATION	    { 113480854, 472580108, 578 }	// Innsbruck, useful for X-Plane flight simulator
@@ -237,6 +248,8 @@
 #define PPM_SIGNAL_INVERTED                 0
 #define PPM_ALT_OUTPUT_PINS                 0
 
+
+#if ( HILSIM == 0)
 // NUM_INPUTS:
 // For classic boards: Set to 1-5 (or 1-8 when using PPM input)
 //   1-4 enables only the first 1-4 of the 4 standard input channels
@@ -308,7 +321,52 @@
 
 // Set this to 1 if you need to switch the left and right elevon or vtail surfaces
 #define ELEVON_VTAIL_SURFACES_REVERSED      0
+#endif // HILSIM == 0
+#if ( HILSIM == 1)
+#define NUM_INPUTS                          5
 
+#define THROTTLE_INPUT_CHANNEL              CHANNEL_3
+#define AILERON_INPUT_CHANNEL               CHANNEL_1
+#define ELEVATOR_INPUT_CHANNEL              CHANNEL_2
+#define RUDDER_INPUT_CHANNEL                CHANNEL_4
+#define MODE_SWITCH_INPUT_CHANNEL           CHANNEL_5
+#define FLAP_INPUT_CHANNEL		    CHANNEL_UNUSED
+#define CAMERA_PITCH_INPUT_CHANNEL          CHANNEL_UNUSED
+#define CAMERA_YAW_INPUT_CHANNEL            CHANNEL_UNUSED
+#define CAMERA_MODE_INPUT_CHANNEL           CHANNEL_UNUSED
+#define OSD_MODE_SWITCH_INPUT_CHANNEL       CHANNEL_UNUSED
+#define PASSTHROUGH_A_INPUT_CHANNEL         CHANNEL_UNUSED
+#define PASSTHROUGH_B_INPUT_CHANNEL         CHANNEL_UNUSED
+#define PASSTHROUGH_C_INPUT_CHANNEL         CHANNEL_UNUSED
+#define PASSTHROUGH_D_INPUT_CHANNEL         CHANNEL_UNUSED
+
+#define NUM_OUTPUTS                         4
+
+#define THROTTLE_OUTPUT_CHANNEL             CHANNEL_3
+#define AILERON_OUTPUT_CHANNEL              CHANNEL_1
+#define ELEVATOR_OUTPUT_CHANNEL             CHANNEL_2
+#define RUDDER_OUTPUT_CHANNEL               CHANNEL_4
+#define FLAP_OUTPUT_CHANNEL		    CHANNEL_UNUSED
+#define AILERON_SECONDARY_OUTPUT_CHANNEL    CHANNEL_UNUSED
+#define CAMERA_PITCH_OUTPUT_CHANNEL         CHANNEL_UNUSED
+#define CAMERA_YAW_OUTPUT_CHANNEL           CHANNEL_UNUSED
+#define TRIGGER_OUTPUT_CHANNEL              CHANNEL_UNUSED
+#define PASSTHROUGH_A_OUTPUT_CHANNEL        CHANNEL_UNUSED
+#define PASSTHROUGH_B_OUTPUT_CHANNEL        CHANNEL_UNUSED
+#define PASSTHROUGH_C_OUTPUT_CHANNEL        CHANNEL_UNUSED
+#define PASSTHROUGH_D_OUTPUT_CHANNEL        CHANNEL_UNUSED
+
+#define AILERON_CHANNEL_REVERSED            1
+#define ELEVATOR_CHANNEL_REVERSED           1
+#define RUDDER_CHANNEL_REVERSED             1
+#define AILERON_SECONDARY_CHANNEL_REVERSED  0
+#define THROTTLE_CHANNEL_REVERSED           0
+#define CAMERA_PITCH_CHANNEL_REVERSED       0
+#define CAMERA_YAW_CHANNEL_REVERSED         0
+
+#define ELEVON_VTAIL_SURFACES_REVERSED      0
+
+#endif // HILSIM == 1
 
 ////////////////////////////////////////////////////////////////////////////////
 // Mode Switch is ideally controlled by a 3-position switch on your transmitter.
@@ -705,15 +763,6 @@
 #define RTL_PITCH_DOWN                      0.0
 
 
-////////////////////////////////////////////////////////////////////////////////
-// Hardware In the Loop Simulation
-// Only set this to 1 for testing in the simulator.  Do not try to fly with this set to 1!
-// See the MatrixPilot wiki for more info on using HILSIM.
-// HILSIM_BAUD is the serial speed for communications with the X-Plane plugin.  Default is
-// now 38400.  Make sure the X-Plane plugin's Setup file has its speed set to match.
-#define HILSIM                              0
-#define HILSIM_USB                          0           // AUAV3 only (under development)
-#define HILSIM_BAUD                         38400
 
 
 ////////////////////////////////////////////////////////////////////////////////
