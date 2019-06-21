@@ -28,6 +28,8 @@
 #include "rmat.h"
 #include "../libUDB/heartbeat.h"
 
+//#define BODY_FRAME_BIAS
+#define EARTH_FRAME_BIAS
 
 // heartbeats
 #define DR_PERIOD (int16_t)((HEARTBEAT_HZ/GPS_RATE)+4)
@@ -87,6 +89,50 @@ fractional locationErrorEarth[] = { 0, 0, 0 };
 // GPSvelocity - IMUvelocity
 fractional velocityErrorEarth[] = { 0, 0, 0 };
 
+#ifdef BODY_FRAME_BIAS
+void update_bias(void)
+{
+    // update the accelerometer bias estimate
+    IMUBiasx.WW += __builtin_mulss(((int16_t)(DR_I_GAIN)), velocityErrorEarth[0]);
+    IMUBiasy.WW += __builtin_mulss(((int16_t)(DR_I_GAIN)), velocityErrorEarth[1]);
+    IMUBiasz.WW += __builtin_mulss(((int16_t)(DR_I_GAIN)), velocityErrorEarth[2]);
+}
+void apply_bias(void)
+{
+    // adjust for accelerometer bias
+    IMUvelocityx.WW += __builtin_mulss(DR_TIMESTEP*MAX16,IMUBiasx._.W1);
+	IMUvelocityy.WW += __builtin_mulss(DR_TIMESTEP*MAX16,IMUBiasy._.W1);
+	IMUvelocityz.WW += __builtin_mulss(DR_TIMESTEP*MAX16,IMUBiasz._.W1);		 
+}
+#endif
+
+#ifdef EARTH_FRAME_BIAS
+void update_bias(void)
+{
+    // update the accelerometer bias estimate
+    int16_t velocityErrorBody[3];
+    fractional rmat_transpose[9];
+    MatrixTranspose(3,3,rmat_transpose,rmat);
+    MatrixMultiply(3,3,1,velocityErrorBody,rmat_transpose,velocityErrorEarth);
+    IMUBiasx.WW += __builtin_mulss(((int16_t)(DR_I_GAIN)), velocityErrorBody[0]);
+    IMUBiasy.WW += __builtin_mulss(((int16_t)(DR_I_GAIN)), velocityErrorBody[1]);
+    IMUBiasz.WW += __builtin_mulss(((int16_t)(DR_I_GAIN)), velocityErrorBody[2]);
+}
+void apply_bias(void)
+{
+    int16_t bias_body[3];
+    int16_t bias_earth[3];
+    // adjust for accelerometer bias
+    bias_body[0] = IMUBiasx._.W1 ;
+    bias_body[1] = IMUBiasy._.W1 ;
+    bias_body[2] = IMUBiasz._.W1 ;
+    MatrixMultiply(3,3,1,bias_earth,rmat,bias_body);
+    IMUvelocityx.WW += __builtin_mulss(DR_TIMESTEP*MAX16,bias_earth[0]);
+	IMUvelocityy.WW += __builtin_mulss(DR_TIMESTEP*MAX16,bias_earth[1]);
+	IMUvelocityz.WW += __builtin_mulss(DR_TIMESTEP*MAX16,bias_earth[2]);		 
+}
+#endif
+
 void dead_reckon(void)
 {
 	int16_t air_speed_x, air_speed_y, air_speed_z;
@@ -116,10 +162,8 @@ void dead_reckon(void)
 		IMUvelocityy.WW += __builtin_mulss(((int16_t)(ACCEL2DELTAV)), accelEarth[1] );
 		IMUvelocityz.WW += __builtin_mulss(((int16_t)(ACCEL2DELTAV)), accelEarth[2] );
         
-        // adjust for accelerometer bias
-		IMUvelocityx.WW += __builtin_mulss(DR_TIMESTEP*MAX16,IMUBiasx._.W1);
-		IMUvelocityy.WW += __builtin_mulss(DR_TIMESTEP*MAX16,IMUBiasy._.W1);
-		IMUvelocityz.WW += __builtin_mulss(DR_TIMESTEP*MAX16,IMUBiasz._.W1);
+        // adjust velocity estimate for accelerometer bias
+        apply_bias();
 		
         // integrate IMU velocity to update the IMU location	
 		IMUlocationx.WW += (__builtin_mulss(((int16_t)(VELOCITY2LOCATION)), IMUvelocityx._.W1)>>4);
@@ -131,12 +175,10 @@ void dead_reckon(void)
 		// This is done with a countdown clock that gets reset each time new data comes in.
 		{
 			dead_reckon_clock --;
-
-            // update the accelerometer bias estimate
-            IMUBiasx.WW += __builtin_mulss(((int16_t)(DR_I_GAIN)), velocityErrorEarth[0]);
-            IMUBiasy.WW += __builtin_mulss(((int16_t)(DR_I_GAIN)), velocityErrorEarth[1]);
-            IMUBiasz.WW += __builtin_mulss(((int16_t)(DR_I_GAIN)), velocityErrorEarth[2]);
-		
+            
+            // update estimate of accelerometer bias
+            update_bias() ;
+            
             // apply the velocity error term to the velocity estimate
             IMUvelocityx.WW += __builtin_mulss(2*DR_FILTER_GAIN, velocityErrorEarth[0]);
             IMUvelocityy.WW += __builtin_mulss(2*DR_FILTER_GAIN, velocityErrorEarth[1]);
