@@ -2,9 +2,11 @@
 
 #define CAM_VIEW_LAUNCH         { 0, 0, 0 }
 
-
+#define FULL_MISSION 0
 const struct waypointDef waypoints[] = {
+#if ( FULL_MISSION == 1 )
 	{ { 0, 0, 75 } , 10 , 0 , F_NORMAL , CAM_VIEW_LAUNCH } , //Waypoint 1
+#endif
 	{ { -106, 78, 75 } , 10 , 0 , F_NORMAL + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 2
 	{ { -128, 113, 75 } , 10 , 0 , F_NORMAL + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 3
 	{ { -121, 150, 75 } , 10 , 0 , F_NORMAL + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 4
@@ -27,7 +29,9 @@ const struct waypointDef waypoints[] = {
 	{ { 137, -69, 25 } , 10 , 0 , F_NORMAL + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 21
 	{ { 94, -65, 20 } , 10 , 0 , F_NORMAL + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 22
 	{ { -5, 3, 10 } , 10 , 0 , F_NORMAL + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 23
+#if ( FULL_MISSION == 1 )
 	{ { -140, 97, -5 } , 0 , 0 , F_LAND + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 24
+#endif
 };
 
 
