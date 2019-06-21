@@ -28,8 +28,8 @@
 #include "rmat.h"
 #include "../libUDB/heartbeat.h"
 
-//#define BODY_FRAME_BIAS
-#define EARTH_FRAME_BIAS
+#define BODY_FRAME_BIAS
+//#define EARTH_FRAME_BIAS
 
 // heartbeats
 #define DR_PERIOD (int16_t)((HEARTBEAT_HZ/GPS_RATE)+4)
@@ -89,7 +89,7 @@ fractional locationErrorEarth[] = { 0, 0, 0 };
 // GPSvelocity - IMUvelocity
 fractional velocityErrorEarth[] = { 0, 0, 0 };
 
-#ifdef BODY_FRAME_BIAS
+#ifdef EARTH_FRAME_BIAS
 void update_bias(void)
 {
     // update the accelerometer bias estimate
@@ -106,7 +106,7 @@ void apply_bias(void)
 }
 #endif
 
-#ifdef EARTH_FRAME_BIAS
+#ifdef BODY_FRAME_BIAS
 void update_bias(void)
 {
     // update the accelerometer bias estimate
@@ -114,6 +114,8 @@ void update_bias(void)
     fractional rmat_transpose[9];
     MatrixTranspose(3,3,rmat_transpose,rmat);
     MatrixMultiply(3,3,1,velocityErrorBody,rmat_transpose,velocityErrorEarth);
+	// in principle there should be a multiply by 2 after the matrix multiply,
+	// but with body frame bias it is better to reduce the overall feedback gain
     IMUBiasx.WW += __builtin_mulss(((int16_t)(DR_I_GAIN)), velocityErrorBody[0]);
     IMUBiasy.WW += __builtin_mulss(((int16_t)(DR_I_GAIN)), velocityErrorBody[1]);
     IMUBiasz.WW += __builtin_mulss(((int16_t)(DR_I_GAIN)), velocityErrorBody[2]);
@@ -127,6 +129,8 @@ void apply_bias(void)
     bias_body[1] = IMUBiasy._.W1 ;
     bias_body[2] = IMUBiasz._.W1 ;
     MatrixMultiply(3,3,1,bias_earth,rmat,bias_body);
+	// in principle there should be a multiply by 2 after the matrix multiply,
+	// but with body frame bias it is better to reduce the overall feedback gain
     IMUvelocityx.WW += __builtin_mulss(DR_TIMESTEP*MAX16,bias_earth[0]);
 	IMUvelocityy.WW += __builtin_mulss(DR_TIMESTEP*MAX16,bias_earth[1]);
 	IMUvelocityz.WW += __builtin_mulss(DR_TIMESTEP*MAX16,bias_earth[2]);		 
