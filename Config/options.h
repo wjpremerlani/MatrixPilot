@@ -8,7 +8,7 @@
 // See the MatrixPilot wiki for more info on using HILSIM.
 // HILSIM_BAUD is the serial speed for communications with the X-Plane plugin.  Default is
 // now 38400.  Make sure the X-Plane plugin's Setup file has its speed set to match.
-#define HILSIM                              1
+#define HILSIM                              0
 #define HILSIM_USB                          0           // AUAV3 only (under development)
 #define HILSIM_BAUD                         38400
 
@@ -44,12 +44,12 @@
 */
 
 // board 2
-#define XACCEL_OFFSET	( 65 )
-#define YACCEL_OFFSET	( -107 )
-#define ZACCEL_OFFSET	( -1047 )
-#define XRATE_OFFSET	( -62 )
-#define YRATE_OFFSET	( -55 )
-#define ZRATE_OFFSET	( -12 )
+#define XACCEL_OFFSET	( 220 )
+#define YACCEL_OFFSET	( -32 )
+#define ZACCEL_OFFSET	( -1050 )
+#define XRATE_OFFSET	( -162 )
+#define YRATE_OFFSET	( -106 )
+#define ZRATE_OFFSET	( -37 )
 
 // board 3
 /*

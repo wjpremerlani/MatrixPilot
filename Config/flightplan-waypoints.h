@@ -2,7 +2,7 @@
 
 #define CAM_VIEW_LAUNCH         { 0, 0, 0 }
 
-#define FULL_MISSION 0
+#define FULL_MISSION 1
 const struct waypointDef waypoints[] = {
 #if ( FULL_MISSION == 1 )
 	{ { 0, 0, 75 } , 10 , 0 , F_NORMAL , CAM_VIEW_LAUNCH } , //Waypoint 1
