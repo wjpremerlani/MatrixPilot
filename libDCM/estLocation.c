@@ -108,7 +108,8 @@ void estLocation(void)
 	// markw: what is the latency? It doesn't appear numerically or as a comment
 	// in the following code. Since this method is called at the GPS reporting rate
 	// it must be assumed to be one reporting interval?
-#if (HILSIM != 1)
+//#if (HILSIM != 1)
+#if ( 1 == 0) // TODO : revise this temporary disable of GPS lead filter latency compensator
 	if (dcm_flags._.gps_history_valid)
 	{
 		cog_delta = cog_circular - cog_previous;

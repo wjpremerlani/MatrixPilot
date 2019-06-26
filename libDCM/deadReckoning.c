@@ -28,8 +28,8 @@
 #include "rmat.h"
 #include "../libUDB/heartbeat.h"
 
-#define BODY_FRAME_BIAS
-//#define EARTH_FRAME_BIAS
+//#define BODY_FRAME_BIAS
+#define EARTH_FRAME_BIAS
 
 // heartbeats
 #define DR_PERIOD (int16_t)((HEARTBEAT_HZ/GPS_RATE)+4)
@@ -41,7 +41,8 @@
 #define MAX16 (4.0*RMAX)
 
 // seconds
-#define DR_TAU 2.5
+//#define DR_TAU 2.5
+#define DR_TAU 1.0
 
 // seconds * (cm/sec^2 / count) ??? is G always represented as cm/sec^2 ?
 // GRAVITYM is 980 cm/sec^2, GRAVITY is 2000 counts
@@ -68,6 +69,10 @@ union longww IMUvelocityx = { 0 };
 union longww IMUvelocityy = { 0 };
 union longww IMUvelocityz = { 0 };
 
+int16_t prev_IMUvelocityx = 0 ;
+int16_t prev_IMUvelocityy = 0 ;
+int16_t prev_IMUvelocityz = 0 ;
+
 int16_t forward_ground_speed = 0 ;
 
 // location, as estimated by the IMU
@@ -75,6 +80,10 @@ int16_t forward_ground_speed = 0 ;
 union longww IMUlocationx = { 0 };
 union longww IMUlocationy = { 0 };
 union longww IMUlocationz = { 0 };
+
+int16_t prev_IMUlocationx = 0 ;
+int16_t prev_IMUlocationy = 0 ;
+int16_t prev_IMUlocationz = 0 ;
 
 // integral of acceleration
 union longww IMUBiasx = { 0 };
@@ -152,13 +161,21 @@ void dead_reckon(void)
 			dcm_flags._.reckon_req = 0;
 			dead_reckon_clock = DR_PERIOD;
 
-			locationErrorEarth[0] = GPSlocation.x - IMUlocationx._.W1;
-			locationErrorEarth[1] = GPSlocation.y - IMUlocationy._.W1;
-			locationErrorEarth[2] = GPSlocation.z - IMUlocationz._.W1;
+			locationErrorEarth[0] = GPSlocation.x - prev_IMUlocationx;
+			locationErrorEarth[1] = GPSlocation.y - prev_IMUlocationy;
+			locationErrorEarth[2] = GPSlocation.z - prev_IMUlocationz;
 
-			velocityErrorEarth[0] = GPSvelocity.x - IMUvelocityx._.W1;
-			velocityErrorEarth[1] = GPSvelocity.y - IMUvelocityy._.W1;
-			velocityErrorEarth[2] = GPSvelocity.z - IMUvelocityz._.W1;
+			velocityErrorEarth[0] = GPSvelocity.x - prev_IMUvelocityx;
+			velocityErrorEarth[1] = GPSvelocity.y - prev_IMUvelocityy;
+			velocityErrorEarth[2] = GPSvelocity.z - prev_IMUvelocityz;
+			
+			prev_IMUlocationx = IMUlocationx._.W1;
+			prev_IMUlocationy = IMUlocationy._.W1;
+			prev_IMUlocationz = IMUlocationz._.W1;
+
+			prev_IMUvelocityx = IMUvelocityx._.W1;
+			prev_IMUvelocityy = IMUvelocityy._.W1;
+			prev_IMUvelocityz = IMUvelocityz._.W1;
 		}
 
 		// integrate the raw acceleration
@@ -167,7 +184,7 @@ void dead_reckon(void)
 		IMUvelocityz.WW += __builtin_mulss(((int16_t)(ACCEL2DELTAV)), accelEarth[2] );
         
         // adjust velocity estimate for accelerometer bias
-        apply_bias();
+        //apply_bias();
 		
         // integrate IMU velocity to update the IMU location	
 		IMUlocationx.WW += (__builtin_mulss(((int16_t)(VELOCITY2LOCATION)), IMUvelocityx._.W1)>>4);
@@ -181,7 +198,7 @@ void dead_reckon(void)
 			dead_reckon_clock --;
             
             // update estimate of accelerometer bias
-            update_bias() ;
+            //update_bias() ;
             
             // apply the velocity error term to the velocity estimate
             IMUvelocityx.WW += __builtin_mulss(2*DR_FILTER_GAIN, velocityErrorEarth[0]);
@@ -213,6 +230,15 @@ void dead_reckon(void)
 		IMUlocationx.WW = 0;
 		IMUlocationy.WW = 0;
 		IMUlocationz.WW = 0;
+
+		prev_IMUvelocityx = 0 ;
+		prev_IMUvelocityy = 0 ;
+		prev_IMUvelocityz = 0 ;	
+		
+		prev_IMUlocationx = 0 ;
+		prev_IMUlocationy = 0 ;
+		prev_IMUlocationz = 0 ;	
+			
 	}
 	air_speed_x = IMUvelocityx._.W1 - estimatedWind[0];
 	air_speed_y = IMUvelocityy._.W1 - estimatedWind[1];
