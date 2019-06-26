@@ -8,7 +8,8 @@
 
 #define SLOW_TURN_RATE_SCALING 1
 
-#define SPEED_MARGIN		4
+//#define SPEED_MARGIN		4
+#define SPEED_MARGIN		0
 
 #define USE_FIXED_ORIGIN	    0
 //#define FIXED_ORIGIN_LOCATION	    { -1219950467, 374124664, 30.0 }	// A point in Baylands Park in Sunnyvale, CA
@@ -187,12 +188,12 @@
 #define ELEVATOR_BOOST                        0.5
 
 // Cirrus : needs to be revised
-#define ANGLE_OF_ATTACK_NORMAL				( -3.4 )
-#define ANGLE_OF_ATTACK_INVERTED			( -3.4 )
-#define ELEVATOR_TRIM_NORMAL				( -.1 )
-#define ELEVATOR_TRIM_INVERTED				( -.1)
+#define ANGLE_OF_ATTACK_NORMAL				( -2.0)
+#define ANGLE_OF_ATTACK_INVERTED			( -7.6 )
+#define ELEVATOR_TRIM_NORMAL				( -0.0 )
+#define ELEVATOR_TRIM_INVERTED				( -0.42)
 //#define CRUISE_SPEED						( 177.0 )
-#define REFERENCE_SPEED						( 110.0 )
+#define REFERENCE_SPEED						( 75.0 )
 
 
  
@@ -249,12 +250,12 @@
 //#define HEIGHT_MARGIN                       50
 #define HEIGHT_MARGIN                       25
 
-#define ALT_HOLD_THROTTLE_MIN               0.4
+#define ALT_HOLD_THROTTLE_MIN               0.0
 #define ALT_HOLD_THROTTLE_MAX               1.0
 
-#define ALT_HOLD_PITCH_MIN                 -18.0
-#define ALT_HOLD_PITCH_MAX                  12.0
-#define ALT_HOLD_PITCH_HIGH                -18.0
+#define ALT_HOLD_PITCH_MIN                 -15.0
+#define ALT_HOLD_PITCH_MAX                  15.0
+#define ALT_HOLD_PITCH_HIGH                -15.0
 
 //#define ALT_HOLD_PITCH_MIN                 -10.0
 //#define ALT_HOLD_PITCH_MAX                  10.0
@@ -270,8 +271,8 @@
 
 //#define ID_DIY_DRONES_URL "http://www.diydrones.com/profile/PeterHollands"
 #define ID_VEHICLE_MODEL_NAME               "Cirrus HILSIM"
-#define ID_VEHICLE_REGISTRATION             "helical version, body frame pitch"
-#define ID_LEAD_PILOT                       "WJP"
+#define ID_VEHICLE_REGISTRATION             "June 25, 2019"
+#define ID_LEAD_PILOT                       "Mike"
 #define ID_DIY_DRONES_URL                   ""
 
 #define FLY_BY_DATALINK_ENABLED             0
