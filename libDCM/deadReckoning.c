@@ -42,7 +42,7 @@
 
 // seconds
 //#define DR_TAU 2.5
-#define DR_TAU 1.0
+#define DR_TAU 1.4
 
 // seconds * (cm/sec^2 / count) ??? is G always represented as cm/sec^2 ?
 // GRAVITYM is 980 cm/sec^2, GRAVITY is 2000 counts
@@ -160,7 +160,16 @@ void dead_reckon(void)
 			// compute error indications and restart the dead reckoning clock to apply them
 			dcm_flags._.reckon_req = 0;
 			dead_reckon_clock = DR_PERIOD;
+			
+#if ( HILSIM ==1 )			
+			locationErrorEarth[0] = GPSlocation.x - IMUlocationx._.W1;
+			locationErrorEarth[1] = GPSlocation.y - IMUlocationy._.W1;
+			locationErrorEarth[2] = GPSlocation.z - IMUlocationz._.W1;
 
+			velocityErrorEarth[0] = GPSvelocity.x - IMUvelocityx._.W1;
+			velocityErrorEarth[1] = GPSvelocity.y - IMUvelocityy._.W1;
+			velocityErrorEarth[2] = GPSvelocity.z - IMUvelocityz._.W1;			
+#else
 			locationErrorEarth[0] = GPSlocation.x - prev_IMUlocationx;
 			locationErrorEarth[1] = GPSlocation.y - prev_IMUlocationy;
 			locationErrorEarth[2] = GPSlocation.z - prev_IMUlocationz;
@@ -175,7 +184,8 @@ void dead_reckon(void)
 
 			prev_IMUvelocityx = IMUvelocityx._.W1;
 			prev_IMUvelocityy = IMUvelocityy._.W1;
-			prev_IMUvelocityz = IMUvelocityz._.W1;
+			prev_IMUvelocityz = IMUvelocityz._.W1;			
+#endif // HILSIM
 		}
 
 		// integrate the raw acceleration
@@ -201,9 +211,9 @@ void dead_reckon(void)
             //update_bias() ;
             
             // apply the velocity error term to the velocity estimate
-            IMUvelocityx.WW += __builtin_mulss(2*DR_FILTER_GAIN, velocityErrorEarth[0]);
-            IMUvelocityy.WW += __builtin_mulss(2*DR_FILTER_GAIN, velocityErrorEarth[1]);
-            IMUvelocityz.WW += __builtin_mulss(2*DR_FILTER_GAIN, velocityErrorEarth[2]);
+            IMUvelocityx.WW += __builtin_mulss(DR_FILTER_GAIN, velocityErrorEarth[0]);
+            IMUvelocityy.WW += __builtin_mulss(DR_FILTER_GAIN, velocityErrorEarth[1]);
+            IMUvelocityz.WW += __builtin_mulss(DR_FILTER_GAIN, velocityErrorEarth[2]);
 		
             // apply the location error term to the location estimate
             IMUlocationx.WW += __builtin_mulss(DR_FILTER_GAIN, locationErrorEarth[0]);
