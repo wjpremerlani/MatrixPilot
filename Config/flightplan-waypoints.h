@@ -141,7 +141,8 @@ const struct waypointDef waypoints[] = {
 };
 */
 //#define LANDING_SPEED 120
-#define LANDING_SPEED 70
+//#define LANDING_SPEED 70
+#define LANDING_SPEED 85
 const struct waypointDef waypoints[] = {
 	{ { -738146403, 431230295, 1219 } , 120 , 0 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 1
 	{ { -738103019, 429509530, 1219 } , 120 , 0 , F_ABSOLUTE + F_CROSS_TRACK , CAM_VIEW_LAUNCH } , //Waypoint 2
