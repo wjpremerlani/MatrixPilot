@@ -59,7 +59,7 @@
 
 // dimensionless
 #define DR_FILTER_GAIN (int16_t)(DR_TIMESTEP*MAX16/DR_TAU)
-#define DR_I_GAIN (DR_FILTER_GAIN/DR_TAU)
+#define DR_I_GAIN (0.5*DR_FILTER_GAIN/DR_TAU)
 
 // 1/seconds
 #define ONE_OVER_TAU (uint16_t)(MAX16/DR_TAU)
@@ -196,9 +196,6 @@ void dead_reckon(void)
 		IMUvelocityy.WW += __builtin_mulss(((int16_t)(ACCEL2DELTAV)), accelEarth[1] );
 		IMUvelocityz.WW += __builtin_mulss(((int16_t)(ACCEL2DELTAV)), accelEarth[2] );
         
-        // adjust velocity estimate for accelerometer bias
-        //apply_bias();
-		
         // integrate IMU velocity to update the IMU location	
 		IMUlocationx.WW += (__builtin_mulss(((int16_t)(VELOCITY2LOCATION)), IMUvelocityx._.W1)>>4);
 		IMUlocationy.WW += (__builtin_mulss(((int16_t)(VELOCITY2LOCATION)), IMUvelocityy._.W1)>>4);
@@ -210,8 +207,9 @@ void dead_reckon(void)
 		{
 			dead_reckon_clock --;
             
-            // update estimate of accelerometer bias
-            //update_bias() ;
+            // update and apply estimate of accelerometer bias
+            update_bias() ;
+			apply_bias() ;
             
             // apply the velocity error term to the velocity estimate
             IMUvelocityx.WW += __builtin_mulss(DR_FILTER_GAIN, velocityErrorEarth[0]);
