@@ -41,10 +41,10 @@
 #define MAX16 (4.0*RMAX)
 
 // seconds
-//#define DR_TAU 2.5
+#define DR_TAU 2.5
 //#define DR_TAU 1.4
 //#define DR_TAU 1.0
-#define DR_TAU 4.0
+//#define DR_TAU 4.0
 
 // seconds * (cm/sec^2 / count) ??? is G always represented as cm/sec^2 ?
 // GRAVITYM is 980 cm/sec^2, GRAVITY is 2000 counts
@@ -163,8 +163,8 @@ void dead_reckon(void)
 			dcm_flags._.reckon_req = 0;
 			dead_reckon_clock = DR_PERIOD;
 			
-#if ( HILSIM == 1 )
-//#if ( 1 == 1)			
+//#if ( HILSIM == 1 )
+#if ( 1 == 1)			
 			locationErrorEarth[0] = GPSlocation.x - IMUlocationx._.W1;
 			locationErrorEarth[1] = GPSlocation.y - IMUlocationy._.W1;
 			locationErrorEarth[2] = GPSlocation.z - IMUlocationz._.W1;
