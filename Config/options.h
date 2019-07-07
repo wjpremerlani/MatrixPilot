@@ -2,6 +2,9 @@
 #define GNSS_VDOP_REQUIRED_FOR_STARTUP	     60  //  Vertical Dilution of Precision
 #define GNSS_SVS_REQUIRED_FOR_STARTUP	      6  //  Number of Sattelites in View
 
+#define USE_FIXED_ORIGIN        1
+#define FIXED_ORIGIN_LOCATION   { -738885970 , 428331742 , 130.65 }    // Niskayuna soccer field
+
 ////////////////////////////////////////////////////////////////////////////////
 // Hardware In the Loop Simulation
 // Only set this to 1 for testing in the simulator.  Do not try to fly with this set to 1!
@@ -11,11 +14,6 @@
 #define HILSIM                              0
 #define HILSIM_USB                          0           // AUAV3 only (under development)
 #define HILSIM_BAUD                         38400
-
-
-#define USE_FIXED_ORIGIN	    0
-//#define FIXED_ORIGIN_LOCATION	    { -1219950467, 374124664, 30.0 }	// A point in Baylands Park in Sunnyvale, CA
-#define FIXED_ORIGIN_LOCATION	    { 113480854, 472580108, 578 }	// Innsbruck, useful for X-Plane flight simulator
 
 #define WAYPOINT_PROXIMITY_RADIUS   (1)
 
