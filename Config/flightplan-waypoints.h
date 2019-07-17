@@ -127,6 +127,9 @@
 
 #define CAM_VIEW_LAUNCH         { 0, 0, 0 }
 
+#define WAY_POINT_SPEED         10
+#define WAY_POINT_FLAPS         0 
+
 // 
 // 
 // You do not need to specify how many points you have, the compiler will count them for you.
@@ -144,16 +147,16 @@
 
 // Innsbruck inverted/reversed T3 course
 const struct waypointDef waypoints[] = {
-		{ {  113236490, 472496320, 350 } , F_ABSOLUTE, CAM_VIEW_LAUNCH } ,
-		{ {  113236490, 472638400, 350 } , F_ABSOLUTE, CAM_VIEW_LAUNCH } ,
-		{ {  113579820, 472496320, 350 } , F_ABSOLUTE, CAM_VIEW_LAUNCH } ,
-		{ {  113579820, 472638400, 350 } , F_ABSOLUTE, CAM_VIEW_LAUNCH } ,
+		{ {  113236490, 472496320, 350 } , WAY_POINT_SPEED , WAY_POINT_FLAPS , F_ABSOLUTE, CAM_VIEW_LAUNCH } ,
+		{ {  113236490, 472638400, 350 } , WAY_POINT_SPEED , WAY_POINT_FLAPS , F_ABSOLUTE, CAM_VIEW_LAUNCH } ,
+		{ {  113579820, 472496320, 350 } , WAY_POINT_SPEED , WAY_POINT_FLAPS , F_ABSOLUTE, CAM_VIEW_LAUNCH } ,
+		{ {  113579820, 472638400, 350 } , WAY_POINT_SPEED , WAY_POINT_FLAPS , F_ABSOLUTE, CAM_VIEW_LAUNCH } ,
 };
 
 #else
 
 const struct waypointDef waypoints[] = {
-		{ {   0,   0, 75 } , F_NORMAL, CAM_VIEW_LAUNCH } ,  // return to, and loiter 75 meters above the startup position
+		{ {   0,   0, 75 } , WAY_POINT_SPEED , WAY_POINT_FLAPS , F_NORMAL, CAM_VIEW_LAUNCH } ,  // return to, and loiter 75 meters above the startup position
 };
 
 #endif
@@ -171,7 +174,7 @@ const struct waypointDef waypoints[] = {
 // and after flights, since turning off the transmitter will cause the throttle to come on.
 
 const struct waypointDef rtlWaypoints[] = {
-		{ { 0, 0,  50 } , F_LOITER + F_LAND, CAM_VIEW_LAUNCH } ,
+		{ { 0, 0,  50 } , WAY_POINT_SPEED , WAY_POINT_FLAPS , F_LOITER + F_LAND, CAM_VIEW_LAUNCH } ,
 };
 
 
@@ -199,11 +202,11 @@ const struct waypointDef rtlWaypoints[] = {
 
 /*
 const struct waypointDef waypoints[] = {
-		{ { 100,   0  , 75 } , F_NORMAL,   CAM_VIEW_LAUNCH } ,
-		{ { 100, 100  , 75 } , F_NORMAL,   CAM_VIEW_LAUNCH } ,
-		{ {   0, 100  , 75 } , F_INVERTED, CAM_VIEW_LAUNCH } ,
-		{ {   0,   0  , 75 } , F_NORMAL,   CAM_VIEW_LAUNCH } ,
-		{ {  50,  50  , 75 } , F_LOITER + F_TRIGGER + F_LAND, CAM_VIEW_LAUNCH } ,
+		{ { 100,   0  , 75 } , WAY_POINT_SPEED , WAY_POINT_FLAPS , F_NORMAL,   CAM_VIEW_LAUNCH } ,
+		{ { 100, 100  , 75 } , WAY_POINT_SPEED , WAY_POINT_FLAPS , F_NORMAL,   CAM_VIEW_LAUNCH } ,
+		{ {   0, 100  , 75 } , WAY_POINT_SPEED , WAY_POINT_FLAPS , F_INVERTED, CAM_VIEW_LAUNCH } ,
+		{ {   0,   0  , 75 } , WAY_POINT_SPEED , WAY_POINT_FLAPS , F_NORMAL,   CAM_VIEW_LAUNCH } ,
+		{ {  50,  50  , 75 } , WAY_POINT_SPEED , WAY_POINT_FLAPS , F_LOITER + F_TRIGGER + F_LAND, CAM_VIEW_LAUNCH } ,
 };
 */
 
@@ -227,17 +230,17 @@ const struct waypointDef waypoints[] = {
 // Here is the T3 course definition:
 
 const struct waypointDef waypoints[] = {
-		{ {    CORNER  ,    CORNER  , CLEARANCE + 100 } , F_NORMAL, CAM_VIEW_LAUNCH } ,
-		{ {    CORNER  ,  - CORNER  , CLEARANCE +  75 } , F_NORMAL, CAM_VIEW_LAUNCH } ,
-		{ {  - CORNER  ,    CORNER  , CLEARANCE +  50 } , F_NORMAL, CAM_VIEW_LAUNCH } ,
-		{ {  - CORNER  ,  - CORNER  , CLEARANCE +  25 } , F_NORMAL, CAM_VIEW_LAUNCH } ,
-		{ {    CORNER  ,    CORNER  , CLEARANCE +  50 } , F_NORMAL, CAM_VIEW_LAUNCH } ,
-		{ {    CORNER  ,  - CORNER  , CLEARANCE +  75 } , F_NORMAL, CAM_VIEW_LAUNCH } ,
-		{ {  - CORNER  ,    CORNER  , CLEARANCE + 100 } , F_NORMAL, CAM_VIEW_LAUNCH } ,
-		{ {  - CORNER  ,  - CORNER  , CLEARANCE +  75 } , F_NORMAL, CAM_VIEW_2 } ,
-		{ {    CORNER  ,    CORNER  , CLEARANCE +  50 } , F_NORMAL, CAM_VIEW_2 } ,
-		{ {    CORNER  ,  - CORNER  , CLEARANCE +  25 } , F_NORMAL, CAM_VIEW_2 } ,
-		{ {  - CORNER  ,    CORNER  , CLEARANCE +  50 } , F_NORMAL, CAM_VIEW_2 } ,
-		{ {  - CORNER  ,  - CORNER  , CLEARANCE +  75 } , F_NORMAL, CAM_VIEW_2 } ,
+		{ {    CORNER  ,    CORNER  , CLEARANCE + 100 } , WAY_POINT_SPEED , WAY_POINT_FLAPS , F_NORMAL, CAM_VIEW_LAUNCH } ,
+		{ {    CORNER  ,  - CORNER  , CLEARANCE +  75 } , WAY_POINT_SPEED , WAY_POINT_FLAPS , F_NORMAL, CAM_VIEW_LAUNCH } ,
+		{ {  - CORNER  ,    CORNER  , CLEARANCE +  50 } , WAY_POINT_SPEED , WAY_POINT_FLAPS , F_NORMAL, CAM_VIEW_LAUNCH } ,
+		{ {  - CORNER  ,  - CORNER  , CLEARANCE +  25 } , WAY_POINT_SPEED , WAY_POINT_FLAPS , F_NORMAL, CAM_VIEW_LAUNCH } ,
+		{ {    CORNER  ,    CORNER  , CLEARANCE +  50 } , WAY_POINT_SPEED , WAY_POINT_FLAPS , F_NORMAL, CAM_VIEW_LAUNCH } ,
+		{ {    CORNER  ,  - CORNER  , CLEARANCE +  75 } , WAY_POINT_SPEED , WAY_POINT_FLAPS , F_NORMAL, CAM_VIEW_LAUNCH } ,
+		{ {  - CORNER  ,    CORNER  , CLEARANCE + 100 } , WAY_POINT_SPEED , WAY_POINT_FLAPS , F_NORMAL, CAM_VIEW_LAUNCH } ,
+		{ {  - CORNER  ,  - CORNER  , CLEARANCE +  75 } , WAY_POINT_SPEED , WAY_POINT_FLAPS , F_NORMAL, CAM_VIEW_2 } ,
+		{ {    CORNER  ,    CORNER  , CLEARANCE +  50 } , WAY_POINT_SPEED , WAY_POINT_FLAPS , F_NORMAL, CAM_VIEW_2 } ,
+		{ {    CORNER  ,  - CORNER  , CLEARANCE +  25 } , WAY_POINT_SPEED , WAY_POINT_FLAPS , F_NORMAL, CAM_VIEW_2 } ,
+		{ {  - CORNER  ,    CORNER  , CLEARANCE +  50 } , WAY_POINT_SPEED , WAY_POINT_FLAPS , F_NORMAL, CAM_VIEW_2 } ,
+		{ {  - CORNER  ,  - CORNER  , CLEARANCE +  75 } , WAY_POINT_SPEED , WAY_POINT_FLAPS , F_NORMAL, CAM_VIEW_2 } ,
 };
 */

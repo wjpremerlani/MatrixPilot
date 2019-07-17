@@ -340,7 +340,7 @@ static void cross_track(void)
 	crossVector[1]._.W1 = navgoal.y;
     
 #ifndef X_TRACK_V_SHIFT
-#define X_TRACK_V_SHIFT 2
+#define X_TRACK_V_SHIFT 4  // default value for small RC models such as EasyStar
 #endif // X_TRACK_V_SHIFT
 	
 	crossVector[0].WW -= IMUlocationx.WW + ((IMUvelocityx.WW) >> X_TRACK_V_SHIFT );

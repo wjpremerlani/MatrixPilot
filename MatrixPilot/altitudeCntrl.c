@@ -35,6 +35,14 @@
 #include "options_mavlink.h"
 #include "flightplan_waypoints.h"
 
+#ifndef SPEED_MARGIN
+#define SPEED_MARGIN 0 // default value for a small RC model such as EasyStar
+#endif // SPEED_MARGIN
+
+#ifndef USE_THROTTLE_FILTER
+#define USE_THROTTLE_FILTER		1 // default is to apply filtering to the throttle
+#endif
+
 #if (ALTITUDE_GAINS_VARIABLE != 1)
 
 union longww throttleFiltered = { 0 };
