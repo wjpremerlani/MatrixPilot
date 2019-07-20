@@ -44,7 +44,7 @@
 #endif
 
 #ifndef USE_SPEED_IN_HEIGHT_CONTROL
-#define USE_SPEED_IN_HEIGHT_CONTROL			0  // default is to not use speed in height control via elevator
+#define USE_SPEED_IN_HEIGHT_CONTROL			1  // default is to not use speed in height control via elevator
 #endif // USE_SPEED_IN_HEIGHT_CONTROL
 
 #if (ALTITUDE_GAINS_VARIABLE != 1)
