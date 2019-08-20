@@ -190,7 +190,7 @@ class base_telemetry :
         self.cog = int (0)  # course over ground
         self.roll = int (0)
         self.pitch = int (0)
-        self.hdop  = int(0) 
+        self.hdop  = int(0)
         self.vdop  = int(0)
         self.svs   = int(0)
         self.cpu   = int(0)
@@ -281,6 +281,7 @@ class base_telemetry :
         self.omega_accum = [0,0,0]
         self.desired_turn_rate = 0
         self.elevator_loading_trim = 0
+        self.number_of_range_samples = 0
         
 class mavlink_telemetry(base_telemetry):
     """Parse a single binary mavlink message record"""
@@ -2037,6 +2038,12 @@ class ascii_telemetry(base_telemetry):
             if match :
                 try:
                     self.elevator_loading_trim = int(match.group(1))
+                except:
+                    pass
+            match = re.match(".*:Ct([-0-9]*?):",line) # Number of samples of range finder (sonar / lidar)
+            if match :
+                try:
+                    self.number_of_range_samples = int(match.group(1))
                 except:
                     pass
                 

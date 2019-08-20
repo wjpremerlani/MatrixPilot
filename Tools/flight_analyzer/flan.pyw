@@ -2298,6 +2298,7 @@ def create_log_book(options) :
                 log_book.entries[-1].omega_accum = log.omega_accum
                 log_book.entries[-1].desired_turn_rate = log.desired_turn_rate
                 log_book.entries[-1].elevator_loading_trim = log.elevator_loading_trim
+                log_book.entries[-1].number_of_range_samples = log.number_of_range_samples
         elif log.log_format == "F24" :
             log_book.aileron_channel_neutral = log.aileron_channel_neutral
             log_book.elevator_channel_neutral = log.elevator_channel_neutral
@@ -2426,7 +2427,7 @@ def write_csv(options,log_book):
     print >> f_csv, "ElevLoadTrim,",
     print >> f_csv, "LEX,LEY,LEZ,IMU X,IMU Y,IMU Z,Desired_Height,Bar_Tmp,Bar_Prs,Bar_Alt_ASL,Bar_Alt_AO,MAG_W,MAG_N,MAG_Z,",
     print >> f_csv, "Waypoint X,WaypointY,WaypointZ,IMUvelocityX,IMUvelocityY,IMUvelocityZ,",
-    print >> f_csv, "Flags Dec,Flags Hex,Range,ALT_AGL,AeroX,AeroY,AeroZ,OmegaX,OmegaY,OmegaZ,AoI,WingLoad,AoA_Pitch,",
+    print >> f_csv, "Flags Dec,Flags Hex,Range,ALT_AGL,RangeCnt,AeroX,AeroY,AeroZ,OmegaX,OmegaY,OmegaZ,AoI,WingLoad,AoA_Pitch,",
     print >> f_csv, "Volts,Amps,mAh"
     
     counter = 0
@@ -2572,6 +2573,7 @@ def write_csv(options,log_book):
               "{0:.2f}".format(entry.IMUvelocityx / 100.0), ",", "{0:.2f}".format(entry.IMUvelocityy / 100.0), ",", \
               "{0:.2f}".format(entry.IMUvelocityz / 100.0), ",", \
               entry.flags, ",",hex(entry.flags),",", "{0:.2f}".format(entry.sonar_direct / 100.0), ",", "{0:.2f}".format(entry.alt_sonar / 100.0), ",", \
+              entry.number_of_range_samples, ",", \
               entry.aero_force_x, ",", entry.aero_force_y, ",", entry.aero_force_z,",", \
               entry.omega_accum[0], ",", entry.omega_accum[1], ",", entry.omega_accum[2], ",", \
               "{0:.2f}".format(incidence), \
