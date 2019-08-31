@@ -576,6 +576,7 @@ void telemetry_output_8hz(void)
 
 extern uint16_t udb_pwm_range;
 extern uint16_t udb_gap_range;
+extern uint16_t get_range_count(void);
 
 void telemetry_output_8hz(void)
 {
@@ -736,7 +737,7 @@ void telemetry_output_8hz(void)
 					    state_flags.WW, osc_fail_count,
 					    IMUvelocityx._.W1, IMUvelocityy._.W1, IMUvelocityz._.W1, goal.x, goal.y, goal.z, aero_force[0], aero_force[1], aero_force[2]);
 #if ( USE_RANGER_INPUT !=  0)
-					serial_output("H%i,%i,%i,%i,%i:", range_to_target, height_above_ground_level , udb_pwm_range , udb_gap_range ) ;
+					serial_output("H%i,%i,%i,%i,%i:", range_to_target, height_above_ground_level , get_range_count() , udb_gap_range ) ;
 //				serial_output("H%i,%i:", range_to_target, height_above_ground_level) ; 
 #endif
 #if (USE_BAROMETER_ALTITUDE == 1)

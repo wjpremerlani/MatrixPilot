@@ -23,29 +23,35 @@
 #include "interrupt.h"
 #include "rangeIn.h"
 
+#define MAXIMUM_GAP_BETWEEN_PULSES	4000	// maximum time in milliseconds between valid pulses, times 2.5, times 100, 16*2.5*100 =
+
 #if (USE_RANGER_INPUT != 0)
 
 uint16_t udb_pwm_range;          
 uint16_t udb_gap_range;
-static uint16_t _udb_pwm_range ;
-static uint16_t udb_pwm_range_rise;
-static uint16_t udb_pwm_range_fall;
+static union longww range_pwm_total ;
 static uint16_t range_pwm_count;
 
+static uint16_t udb_pwm_range_rise;
+static uint16_t udb_pwm_range_fall;
+
+static uint16_t _udb_pwm_range ;
 static uint16_t _range_pwm_count;
 static union longww _range_pwm_total ;
-static union longww range_pwm_total ;
 
 void update_range_value(void)
 {
 	if ( ( range_pwm_count == 0) || (range_pwm_total._.W1 > range_pwm_count ))
-	{
+	{	// either no pulses to work with,
+		// or it has been too long since last update and there was integer overflow
 		udb_pwm_range = 32768 ;
 	}
 	else
-	{
+	{	// normal condition, take the average of pulses since last time this routine was executed
 		udb_pwm_range = __builtin_divud(range_pwm_total.WW , range_pwm_count) ;
 	}
+	// reset the totals
+	udb_flags._.range_update_request = 1 ;
 }
 
 uint16_t get_range_value(void)
@@ -117,6 +123,7 @@ void udb_init_ranger(void)
 
 void service_lidar_update ( void )
 {
+	//	take a snapshot of the ISR running accumulation of the LIDAR data, zero it out and reset the update request
 	range_pwm_total.WW = _range_pwm_total.WW ;
 	range_pwm_count = _range_pwm_count ;
 	 _range_pwm_total.WW = 0 ;
@@ -126,17 +133,19 @@ void service_lidar_update ( void )
 
 void service_lidar_high(uint16_t time)
 {
+	// measure the gap between the trailing edge of the last pulse and the leading edge of this one
 	udb_pwm_range_rise = time;
 	udb_gap_range = time - udb_pwm_range_fall ;
 }
 
 void service_lidar_low(uint16_t time)
 {
+	// measure the latest pulse, validate it, and accumulate it into the running totals
 	udb_pwm_range_fall = time ;
 	_udb_pwm_range = time - udb_pwm_range_rise;
-	if ( udb_gap_range > 4000)
+	if ( udb_gap_range > MAXIMUM_GAP_BETWEEN_PULSES )
 	{
-		led_on(LED_BLUE) ;
+		led_on(LED_BLUE) ; // for debugging
 	}
 	else
 	{

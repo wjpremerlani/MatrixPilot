@@ -62,7 +62,7 @@ void calculate_height_above_ground_level(void)
 {
 	{	
 		union longbbbb accum;
-		update_range_value() ;
+		update_range_value() ; // compute a new value for range from a set of pulses and start a new se
 		accum.WW = __builtin_muluu(get_range_value(), UDB_RANGER_PWM_UNITS_TO_CENTIMETERS) + 32768;
 		range_to_target = accum._.W1;
 		// RMAT 8 is the cosine of the tilt of the plane in pitch and roll	;
@@ -92,7 +92,6 @@ void calculate_height_above_ground_level(void)
 			}
 		}
 	}
-	udb_flags._.range_update_request = 1 ;
 }
 
 #else
