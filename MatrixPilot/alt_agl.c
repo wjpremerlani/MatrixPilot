@@ -56,16 +56,14 @@ static fractional cos_pitch_roll;      // tilt of the plane in UDB fractional un
 #endif
 
 static uint8_t good_sample_count = 0;   // Tracks the number of consequtive good samples up until SONAR_SAMPLE_THRESHOLD is reached.
-static uint8_t no_readings_count = 0;   // Tracks number of UDB frames since last sonar reading was sent by sonar device
+//static uint8_t no_readings_count = 0;   // Tracks number of UDB frames since last sonar reading was sent by sonar device
 
 void calculate_height_above_ground_level(void)
 {
-	if (udb_flags._.range_updated == 1) 
 	{	
 		union longbbbb accum;
-
-		no_readings_count  = 0;
-		accum.WW = __builtin_mulss(get_range_value(), UDB_RANGER_PWM_UNITS_TO_CENTIMETERS) + 32768;
+		update_range_value() ;
+		accum.WW = __builtin_muluu(get_range_value(), UDB_RANGER_PWM_UNITS_TO_CENTIMETERS) + 32768;
 		range_to_target = accum._.W1;
 		// RMAT 8 is the cosine of the tilt of the plane in pitch and roll	;
 		cos_pitch_roll = rmat[8]; // rmat[8] can change in another thread of execution
@@ -93,19 +91,8 @@ void calculate_height_above_ground_level(void)
 				height_above_ground_level = OUT_OF_RANGE_DISTANCE;
 			}
 		}
-		udb_flags._.range_updated = 0;
 	}
-	else
-	{
-		if (no_readings_count < 7)  // This assumes running at 40HZ UDB frame rate
-		{
-			no_readings_count++;
-		}
-		else
-		{
-			height_above_ground_level = NO_READING_RECEIVED_DISTANCE;
-		}
-	}
+	udb_flags._.range_update_request = 1 ;
 }
 
 #else

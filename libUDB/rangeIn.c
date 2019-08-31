@@ -25,11 +25,28 @@
 
 #if (USE_RANGER_INPUT != 0)
 
-uint16_t udb_pwm_range;          // pulse width of sonar signal
+uint16_t udb_pwm_range;          
 uint16_t udb_gap_range;
+static uint16_t _udb_pwm_range ;
 static uint16_t udb_pwm_range_rise;
 static uint16_t udb_pwm_range_fall;
 static uint16_t range_pwm_count;
+
+static uint16_t _range_pwm_count;
+static union longww _range_pwm_total ;
+static union longww range_pwm_total ;
+
+void update_range_value(void)
+{
+	if ( ( range_pwm_count == 0) || (range_pwm_total._.W1 > range_pwm_count ))
+	{
+		udb_pwm_range = 32768 ;
+	}
+	else
+	{
+		udb_pwm_range = __builtin_divud(range_pwm_total.WW , range_pwm_count) ;
+	}
+}
 
 uint16_t get_range_value(void)
 {
@@ -98,37 +115,35 @@ void udb_init_ranger(void)
 
 }
 
+void service_lidar_update ( void )
+{
+	range_pwm_total.WW = _range_pwm_total.WW ;
+	range_pwm_count = _range_pwm_count ;
+	 _range_pwm_total.WW = 0 ;
+	 _range_pwm_count = 0 ;
+	 udb_flags._.range_update_request = 0 ;	 
+}
+
 void service_lidar_high(uint16_t time)
 {
-	//led_on(LED_BLUE) ; led_on(LED_ORANGE) ;
 	udb_pwm_range_rise = time;
 	udb_gap_range = time - udb_pwm_range_fall ;
-	range_pwm_count++;
 }
 
 void service_lidar_low(uint16_t time)
 {
-	//led_off(LED_BLUE) ; led_off(LED_ORANGE) ;
 	udb_pwm_range_fall = time ;
-	udb_pwm_range = time - udb_pwm_range_rise;
+	_udb_pwm_range = time - udb_pwm_range_rise;
 	if ( udb_gap_range > 4000)
 	{
 		led_on(LED_BLUE) ;
-		led_off(LED_ORANGE) ;
 	}
 	else
 	{
 		led_off(LED_BLUE) ;
-		if ( udb_pwm_range < 800)
-		{
-			led_on(LED_ORANGE) ;
-		}
-		else
-		{
-			led_off(LED_ORANGE) ;
-		}
+		_range_pwm_count++ ;
+		_range_pwm_total.WW += _udb_pwm_range ;
 	}
-	udb_flags._.range_updated = 1; 
 }
 
 #define _RANGER_HANDLER(x, y) \
@@ -143,6 +158,8 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _IC##x##Interrupt(void) \
 	{ \
 		time = IC##x##BUF; \
 	} \
+	if (udb_flags._.range_update_request == 1) \
+		service_lidar_update() ; \
 	if (IC_PIN##x) \
 	{ \
 		service_lidar_high( time ) ; \
