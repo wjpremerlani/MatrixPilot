@@ -19,6 +19,6 @@
 // along with MatrixPilot.  If not, see <http://www.gnu.org/licenses/>.
 
 
-int16_t get_range_value(void);   // Get the raw PWM values from the Sonar / Lidar device
+uint16_t get_range_value(void);   // Get the raw PWM values from the Sonar / Lidar device
 uint16_t get_range_count(void);
 void udb_init_ranger(void);
