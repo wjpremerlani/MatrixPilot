@@ -574,8 +574,9 @@ void telemetry_output_8hz(void)
 
 #elif (SERIAL_OUTPUT_FORMAT == SERIAL_UDB_EXTRA)
 
-extern uint16_t udb_pwm_range;
-extern uint16_t udb_gap_range;
+//extern uint16_t udb_pwm_range;
+//extern uint16_t udb_gap_range;
+
 extern uint16_t get_range_count(void);
 
 void telemetry_output_8hz(void)
@@ -737,8 +738,8 @@ void telemetry_output_8hz(void)
 					    state_flags.WW, osc_fail_count,
 					    IMUvelocityx._.W1, IMUvelocityy._.W1, IMUvelocityz._.W1, goal.x, goal.y, goal.z, aero_force[0], aero_force[1], aero_force[2]);
 #if ( USE_RANGER_INPUT !=  0)
-					serial_output("H%i,%i,%i,%i,%i:", range_to_target, height_above_ground_level , get_range_count() , udb_gap_range ) ;
-//				serial_output("H%i,%i:", range_to_target, height_above_ground_level) ; 
+//					serial_output("H%i,%i,%i,%i,%i:", range_to_target, height_above_ground_level , get_range_count() , udb_gap_range ) ;
+					serial_output("H%i,%i:", range_to_target, height_above_ground_level) ; 
 #endif
 #if (USE_BAROMETER_ALTITUDE == 1)
 					serial_output("tmp%i:prs%li:alt%li:",
@@ -763,12 +764,12 @@ void telemetry_output_8hz(void)
 					serial_output("stk%d:", (int16_t)(4096-maxstack));
 #endif // RECORD_FREE_STACK_SPACE
 					serial_output("\r\n");
-					serial_output("F23:G%i:V%i:RE%d,%d,%d:TE%d,%d,%d:DR%d,%d,%d:OM%d,%d,%d:DT%d:EL%d:\r\n",            \
+					serial_output("F23:G%i:V%i:RE%d,%d,%d:TE%d,%d,%d:DR%d,%d,%d:OM%d,%d,%d:DT%d:EL%d:Ct%i:\r\n",            \
                             gps_parse_errors,vdop,                                                                     \
                             rotationRateError[0],rotationRateError[1],rotationRateError[2],                            \
                             tiltError[0],tiltError[1],tiltError[2],                                                    \
                             desiredRotationRateRadians[0],desiredRotationRateRadians[1],desiredRotationRateRadians[2], \
-                            omegaAccum[0],omegaAccum[1],omegaAccum[2],desiredTurnRateRadians,elevatorLoadingTrim);
+                            omegaAccum[0],omegaAccum[1],omegaAccum[2],desiredTurnRateRadians,elevatorLoadingTrim,get_range_count());
 				}
 			}
 			if (state_flags._.f13_print_req == 1)

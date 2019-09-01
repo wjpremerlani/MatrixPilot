@@ -79,17 +79,17 @@ void calculate_height_above_ground_level(void)
 		}
 		else 
 		{
-			good_sample_count++;
-			if (good_sample_count > RANGER_SAMPLE_THRESHOLD) 
+			//good_sample_count++;
+			//if (good_sample_count > RANGER_SAMPLE_THRESHOLD) 
 			{
-				good_sample_count = RANGER_SAMPLE_THRESHOLD;
+			//	good_sample_count = RANGER_SAMPLE_THRESHOLD;
 				accum.WW = (__builtin_mulss(cos_pitch_roll, range_to_target) + 8192)<<2;
 				height_above_ground_level = accum._.W1; 
 			}
-			else
-			{
-				height_above_ground_level = OUT_OF_RANGE_DISTANCE;
-			}
+			//else
+			//{
+			//	height_above_ground_level = OUT_OF_RANGE_DISTANCE;
+			//}
 		}
 	}
 }
