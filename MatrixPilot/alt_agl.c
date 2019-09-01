@@ -55,42 +55,28 @@ static fractional cos_pitch_roll;      // tilt of the plane in UDB fractional un
 #error  'incorrectly specified RANGER_TYPE'
 #endif
 
-static uint8_t good_sample_count = 0;   // Tracks the number of consequtive good samples up until SONAR_SAMPLE_THRESHOLD is reached.
-//static uint8_t no_readings_count = 0;   // Tracks number of UDB frames since last sonar reading was sent by sonar device
 
 void calculate_height_above_ground_level(void)
-{
-	{	
-		union longbbbb accum;
-		update_range_value() ; // compute a new value for range from a set of pulses and start a new se
-		accum.WW = __builtin_muluu(get_range_value(), UDB_RANGER_PWM_UNITS_TO_CENTIMETERS) + 32768;
-		range_to_target = accum._.W1;
-		// RMAT 8 is the cosine of the tilt of the plane in pitch and roll	;
-		cos_pitch_roll = rmat[8]; // rmat[8] can change in another thread of execution
-		if (cos_pitch_roll < 8192) // tilt >  60 degrees
-		{
-			height_above_ground_level = OUT_OF_RANGE_DISTANCE;
-            return;
-		}
-		if (range_to_target > USEABLE_RANGER_DISTANCE)
-		{
-			height_above_ground_level = OUT_OF_RANGE_DISTANCE;
-			good_sample_count = 0; 
-		}
-		else 
-		{
-			//good_sample_count++;
-			//if (good_sample_count > RANGER_SAMPLE_THRESHOLD) 
-			{
-			//	good_sample_count = RANGER_SAMPLE_THRESHOLD;
-				accum.WW = (__builtin_mulss(cos_pitch_roll, range_to_target) + 8192)<<2;
-				height_above_ground_level = accum._.W1; 
-			}
-			//else
-			//{
-			//	height_above_ground_level = OUT_OF_RANGE_DISTANCE;
-			//}
-		}
+{	
+	union longbbbb accum;
+	update_range_value() ; // compute a new value for range from a set of pulses and start a new se
+	accum.WW = __builtin_muluu(get_range_value(), UDB_RANGER_PWM_UNITS_TO_CENTIMETERS) + 32768;
+	range_to_target = accum._.W1;
+	// RMAT 8 is the cosine of the tilt of the plane in pitch and roll	;
+	cos_pitch_roll = rmat[8]; // rmat[8] can change in another thread of execution
+	if (cos_pitch_roll < 8192) // tilt >  60 degrees
+	{
+		height_above_ground_level = OUT_OF_RANGE_DISTANCE;
+		return;
+	}
+	if (range_to_target > USEABLE_RANGER_DISTANCE)
+	{
+		height_above_ground_level = OUT_OF_RANGE_DISTANCE;
+	}
+	else 
+	{
+		accum.WW = (__builtin_mulss(cos_pitch_roll, range_to_target) + 8192)<<2;
+		height_above_ground_level = accum._.W1; 
 	}
 }
 
