@@ -185,5 +185,10 @@ void __attribute__((__interrupt__,__no_auto_psv__)) _IC##x##Interrupt(void) \
 
 RANGER_HANDLER(USE_RANGER_INPUT, REGTOK1);
 
+#else
+uint16_t get_range_count(void)
+{
+	return 0;
+}
 
 #endif // USE_RANGER_INPUT
