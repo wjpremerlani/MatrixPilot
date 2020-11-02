@@ -1,0 +1,22 @@
+Getting Started
+
+Solder the pins you want to use.
+Initially all you will need are power, ground, the serial port and the programming port.
+It is also suggested that you use the solder blob to tie SVCC to VCC.
+Obviously, you will also need to connect power, ground, RX and TX of your GPS.
+Use either the 6 pin connector or the GTX and GRX pins plus 5V and ground.
+
+Program your UDB with the accompanying .hex file, gyro_accelerometer_self_test.hex.
+Instructions for that, programming_with_a_hex_file.rtf are also attached.
+
+You do not need to connect a GPS to the board.
+
+After that, cycle the power to the UDB with it more or less level.
+It does not matter if you leave the picKIT connected to the UDB or not.
+
+When the UDB powers up, the red and green LEDs will flash for a little while.
+
+When they stop flashing the green LED will use the accelerometers
+to indicate when the UDB is tipped, using only the X and Y channels.
+
+The red LED will use all three gyros to indicate rotation rate.
