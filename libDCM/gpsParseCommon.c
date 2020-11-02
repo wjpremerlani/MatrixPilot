@@ -141,6 +141,18 @@ static void gps_parse_common_callback(void)
 	dirOverGndHrmat[0] = rmat[1];
 	dirOverGndHrmat[1] = rmat[4];
 	dirOverGndHrmat[2] = 0;
+	
+	if ( NORADIO == 1)
+	{
+		if ( gps_nav_valid() )
+		{
+			led_on ( LED_GREEN ) ;
+		}
+		else
+		{
+			udb_led_toggle ( LED_GREEN );
+		}
+	}
 
 	if (gps_nav_valid())
 	{
