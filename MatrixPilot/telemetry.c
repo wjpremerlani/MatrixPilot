@@ -698,7 +698,8 @@ void telemetry_output_8hz(void)
 					rmat[6], rmat[7], rmat[8],
 					(uint16_t)cog_gps.BB, sog_gps.BB, (uint16_t)udb_cpu_load(), 
 					air_speed_3DIMU,
-                    estimatedWind[0], estimatedWind[1], estimatedWind[2],
+ //                   estimatedWind[0], estimatedWind[1], estimatedWind[2],
+					estimatedWind[0], estimatedWind[1], total_speed_update(),
 #if (MAG_YAW_DRIFT == 1)
 				    magFieldEarth[0], magFieldEarth[1], magFieldEarth[2],
 #else

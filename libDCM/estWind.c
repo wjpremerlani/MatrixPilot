@@ -24,9 +24,27 @@
 #include "gpsData.h"
 #include "estWind.h"
 #include "rmat.h"
+#include ".\..\libDCM\deadReckoning.h"
+
+#define GRAVITY_TIMES_2 (1961)  // cm/sec/sec
+#define UPDATE_RATE (4)  // 4 updates per second
 
 
 int16_t estimatedWind[3] = { 0, 0, 0 };
+
+uint32_t previous_energy = 0 ;
+uint32_t present_energy = 0 ;
+
+int16_t total_speed_update(void)
+{
+	int32_t total_speed_32 ;
+	present_energy = __builtin_muluu ( air_speed_3DIMU  , air_speed_3DIMU ) ;
+	total_speed_32 = present_energy - previous_energy ;
+	previous_energy = present_energy ;
+	total_speed_32 = total_speed_32 / (GRAVITY_TIMES_2/UPDATE_RATE) ;
+	total_speed_32 += IMUvelocityz._.W1 ;
+	return (int16_t) total_speed_32 ;
+}
 
 #if (WIND_ESTIMATION == 1)
 
@@ -138,7 +156,7 @@ void estWind(int16_t angleOfAttack)
 
 #else
 
-void estWind(void)
+void estWind(int16_t angleOfAttack)
 {
 }
 
