@@ -118,12 +118,12 @@ void dead_reckon(void)
 			IMUlocationy.WW += __builtin_mulss(DR_FILTER_GAIN, locationErrorEarth[1]);
 			IMUlocationz.WW += __builtin_mulss(DR_FILTER_GAIN, locationErrorEarth[2]);
 
-			IMUvelocityx.WW = IMUintegralAccelerationx.WW +
-			                  __builtin_mulus(ONE_OVER_TAU, 100*locationErrorEarth[0]);
-			IMUvelocityy.WW = IMUintegralAccelerationy.WW +
-			                  __builtin_mulus(ONE_OVER_TAU, 100*locationErrorEarth[1]);
-			IMUvelocityz.WW = IMUintegralAccelerationz.WW +
-			                  __builtin_mulus(ONE_OVER_TAU, 100*locationErrorEarth[2]);
+			IMUvelocityx.WW = IMUintegralAccelerationx.WW ;
+			//IMUvelocityx.WW += __builtin_mulus(ONE_OVER_TAU, 100*locationErrorEarth[0]);
+			IMUvelocityy.WW = IMUintegralAccelerationy.WW ;
+			//IMUvelocityy.WW +=__builtin_mulus(ONE_OVER_TAU, 100*locationErrorEarth[1]);
+			IMUvelocityz.WW = IMUintegralAccelerationz.WW ;
+			//IMUvelocityz.WW += __builtin_mulus(ONE_OVER_TAU, 100*locationErrorEarth[2]);
 
 		}
 		else  // GPS has gotten disconnected
