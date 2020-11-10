@@ -35,6 +35,16 @@ int16_t estimatedWind[3] = { 0, 0, 0 };
 uint32_t previous_energy = 0 ;
 uint32_t present_energy = 0 ;
 
+int16_t VectorDot_3(int16_t * vector1 , int16_t * vector2) 
+{
+	union longww dot_accum;
+	dot_accum.WW = __builtin_mulss( vector1[0] , vector2[0]);
+	dot_accum.WW += __builtin_mulss( vector1[1] , vector2[1]);
+	dot_accum.WW += __builtin_mulss( vector1[2] , vector2[2]);
+	dot_accum.WW *= 4;
+	return dot_accum._.W1 ;
+}
+
 int16_t total_speed_update(void)
 {
 	int32_t total_speed_32 ;
@@ -49,35 +59,32 @@ int16_t total_speed_update(void)
 #if (WIND_ESTIMATION == 1)
 
 static int16_t groundVelocityHistory[3] = { 0, 0, 0 };
-static int16_t fuselageDirectionHistory[3] = { 0, 0, 0 };
+static int16_t fuselageDirectionHistory[3] = { 0, RMAX , 0 };
 
 #define MINROTATION ((int16_t)(0.2 * RMAX))
+
+
+int16_t airspeed_numerator ;
+uint16_t airspeed_denominator ;
+uint16_t airspeed_2 ;
 
 void estWind(int16_t angleOfAttack)
 {
 	int16_t index;
 	int16_t groundVelocity[3];
-	int16_t groundVelocitySum[3];
 	int16_t groundVelocityDiff[3];
 	int16_t fuselageDirection[3];
-	int16_t fuselageDirectionSum[3];
-	int16_t fuselageDirectionDiff[3];
-	uint16_t magVelocityDiff;
-	uint16_t magDirectionDiff;
-	int8_t angleVelocityDiff;
-	int8_t angleDirectionDiff;
-	int8_t thetaDiff;
-	int16_t costhetaDiff;
-	int16_t sinthetaDiff;
+	int16_t f2_cross_f1[3] ;
+	int16_t f1_cross_f2_cross_f1[3];
+	uint16_t magf2_cross_f1 ;
 	union longww longaccum;
-	struct relative2D xy;
-	uint16_t estimatedAirspeed;
+
 
 	if (dcm_flags._.skip_yaw_drift) return;
 
-	groundVelocity[0] = GPSvelocity.x;
-	groundVelocity[1] = GPSvelocity.y;
-	groundVelocity[2] = GPSvelocity.z;
+	groundVelocity[0] = IMUvelocityx._.W1;
+	groundVelocity[1] = IMUvelocityy._.W1;
+	groundVelocity[2] = IMUvelocityz._.W1;
 
 	fuselageDirection[0] = -rmat[1];
 	fuselageDirection[1] =  rmat[4];
@@ -91,66 +98,36 @@ void estWind(int16_t angleOfAttack)
 	longaccum.WW = (__builtin_mulss(- rmat[8], angleOfAttack)) << 2;
 	fuselageDirection[2] += longaccum._.W1;
 
-	for (index = 0; index < 3; index++)
+	// compute the cross product of the latest fuselage vector with the previous one
+	VectorCross( f2_cross_f1 , fuselageDirection , fuselageDirectionHistory ) ;
+	// normalize f2 cross f1 and capture its magnitude
+	magf2_cross_f1 = vector3_normalize( f2_cross_f1 , f2_cross_f1 ) ;
+	
+	if (magf2_cross_f1 > MINROTATION)
 	{
-		groundVelocity[index] >>= 1;
-		fuselageDirection[index] >>= 1;
-		groundVelocitySum[index]  = groundVelocity[index] + groundVelocityHistory[index];
-		groundVelocityDiff[index] = groundVelocity[index] - groundVelocityHistory[index];
-		fuselageDirectionSum[index]  = fuselageDirection[index] + fuselageDirectionHistory[index];
-		fuselageDirectionDiff[index] = fuselageDirection[index] - fuselageDirectionHistory[index];
-	}
-
-	xy.x = fuselageDirectionDiff[0];
-	xy.y = fuselageDirectionDiff[1];
-	angleDirectionDiff = rect_to_polar(&xy);
-
-	xy.x = groundVelocityDiff[0];
-	xy.y = groundVelocityDiff[1];
-	angleVelocityDiff = rect_to_polar(&xy);
-
-	thetaDiff = angleVelocityDiff - angleDirectionDiff;
-	costhetaDiff = cosine(thetaDiff);
-	sinthetaDiff = sine(thetaDiff);
-
-	magDirectionDiff = vector3_mag(fuselageDirectionDiff[0],
-	                               fuselageDirectionDiff[1],
-	                               fuselageDirectionDiff[2]);
-
-	magVelocityDiff = vector3_mag(groundVelocityDiff[0],
-	                              groundVelocityDiff[1],
-	                              groundVelocityDiff[2]);
-
-	if (magDirectionDiff > MINROTATION)
-	{
-		longaccum._.W1 = magVelocityDiff >> 2;
-		longaccum._.W0 = 0;
-#if (HILSIM == 1)
-		estimatedAirspeed = hilsim_airspeed.BB; // use the simulation as a pitot tube
-#else
-		estimatedAirspeed = __builtin_divud(longaccum.WW, magDirectionDiff);
-#endif
-		longaccum.WW = (__builtin_mulss(costhetaDiff, fuselageDirectionSum[0])
-		              - __builtin_mulss(sinthetaDiff, fuselageDirectionSum[1])) << 2;
-		longaccum.WW = (__builtin_mulus(estimatedAirspeed, longaccum._.W1)) << 2;
-		estimatedWind[0] = estimatedWind[0] + 
-		    ((groundVelocitySum[0] - longaccum._.W1 - estimatedWind[0]) >> 4);
-
-		longaccum.WW = (__builtin_mulss(sinthetaDiff, fuselageDirectionSum[0])
-		              + __builtin_mulss(costhetaDiff, fuselageDirectionSum[1])) << 2;
-		longaccum.WW = (__builtin_mulus(estimatedAirspeed, longaccum._.W1)) << 2;
-		estimatedWind[1] = estimatedWind[1] +
-		    ((groundVelocitySum[1] - longaccum._.W1 - estimatedWind[1]) >> 4);
-
-		longaccum.WW = (__builtin_mulus(estimatedAirspeed, fuselageDirectionSum[2])) << 2;
-		estimatedWind[2] = estimatedWind[2] +
-		((groundVelocitySum[2] - longaccum._.W1 - estimatedWind[2]) >> 4);
-
+		// compute the change in IMU velocity
+		for (index = 0; index < 3; index++)
+		{
+			groundVelocityDiff[index] = groundVelocity[index] - groundVelocityHistory[index];	
+		}
+		// compute ( f1 cross ( f2 cross f1 ) )
+		VectorCross ( f1_cross_f2_cross_f1 , fuselageDirectionHistory , f2_cross_f1 ) ;
+		// compute numerator and denominator of expression for estimated airspeed 
+		airspeed_numerator = VectorDot_3( groundVelocityDiff , f1_cross_f2_cross_f1 ) ;
+		if ( airspeed_numerator < 0 ) airspeed_numerator = 0 ;
+		airspeed_denominator = magf2_cross_f1 ;
+		
+		airspeed_2 = __builtin_divud( __builtin_muluu( RMAX , airspeed_numerator ) , airspeed_denominator ) ;
+		
+		estimatedWind[0] = 0 ;
+		estimatedWind[1] = 0 ;
+		estimatedWind[2] = 0 ;
+		
 		for (index = 0; index < 3; index++)
 		{
 			groundVelocityHistory[index] = groundVelocity[index];
 			fuselageDirectionHistory[index] = fuselageDirection[index];
-		}
+		}	
 	}
 }
 
