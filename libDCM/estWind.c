@@ -119,10 +119,13 @@ void estWind(int16_t angleOfAttack)
 		
 		airspeed_2 = __builtin_divud( __builtin_muluu( RMAX , airspeed_numerator ) , airspeed_denominator ) ;
 		
-		estimatedWind[0] = 0 ;
-		estimatedWind[1] = 0 ;
-		estimatedWind[2] = 0 ;
-		
+		for (index = 0; index < 3; index++)
+		{
+			estimatedWind[index] = estimatedWind[index] + ((groundVelocity[index] 
+					- __builtin_divsd( __builtin_mulsu ( fuselageDirection[index], airspeed_2 ), RMAX ) 
+					- estimatedWind[index])>>4) ;
+		}
+			
 		for (index = 0; index < 3; index++)
 		{
 			groundVelocityHistory[index] = groundVelocity[index];
