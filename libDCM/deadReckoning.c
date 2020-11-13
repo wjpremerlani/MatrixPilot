@@ -79,6 +79,7 @@ union longww IMUintegralAccelerationy = { 0 };
 union longww IMUintegralAccelerationz = { 0 };
 
 uint16_t air_speed_3DIMU = 0;
+uint32_t air_speed_3DIMU_sqr = 0 ;
 int16_t total_energy = 0;
 
 // GPSlocation - IMUlocation: meters
@@ -173,6 +174,9 @@ void dead_reckon(void)
 	forward_ground_speed = accum._.W1 ;
 
 	air_speed_3DIMU = vector3_mag(air_speed_x, air_speed_y, air_speed_z);
+	air_speed_3DIMU_sqr = __builtin_mulss( air_speed_x , air_speed_x )
+			+ __builtin_mulss( air_speed_y , air_speed_y )
+			+ __builtin_mulss( air_speed_z , air_speed_z ) ;
 
 	accum.WW   = __builtin_mulsu(air_speed_x, 37877);
 	energy.WW  = __builtin_mulss(accum._.W1, accum._.W1);

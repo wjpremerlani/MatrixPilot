@@ -28,6 +28,7 @@
 #include "mode_switch.h"
 #include "servoMix.h"
 #include "servoPrepare.h"
+#include "../libDCM/estWind.h"
 #include "MAVLink.h"
 #include "telemetry.h"
 #include "flightplan_waypoints.h"
@@ -120,6 +121,14 @@ void dcm_heartbeat_callback(void)
 	if (dcm_flags._.calib_finished)
 	{
 		flight_controller();
+		if (udb_pulse_counter % (HEARTBEAT_HZ/4) == 0)  // run at 4 HZ
+		{
+			estWind(GetAofA());
+		}
+		if (udb_pulse_counter % (HEARTBEAT_HZ/40) == 0)  // run at 40 HZ
+		{
+			filterWind();
+		}
 	}
 	else
 	{

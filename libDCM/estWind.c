@@ -31,6 +31,8 @@
 
 
 int16_t estimatedWind[3] = { 0, 0, 0 };
+int16_t estimatedWind_unfiltered[2] = { 0, 0 };
+union longww estimatedWind_filtered[2]= { {0}, {0} };
 
 uint32_t previous_energy = 0 ;
 uint32_t present_energy = 0 ;
@@ -38,7 +40,7 @@ uint32_t present_energy = 0 ;
 int16_t total_speed_update(void)
 {
 	int32_t total_speed_32 ;
-	present_energy = __builtin_muluu ( air_speed_3DIMU  , air_speed_3DIMU ) ;
+	present_energy = air_speed_3DIMU_sqr ;
 	total_speed_32 = present_energy - previous_energy ;
 	previous_energy = present_energy ;
 	total_speed_32 = total_speed_32 / (GRAVITY_TIMES_2/UPDATE_RATE) ;
@@ -157,20 +159,20 @@ void estWind(int16_t angleOfAttack)
 		longaccum.WW = (__builtin_mulss(costhetaDiff, fuselageDirectionSum[0])
 		              - __builtin_mulss(sinthetaDiff, fuselageDirectionSum[1])) << 2;
 		longaccum.WW = (__builtin_mulus(estimatedAirspeed, longaccum._.W1)) << 2;
-		estimatedWind[0] = estimatedWind[0] + 
-		    ((groundVelocitySum[0] - longaccum._.W1 - estimatedWind[0]) >> 4);
+		estimatedWind_unfiltered[0] = estimatedWind_unfiltered[0] + 
+		    ((groundVelocitySum[0] - longaccum._.W1 - estimatedWind_unfiltered[0]) >> 4);
 
 		longaccum.WW = (__builtin_mulss(sinthetaDiff, fuselageDirectionSum[0])
 		              + __builtin_mulss(costhetaDiff, fuselageDirectionSum[1])) << 2;
 		longaccum.WW = (__builtin_mulus(estimatedAirspeed, longaccum._.W1)) << 2;
-		estimatedWind[1] = estimatedWind[1] +
-		    ((groundVelocitySum[1] - longaccum._.W1 - estimatedWind[1]) >> 4);
+		estimatedWind_unfiltered[1] = estimatedWind_unfiltered[1] +
+		    ((groundVelocitySum[1] - longaccum._.W1 - estimatedWind_unfiltered[1]) >> 4);
 
 		//longaccum.WW = (__builtin_mulus(estimatedAirspeed, fuselageDirectionSum[2])) << 2;
-		//estimatedWind[2] = estimatedWind[2] +
-		//	((groundVelocitySum[2] - longaccum._.W1 - estimatedWind[2]) >> 4);
+		//estimatedWind_unfiltered[2] = estimatedWind_unfiltered[2] +
+		//	((groundVelocitySum[2] - longaccum._.W1 - estimatedWind_unfiltered[2]) >> 4);
 		
-		estimatedWind[2] = 0 ;
+		estimatedWind_unfiltered[2] = 0 ;
 
 		for (index = 0; index < 3; index++)
 		{
@@ -184,10 +186,29 @@ void estWind(int16_t angleOfAttack)
 	}
 }
 
+void filterWind()
+{
+	int16_t index ;
+	union longww filter_input[2];
+	// expected to execute at 40 Hz
+	for (index = 0; index < 2 ; index++)
+	{
+		filter_input[index]._.W1= estimatedWind_unfiltered[index] ;
+		filter_input[index]._.W0= 0 ;
+		estimatedWind_filtered[index].WW = estimatedWind_filtered[index].WW +
+		((filter_input[index].WW - estimatedWind_filtered[index].WW)>>7) ; // time constant (2^7)/40 = 3.2 seconds
+		estimatedWind[index] = estimatedWind_filtered[index]._.W1 ;
+	}	
+}
+
 #else
 
 void estWind(int16_t angleOfAttack)
 {
+}
+void filterWind(void)
+{
+	
 }
 
 #endif // WIND_ESTIMATION

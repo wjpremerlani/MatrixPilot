@@ -24,6 +24,7 @@
 
 
 extern uint16_t air_speed_3DIMU;
+extern uint32_t air_speed_3DIMU_sqr;
 extern int16_t total_energy;
 extern fractional locationErrorEarth[3];
 
