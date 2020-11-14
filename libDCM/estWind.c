@@ -37,6 +37,11 @@ union longww estimatedWind_filtered[2]= { {0}, {0} };
 uint32_t previous_energy = 0 ;
 uint32_t present_energy = 0 ;
 
+int16_t vertical_wind(void)
+{
+	return IMUvelocityz._.W1 - __builtin_divsd ( __builtin_mulsu(-rmat[7],air_speed_3DIMU),RMAX ) ;
+}
+
 int16_t total_speed_update(void)
 {
 	int32_t total_speed_32 ;
