@@ -121,10 +121,17 @@ void dcm_heartbeat_callback(void)
 	if (dcm_flags._.calib_finished)
 	{
 		flight_controller();
+#if(USE_PITOT==1)
+		if (udb_pulse_counter % (HEARTBEAT_HZ/10) == 0)  // run at 10 HZ
+		{
+			estWind(GetAofA());
+		}
+#else
 		if (udb_pulse_counter % (HEARTBEAT_HZ/4) == 0)  // run at 4 HZ
 		{
 			estWind(GetAofA());
 		}
+#endif //USE_PITOT
 		if (udb_pulse_counter % (HEARTBEAT_HZ/40) == 0)  // run at 40 HZ
 		{
 			filterWind();
