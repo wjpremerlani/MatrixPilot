@@ -109,11 +109,10 @@ void estWind(int16_t angleOfAttack)
 	
 	for (index = 0; index < 3; index++)
 	{
-		groundVelocityDiff[index] = (groundVelocity[index] - groundVelocityHistory[index])>1;
-		groundVelocitySum[index] = (groundVelocity[index] + groundVelocityHistory[index])>1;
-		fuselageDirectionDiff[index] = (fuselageDirection[index] - fuselageDirectionHistory[index])>1;
+		groundVelocityDiff[index] = (groundVelocity[index] - groundVelocityHistory[index])>>1;
+		groundVelocitySum[index] = (groundVelocity[index] + groundVelocityHistory[index])>>1;
+		fuselageDirectionDiff[index] = (fuselageDirection[index] - fuselageDirectionHistory[index])>>1;
 	}
-
 	
 	magDirectionDiff = vector3_mag(fuselageDirectionDiff[0],
 	                               fuselageDirectionDiff[1],
@@ -145,10 +144,10 @@ void estWind(int16_t angleOfAttack)
 		estimatedAirspeed_log = estimatedAirspeed ;
 		
 #endif
-		Vx2 = __builtin_divsd( __builtin_mulus(estimatedAirspeed,fuselageDirection[0]),RMAX)>1 ;
-		Vx1 = __builtin_divsd( __builtin_mulus(airspeed_history,fuselageDirectionHistory[0]),RMAX)>1;
-		Vy2 = __builtin_divsd( __builtin_mulus(estimatedAirspeed,fuselageDirection[1]),RMAX)>1 ;
-		Vy1 = __builtin_divsd( __builtin_mulus(airspeed_history,fuselageDirectionHistory[1]),RMAX)>1;
+		Vx2 = __builtin_divsd( __builtin_mulus(estimatedAirspeed,fuselageDirection[0]),RMAX)>>1 ;
+		Vx1 = __builtin_divsd( __builtin_mulus(airspeed_history,fuselageDirectionHistory[0]),RMAX)>>1;
+		Vy2 = __builtin_divsd( __builtin_mulus(estimatedAirspeed,fuselageDirection[1]),RMAX)>>1 ;
+		Vy1 = __builtin_divsd( __builtin_mulus(airspeed_history,fuselageDirectionHistory[1]),RMAX)>>1;
 		Vxsum = Vx1 + Vx2 ;
 		Vysum = Vy1 + Vy2 ;
 		xy.x = (Vx2-Vx1) ;
