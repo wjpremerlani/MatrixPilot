@@ -58,11 +58,12 @@ int16_t total_speed_update(void)
 int8_t thetaDiff_log ;
 uint16_t estimatedAirspeed_log ;
 
-#define MINROTATION ((int16_t)(0.2 * RMAX))
-#define MAX_AGE 20 // maximum delay between computations
+#define MINROTATION ((int16_t)(0.05 * RMAX))
+#define MAX_AGE 40 
 
 uint16_t estWindAge = 0 ;
 uint16_t estWindAge_log ;
+static uint16_t reset_request = 1 ;
 
 static int16_t groundVelocityHistory[3] = { 0, 0, 0 };
 static int16_t fuselageDirectionHistory[3] = { 0, 0, 0 };
@@ -93,19 +94,18 @@ void estWind(int16_t angleOfAttack)
 	
 	fuselageDirection[0] = -rmat[1];
 	fuselageDirection[1] =  rmat[4];
-	//fuselageDirection[2] = -rmat[7];
-	fuselageDirection[2] = 0 ;
+	fuselageDirection[2] = -rmat[7];
 	// adjust "fuselage direction" for angle of attack
 	longaccum.WW = (__builtin_mulss(- rmat[2], angleOfAttack)) << 2;
 	fuselageDirection[0] += longaccum._.W1;
 	longaccum.WW = (__builtin_mulss(  rmat[5], angleOfAttack)) << 2;
 	fuselageDirection[1] += longaccum._.W1;
 	longaccum.WW = (__builtin_mulss(- rmat[8], angleOfAttack)) << 2;
-	//fuselageDirection[2] += longaccum._.W1;
+	fuselageDirection[2] += longaccum._.W1;
 	
 	groundVelocity[0] = IMUvelocityx._.W1 ;
 	groundVelocity[1] = IMUvelocityy._.W1 ;
-	groundVelocity[2] = 0 ; // Z velocity is computed separately
+	groundVelocity[2] = IMUvelocityz._.W1 ;
 	
 	for (index = 0; index < 3; index++)
 	{
@@ -135,15 +135,20 @@ void estWind(int16_t angleOfAttack)
 
 	if (magDirectionDiff > MINROTATION)
 	{
-
 #if ((HILSIM == 1)&&(USE_PITOT==1))
 		estimatedAirspeed = hilsim_airspeed.BB; // use the simulation as a pitot tube
 		estimatedAirspeed_log = estimatedAirspeed ;
 #else
+		longaccum._.W1 = magVelocityDiff>>2 ;
+		longaccum._.W0 = 0 ;
 		estimatedAirspeed = __builtin_divud(longaccum.WW, magDirectionDiff);
-		estimatedAirspeed_log = estimatedAirspeed ;
-		
+		estimatedAirspeed_log = estimatedAirspeed ;		
 #endif
+		if ( reset_request == 1)
+		{
+			reset_request = 0 ;
+			airspeed_history = estimatedAirspeed ;
+		}
 		Vx2 = __builtin_divsd( __builtin_mulus(estimatedAirspeed,fuselageDirection[0]),RMAX)>>1 ;
 		Vx1 = __builtin_divsd( __builtin_mulus(airspeed_history,fuselageDirectionHistory[0]),RMAX)>>1;
 		Vy2 = __builtin_divsd( __builtin_mulus(estimatedAirspeed,fuselageDirection[1]),RMAX)>>1 ;
@@ -166,7 +171,6 @@ void estWind(int16_t angleOfAttack)
 		estWindAge = 0 ;
 		thetaDiff_log = thetaDiff ;
 	
-		
 		estimatedWind_unfiltered[0] = estimatedWind_unfiltered[0] + 
 		    ((groundVelocitySum[0]  
 				- (__builtin_divsd ( __builtin_mulss( costhetaDiff , Vxsum),RMAX))
