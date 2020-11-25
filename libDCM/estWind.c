@@ -58,7 +58,7 @@ int16_t total_speed_update(void)
 int8_t thetaDiff_log ;
 uint16_t estimatedAirspeed_log ;
 
-#define MINROTATION ((int16_t)(0.05 * RMAX))
+#define MINROTATION ((uint16_t)(0.2*RMAX))
 #define MAX_AGE 40 
 
 uint16_t estWindAge = 0 ;
@@ -103,9 +103,9 @@ void estWind(int16_t angleOfAttack)
 	longaccum.WW = (__builtin_mulss(- rmat[8], angleOfAttack)) << 2;
 	fuselageDirection[2] += longaccum._.W1;
 	
-	groundVelocity[0] = IMUvelocityx._.W1 ;
-	groundVelocity[1] = IMUvelocityy._.W1 ;
-	groundVelocity[2] = IMUvelocityz._.W1 ;
+	groundVelocity[0] = GPSvelocity.x ;
+	groundVelocity[1] = GPSvelocity.y ;
+	groundVelocity[2] = GPSvelocity.z ;
 	
 	for (index = 0; index < 3; index++)
 	{
@@ -211,7 +211,8 @@ void filterWind()
 		filter_input[index]._.W0= 0 ;
 		estimatedWind_filtered[index].WW = estimatedWind_filtered[index].WW +
 		((filter_input[index].WW - estimatedWind_filtered[index].WW)>>7) ; // time constant (2^7)/40 = 3.2 seconds
-		estimatedWind[index] = estimatedWind_filtered[index]._.W1 ;
+//	estimatedWind[index] = estimatedWind_filtered[index]._.W1 ;
+		estimatedWind[index] = estimatedWind_unfiltered[index] ;
 	}	
 }
 #endif
