@@ -59,7 +59,7 @@ int8_t thetaDiff_log ;
 uint16_t estimatedAirspeed_log ;
 
 #define MINROTATION ((uint16_t)(0.2*RMAX))
-#define MAX_AGE 40 
+#define MAX_AGE 30 
 
 uint16_t estWindAge = 0 ;
 uint16_t estWindAge_log ;

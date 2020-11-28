@@ -87,9 +87,12 @@ fractional locationErrorEarth[] = { 0, 0, 0 };
 // GPSvelocity - IMUvelocity
 fractional velocityErrorEarth[] = { 0, 0, 0 };
 
+extern union longww estimatedWind_filtered[2] ;
+
 void dead_reckon(void)
 {
 	int16_t air_speed_x, air_speed_y, air_speed_z;
+	int16_t air_speed_x_filtered, air_speed_y_filtered ;	
 	union longww accum;
 	union longww energy;
 
@@ -168,14 +171,17 @@ void dead_reckon(void)
 	air_speed_x = IMUvelocityx._.W1 - estimatedWind[0];
 	air_speed_y = IMUvelocityy._.W1 - estimatedWind[1];
 	air_speed_z = IMUvelocityz._.W1 - estimatedWind[2];
-
+	
+	air_speed_x_filtered = IMUvelocityx._.W1 - estimatedWind_filtered[0]._.W1 ;
+	air_speed_y_filtered = IMUvelocityy._.W1 - estimatedWind_filtered[1]._.W1 ;
+	
 	accum.WW = ((__builtin_mulss(-IMUintegralAccelerationx._.W1, rmat[1])
 	                          + __builtin_mulss( IMUintegralAccelerationy._.W1, rmat[4])) << 2);
 	forward_ground_speed = accum._.W1 ;
 
 	air_speed_3DIMU = vector3_mag(air_speed_x, air_speed_y, air_speed_z);
-	air_speed_3DIMU_sqr = __builtin_mulss( air_speed_x , air_speed_x )
-			+ __builtin_mulss( air_speed_y , air_speed_y )
+	air_speed_3DIMU_sqr = __builtin_mulss( air_speed_x_filtered , air_speed_x_filtered )
+			+ __builtin_mulss( air_speed_y_filtered , air_speed_y_filtered )
 			+ __builtin_mulss( air_speed_z , air_speed_z ) ;
 
 	accum.WW   = __builtin_mulsu(air_speed_x, 37877);
