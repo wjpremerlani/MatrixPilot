@@ -705,12 +705,13 @@ void telemetry_output_8hz(void)
 					rmat[6], rmat[7], rmat[8],
 					(uint16_t)cog_gps.BB, sog_gps.BB, (uint16_t)udb_cpu_load(), 
 					air_speed_3DIMU,
-					estimatedWind[0], estimatedWind[1], vertical_wind(), 		
+					estimatedWind[0], estimatedWind[1], total_speed_update(),		
 #if (MAG_YAW_DRIFT == 1)
 				    magFieldEarth[0], magFieldEarth[1], magFieldEarth[2],
 #else
 //				    (uint16_t)0, (uint16_t)0, (uint16_t)0,
-							(int16_t) thetaDiff_log ,  estWindAge_log , total_speed_update(),
+// the following line is used for debugging of application of wind estimation to a full size glider
+					(int16_t) thetaDiff_log ,  estWindAge_log , estimatedAirspeed_log ,		 
 #endif // MAG_YAW_DRIFT
 				    svs, hdop);
 
