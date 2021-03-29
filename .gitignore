@@ -71,3 +71,7 @@ MatrixPilot.includes
 
 _build
 
+*.d
+*.hex
+*.elf
+MultiRotor/MultiRotor-udb4.X/dist/default/production/MultiRotor-UDB5.X.production.map
