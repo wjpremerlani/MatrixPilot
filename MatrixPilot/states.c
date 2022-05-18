@@ -363,7 +363,7 @@ static void acquiringS(void)
 	return;
 #endif
 
-	if (dcm_flags._.nav_capable && ((MAG_YAW_DRIFT == 0) || (magMessage == 7)))
+	if ((dcm_flags._.nav_capable && ((MAG_YAW_DRIFT == 0) || (magMessage == 7)))||(GPS_TYPE==GPS_NONE))
 	{
 #if (NORADIO == 1)
 		if (1)
@@ -371,7 +371,7 @@ static void acquiringS(void)
 		if (udb_flags._.radio_on)
 #endif
 		{
-			if (gps_check_startup_metrics())
+			if ((gps_check_startup_metrics())||(GPS_TYPE==GPS_NONE))
 			{
 				if (standby_timer == NUM_WAGGLES+1)
 					waggle = WAGGLE_SIZE;

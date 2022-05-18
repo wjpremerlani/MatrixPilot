@@ -83,7 +83,7 @@ void gps_init(void)
 
 #if (GPS_TYPE == GPS_NONE)
 void init_gps_none(void) { }
-boolean gps_nav_valid(void) { return 0; }
+boolean gps_nav_valid(void) { return 1; }
 void gps_startup_sequence(int16_t gpscount) { }
 void gps_commit_data(void) { }
 void gps_parse_none(uint8_t gpschar) { }
