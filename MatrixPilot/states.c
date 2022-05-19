@@ -37,11 +37,18 @@ static uint8_t counter = 0;
 #define CALIB_PAUSE   (2 * FSM_CLK)     // wait for 2 seconds of runs through the state machine
 #define STANDBY_PAUSE (5 * FSM_CLK)     // pause for 5 seconds of runs through the state machine
 #else
+#if (GPS_TYPE == GPS_NONE)
+#define CALIB_PAUSE (5 * FSM_CLK)    // wait for 5 seconds of runs through the state machine
+#define STANDBY_PAUSE (2 * FSM_CLK)    // pause for 2 seconds of runs through the state machine
+                                        
+#else
 #define CALIB_PAUSE (10.5 * FSM_CLK)    // wait for 10.5 seconds of runs through the state machine
 #define STANDBY_PAUSE (48 * FSM_CLK)    // pause for 48 seconds of runs through the state machine
                                         // This used to be 24 seconds, but that was not long enough
                                         // Standby pause was raised from 24 seconds to 48 seconds by BillP
                                         // to improve the accuracy of the origin during a fast warm start
+#endif // GPS_NONE
+
 #endif
 
 #define NUM_WAGGLES 4                   // waggle 4 times during the end of the standby pause (this number must be less than STANDBY_PAUSE)
@@ -57,6 +64,10 @@ static void manualS(void);
 static void stabilizedS(void);
 static void waypointS(void);
 static void returnS(void);
+static void ent_GPS_less_highS(void);
+static void	ent_GPS_less_lowS(void);
+static void GPS_less_highS(void);
+static void	GPS_less_lowS(void);
 
 #ifdef CATAPULT_LAUNCH_ENABLE
 #define LAUNCH_DELAY (40)      // wait (x) * .25ms
@@ -450,6 +461,8 @@ static void cat_delayS(void)
 }
 #endif // CATAPULT_LAUNCH_ENABLE
 
+#if GPS_TYPE != GPS_NONE
+
 static void manualS(void)
 {
 	if (udb_flags._.radio_on)
@@ -477,6 +490,72 @@ static void manualS(void)
 		}
 	}
 }
+
+#else
+
+static void manualS(void)
+{
+	if (udb_flags._.radio_on)
+	{
+#ifdef CATAPULT_LAUNCH_ENABLE
+		if (launch_enabled() & flight_mode_switch_waypoints() & dcm_flags._.nav_capable)
+			ent_cat_armedS();
+		else
+#endif
+		if (flight_mode_switch_waypoints())
+			ent_GPS_less_highS();
+		else if (flight_mode_switch_stabilize())
+			ent_GPS_less_lowS();
+	}
+}
+
+static void ent_GPS_less_highS(void){
+	state_flags._.GPS_steering = 0;
+	state_flags._.pitch_feedback = 1;
+	state_flags._.altitude_hold_throttle = 0;
+	state_flags._.altitude_hold_pitch = 0;
+	waggle = 0;
+	led_on(LED_RED);
+	stateS = &GPS_less_highS;	
+}
+static void	ent_GPS_less_lowS(void){
+	state_flags._.GPS_steering = 0;
+	state_flags._.pitch_feedback = 1;
+	state_flags._.altitude_hold_throttle = 0;
+	state_flags._.altitude_hold_pitch = 0;
+	waggle = 0;
+	led_on(LED_RED);
+	stateS = &GPS_less_lowS;	
+}
+static void GPS_less_highS(void){
+	udb_led_toggle(LED_RED);
+	if (udb_flags._.radio_on)
+	{
+		if (flight_mode_switch_manual())
+			ent_manualS();
+		else if (flight_mode_switch_stabilize())
+			ent_GPS_less_lowS();
+	}
+	else
+	{
+		ent_manualS();
+	}
+}
+static void	GPS_less_lowS(void){
+	led_on(LED_RED);
+	if (udb_flags._.radio_on)
+	{
+		if (flight_mode_switch_waypoints())
+			ent_GPS_less_highS();
+		else if (flight_mode_switch_manual())
+			ent_manualS();
+	}
+	else
+	{
+		ent_manualS();
+	}
+}
+#endif // GPS_NONE
 
 static void stabilizedS(void)
 {
