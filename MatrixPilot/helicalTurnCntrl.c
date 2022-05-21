@@ -281,9 +281,14 @@ void helicalTurnCntrl(void)
 
 	// note that total steering is the sum of pilot input and waypoint navigation,
 	// so that the pilot always has some say in the matter
-
-	accum.WW = __builtin_mulsu(steeringInput, turngainfbw) /(2*MAX_INPUT);
-
+	if ( GPS_TYPE == GPS_NONE)
+	{
+		accum.WW = __builtin_mulsu(steeringInput, turngaingpsnone) /(2*MAX_INPUT);
+	}
+	else
+	{
+		accum.WW = __builtin_mulsu(steeringInput, turngainfbw) /(2*MAX_INPUT);
+	}
 	if ((settings._.AileronNavigation || settings._.RudderNavigation) && state_flags._.GPS_steering)
 	{
 		accum.WW +=(int32_t) navigate_determine_deflection('t');

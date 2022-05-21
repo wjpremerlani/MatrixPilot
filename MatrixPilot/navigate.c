@@ -50,6 +50,7 @@ uint16_t yawkpail; // only exported for parameter_table
 uint16_t yawkprud; // only exported for parameter_table
 uint16_t turngainfbw; // fly by wire turn gain
 uint16_t turngainnav; // waypoints turn gain
+uint16_t turngaingpsnone; // gpsless turn gain
 
 int16_t tofinish_line = 0;
 int16_t progress_to_goal = 0;

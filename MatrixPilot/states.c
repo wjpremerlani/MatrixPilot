@@ -25,6 +25,7 @@
 #include "config.h"
 #include "states.h"
 #include "altitudeCntrl.h"
+#include "navigate.h"
 #include "../libDCM/deadReckoning.h"
 #include "../libDCM/gpsParseCommon.h"
 
@@ -38,8 +39,8 @@ static uint8_t counter = 0;
 #define STANDBY_PAUSE (5 * FSM_CLK)     // pause for 5 seconds of runs through the state machine
 #else
 #if (GPS_TYPE == GPS_NONE)
-#define CALIB_PAUSE (5 * FSM_CLK)    // wait for 5 seconds of runs through the state machine
-#define STANDBY_PAUSE (2 * FSM_CLK)    // pause for 2 seconds of runs through the state machine
+#define CALIB_PAUSE (2 * FSM_CLK)    // wait for 5 seconds of runs through the state machine
+#define STANDBY_PAUSE (5 * FSM_CLK)    // pause for 2 seconds of runs through the state machine
                                         
 #else
 #define CALIB_PAUSE (10.5 * FSM_CLK)    // wait for 10.5 seconds of runs through the state machine
@@ -529,6 +530,8 @@ static void	ent_GPS_less_lowS(void){
 }
 static void GPS_less_highS(void){
 	udb_led_toggle(LED_RED);
+	air_speed_3DIMU = ( uint16_t ) ( 100.0 * DESIRED_SPEED ) ;
+	turngaingpsnone = turngainnav ;
 	if (udb_flags._.radio_on)
 	{
 		if (flight_mode_switch_manual())
@@ -543,6 +546,8 @@ static void GPS_less_highS(void){
 }
 static void	GPS_less_lowS(void){
 	led_on(LED_RED);
+	air_speed_3DIMU = ( uint16_t ) ( 100.0 * DESIRED_SPEED ) ;
+	turngaingpsnone = turngainfbw ;
 	if (udb_flags._.radio_on)
 	{
 		if (flight_mode_switch_waypoints())

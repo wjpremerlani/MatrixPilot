@@ -171,8 +171,15 @@ void dead_reckon(void)
 	accum.WW = ((__builtin_mulss(-IMUintegralAccelerationx._.W1, rmat[1])
 	                          + __builtin_mulss( IMUintegralAccelerationy._.W1, rmat[4])) << 2);
 	forward_ground_speed = accum._.W1 ;
-
-	air_speed_3DIMU = vector3_mag(air_speed_x, air_speed_y, air_speed_z);
+	
+	if ( GPS_TYPE != GPS_NONE)
+	{
+		air_speed_3DIMU = vector3_mag(air_speed_x, air_speed_y, air_speed_z);
+	}
+	else
+	{
+		air_speed_3DIMU = ( uint16_t ) ( 100.0 * DESIRED_SPEED ) ;
+	}
 
 	accum.WW   = __builtin_mulsu(air_speed_x, 37877);
 	energy.WW  = __builtin_mulss(accum._.W1, accum._.W1);

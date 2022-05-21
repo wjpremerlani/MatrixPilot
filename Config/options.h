@@ -512,8 +512,8 @@
 // waypoint navigation mode and fly by wire mode respectively.
 // They are specified in terms of the maximum desired turning rate in degrees per second in each mode.
 // The largest possible value is 240 degrees per second, anything larger will be clipped to 240.
-#define TURN_RATE_NAV                       30.0
-#define TURN_RATE_FBW                       60.0
+#define TURN_RATE_NAV                       60.0
+#define TURN_RATE_FBW                       30.0
 
 // Aileron/Roll Control Gains
 // ROLLKP is the proportional gain, approximately 0.25

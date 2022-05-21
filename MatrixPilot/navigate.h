@@ -27,6 +27,7 @@ extern int8_t extended_range;
 extern int8_t desired_dir;
 extern uint16_t turngainfbw; // fly by wire turn gain
 extern uint16_t turngainnav; // waypoints turn gain
+extern uint16_t turngaingpsnone; // gpsless turn gain
 
 void init_navigation(void);
 void save_navigation(void);
