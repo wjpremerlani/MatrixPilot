@@ -35,6 +35,11 @@ struct state_flags_bits {
 	uint16_t update_autopilot_state_asap: 1;
 };
 
+#if ( GPS_TYPE == GPS_NONE)
+extern int16_t stabilize_low_flag , stabilize_high_flag ;
+extern int32_t record_number ;
+#endif // GPS_NONE
+
 union state_flags_int { struct state_flags_bits _; int16_t WW; };
 extern union state_flags_int state_flags;
 

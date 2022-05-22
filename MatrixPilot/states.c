@@ -29,6 +29,11 @@
 #include "../libDCM/deadReckoning.h"
 #include "../libDCM/gpsParseCommon.h"
 
+#if ( GPS_TYPE == GPS_NONE)
+int16_t stabilize_low_flag = 0 , stabilize_high_flag = 0 ;
+int32_t record_number = 0 ;
+#endif // GPS_NONE
+
 union state_flags_int state_flags;
 int16_t waggle = 0;
 static uint8_t counter = 0;
@@ -496,6 +501,7 @@ static void manualS(void)
 
 static void manualS(void)
 {
+	stabilize_low_flag = 0 ; stabilize_high_flag = 0 ;
 	if (udb_flags._.radio_on)
 	{
 #ifdef CATAPULT_LAUNCH_ENABLE
@@ -511,6 +517,7 @@ static void manualS(void)
 }
 
 static void ent_GPS_less_highS(void){
+	stabilize_low_flag = 0 ; stabilize_high_flag = 1 ;
 	state_flags._.GPS_steering = 0;
 	state_flags._.pitch_feedback = 1;
 	state_flags._.altitude_hold_throttle = 0;
@@ -520,6 +527,7 @@ static void ent_GPS_less_highS(void){
 	stateS = &GPS_less_highS;	
 }
 static void	ent_GPS_less_lowS(void){
+	stabilize_low_flag = 1 ; stabilize_high_flag = 0 ;
 	state_flags._.GPS_steering = 0;
 	state_flags._.pitch_feedback = 1;
 	state_flags._.altitude_hold_throttle = 0;

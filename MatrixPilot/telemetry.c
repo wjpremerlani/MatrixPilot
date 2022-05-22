@@ -584,6 +584,10 @@ void telemetry_output_8hz(void)
 	switch (telemetry_counter)
 	{
 		case 15:
+			if ( GPS_TYPE == GPS_NONE)
+			{
+				setup_origin();
+			}
 			serial_output("F22:Sensors=%i,%i,%i,%i,%i,%i\r\n",
 				UDB_XACCEL.value, UDB_YACCEL.value,
 				UDB_ZACCEL.value + (Z_GRAVITY_SIGN ((int16_t)(2*GRAVITY))),
@@ -691,8 +695,13 @@ void telemetry_output_8hz(void)
                             "c%u:s%i:cpu%u:"
                             "as%u:wvx%i:wvy%i:wvz%i:ma%i:mb%i:mc%i:svs%i:hd%i:",                  
 #endif
+#if ( GPS_TYPE != GPS_NONE)							
 					tow.WW, udb_flags._.radio_on, dcm_flags._.nav_capable, state_flags._.GPS_steering,
 					lat_gps.WW, lon_gps.WW, alt_sl_gps.WW, waypointIndex,
+#else
+					(record_number++)*250 , udb_flags._.radio_on , stabilize_low_flag , stabilize_high_flag,
+					lat_origin.WW, lon_origin.WW, alt_origin.WW+10000, waypointIndex,
+#endif // GPS_NONE
 					rmat[0], rmat[1], rmat[2],
 					rmat[3], rmat[4], rmat[5],
 					rmat[6], rmat[7], rmat[8],

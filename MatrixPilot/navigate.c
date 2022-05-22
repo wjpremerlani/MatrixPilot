@@ -100,7 +100,7 @@ void save_navigation(void)
 	gains.YawKPRudder  = (float)yawkprud / (RMAX);
 }
 
-static void setup_origin(void)
+void setup_origin(void)
 {
 	if (use_fixed_origin())
 	{

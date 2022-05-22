@@ -47,5 +47,6 @@ int16_t navigate_get_goal(vect3_16t* goal);
 
 uint16_t wind_gain_adjustment(void);
 
+void setup_origin(void);
 
 #endif // NAVIGATE_H
