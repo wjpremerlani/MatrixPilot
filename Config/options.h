@@ -218,16 +218,16 @@
 // If using PWM inputs (parallel Rx connections), set to the number of cables connected, 1-8
 // If using PPM inputs (serial Rx connection), set to the number of Rx channels, up to PPM_NUMBER_OF_CHANNELS
 // If using LRS library (integrated SPI tranceiver), set to the number of Rx channels, up to 16
-#define NUM_INPUTS                          5
+#define NUM_INPUTS                          4
 
 // Channel numbers for each input.
 // Use as is, or edit to match your setup.
 //   - If you're set up to use Rudder Navigation (like MatrixNav), then you may want to swap
 //     the aileron and rudder channels so that rudder is CHANNEL_1, and aileron is 5.
-#define THROTTLE_INPUT_CHANNEL              CHANNEL_3
+#define THROTTLE_INPUT_CHANNEL              CHANNEL_UNUSED
 #define AILERON_INPUT_CHANNEL               CHANNEL_1
 #define ELEVATOR_INPUT_CHANNEL              CHANNEL_2
-#define RUDDER_INPUT_CHANNEL                CHANNEL_5
+#define RUDDER_INPUT_CHANNEL                CHANNEL_3
 #define MODE_SWITCH_INPUT_CHANNEL           CHANNEL_4
 #define BRAKE_THR_SEL_INPUT_CHANNEL         CHANNEL_UNUSED
 #define BRAKE_INPUT_CHANNEL                 CHANNEL_UNUSED
@@ -248,7 +248,7 @@
 // For UDB4/5 boards: Set to 3-8 (or up to 10 using pins RA4 and RA1.)
 // For AUAV3 boards:  Set to 3-8 (or up to 11 using pins RE1, RA6 and RA7.)
 //                               (this needs developing, so contact the list)
-#define NUM_OUTPUTS                         4
+#define NUM_OUTPUTS                         3
 
 // Channel numbers for each output
 // Use as is, or edit to match your setup.
@@ -261,11 +261,11 @@
 // connect THROTTLE_OUTPUT_CHANNEL to one of the built-in Outputs (1, 2, or 3) to make
 // sure your board gets power.
 //
-#define THROTTLE_OUTPUT_CHANNEL             CHANNEL_3
+#define THROTTLE_OUTPUT_CHANNEL             CHANNEL_UNUSED
 #define AILERON_OUTPUT_CHANNEL              CHANNEL_1
 #define AILERON_SECONDARY_OUTPUT_CHANNEL    CHANNEL_UNUSED
 #define ELEVATOR_OUTPUT_CHANNEL             CHANNEL_2
-#define RUDDER_OUTPUT_CHANNEL               CHANNEL_4
+#define RUDDER_OUTPUT_CHANNEL               CHANNEL_3
 #define AILERON_LEFT_OUTPUT_CHANNEL         CHANNEL_UNUSED
 #define FLAP_LEFT_OUTPUT_CHANNEL            CHANNEL_UNUSED
 #define FLAP_RIGHT_OUTPUT_CHANNEL           CHANNEL_UNUSED
@@ -506,7 +506,7 @@
 // the feed forward gain for that axis.
 // For each axis, a deflection term is added equal to the feed forward gain for that axis
 // times projection of the desired earth vertical rotation rate onto that axis
-#define FEED_FORWARD                        1.0
+#define FEED_FORWARD                        0.8
 
 // TURN_RATE_NAV and TURN_RATE_FBW set the gains of the helical turn control for
 // waypoint navigation mode and fly by wire mode respectively.
@@ -522,8 +522,8 @@
 // use it only if there is no rudder.
 // YAWKD_AILERON is the derivative feedback gain for ailerons in response to yaw rotation.
 // use it only if there is no rudder.
-#define ROLLKP                              0.20
-#define ROLLKD                              0.05
+#define ROLLKP                              0.40
+#define ROLLKD                              0.00
 #define YAWKP_AILERON                       0.00
 #define YAWKD_AILERON                       0.00
 
@@ -531,9 +531,9 @@
 // PITCHGAIN is the pitch stabilization gain, typically around 0.125
 // PITCHKD feedback gain for pitch damping, around 0.0625
 // ELEVATOR_BOOST is the additional gain multiplier for the manually commanded elevator deflection
-#define PITCHGAIN                           0.30
+#define PITCHGAIN                           0.50
 #define PITCHKD                             0.00
-#define ELEVATOR_BOOST                      0.50
+#define ELEVATOR_BOOST                      0.5
 
 // Parameters below are used in the computation of angle of attack and pitch trim.
 // ( INVERTED_NEUTRAL_PITCH is no longer used and should not be used.) -- Note (RobD) yes it is?
@@ -579,7 +579,7 @@
 // in stabilized or waypoint mode.  This mainly helps aileron-initiated turning while in stabilized.
 // MANUAL_AILERON_RUDDER_MIX is no longer needed with the new controls, it should be set to zero.
 // RUDDER_BOOST is the additional gain multiplier for the manually commanded rudder deflection
-#define YAWKP_RUDDER                        0.30
+#define YAWKP_RUDDER                        0.40
 #define YAWKD_RUDDER                        0.00
 #define ROLLKP_RUDDER                       0.00
 #define ROLLKD_RUDDER                       0.00
@@ -789,10 +789,10 @@
 //#define ID_VEHICLE_REGISTRATION "TW2-PDH-UK"
 //#define ID_LEAD_PILOT "Pete Hollands"
 //#define ID_DIY_DRONES_URL "http://www.diydrones.com/profile/PeterHollands"
-#define ID_VEHICLE_MODEL_NAME               "Not Defined"
+#define ID_VEHICLE_MODEL_NAME               "Tow Plane"
 #define ID_VEHICLE_REGISTRATION             "Not Defined"
-#define ID_LEAD_PILOT                       "Not Defined"
-#define ID_DIY_DRONES_URL                   "http://www.diydrones.com"
+#define ID_LEAD_PILOT                       "Jim Palmer"
+#define ID_DIY_DRONES_URL                   ""
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Aid to Flight Analysis of Delta Wing Aircraft. This is an optional setting which
