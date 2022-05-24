@@ -135,7 +135,7 @@
 // in the altitude controls, and will trim the throttle and pitch to maintain air speed.
 // Define DESIRED_SPEED to be the air speed that you want, in meters/second.
 #define SPEED_CONTROL                       0
-#define DESIRED_SPEED                       10.0    // meters/second
+#define DESIRED_SPEED                       12.0    // meters/second
 
 // Inverted flight
 // Set these to 1 to enable stabilization of inverted flight in stabilized and/or waypoint modes.
@@ -512,8 +512,8 @@
 // waypoint navigation mode and fly by wire mode respectively.
 // They are specified in terms of the maximum desired turning rate in degrees per second in each mode.
 // The largest possible value is 240 degrees per second, anything larger will be clipped to 240.
-#define TURN_RATE_NAV                       60.0
-#define TURN_RATE_FBW                       30.0
+#define TURN_RATE_NAV                       30.0
+#define TURN_RATE_FBW                       15.0
 
 // Aileron/Roll Control Gains
 // ROLLKP is the proportional gain, approximately 0.25
@@ -531,7 +531,7 @@
 // PITCHGAIN is the pitch stabilization gain, typically around 0.125
 // PITCHKD feedback gain for pitch damping, around 0.0625
 // ELEVATOR_BOOST is the additional gain multiplier for the manually commanded elevator deflection
-#define PITCHGAIN                           0.50
+#define PITCHGAIN                           0.40
 #define PITCHKD                             0.00
 #define ELEVATOR_BOOST                      0.5
 
@@ -560,13 +560,13 @@
 // Be careful not to use the offsets below with the wrong board.
 // Uncomment the line below to activate the CUSTOM_OFFSETS feature in MatrixPilot.
 
-//#define CUSTOM_OFFSETS
-#define XACCEL_OFFSET ( 0 ) 
-#define YACCEL_OFFSET ( 0 )
-#define ZACCEL_OFFSET ( 0 )
-#define XRATE_OFFSET  ( 0 ) // not used by the UDB4
-#define YRATE_OFFSET  ( 0 ) // not used by the UDB4
-#define ZRATE_OFFSET  ( 0 ) // not used by the UDB4
+#define CUSTOM_OFFSETS
+#define XACCEL_OFFSET ( 124 ) 
+#define YACCEL_OFFSET ( -174 )
+#define ZACCEL_OFFSET ( -576 )
+#define XRATE_OFFSET  ( -53 ) // not used by the UDB4
+#define YRATE_OFFSET  ( 174 ) // not used by the UDB4
+#define ZRATE_OFFSET  ( -113 ) // not used by the UDB4
 
 // Rudder/Yaw Control Gains
 // YAWKP_RUDDER is the proportional feedback gain for rudder control of yaw orientation.
