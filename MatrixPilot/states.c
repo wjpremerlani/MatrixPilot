@@ -30,9 +30,9 @@
 #include "../libDCM/gpsParseCommon.h"
 
 #if ( GPS_TYPE == GPS_NONE)
-int16_t stabilize_low_flag = 0 , stabilize_high_flag = 0 ;
 int32_t record_number = 0 ;
 #endif // GPS_NONE
+int16_t stabilize_low_flag = 0 , stabilize_high_flag = 0 ;
 
 union state_flags_int state_flags;
 int16_t waggle = 0;
@@ -478,10 +478,17 @@ static void manualS(void)
 			ent_cat_armedS();
 		else
 #endif
+#if (TWO_STAB_MODES == 1 )		
+		if (flight_mode_switch_waypoints())
+			ent_GPS_less_highS();
+		else if (flight_mode_switch_stabilize())
+			ent_GPS_less_lowS();		
+#else		
 		if (flight_mode_switch_waypoints() & dcm_flags._.nav_capable)
 			ent_waypointS();
 		else if (flight_mode_switch_stabilize())
 			ent_stabilizedS();
+#endif // TWO_STAB_MODES
 	}
 	else
 	{
@@ -516,58 +523,6 @@ static void manualS(void)
 	}
 }
 
-static void ent_GPS_less_highS(void){
-	stabilize_low_flag = 0 ; stabilize_high_flag = 1 ;
-	state_flags._.GPS_steering = 0;
-	state_flags._.pitch_feedback = 1;
-	state_flags._.altitude_hold_throttle = 0;
-	state_flags._.altitude_hold_pitch = 0;
-	waggle = 0;
-	led_on(LED_RED);
-	stateS = &GPS_less_highS;	
-}
-static void	ent_GPS_less_lowS(void){
-	stabilize_low_flag = 1 ; stabilize_high_flag = 0 ;
-	state_flags._.GPS_steering = 0;
-	state_flags._.pitch_feedback = 1;
-	state_flags._.altitude_hold_throttle = 0;
-	state_flags._.altitude_hold_pitch = 0;
-	waggle = 0;
-	led_on(LED_RED);
-	stateS = &GPS_less_lowS;	
-}
-static void GPS_less_highS(void){
-	udb_led_toggle(LED_RED);
-	air_speed_3DIMU = ( uint16_t ) ( 100.0 * DESIRED_SPEED ) ;
-	turngaingpsnone = turngainnav ;
-	if (udb_flags._.radio_on)
-	{
-		if (flight_mode_switch_manual())
-			ent_manualS();
-		else if (flight_mode_switch_stabilize())
-			ent_GPS_less_lowS();
-	}
-	else
-	{
-		ent_manualS();
-	}
-}
-static void	GPS_less_lowS(void){
-	led_on(LED_RED);
-	air_speed_3DIMU = ( uint16_t ) ( 100.0 * DESIRED_SPEED ) ;
-	turngaingpsnone = turngainfbw ;
-	if (udb_flags._.radio_on)
-	{
-		if (flight_mode_switch_waypoints())
-			ent_GPS_less_highS();
-		else if (flight_mode_switch_manual())
-			ent_manualS();
-	}
-	else
-	{
-		ent_manualS();
-	}
-}
 #endif // GPS_NONE
 
 static void stabilizedS(void)
@@ -628,5 +583,57 @@ static void returnS(void)
 #if (FAILSAFE_HOLD == 1)
 		state_flags._.rtl_hold = 1;
 #endif
+	}
+}
+static void ent_GPS_less_highS(void){
+	stabilize_low_flag = 0 ; stabilize_high_flag = 1 ;
+	state_flags._.GPS_steering = 0;
+	state_flags._.pitch_feedback = 1;
+	state_flags._.altitude_hold_throttle = 0;
+	state_flags._.altitude_hold_pitch = 0;
+	waggle = 0;
+	led_on(LED_RED);
+	stateS = &GPS_less_highS;	
+}
+static void	ent_GPS_less_lowS(void){
+	stabilize_low_flag = 1 ; stabilize_high_flag = 0 ;
+	state_flags._.GPS_steering = 0;
+	state_flags._.pitch_feedback = 1;
+	state_flags._.altitude_hold_throttle = 0;
+	state_flags._.altitude_hold_pitch = 0;
+	waggle = 0;
+	led_on(LED_RED);
+	stateS = &GPS_less_lowS;	
+}
+static void GPS_less_highS(void){
+	udb_led_toggle(LED_RED);
+	air_speed_3DIMU = ( uint16_t ) ( 100.0 * DESIRED_SPEED ) ;
+	turngaingpsnone = turngainnav ;
+	if (udb_flags._.radio_on)
+	{
+		if (flight_mode_switch_manual())
+			ent_manualS();
+		else if (flight_mode_switch_stabilize())
+			ent_GPS_less_lowS();
+	}
+	else
+	{
+		ent_manualS();
+	}
+}
+static void	GPS_less_lowS(void){
+	led_on(LED_RED);
+	air_speed_3DIMU = ( uint16_t ) ( 100.0 * DESIRED_SPEED ) ;
+	turngaingpsnone = turngainfbw ;
+	if (udb_flags._.radio_on)
+	{
+		if (flight_mode_switch_waypoints())
+			ent_GPS_less_highS();
+		else if (flight_mode_switch_manual())
+			ent_manualS();
+	}
+	else
+	{
+		ent_manualS();
 	}
 }

@@ -36,10 +36,9 @@ struct state_flags_bits {
 };
 
 #if ( GPS_TYPE == GPS_NONE)
-extern int16_t stabilize_low_flag , stabilize_high_flag ;
 extern int32_t record_number ;
 #endif // GPS_NONE
-
+extern int16_t stabilize_low_flag , stabilize_high_flag ;
 union state_flags_int { struct state_flags_bits _; int16_t WW; };
 extern union state_flags_int state_flags;
 

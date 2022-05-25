@@ -72,6 +72,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Set this value to your GPS type.  (Set to GPS_STD, GPS_UBX_2HZ, GPS_UBX_4HZ, GPS_MTEK, GPS_NMEA, or GPS_NONE)
 #define GPS_TYPE                            GPS_NONE
+#define TWO_STAB_MODES			    (1)
+#ifndef TWO_STAB_MODES
+#define TWO_STAB_MODES			    (0)
+#endif
 //#define DEFAULT_GPS_BAUD                    57600   // added for GPS_NMEA support
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -767,8 +771,11 @@
 // If you are using OpenLog, an easy way to determine the altitude of your landing point is to
 // examine the telemetry after a flight, take a look in the .csv file, it will be easy to spot the
 // altitude, expressed in meters.
-
+#if (GPS_TYPE == GPS_NONE)
 #define USE_FIXED_ORIGIN	    1
+#else
+#define USE_FIXED_ORIGIN	    0
+#endif
 //#define FIXED_ORIGIN_LOCATION	    { -1219950467, 374124664, 30.0 }	// A point in Baylands Park in Sunnyvale, CA
 #define FIXED_ORIGIN_LOCATION	    { 113480854, 472580108, 578 }	// Innsbruck, useful for X-Plane flight simulator
 
