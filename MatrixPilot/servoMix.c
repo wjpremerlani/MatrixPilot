@@ -150,6 +150,8 @@ void servoMix(void)
 			pwManual[temp] = udb_pwTrim[temp];
 	}
 
+	udb_pwOut[TOW_RELEASE_OUTPUT_CHANNEL] = pwManual[TOW_RELEASE_INPUT_CHANNEL];
+	udb_pwOut[FLAPS_OUTPUT_CHANNEL] = pwManual[FLAPS_INPUT_CHANNEL];
 
 	// Standard airplane airframe
 	// Mix roll_control into ailerons
