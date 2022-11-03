@@ -149,7 +149,7 @@
 #endif
 
 #ifdef draganflier
-#define TEST_LIDAR 1
+#define TEST_LIDAR 0
 #define MISSION_TIME 180
 #define MAX_ALT_RATE_CONTROL 1300
 #define MAX_ALT_PROP_CONTROL 1300
@@ -195,7 +195,7 @@
 #define MAX_SPEED 500 // cm/sec
 #define MAX_DISTANCE 1000 // cm
 #define LATERAL_RATE_GAIN 32
-#define ROTOR_CRAFT "draganflier, Sept. 24, 2022\r\n"
+#define ROTOR_CRAFT "draganflier, Nov. 3, 2022\r\n"
 #define NUM_INPUTS	7
 #if (TEST_LIDAR == 0 )
 #define NUM_OUTPUTS	4
