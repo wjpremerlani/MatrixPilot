@@ -134,7 +134,8 @@ void update_slide_detection(void)
 			}
 		else
 			{
-				LED_RED = LED_ON ;
+				udb_led_toggle(LED_RED);
+	//			LED_RED = LED_ON ;
 			}
 		}
 	else
@@ -143,7 +144,8 @@ void update_slide_detection(void)
 			{
 				start_log = 1 ;
 				slide_in_progress = 1 ;
-				LED_RED = LED_ON ;
+				udb_led_toggle(LED_RED);
+	//			LED_RED = LED_ON ;
 			}
 		else
 			{

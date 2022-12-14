@@ -75,7 +75,9 @@ void MPU6000_init16(callback_fptr_t fptr)
 	initMPUSPI_master16(SEC_PRESCAL_4_1, PRI_PRESCAL_16_1);
 #elif (MIPS == 32)
 	// set prescaler for FCY/48 = 667 kHz at 32 MIPS
-	initMPUSPI_master16(SEC_PRESCAL_3_1, PRI_PRESCAL_16_1);
+	// initMPUSPI_master16(SEC_PRESCAL_3_1, PRI_PRESCAL_16_1);
+	// set prescaler for FCY/32 = 1000 kHz at 32 MIPS
+	initMPUSPI_master16(SEC_PRESCAL_2_1, PRI_PRESCAL_16_1);
 #elif (MIPS == 16)
 	// set prescaler for FCY/24 = 667 kHz at 16MIPS
 	initMPUSPI_master16(SEC_PRESCAL_6_1, PRI_PRESCAL_4_1);
@@ -108,10 +110,10 @@ void MPU6000_init16(callback_fptr_t fptr)
 	}
 
 	// SAMPLE RATE
-	writeMPUSPIreg16(MPUREG_SMPLRT_DIV, 4); // Sample rate = 200Hz  Fsample= 1Khz/(N+1) = 200Hz
-
+//	writeMPUSPIreg16(MPUREG_SMPLRT_DIV, 4); // Sample rate = 200Hz  Fsample= 1Khz/(N+1) = 200Hz
+	writeMPUSPIreg16(MPUREG_SMPLRT_DIV, 0);
 	// scaling & DLPF
-	writeMPUSPIreg16(MPUREG_CONFIG, BITS_DLPF_CFG_42HZ);
+//	writeMPUSPIreg16(MPUREG_CONFIG, BITS_DLPF_CFG_42HZ);
 #if (GYRO_RANGE == 250 )
 	writeMPUSPIreg16(MPUREG_GYRO_CONFIG, BITS_FS_250DPS);  // Gyro scale 250º/s
 #elif (GYRO_RANGE == 500 )
@@ -208,6 +210,8 @@ void MPU6000_init16(callback_fptr_t fptr)
 #endif
 }
 
+uint16_t sample_number = 0 ;
+#define SAMPLE_DIV 40
 static void process_MPU_data(void)
 {
 	mpuDAV = true;
@@ -232,7 +236,12 @@ static void process_MPU_data(void)
 
 #if (BOARD_TYPE != UDB4_BOARD && HEARTBEAT_HZ == 200)
 	//  trigger synchronous processing of sensor data
-	if (callback) callback();   // was directly calling heartbeat()
+	sample_number = sample_number + 1 ;
+	if ( sample_number == SAMPLE_DIV)
+	{
+		sample_number = 0 ;
+		if (callback) callback();   // was directly calling heartbeat()
+	}
 #else
 #warning mpu6000: no callback mechanism defined
 #endif // (BOARD_TYPE != UDB4_BOARD && HEARTBEAT_HZ == 200)
