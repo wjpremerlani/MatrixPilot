@@ -113,6 +113,7 @@
         <itemPath>../../libDCM/mathlib.c</itemPath>
         <itemPath>../../libDCM/mathlibNAV.c</itemPath>
         <itemPath>../../libDCM/rmat.c</itemPath>
+        <itemPath>../../libDCM/fract_32_mpy.c</itemPath>
       </logicalFolder>
       <logicalFolder name="libUDB" displayName="libUDB" projectFiles="true">
         <itemPath>../../libUDB/ADchannel.c</itemPath>
