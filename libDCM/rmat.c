@@ -271,9 +271,13 @@ void udb_callback_read_sensors(void)
 
 fractional theta[3];
 fractional rup_copy[9];
+int32_t destination[9] , source1[9] , source2[9] ;
+extern void matrix_mpy_fract_32( int32_t dest[] , int32_t arg1[] , int32_t arg2[] ) ;
 // The update algorithm!!
 static void rupdate(void)
 {
+	// test CPU loading of 
+	matrix_mpy_fract_32(destination,source1,source2);
 	// This is the key routine. It performs a small rotation
 	// on the direction cosine matrix, based on the gyro vector and correction.
 	// It uses vector and matrix routines furnished by Microchip.
