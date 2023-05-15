@@ -24,6 +24,7 @@
 
 
 #include "udbTypes.h"
+#include "libUDB.h"
 
 //#ifdef USE_SILSIM // may move to this style of USE_xxx macro in the future..
 #if (SILSIM == 1 || PX4 == 1)
@@ -44,13 +45,14 @@
 #define AUAV3_BOARD             9   // Nick Arsov's AUAV3 with dsPIC33EP and MPU6000
 #define AUAV4_BOARD             10  // AUAV4 with PIC32MX
 #define PX4_BOARD               11  // PX4 with STM32F4xx
+#define UDB7LUGE_BOARD          12
 
 #if (SILSIM == 0)
 
 // Include the necessary files for the current board type
 #if (BOARD_TYPE == UDB4_BOARD)
 #include "ConfigUDB4.h"
-#elif (UDB == UDB7LUGE_BOARD)
+#elif (BOARD_TYPE == UDB7LUGE_BOARD)
 #include "ConfigUDB7luge.h"
 #elif (BOARD_TYPE == UDB5_BOARD)
 #include "ConfigUDB5.h"

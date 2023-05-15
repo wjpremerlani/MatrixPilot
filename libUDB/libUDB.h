@@ -18,6 +18,10 @@
 // You should have received a copy of the GNU General Public License
 // along with MatrixPilot.  If not, see <http://www.gnu.org/licenses/>.
 
+#ifndef OPTIONS_H
+#define OPTIONS_H
+#include "options.h"
+#endif
 
 #ifndef LIB_UDB_H
 #define LIB_UDB_H
@@ -25,7 +29,7 @@
 #define _ADDED_C_LIB 1 // Needed to get vsnprintf()
 #include <stdio.h>
 
-#include "options.h"
+//#include "options.h"
 //#include "options_quad.h"
 
 #ifdef PX4
@@ -79,13 +83,11 @@
 #undef  USE_MSD
 #define USE_MSD                             0
 #else
-    #ifdef UDB5
     #define BOARD_TYPE                          UDB5_BOARD
     #undef  USE_USB
     #define USE_USB                             0
     #undef  USE_MSD
     #define USE_MSD                             0
-    #endif
 #endif
 
 
