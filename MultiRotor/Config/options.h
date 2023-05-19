@@ -1,5 +1,5 @@
 
-#define DATE "rev. 3.0, 3/26/2023\r\n"
+#define DATE "rev. 3.1, 5/16/2023\r\n"
 
 //#define CONING_CORRECTION
 //#define CONING_CORRECTION_IN_RMAT
@@ -16,14 +16,14 @@
 
 // the following defines select what gets sent to the logger. define one of them
 //#define LOG_IMU
-#define LOG_RESIDUALS
+//#define LOG_RESIDUALS
 //#define RESIDUAL_LOG_PERIOD 10  // 6 times per minute
 #define RESIDUAL_LOG_PERIOD 5  // 12 times per minute
 //#define RESIDUAL_LOG_PERIOD 1  // 60 times per minute
 //#define RECORD_OFFSETS
-#define GYRO_OFFSETS
+//#define GYRO_OFFSETS
 //#define TEST_LOGGER_HZ
-//#define GYRO_CALIB
+#define GYRO_CALIB
 //#define LOG_VELOCITY
 //#define GYRO_DRIFT
 //#define ROAD_TEST
@@ -58,7 +58,7 @@
 // LOG_RATE reports the gyro rates, degrees/sec
 // LOG_EULER reports roll, pitch and yaw Euler angles in NED
 //#define LOG_RATE
-#define LOG_EULER
+//#define LOG_EULER
 //#define LOG_RATE_AND_EULER
 //#define LOG_PITCH_AND_TWO_FORCES
 
@@ -71,24 +71,48 @@
 #define TILT_START	15
 #define TILT_STOP	60
 
+#define LUGE7_SN102
 //#define MINI6_SN4 // SN1, Tucker West
 //#define MINI5_SN14 // was SN14, now SN2
 //#define MINI6_SN3 // SN3
 //SN4 is mini6_sn1 but it is out of service
 //#define MINI6_SN5 // SN5
-#define MINI6_SN6 // SN6
+//#define MINI6_SN6 // SN6
 //#define MINI5_SN7 // SN7
 //#define MINI5_SN1 // SN8
 //#define MINI5_SN2 // SN9
 //#define MINI5_SN3 // SN10
 //#define MINI5_SN4 // SN11
 //#define MINI5_SN12 // SN12
-//#define MINI6_SN14 // was SN2, now SN14
+//#define MINI6_SN2 // was SN2, now SN14
 //#define MINI6_SN15 // SN15
 
+#ifdef LUGE7_SN102
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	1
+#define SERIAL_NUMBERD2	0
+#define SERIAL_NUMBERD3 2
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#endif // LUGE7_SN102
 
-
-//#define MINI6_SN2 // was SN2, now SN14
+#ifdef LUGE7_SN102
+#define CUSTOM_OFFSETS
+#define XACCEL_OFFSET	( 0 )
+#define YACCEL_OFFSET	( -40 )
+#define ZACCEL_OFFSET	( 6 )
+#define GYRO_OFFSET_TABLE "../libUDB/gyro_tables/table_21.h"
+#define CALIBRATIONX	1.0133
+#define CALIBRATIONY	1.0132
+#define CALIBRATIONZ	1.0151
+#define CALIB_GRAVITY	4096
+#define CAL_GRAV_X	4106
+#define CAL_GRAV_Y	4103
+#define CAL_GRAV_Z	4087
+#endif //LUGE7_SN102
 
 
 #ifdef MINI6_SN1

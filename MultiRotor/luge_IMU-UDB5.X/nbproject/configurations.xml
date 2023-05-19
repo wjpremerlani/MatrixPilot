@@ -46,6 +46,7 @@
           <itemPath>../../libUDB/gyro_tables/table_18.h</itemPath>
           <itemPath>../../libUDB/gyro_tables/table_19.h</itemPath>
           <itemPath>../../libUDB/gyro_tables/table_20.h</itemPath>
+          <itemPath>../../libUDB/gyro_tables/table_21.h</itemPath>
         </logicalFolder>
         <itemPath>../../libUDB/ADchannel.h</itemPath>
         <itemPath>../../libUDB/analogs.h</itemPath>
