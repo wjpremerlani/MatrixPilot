@@ -14,20 +14,24 @@
 #define LUGE7 "UDBluge7 hardware, 200 Hz sampling.\r\n"
 #endif // CONING_CORRECTION
 
-// the following defines select what gets sent to the logger. define one of them
-//#define LOG_IMU
-//#define LOG_RESIDUALS
+// the following defines select what gets sent to the logger
+//#define LOG_IMU               // logs IMU data during a run
+//#define LOG_RESIDUALS         // logs residual offsets between runs
 //#define RESIDUAL_LOG_PERIOD 10  // 6 times per minute
 #define RESIDUAL_LOG_PERIOD 5  // 12 times per minute
 //#define RESIDUAL_LOG_PERIOD 1  // 60 times per minute
-//#define RECORD_OFFSETS
-//#define GYRO_OFFSETS
+
+// the following are used to measure offsets and gains for commissioning
+//#define RECORD_OFFSETS        // record raw accelerometer data
+//#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
+//#define GYRO_OFFSETS          // verifies gyro temperature compensation table
+//#define GYRO_CALIB            // used to compute gyro calibration
+
+// the following are options used for development and debugging activities
 //#define TEST_LOGGER_HZ
-#define GYRO_CALIB
 //#define LOG_VELOCITY
 //#define GYRO_DRIFT
 //#define ROAD_TEST
-//#define BUILD_OFFSET_TABLE
 //#define GYRO_LPF
 //#define LOG_TIC_TOK_TEST
 
@@ -65,12 +69,14 @@
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
 #define LOGGER_HZ	20
-#define HEADER_HZ	20
-#define SLIDE_DET_HZ	200
-#define TILT_STOP_DELAY 10 // seconds 
-#define TILT_START	15
-#define TILT_STOP	60
+#define HEADER_HZ	20          // records per second during header logging
+#define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
+#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
+#define TILT_START	15          // tilt angle threshold in degrees to start recording a run
+#define TILT_STOP	60          // tilt angle threshold in degrees to stop recording a run
 
+
+// select a wolf_pac by defining its internal label
 #define LUGE7_SN102
 //#define MINI6_SN4 // SN1, Tucker West
 //#define MINI5_SN14 // was SN14, now SN2
