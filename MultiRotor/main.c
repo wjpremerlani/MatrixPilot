@@ -68,8 +68,12 @@ int main (void)
     hasWrittenHeader = 1;
     logging_on = 0 ;
 #else
+#ifndef UDB7LUGE
 	udb_serial_set_rate(57600) ;
-#endif
+#else
+    udb_serial_set_rate(460800) ;
+#endif // UDB7LUGE
+#endif // USE_PACKETIZED_TELEMERTY
     
 	LED_GREEN = LED_OFF ;
 	LED_RED = LED_OFF ;

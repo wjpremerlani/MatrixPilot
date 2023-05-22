@@ -158,9 +158,7 @@ extern union longww ggain_32[];
 extern int16_t theta_16[];
 
 extern union longww rmat_32[];
-extern int32_t renorm_32_row_3 ;
-					
-
+extern int32_t renorm_32_row_3 	;			
 
 void send_residual_data(void)
 {
@@ -369,7 +367,11 @@ void send_imu_data(void)
 #endif // LOG_RATE
 #ifdef LOG_EULER
 #ifndef THETA_LOG
+#ifndef UDB7LUGE
 				serial_output( "\r\n\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx\r\n" ) ;
+#else
+				serial_output( "\r\n\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx,cpu,line_no\r\n" ) ;
+#endif // UDB7LUGE
 #else
 				serial_output("\r\r\r\nx_theta,y_theta,x_omega,y_omega,pitch,roll\r\n") ;
 #endif // THETA_LOG
@@ -512,12 +514,24 @@ void send_imu_data(void)
 			heading_previous = heading ;
 			yaw_previous = yaw_angle ;
 #ifndef THETA_LOG
+#ifndef UDB7LUGE
 			serial_output( "%.2f,%.1f,%.1f,%.1f,%.2f,%.1f,%u\r\n" ,
 				((double)(aero_force[0]))/ACCEL_FACTOR ,
 				((double)(aero_force[1]))/ACCEL_FACTOR ,
 				((double)(aero_force[2]))/ACCEL_FACTOR ,
 				heading ,  pitch_angle , roll_angle , max_gyro/328  ) ;	
 			max_gyro = 0 ;
+#else
+
+            serial_output( "%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u\r\n" ,
+				((double)(aero_force[0]))/ACCEL_FACTOR ,
+				((double)(aero_force[1]))/ACCEL_FACTOR ,
+				((double)(aero_force[2]))/ACCEL_FACTOR ,
+				heading ,  pitch_angle , roll_angle , max_gyro/328 , udb_cpu_load() , record_number ++   ) ;	
+			max_gyro = 0 ;
+            
+#endif // UDB7LUGE
+
 #else
 			serial_output("%i,%i,%i,%i,%.2f,%.2f\r\n" ,
 					theta[0] , theta[1] ,
