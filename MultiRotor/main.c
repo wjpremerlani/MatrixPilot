@@ -49,6 +49,22 @@ void offsets_init(void) ;
 const int max_tilt = 0 ;  // maximum tilt in byte cicular
 int commanded_tilt_gain ;
 
+#define BLINK_HZ 2
+void udb_blink_red(void)
+{
+    if ((udb_heartbeat_counter % (HEARTBEAT_HZ/BLINK_HZ)) == 0)
+    {
+        udb_led_toggle(LED_RED);
+    }
+}
+void udb_blink_green(void)
+{
+    if ((udb_heartbeat_counter % (HEARTBEAT_HZ/BLINK_HZ)) == 0)
+    {
+        udb_led_toggle(LED_GREEN);
+    }
+}
+
 int main (void)
 {
 //	offsets_init();
@@ -155,18 +171,21 @@ void update_slide_detection(void)
 				stop_log = 1 ;
 				slide_in_progress = 0 ;
 				LED_RED = LED_OFF ;
-				udb_led_toggle(LED_GREEN);
+                udb_blink_green();
+//				udb_led_toggle(LED_GREEN);
 			}
 			else
 			{
 				stop_count ++ ;
-				LED_RED = LED_ON ;
+//				LED_RED = LED_ON ;
+                udb_blink_red();
 				LED_GREEN = LED_OFF ;
 			}
 		else
 			{
 				stop_count = 0 ;
-				udb_led_toggle(LED_RED);
+//				udb_led_toggle(LED_RED);
+                udb_blink_red();
 				LED_GREEN = LED_OFF ;
 			}
 		}
@@ -177,13 +196,15 @@ void update_slide_detection(void)
 				stop_count = 0 ;
 				start_log = 1 ;
 				slide_in_progress = 1 ;
-				udb_led_toggle(LED_RED);
+//				udb_led_toggle(LED_RED);
+                udb_blink_red();
 				LED_GREEN = LED_OFF ;
 			}
 		else
 			{
 				LED_RED = LED_OFF ;
-				udb_led_toggle(LED_GREEN);
+//				udb_led_toggle(LED_GREEN);
+                udb_blink_green();
 			}
 		}
 }
