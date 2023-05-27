@@ -220,6 +220,7 @@ int32_t ggain_32[] =  { (double)256*(double)256*(double)GGAINX_32 ,
 union longww delta_coning_angle32[3] ;
 int16_t theta_16[3] ;
 union longww omega32[3] ;
+union longww _omega32[3] ;
 union longww theta_32[3] ;
 union longww _theta_32[3] ;
 union longww omega_dt[3];
@@ -289,6 +290,7 @@ void reset_coning_adjustment(void)
 int16_t sample_counter = 0 ;
 
 int32_t xaccel32, yaccel32, zaccel32, temp32, xrate32, yrate32, zrate32 ;
+int32_t omegagyro32X[3] ;
 uint32_t max_gyro = 0 ;
 
 void compute_max_gyro(void)
@@ -351,7 +353,7 @@ static void process_MPU_data(void)
 static void process_MPU_data(void)
 {
 	mpuDAV = true;
-	
+    
 	compute_max_gyro(); // diagnostic to detect gyro saturation
 
 //	integrate all data for use in upstream calculations other than those that need coning correction	
@@ -360,7 +362,7 @@ static void process_MPU_data(void)
 	zaccel32 += ((int32_t)((int16_t)mpu_data[zaccel_MPU_channel].BB)) ;
 	
 	temp32 += ((int32_t)((int16_t)mpu_data[temp_MPU_channel].BB)) ;
-	
+    
 	xrate32 += ((int32_t)((int16_t)mpu_data[xrate_MPU_channel].BB)) ;
 	yrate32 += ((int32_t)((int16_t)mpu_data[yrate_MPU_channel].BB)) ;
 	zrate32 += ((int32_t)((int16_t)mpu_data[zrate_MPU_channel].BB)) ;
@@ -382,7 +384,11 @@ static void process_MPU_data(void)
 		udb_xrate.value = __builtin_divsd(xrate32+20,40);
 		udb_yrate.value = __builtin_divsd(yrate32+20,40);
 		udb_zrate.value = __builtin_divsd(zrate32+20,40);
-		
+        
+        omegagyro32X[0] =(xrate32 << 2)/((int32_t)5) ;
+        omegagyro32X[1] =(yrate32 << 2)/((int32_t)5) ;
+        omegagyro32X[2] =(zrate32 << 2)/((int32_t)5) ;
+        	
 		xaccel32 = 0 ;
 		yaccel32 = 0 ;
 		zaccel32 = 0 ;
@@ -404,6 +410,11 @@ static void process_MPU_data(void)
 		theta_16[0] = _theta_32[0]._.W1 ;
 		theta_16[1] = _theta_32[1]._.W1 ;
 		theta_16[2] = _theta_32[2]._.W1 ;
+        
+        _omega32[0].WW = omega32[0].WW ;
+        _omega32[1].WW = omega32[1].WW ;
+        _omega32[2].WW = omega32[2].WW ;
+        
 		
 		// get ready for the next batch of 40 samples
 		reset_coning_adjustment();

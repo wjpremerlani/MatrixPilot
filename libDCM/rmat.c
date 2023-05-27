@@ -160,6 +160,7 @@ union longww omegagyro_filtered[] = { { 0 }, { 0 },  { 0 } };
 extern int16_t accelOn ;
 extern int16_t gyro_offset[];
 union longww gyro_offset_32[] = { { 0 }, { 0 },  { 0 } };
+extern int32_t omegagyro32X[] ;
 static inline void read_gyros(void)
 {
 	// fetch the gyro signals and subtract the baseline offset, 
@@ -175,11 +176,19 @@ static inline void read_gyros(void)
 	gyro_offset_32[0]._.W1 = 0 ;
 	gyro_offset_32[1]._.W1 = 0 ;
 	gyro_offset_32[2]._.W1 = 0 ;
-
-	omegagyro[0] = XRATE_VALUE;
+    omegagyro[0] = XRATE_VALUE;
 	omegagyro[1] = YRATE_VALUE;
 	omegagyro[2] = ZRATE_VALUE;
-	union longww accum32 ;
+
+    
+#ifdef CONING_CORRECTION
+    if(accelOn == 1)
+    {
+	omegagyro_filtered[0].WW += ((int32_t)(omegagyro32X[0])>>(GYRO_FILTER_SHIFT-11)) -((int32_t)(omegagyro_filtered[0].WW )>>GYRO_FILTER_SHIFT) ;
+	omegagyro_filtered[1].WW += ((int32_t)(omegagyro32X[1])>>(GYRO_FILTER_SHIFT-11)) -((int32_t)(omegagyro_filtered[1].WW )>>GYRO_FILTER_SHIFT) ;
+	omegagyro_filtered[2].WW += ((int32_t)(omegagyro32X[2])>>(GYRO_FILTER_SHIFT-11)) -((int32_t)(omegagyro_filtered[2].WW )>>GYRO_FILTER_SHIFT) ;
+    }
+#else
 	
 	if (accelOn == 1)
 	{
@@ -191,6 +200,7 @@ static inline void read_gyros(void)
 	accum32._.W1 = -omegagyro[2] ;
 	omegagyro_filtered[2].WW += ((int32_t)(accum32.WW)>>GYRO_FILTER_SHIFT) -((int32_t)(omegagyro_filtered[2].WW )>>GYRO_FILTER_SHIFT) ;
 	}
+#endif // CONING_CORRECTION
 }
 boolean first_accel = 1 ;
 int16_t aero_force_new[] = { 0 , 0 , 0 } ;
