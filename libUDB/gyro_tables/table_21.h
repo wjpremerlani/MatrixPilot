@@ -7,7 +7,7 @@
 
 #define STEP_SIZE 64
 
-int16_t residual_offset[] = { 0 , 0 , 0 } ;
+int16_t residual_offset[] = { -355 , -54 , 18 } ;
 
 #define TABLE_ORIGIN  -10153
 
