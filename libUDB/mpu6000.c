@@ -353,6 +353,11 @@ static void process_MPU_data(void)
 static void process_MPU_data(void)
 {
 	mpuDAV = true;
+#ifdef SIMULATED_GYRO
+    mpu_data[xrate_MPU_channel].BB = 25 ;
+    mpu_data[yrate_MPU_channel].BB = -50 ;
+    mpu_data[zrate_MPU_channel].BB = 75 ;
+#endif // SIMULATED_GYRO
     
 	compute_max_gyro(); // diagnostic to detect gyro saturation
 
@@ -385,9 +390,9 @@ static void process_MPU_data(void)
 		udb_yrate.value = __builtin_divsd(yrate32+20,40);
 		udb_zrate.value = __builtin_divsd(zrate32+20,40);
         
-        omegagyro32X[0] =(xrate32 << 2)/((int32_t)5) ;
-        omegagyro32X[1] =(yrate32 << 2)/((int32_t)5) ;
-        omegagyro32X[2] =(zrate32 << 2)/((int32_t)5) ;
+        omegagyro32X[0] = XRATE_SIGN_ORIENTED (xrate32 << 2)/((int32_t)5) ;
+        omegagyro32X[1] = YRATE_SIGN_ORIENTED (yrate32 << 2)/((int32_t)5) ;
+        omegagyro32X[2] = ZRATE_SIGN_ORIENTED (zrate32 << 2)/((int32_t)5) ;
         	
 		xaccel32 = 0 ;
 		yaccel32 = 0 ;

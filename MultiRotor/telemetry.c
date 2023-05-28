@@ -169,7 +169,7 @@ void send_residual_data(void)
 	}
 	else
 	{
-		serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i\r\n",
+		serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i\r\n",
 				mpu_temp.value,
 				accelOn ,
 				omegagyro[0],
@@ -180,8 +180,8 @@ void send_residual_data(void)
 				(int16_t)((omegagyro_filtered[2].WW)>>12) ,
 				omegagyro[0] + omegagyro_filtered[0]._.W1 ,
 				omegagyro[1] + omegagyro_filtered[1]._.W1 ,
-				omegagyro[2] + omegagyro_filtered[2]._.W1 ,
-                omega32[0]._.W1 , omega32[1]._.W1 , omega32[2]._.W1 
+				omegagyro[2] + omegagyro_filtered[2]._.W1 
+  //              omega32[0]._.W1 , omega32[1]._.W1 , omega32[2]._.W1 
 					);
 	}
 }
@@ -602,7 +602,7 @@ void send_imu_data(void)
 		//	serial_output("%i,%i,%i,%i,%i,%i,%i\r\n" , // 7 integers
 		//	serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%i,%i\r\n" , // 10 integers
 		//	serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i\r\n", // 19 integers
-			serial_output("%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%u\r\n" , // 6 floats and 1 uint
+			serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u\r\n" , // 6 floats and 1 uint
 		//	serial_output("%i,%i,%i,%i,%.1f,%.1f,%.1f\r\n" , // 4 integers and 3 floats
 //					udb_cpu_load(),
 //					omegagyro[0] , omegagyro[1], omegagyro[2],

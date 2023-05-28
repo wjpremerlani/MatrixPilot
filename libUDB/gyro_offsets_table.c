@@ -47,7 +47,14 @@ uint16_t index_lsb = 0 ;
 int16_t left_entry[3];
 int16_t right_minus_left[3];
 uint16_t number_entries ;
-
+#ifdef SIMULATED_GYRO
+void lookup_gyro_offsets(void)
+{
+    gyro_offset[0] = 1600 ;
+    gyro_offset[1] = -3200 ;
+    gyro_offset[2] = 4800 ;    
+}
+#else
 void lookup_gyro_offsets(void)
 {
 	temperature_index = mpu_temp.value - TABLE_ORIGIN ;
@@ -92,6 +99,7 @@ void lookup_gyro_offsets(void)
 		}
 	}
 }
+#endif // SIMULATED_GYRO
 
 int64_t samples_64t = 0 ;
 int32_t samples_32t = 0 ;

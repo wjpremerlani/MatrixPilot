@@ -1,8 +1,10 @@
 
 #define DATE "rev. 3.1, 5/16/2023\r\n"
 
+//#define SIMULATED_GYRO
+
 #define CONING_CORRECTION
-//#define CONING_CORRECTION_IN_RMAT
+#define CONING_CORRECTION_IN_RMAT
 
 #ifdef CONING_CORRECTION
 #define MINI5 "UDBmini5 hardware, 8000 Hz sampling.\r\n"
@@ -68,7 +70,7 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	20
+#define LOGGER_HZ	1
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 #define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over

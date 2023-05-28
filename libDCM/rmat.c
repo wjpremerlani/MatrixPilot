@@ -160,6 +160,7 @@ union longww omegagyro_filtered[] = { { 0 }, { 0 },  { 0 } };
 extern int16_t accelOn ;
 extern int16_t gyro_offset[];
 union longww gyro_offset_32[] = { { 0 }, { 0 },  { 0 } };
+union longww gyro_offset_32_coning[] = { { 0 }, { 0 },  { 0 } };
 extern int32_t omegagyro32X[] ;
 static inline void read_gyros(void)
 {
@@ -170,6 +171,11 @@ static inline void read_gyros(void)
 	gyro_offset_32[0].WW += ((int32_t)gyro_offset[0]) << 10 ;
 	gyro_offset_32[1].WW += ((int32_t)gyro_offset[1]) << 10 ;
 	gyro_offset_32[2].WW += ((int32_t)gyro_offset[2]) << 10 ;
+
+	gyro_offset_32_coning[0].WW = XRATE_SIGN_ORIENTED(((int32_t)gyro_offset[0]) << 10) ;
+	gyro_offset_32_coning[1].WW = YRATE_SIGN_ORIENTED(((int32_t)gyro_offset[1]) << 10) ;
+	gyro_offset_32_coning[2].WW = ZRATE_SIGN_ORIENTED(((int32_t)gyro_offset[2]) << 10) ;
+
 	udb_xrate.offset = (gyro_offset_32[0]._.W1) ;
 	udb_yrate.offset = (gyro_offset_32[1]._.W1) ;
 	udb_zrate.offset = (gyro_offset_32[2]._.W1) ;
@@ -184,9 +190,15 @@ static inline void read_gyros(void)
 #ifdef CONING_CORRECTION
     if(accelOn == 1)
     {
-	omegagyro_filtered[0].WW += ((int32_t)(omegagyro32X[0])>>(GYRO_FILTER_SHIFT-11)) -((int32_t)(omegagyro_filtered[0].WW )>>GYRO_FILTER_SHIFT) ;
-	omegagyro_filtered[1].WW += ((int32_t)(omegagyro32X[1])>>(GYRO_FILTER_SHIFT-11)) -((int32_t)(omegagyro_filtered[1].WW )>>GYRO_FILTER_SHIFT) ;
-	omegagyro_filtered[2].WW += ((int32_t)(omegagyro32X[2])>>(GYRO_FILTER_SHIFT-11)) -((int32_t)(omegagyro_filtered[2].WW )>>GYRO_FILTER_SHIFT) ;
+	omegagyro_filtered[0].WW += ((int32_t)(-omegagyro32X[0])>>(GYRO_FILTER_SHIFT-11)) 
+            -((int32_t)(omegagyro_filtered[0].WW )>>GYRO_FILTER_SHIFT)
+            +((int32_t)(gyro_offset_32_coning[0].WW )>>GYRO_FILTER_SHIFT) ;
+	omegagyro_filtered[1].WW += ((int32_t)(-omegagyro32X[1])>>(GYRO_FILTER_SHIFT-11)) 
+            -((int32_t)(omegagyro_filtered[1].WW )>>GYRO_FILTER_SHIFT)
+            +((int32_t)(gyro_offset_32_coning[1].WW )>>GYRO_FILTER_SHIFT);
+	omegagyro_filtered[2].WW += ((int32_t)(-omegagyro32X[2])>>(GYRO_FILTER_SHIFT-11)) 
+            -((int32_t)(omegagyro_filtered[2].WW )>>GYRO_FILTER_SHIFT) 
+            +((int32_t)(gyro_offset_32_coning[2].WW )>>GYRO_FILTER_SHIFT);
     }
 #else
 	
