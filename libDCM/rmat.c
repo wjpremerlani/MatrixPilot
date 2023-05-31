@@ -161,6 +161,7 @@ extern int16_t accelOn ;
 extern int16_t gyro_offset[];
 union longww gyro_offset_32[] = { { 0 }, { 0 },  { 0 } };
 union longww gyro_offset_32_coning[] = { { 0 }, { 0 },  { 0 } };
+union longww accum32 ;
 extern int32_t omegagyro32X[] ;
 static inline void read_gyros(void)
 {

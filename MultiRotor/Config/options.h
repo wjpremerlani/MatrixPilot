@@ -1,5 +1,5 @@
 
-#define DATE "rev. 3.1, 5/16/2023\r\n"
+#define DATE "rev. 3.2, 5/28/2023\r\n"
 
 //#define SIMULATED_GYRO
 
@@ -26,6 +26,7 @@
 // the following are used to measure offsets and gains for commissioning
 //#define RECORD_OFFSETS        // record raw accelerometer data
 //#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
+//#define DEBUG_TABLE_BUILD
 //#define GYRO_OFFSETS          // verifies gyro temperature compensation table
 //#define GYRO_CALIB            // used to compute gyro calibration
 
@@ -70,7 +71,7 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	1
+#define LOGGER_HZ	20
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 #define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
@@ -79,7 +80,8 @@
 
 
 // select a wolf_pac by defining its internal label
-#define LUGE7_SN102
+//#define LUGE7_SN102
+#define LUGE7_SN103
 //#define MINI6_SN4 // SN1, Tucker West
 //#define MINI5_SN14 // was SN14, now SN2
 //#define MINI6_SN3 // SN3
@@ -107,6 +109,18 @@
 #define LOG_EULER
 #endif // LUGE7_SN102
 
+#ifdef LUGE7_SN103
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	1
+#define SERIAL_NUMBERD2	0
+#define SERIAL_NUMBERD3 3
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#endif // LUGE7_SN103
+
 #ifdef LUGE7_SN102
 #define CUSTOM_OFFSETS
 #define XACCEL_OFFSET	( 0 )
@@ -122,6 +136,20 @@
 #define CAL_GRAV_Z	4087
 #endif //LUGE7_SN102
 
+#ifdef LUGE7_SN103
+#define CUSTOM_OFFSETS
+#define XACCEL_OFFSET	( 18 )
+#define YACCEL_OFFSET	( -63 )
+#define ZACCEL_OFFSET	( -11 )
+#define GYRO_OFFSET_TABLE "../libUDB/gyro_tables/table_22.h"
+#define CALIBRATIONX	1.0204
+#define CALIBRATIONY	1.0106
+#define CALIBRATIONZ	1.0145
+#define CALIB_GRAVITY	4096
+#define CAL_GRAV_X	4104
+#define CAL_GRAV_Y	4101
+#define CAL_GRAV_Z	4078
+#endif //LUGE7_SN103
 
 #ifdef MINI6_SN1
 #define BOARD MINI6

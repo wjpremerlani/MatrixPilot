@@ -54,14 +54,14 @@ void udb_blink_red(void)
 {
     if ((udb_heartbeat_counter % (HEARTBEAT_HZ/BLINK_HZ)) == 0)
     {
-        udb_led_toggle(LED_RED);
+       udb_led_toggle(LED_RED);
     }
 }
 void udb_blink_green(void)
 {
     if ((udb_heartbeat_counter % (HEARTBEAT_HZ/BLINK_HZ)) == 0)
     {
-        udb_led_toggle(LED_GREEN);
+       udb_led_toggle(LED_GREEN);
     }
 }
 
@@ -252,7 +252,11 @@ void dcm_heartbeat_callback(void)
 			}
 			
 			{
+#ifdef BUILD_OFFSET_TABLE
+                if ((udb_heartbeat_counter % (HEARTBEAT_HZ/BUILD_OFFSET_HZ)) == 0)
+#else
 				if ((udb_heartbeat_counter % (HEARTBEAT_HZ/LOGGER_HZ)) == 0)
+#endif //
 				{
 					send_imu_data();
 				}
