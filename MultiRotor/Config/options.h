@@ -1,5 +1,5 @@
 
-#define DATE "rev. 3.2, 5/28/2023\r\n"
+#define DATE "Wolf_pac_2 , firmware 4.0, 6/19/2023\r\n"
 
 //#define SIMULATED_GYRO
 
@@ -17,7 +17,8 @@
 #endif // CONING_CORRECTION
 
 // the following defines select what gets sent to the logger
-//#define LOG_IMU               // logs IMU data during a run
+//#define LOG_IMU_WP1               // logs IMU data during a run for wolf_pac version 1
+#define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
 #define LOG_RESIDUALS         // logs residual offsets between runs
 //#define RESIDUAL_LOG_PERIOD 10  // 6 times per minute
 #define RESIDUAL_LOG_PERIOD 5  // 12 times per minute
@@ -36,11 +37,11 @@
 //#define GYRO_DRIFT
 //#define ROAD_TEST
 //#define GYRO_LPF
-#define LOG_TIC_TOK_TEST
+
 
 //#define ENABLE_ESP32
 #ifdef ENABLE_ESP32
-#ifdef LOG_IMU
+#ifdef LOG_IMU_WP1
     // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
     // non-printable characters are written out, as header bytes for packets.
     #define USE_PACKETIZED_TELEMERTY
@@ -71,7 +72,7 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	20
+#define LOGGER_HZ	200
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 #define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over

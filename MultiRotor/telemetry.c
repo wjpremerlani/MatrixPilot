@@ -358,7 +358,7 @@ void send_imu_data(void)
 			break;
 		case 23:
 			{
-#ifdef LOG_IMU
+#ifdef LOG_IMU_WP1
 				// initialize the unwrapping of yaw angle
 				compute_euler();
 				yaw_previous = yaw_angle ;
@@ -383,9 +383,9 @@ void send_imu_data(void)
 #ifdef LOG_PITCH_AND_TWO_FORCES
 				serial_output( "\r\n\r\nx_force_xx,z_force,pitch_xx\r\n" ) ;	
 #endif // LOG_PITCH_AND_TWO_FORCES
-#endif // LOG_IMU
+#endif // LOG_IMU_WP1
 				
-#ifdef LOG_TIC_TOK_TEST
+#ifdef LOG_IMU_WP2
 				max_gyro = 0 ;
 				compute_euler();
 				yaw_previous = yaw_angle ;
@@ -396,14 +396,15 @@ void send_imu_data(void)
 				heading_previous_8k = 0.0 ;
 #endif // CONING_CORRECTION
 
+                serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,yaw_8k_xx,pitch_8k_xx,roll_8k_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx\r\n");
 //				serial_output("\r\n\r\ncpu,wx,wy,wz,yaw_xx,pitch_xx,roll_xx,\r\n");
-				serial_output("\r\n\r\nyaw_xx,pitch_xx,roll_xx,yaw_8k_xx,pitch_8k_xx,roll_8k_xx,max_gyro_pct_xx\r\n") ;
+//              serial_output("\r\n\r\nyaw_xx,pitch_xx,roll_xx,yaw_8k_xx,pitch_8k_xx,roll_8k_xx,max_gyro_pct_xx\r\n") ;
 //				serial_output("\r\n\r\ncpu,r0,r1,r2,r3,r4,r5,r6,r7,r8,rr0,rr1,rr2,rr3,rr4,rr5,rr6,rr7,rr8\r\n");
 //				serial_output("\r\n\r\ncpu,tlt_x,tlt_y,tlt_z,theta_x,theta_y,theta_z,t16_x,t16_y,t16_z\r\n");
 //				serial_output("\r\n\r\ncpu,tlt_x,tlt_y,tlt_z,wx,wy,wz,theta_x,theta_y,theta_z,t32_x,t32_y,t32_z\r\n");
 //				serial_output("\r\n\r\ncpu,wx,wy,wz,theta_x,theta_y,theta_z,t32_x,t32_y,t32_z\r\n");
 //				serial_output("\r\n\r\ncpu,tlt_x,tlt_y,tlt_z,t32_x,t32_y,t32_z\r\n");
-#endif // LOG_TIC_TOK_TEST
+#endif // LOG_IMU_WP2
 				
 #ifdef RECORD_OFFSETS
 				serial_output("tmptur,ax,ay,az,gx_val,gy_val,gz_val,gyr_x,gyr_y,gyr_z\r\n");
@@ -484,7 +485,7 @@ void send_imu_data(void)
 #endif	
 #endif // TEST_LOGGER_HZ
 
-#ifdef LOG_IMU
+#ifdef LOG_IMU_WP1
 #ifdef LOG_RATE
 		{
 			serial_output( "%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\r\n" ,
@@ -560,8 +561,8 @@ void send_imu_data(void)
 				pitch_angle   ) ;	
 		}	
 #endif // LOG_PITCH_AND_TWO_FORCES
-#endif // LOG_IMU
-#ifdef LOG_TIC_TOK_TEST
+#endif // LOG_IMU_WP1
+#ifdef LOG_IMU_WP2
 		{
  			compute_euler();
 			delta_yaw = yaw_angle - yaw_previous ;
@@ -602,13 +603,18 @@ void send_imu_data(void)
 		//	serial_output("%i,%i,%i,%i,%i,%i,%i\r\n" , // 7 integers
 		//	serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%i,%i\r\n" , // 10 integers
 		//	serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i\r\n", // 19 integers
-			serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u\r\n" , // 6 floats and 1 uint
+		//	serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u\r\n" , // 6 floats and 1 uint
 		//	serial_output("%i,%i,%i,%i,%.1f,%.1f,%.1f\r\n" , // 4 integers and 3 floats
-//					udb_cpu_load(),
+            serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u\r\n",
 //					omegagyro[0] , omegagyro[1], omegagyro[2],
-					heading ,  pitch_angle , roll_angle ,
-					heading_8k ,  pitch_angle_8k , roll_angle_8k ,
-					max_gyro/328  					
+            	((double)(aero_force[0]))/ACCEL_FACTOR ,
+				((double)(aero_force[1]))/ACCEL_FACTOR ,
+				((double)(aero_force[2]))/ACCEL_FACTOR ,
+				heading ,  pitch_angle , roll_angle ,
+				heading_8k ,  pitch_angle_8k , roll_angle_8k ,
+				max_gyro/328  ,
+                udb_cpu_load(),
+                record_number ++         
 //					renorm_32_row_3 ,
 //					rmat[0],rmat[1],rmat[2],
 //					rmat[3],rmat[4],rmat[5],
@@ -633,7 +639,7 @@ void send_imu_data(void)
 			);
 			max_gyro = 0 ;
 		}
-#endif // LOG_TIC_TOK_TEST
+#endif // LOG_IMU_WP2
 #ifdef GYRO_CALIB
 
 		{	compute_bill_angles();
