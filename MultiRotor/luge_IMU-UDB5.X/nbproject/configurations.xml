@@ -48,6 +48,7 @@
           <itemPath>../../libUDB/gyro_tables/table_20.h</itemPath>
           <itemPath>../../libUDB/gyro_tables/table_21.h</itemPath>
           <itemPath>../../libUDB/gyro_tables/table_22.h</itemPath>
+          <itemPath>../../libUDB/gyro_tables/table_luge7_sn104.h</itemPath>
         </logicalFolder>
         <itemPath>../../libUDB/ADchannel.h</itemPath>
         <itemPath>../../libUDB/analogs.h</itemPath>
@@ -93,6 +94,7 @@
           <itemPath>../../MultiRotor/Config/options_magnetometer.h</itemPath>
           <itemPath>../../MultiRotor/Config/options_osd.h</itemPath>
           <itemPath>../../MultiRotor/Config/options_ports.h</itemPath>
+          <itemPath>../Config/options_LUGE7_SN104.h</itemPath>
         </logicalFolder>
         <itemPath>../rotorLib.h</itemPath>
       </logicalFolder>

@@ -395,7 +395,9 @@ void send_imu_data(void)
 				yaw_previous_8k = yaw_angle_8k ;
 				heading_previous_8k = 0.0 ;
 #endif // CONING_CORRECTION
-
+#ifdef START_TRACK_LOG
+                serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,pitch_xx\r\n");
+#else
                 serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,yaw_8k_xx,pitch_8k_xx,roll_8k_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx\r\n");
 //				serial_output("\r\n\r\ncpu,wx,wy,wz,yaw_xx,pitch_xx,roll_xx,\r\n");
 //              serial_output("\r\n\r\nyaw_xx,pitch_xx,roll_xx,yaw_8k_xx,pitch_8k_xx,roll_8k_xx,max_gyro_pct_xx\r\n") ;
@@ -404,6 +406,7 @@ void send_imu_data(void)
 //				serial_output("\r\n\r\ncpu,tlt_x,tlt_y,tlt_z,wx,wy,wz,theta_x,theta_y,theta_z,t32_x,t32_y,t32_z\r\n");
 //				serial_output("\r\n\r\ncpu,wx,wy,wz,theta_x,theta_y,theta_z,t32_x,t32_y,t32_z\r\n");
 //				serial_output("\r\n\r\ncpu,tlt_x,tlt_y,tlt_z,t32_x,t32_y,t32_z\r\n");
+#endif // START_TRACK_LOG
 #endif // LOG_IMU_WP2
 				
 #ifdef RECORD_OFFSETS
@@ -599,7 +602,13 @@ void send_imu_data(void)
 			heading_previous_8k = heading_8k ;
 			yaw_previous_8k = yaw_angle_8k ;
  #endif // CONING_CORRECTION	
- 
+#ifdef START_TRACK_LOG
+            serial_output("%.3f,%.3f,%.3f,%.3f\r\n",
+            	((double)(aero_force[0]))/ACCEL_FACTOR ,
+				((double)(aero_force[1]))/ACCEL_FACTOR ,
+				((double)(aero_force[2]))/ACCEL_FACTOR ,
+				pitch_angle ) ;				       
+#else 
 		//	serial_output("%i,%i,%i,%i,%i,%i,%i\r\n" , // 7 integers
 		//	serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%i,%i\r\n" , // 10 integers
 		//	serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i\r\n", // 19 integers
@@ -637,6 +646,7 @@ void send_imu_data(void)
 	//				coning_angle_adjustment[1].WW ,
 	//				coning_angle_adjustment[2].WW
 			);
+#endif // START_TRACK_LOG
 			max_gyro = 0 ;
 		}
 #endif // LOG_IMU_WP2
