@@ -1,4 +1,5 @@
 
+
 #define DATE "Wolf_pac_2 , firmware 4.0, 6/19/2023\r\n"
 //#define DATE "Wold_pac_1, rev 2.5, 3/6/2023\r\n"
 
@@ -28,9 +29,9 @@
 
 // the following are used to measure offsets and gains for commissioning
 //#define RECORD_OFFSETS        // record raw accelerometer data
-#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
-#define DEBUG_TABLE_BUILD
-//#define GYRO_OFFSETS          // verifies gyro temperature compensation table
+//#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
+//#define DEBUG_TABLE_BUILD
+#define GYRO_OFFSETS          // verifies gyro temperature compensation table
 //#define GYRO_CALIB            // used to compute gyro calibration
 
 // the following are options used for development and debugging activities
@@ -68,13 +69,13 @@
 // LOG_RATE reports the gyro rates, degrees/sec
 // LOG_EULER reports roll, pitch and yaw Euler angles in NED
 //#define LOG_RATE
-//#define LOG_EULER
+#define LOG_EULER
 //#define LOG_RATE_AND_EULER
 //#define LOG_PITCH_AND_TWO_FORCES
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	100
+#define LOGGER_HZ	20
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 #define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
@@ -85,8 +86,8 @@
 // select a wolf_pac by defining its internal label
 //#define LUGE7_SN102
 //#define LUGE7_SN103
-#define LUGE7_SN104
-//#define LUGE7_SN105
+//#define LUGE7_SN104
+#define LUGE7_SN105
 //#define MINI6_SN4 // SN1, Tucker West
 //#define MINI5_SN14 // was SN14, now SN2
 //#define MINI6_SN3 // SN3
