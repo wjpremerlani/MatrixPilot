@@ -380,19 +380,21 @@ static void process_MPU_data(void)
 	// time to pass the consolidation of 40 samples up to the 200 Hz processes
 	if (sample_counter == 40)
 	{
-		udb_xaccel.value = __builtin_divsd(xaccel32+20,40);
-		udb_yaccel.value = __builtin_divsd(yaccel32+20,40);
-		udb_zaccel.value = __builtin_divsd(zaccel32+20,40);
+        // note: according to microchip documentation
+        // divsd rounds toward zero
+		udb_xaccel.value = __builtin_divsd(xaccel32,40);
+		udb_yaccel.value = __builtin_divsd(yaccel32,40);
+		udb_zaccel.value = __builtin_divsd(zaccel32,40);
 
-		mpu_temp.value = __builtin_divsd(temp32+20,40);
+		mpu_temp.value = __builtin_divsd(temp32,40);
 
-		udb_xrate.value = __builtin_divsd(xrate32+20,40);
-		udb_yrate.value = __builtin_divsd(yrate32+20,40);
-		udb_zrate.value = __builtin_divsd(zrate32+20,40);
+		udb_xrate.value = __builtin_divsd(xrate32,40);
+		udb_yrate.value = __builtin_divsd(yrate32,40);
+		udb_zrate.value = __builtin_divsd(zrate32,40);
         
-        omegagyro32X[0] = XRATE_SIGN_ORIENTED (xrate32 << 2)/((int32_t)5) ;
-        omegagyro32X[1] = YRATE_SIGN_ORIENTED (yrate32 << 2)/((int32_t)5) ;
-        omegagyro32X[2] = ZRATE_SIGN_ORIENTED (zrate32 << 2)/((int32_t)5) ;
+        omegagyro32X[0] = ( XRATE_SIGN_ORIENTED (xrate32 << 2))/((int32_t)5) ;
+        omegagyro32X[1] = ( YRATE_SIGN_ORIENTED (yrate32 << 2))/((int32_t)5) ;
+        omegagyro32X[2] = ( ZRATE_SIGN_ORIENTED (zrate32 << 2))/((int32_t)5) ;
         	
 		xaccel32 = 0 ;
 		yaccel32 = 0 ;
@@ -408,9 +410,31 @@ static void process_MPU_data(void)
 		theta_32[2].WW = _theta_32[2].WW ;
 		
 		// round off the 32 bit theta values for the option of logging just the upper 16 bits
-		_theta_32[0].WW += 0x00008000 ;
-		_theta_32[1].WW += 0x00008000 ;
-		_theta_32[2].WW += 0x00008000 ;
+        if (_theta_32[0].WW )
+        {
+            _theta_32[0].WW += 0x00008000 ;
+        }
+        else
+        {
+            _theta_32[0].WW -= 0x00008000 ;
+        }
+		
+        if (_theta_32[1].WW )
+        {
+            _theta_32[1].WW += 0x00008000 ;
+        }
+        else
+        {
+            _theta_32[1].WW -= 0x00008000 ;
+        }
+         if (_theta_32[2].WW )
+        {
+            _theta_32[2].WW += 0x00008000 ;
+        }
+        else
+        {
+            _theta_32[2].WW -= 0x00008000 ;
+        }
 		
 		theta_16[0] = _theta_32[0]._.W1 ;
 		theta_16[1] = _theta_32[1]._.W1 ;

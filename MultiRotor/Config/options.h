@@ -86,8 +86,8 @@
 // select a wolf_pac by defining its internal label
 //#define LUGE7_SN102
 //#define LUGE7_SN103
-//#define LUGE7_SN104
-#define LUGE7_SN105
+#define LUGE7_SN104
+//#define LUGE7_SN105
 //#define MINI6_SN4 // SN1, Tucker West
 //#define MINI5_SN14 // was SN14, now SN2
 //#define MINI6_SN3 // SN3
