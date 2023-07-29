@@ -226,6 +226,18 @@ union longww _theta_32[3] ;
 union longww omega_dt[3];
 extern union longww omegagyro_filtered[];
 
+int16_t divide_by_40_and_round(int32_t total)
+{
+    if (total>0)
+    {
+        return __builtin_divsd(total+20,40) ;
+    }
+    else
+    {
+        return __builtin_divsd(total-20,40) ;
+    }
+}
+
 // compute just the coning correction term
 void compute_one_half_angle_cross_omega(void)
 {
@@ -380,18 +392,17 @@ static void process_MPU_data(void)
 	// time to pass the consolidation of 40 samples up to the 200 Hz processes
 	if (sample_counter == 40)
 	{
-        // note: according to microchip documentation
-        // divsd rounds toward zero
-		udb_xaccel.value = __builtin_divsd(xaccel32,40);
-		udb_yaccel.value = __builtin_divsd(yaccel32,40);
-		udb_zaccel.value = __builtin_divsd(zaccel32,40);
+        // divide by 40 and round toward 0
+		udb_xaccel.value = divide_by_40_and_round(xaccel32) ;
+		udb_yaccel.value = divide_by_40_and_round(yaccel32);
+		udb_zaccel.value = divide_by_40_and_round(zaccel32);
 
-		mpu_temp.value = __builtin_divsd(temp32,40);
+		mpu_temp.value = divide_by_40_and_round(temp32);
 
-		udb_xrate.value = __builtin_divsd(xrate32,40);
-		udb_yrate.value = __builtin_divsd(yrate32,40);
-		udb_zrate.value = __builtin_divsd(zrate32,40);
-        
+		udb_xrate.value = divide_by_40_and_round(xrate32);
+		udb_yrate.value = divide_by_40_and_round(yrate32);
+        udb_zrate.value = divide_by_40_and_round(zrate32);
+		
         omegagyro32X[0] = ( XRATE_SIGN_ORIENTED (xrate32 << 2))/((int32_t)5) ;
         omegagyro32X[1] = ( YRATE_SIGN_ORIENTED (yrate32 << 2))/((int32_t)5) ;
         omegagyro32X[2] = ( ZRATE_SIGN_ORIENTED (zrate32 << 2))/((int32_t)5) ;
