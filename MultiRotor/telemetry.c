@@ -169,6 +169,11 @@ void send_residual_data(void)
 	}
 	else
 	{
+        union longww omgfilt_rounded[3];
+        omgfilt_rounded[0].WW = omegagyro_filtered[0].WW+0x00008000 ;
+        omgfilt_rounded[1].WW = omegagyro_filtered[1].WW+0x00008000 ;
+        omgfilt_rounded[2].WW = omegagyro_filtered[2].WW+0x00008000 ;
+        
 		serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i\r\n",
 				mpu_temp.value,
 				accelOn ,
@@ -178,9 +183,9 @@ void send_residual_data(void)
 				(int16_t)((omegagyro_filtered[0].WW)>>12) ,
 				(int16_t)((omegagyro_filtered[1].WW)>>12) ,
 				(int16_t)((omegagyro_filtered[2].WW)>>12) ,
-				omegagyro[0] + omegagyro_filtered[0]._.W1 ,
-				omegagyro[1] + omegagyro_filtered[1]._.W1 ,
-				omegagyro[2] + omegagyro_filtered[2]._.W1 
+				omegagyro[0] + omgfilt_rounded[0]._.W1 ,
+				omegagyro[1] + omgfilt_rounded[1]._.W1 ,
+				omegagyro[2] + omgfilt_rounded[2]._.W1 
   //              omega32[0]._.W1 , omega32[1]._.W1 , omega32[2]._.W1 
 					);
 	}

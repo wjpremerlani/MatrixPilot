@@ -228,6 +228,11 @@ extern union longww omegagyro_filtered[];
 
 int16_t divide_by_40_and_round(int32_t total)
 {
+    // divsd does a true signed divide
+    // for positive numerator and denominator, the result*denominator >= numerator,
+    // meaning the remainder is positive.
+    // for negative numerator, the result = - (absolute(numerator)/denominator,
+    // and the remainder is negative.
     if (total>0)
     {
         return __builtin_divsd(total+20,40) ;
@@ -250,29 +255,32 @@ void compute_one_half_angle_cross_omega(void)
 	delta_coning_angle32[1].WW *= 2 ;
 	delta_coning_angle32[2].WW *= 2 ;
 }
-
+extern union longww gyro_offset_32_coning[];
 // compute the sum of both terms in the equation for the rate of change of rotation angle vector
 void compute_coning_adjustment(void)
 {
 	union longww rate ;
-	union longww offset ;
+//	union longww offset ;
 	rate._.W1 = XRATE_SIGN_ORIENTED (((int16_t)mpu_data[xrate_MPU_channel].BB));
 	rate._.W0 = 0 ;
-	offset._.W1 = XRATE_SIGN_ORIENTED (((int16_t)udb_xrate.offset));
-	offset._.W0 = 0 ;
-	omega32[0].WW = (rate.WW>>1)-(offset.WW>>1);
+//	offset._.W1 = XRATE_SIGN_ORIENTED (((int16_t)udb_xrate.offset));
+//	offset._.W0 = 0 ;
+//  omega32[1].WW = (rate.WW>>1)-(offset.WW>>1);   
+	omega32[0].WW = (rate.WW>>1)-((gyro_offset_32_coning[0].WW)>>1);
 	
 	rate._.W1 = YRATE_SIGN_ORIENTED (((int16_t)mpu_data[yrate_MPU_channel].BB));
 	rate._.W0 = 0 ;
-	offset._.W1 = YRATE_SIGN_ORIENTED (((int16_t)udb_yrate.offset));
-	offset._.W0 = 0 ;
-	omega32[1].WW = (rate.WW>>1)-(offset.WW>>1);
+//	offset._.W1 = YRATE_SIGN_ORIENTED (((int16_t)udb_yrate.offset));
+//	offset._.W0 = 0 ;
+//	omega32[1].WW = (rate.WW>>1)-(offset.WW>>1);
+	omega32[1].WW = (rate.WW>>1)-((gyro_offset_32_coning[1].WW)>>1);
 	
 	rate._.W1 = ZRATE_SIGN_ORIENTED (((int16_t)mpu_data[zrate_MPU_channel].BB));
 	rate._.W0 = 0 ;
-	offset._.W1 = ZRATE_SIGN_ORIENTED (((int16_t)udb_zrate.offset));
-	offset._.W0 = 0 ;
-	omega32[2].WW = (rate.WW>>1)-(offset.WW>>1);
+//	offset._.W1 = ZRATE_SIGN_ORIENTED (((int16_t)udb_zrate.offset));
+//	offset._.W0 = 0 ;
+//	omega32[2].WW = (rate.WW>>1)-(offset.WW>>1);
+	omega32[2].WW = (rate.WW>>1)-((gyro_offset_32_coning[2].WW)>>1);
 	
 	// if there are >>1 shifts in the offset compensation computations above,
 	// then there must also be >>1 shifts in the filter compensation below
@@ -429,6 +437,7 @@ static void process_MPU_data(void)
 		theta_16[1] = _theta_32[1]._.W1 ;
 		theta_16[2] = _theta_32[2]._.W1 ;
         
+        // note: following are not used as of 7/29/2023, keep for now
         _omega32[0].WW = omega32[0].WW ;
         _omega32[1].WW = omega32[1].WW ;
         _omega32[2].WW = omega32[2].WW ;
