@@ -32,16 +32,8 @@ void convert_32_bit_to_16_bit(int16_t size , int16_t dest[] , union longww sourc
 	union longww temporary ;
 	for ( index = 0 ; index < size ; index++ )
 	{
-		// rounding toward 0 rather than truncation
-        if (source[index].WW > 0 )
-        {
-            temporary.WW = source[index].WW + 0x00008000 ;
-        }
-        else
-        {
-            temporary.WW = source[index].WW - 0x00008000 ;
-        }
-		dest[index] = temporary._.W1 ;
+        temporary.WW = source[index].WW + 0x00008000 ;
+        dest[index] = temporary._.W1 ;
 	}	
 }
 

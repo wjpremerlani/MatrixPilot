@@ -421,32 +421,10 @@ static void process_MPU_data(void)
 		theta_32[2].WW = _theta_32[2].WW ;
 		
 		// round off the 32 bit theta values for the option of logging just the upper 16 bits
-        if (_theta_32[0].WW )
-        {
-            _theta_32[0].WW += 0x00008000 ;
-        }
-        else
-        {
-            _theta_32[0].WW -= 0x00008000 ;
-        }
-		
-        if (_theta_32[1].WW )
-        {
-            _theta_32[1].WW += 0x00008000 ;
-        }
-        else
-        {
-            _theta_32[1].WW -= 0x00008000 ;
-        }
-         if (_theta_32[2].WW )
-        {
-            _theta_32[2].WW += 0x00008000 ;
-        }
-        else
-        {
-            _theta_32[2].WW -= 0x00008000 ;
-        }
-		
+        _theta_32[0].WW += 0x00008000 ;
+        _theta_32[1].WW += 0x00008000 ;
+        _theta_32[2].WW += 0x00008000 ;
+	
 		theta_16[0] = _theta_32[0]._.W1 ;
 		theta_16[1] = _theta_32[1]._.W1 ;
 		theta_16[2] = _theta_32[2]._.W1 ;
