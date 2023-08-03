@@ -5,7 +5,7 @@
 
 //#define SIMULATED_GYRO
 
-//#define CONING_CORRECTION
+#define CONING_CORRECTION
 //#define CONING_CORRECTION_IN_RMAT
 
 #ifdef CONING_CORRECTION
@@ -20,7 +20,7 @@
 
 // the following defines select what gets sent to the logger
 //#define LOG_IMU_WP1               // logs IMU data during a run for wolf_pac version 1
-//#define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
+#define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
 //#define START_TRACK_LOG         // logs 3 components of force and pitch
 #define LOG_RESIDUALS         // logs residual offsets between runs
 //#define RESIDUAL_LOG_PERIOD 10  // 6 times per minute
@@ -29,8 +29,8 @@
 
 // the following are used to measure offsets and gains for commissioning
 //#define RECORD_OFFSETS        // record raw accelerometer data
-#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
-#define DEBUG_TABLE_BUILD
+//#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
+//#define DEBUG_TABLE_BUILD
 //#define GYRO_OFFSETS          // verifies gyro temperature compensation table
 //#define GYRO_CALIB            // used to compute gyro calibration
 
@@ -75,7 +75,7 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	20
+#define LOGGER_HZ	200
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 #define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
@@ -86,11 +86,11 @@
 // select a wolf_pac by defining its internal label
 //#define LUGE7_SN102
 //#define LUGE7_SN103
-//#define LUGE7_SN104
+#define LUGE7_SN104
 //#define LUGE7_SN105
 //#define LUGE7_SN106
 //#define LUGE7_SN107
-#define LUGE7_SN108
+//#define LUGE7_SN108
 //#define LUGE7_SN202
 //#define MINI6_SN4 // SN1, Tucker West
 //#define MINI5_SN14 // was SN14, now SN2

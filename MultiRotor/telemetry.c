@@ -392,10 +392,11 @@ void send_imu_data(void)
 				
 #ifdef LOG_IMU_WP2
 				max_gyro = 0 ;
+#ifndef CONING_CORRECTION
 				compute_euler();
 				yaw_previous = yaw_angle ;
 				heading_previous = 0.0 ;
-#ifdef CONING_CORRECTION
+#else // CONING_CORRECTION
 				compute_euler_8k();
 				yaw_previous_8k = yaw_angle_8k ;
 				heading_previous_8k = 0.0 ;
@@ -403,7 +404,7 @@ void send_imu_data(void)
 #ifdef START_TRACK_LOG
                 serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,pitch_xx\r\n");
 #else
-                serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,yaw_8k_xx,pitch_8k_xx,roll_8k_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx\r\n");
+                serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx\r\n");
 //				serial_output("\r\n\r\ncpu,wx,wy,wz,yaw_xx,pitch_xx,roll_xx,\r\n");
 //              serial_output("\r\n\r\nyaw_xx,pitch_xx,roll_xx,yaw_8k_xx,pitch_8k_xx,roll_8k_xx,max_gyro_pct_xx\r\n") ;
 //				serial_output("\r\n\r\ncpu,r0,r1,r2,r3,r4,r5,r6,r7,r8,rr0,rr1,rr2,rr3,rr4,rr5,rr6,rr7,rr8\r\n");
@@ -572,6 +573,7 @@ void send_imu_data(void)
 #endif // LOG_IMU_WP1
 #ifdef LOG_IMU_WP2
 		{
+#ifndef CONING_CORRECTION
  			compute_euler();
 			delta_yaw = yaw_angle - yaw_previous ;
 			if (abs(delta_yaw)<90.0)
@@ -588,8 +590,7 @@ void send_imu_data(void)
 			}
 			heading_previous = heading ;
 			yaw_previous = yaw_angle ;
-#ifdef CONING_CORRECTION
-				
+#else // CONING_CORRECTION
 			compute_euler_8k();
 			delta_yaw_8k = yaw_angle_8k - yaw_previous_8k ;
 			if (abs(delta_yaw_8k)<90.0)
@@ -606,7 +607,7 @@ void send_imu_data(void)
 			}
 			heading_previous_8k = heading_8k ;
 			yaw_previous_8k = yaw_angle_8k ;
- #endif // CONING_CORRECTION	
+#endif // CONING_CORRECTION	
 #ifdef START_TRACK_LOG
             serial_output("%.3f,%.3f,%.3f,%.3f\r\n",
             	((double)(aero_force[0]))/ACCEL_FACTOR ,
@@ -619,13 +620,16 @@ void send_imu_data(void)
 		//	serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i\r\n", // 19 integers
 		//	serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u\r\n" , // 6 floats and 1 uint
 		//	serial_output("%i,%i,%i,%i,%.1f,%.1f,%.1f\r\n" , // 4 integers and 3 floats
-            serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u\r\n",
+            serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u\r\n",
 //					omegagyro[0] , omegagyro[1], omegagyro[2],
             	((double)(aero_force[0]))/ACCEL_FACTOR ,
 				((double)(aero_force[1]))/ACCEL_FACTOR ,
 				((double)(aero_force[2]))/ACCEL_FACTOR ,
+#ifndef CONING_CORRECTION
 				heading ,  pitch_angle , roll_angle ,
+#else
 				heading_8k ,  pitch_angle_8k , roll_angle_8k ,
+#endif
 				max_gyro/328  ,
                 udb_cpu_load(),
                 record_number ++         
