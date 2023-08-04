@@ -75,7 +75,7 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	200
+#define LOGGER_HZ	20
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 #define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
@@ -86,14 +86,14 @@
 // select a wolf_pac by defining its internal label
 //#define LUGE7_SN102
 //#define LUGE7_SN103
-#define LUGE7_SN104
+//#define LUGE7_SN104
 //#define LUGE7_SN105
 //#define LUGE7_SN106
 //#define LUGE7_SN107
 //#define LUGE7_SN108
 //#define LUGE7_SN202
 //#define MINI6_SN4 // SN1, Tucker West
-//#define MINI5_SN14 // was SN14, now SN2
+#define MINI5_SN14 // was SN14, now SN2
 //#define MINI6_SN3 // SN3
 //SN4 is mini6_sn1 but it is out of service
 //#define MINI6_SN5 // SN5

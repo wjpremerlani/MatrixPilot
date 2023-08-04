@@ -49,19 +49,28 @@ void offsets_init(void) ;
 const int max_tilt = 0 ;  // maximum tilt in byte cicular
 int commanded_tilt_gain ;
 
-#define BLINK_HZ 2
+#define BLINK_PERIOD 100
+#define BLINK_ON_TIME 20 
 void udb_blink_red(void)
 {
-    if ((udb_heartbeat_counter % (HEARTBEAT_HZ/BLINK_HZ)) == 0)
+    if ((udb_heartbeat_counter % BLINK_PERIOD) <= BLINK_ON_TIME)
     {
-       udb_led_toggle(LED_RED);
+        LED_RED = LED_ON ;
+    }
+    else
+    {
+        LED_RED = LED_OFF ;
     }
 }
 void udb_blink_green(void)
 {
-    if ((udb_heartbeat_counter % (HEARTBEAT_HZ/BLINK_HZ)) == 0)
+    if ((udb_heartbeat_counter % BLINK_PERIOD) <= BLINK_ON_TIME)
     {
-       udb_led_toggle(LED_GREEN);
+        LED_GREEN = LED_ON ;
+    }
+    else
+    {
+        LED_GREEN = LED_OFF ;
     }
 }
 
