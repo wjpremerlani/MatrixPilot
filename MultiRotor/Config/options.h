@@ -6,7 +6,7 @@
 //#define SIMULATED_GYRO
 
 #define CONING_CORRECTION
-//#define CONING_CORRECTION_IN_RMAT
+#define CONING_CORRECTION_IN_RMAT
 
 #ifdef CONING_CORRECTION
 #define MINI5 "UDBmini5 hardware, 8000 Hz sampling.\r\n"
@@ -28,10 +28,10 @@
 //#define RESIDUAL_LOG_PERIOD 1  // 60 times per minute
 
 // the following are used to measure offsets and gains for commissioning
-#define RECORD_OFFSETS        // record raw accelerometer data
+//#define RECORD_OFFSETS        // record raw accelerometer data
 //#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
 //#define DEBUG_TABLE_BUILD
-//#define GYRO_OFFSETS          // verifies gyro temperature compensation table
+#define GYRO_OFFSETS          // verifies gyro temperature compensation table
 //#define GYRO_CALIB            // used to compute gyro calibration
 
 // the following are options used for development and debugging activities
