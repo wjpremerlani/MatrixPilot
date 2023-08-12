@@ -54,10 +54,6 @@
           <itemPath>../../libUDB/gyro_tables/table_luge7_sn106.h</itemPath>
           <itemPath>../../libUDB/gyro_tables/table_luge7_sn107.h</itemPath>
           <itemPath>../../libUDB/gyro_tables/table_luge7_sn108.h</itemPath>
-          <itemPath>../../libUDB/gyro_tables/table_luge7_sn105_rv2.h</itemPath>
-          <itemPath>../../libUDB/gyro_tables/table_luge7_sn106_rv2.h</itemPath>
-          <itemPath>../../libUDB/gyro_tables/table_luge7_sn107_rv2.h</itemPath>
-          <itemPath>../../libUDB/gyro_tables/table_luge7_sn108_rv2.h</itemPath>
         </logicalFolder>
         <itemPath>../../libUDB/ADchannel.h</itemPath>
         <itemPath>../../libUDB/analogs.h</itemPath>
