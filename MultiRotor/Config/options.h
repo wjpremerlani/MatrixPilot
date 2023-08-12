@@ -24,8 +24,9 @@
 //#define START_TRACK_LOG         // logs 3 components of force and pitch
 #define LOG_RESIDUALS         // logs residual offsets between runs
 //#define RESIDUAL_LOG_PERIOD 10  // 6 times per minute
-#define RESIDUAL_LOG_PERIOD 5  // 12 times per minute
-//#define RESIDUAL_LOG_PERIOD 1  // 60 times per minute
+//#define RESIDUAL_LOG_PERIOD 5  // 12 times per minute
+//#define RESIDUAL_LOG_PERIOD 2  // 30 times per minute
+#define RESIDUAL_LOG_PERIOD 1  // 60 times per minute
 
 // the following are used to measure offsets and gains for commissioning
 //#define RECORD_OFFSETS        // record raw accelerometer data
@@ -75,10 +76,11 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	2
+#define LOGGER_HZ	1
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
-#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
+//#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
+#define TILT_STOP_DELAY 2      // delay in seconds to allow for a roll over
 #define TILT_START	15          // tilt angle threshold in degrees to start recording a run
 #define TILT_STOP	60          // tilt angle threshold in degrees to stop recording a run
 
@@ -86,11 +88,11 @@
 // select a wolf_pac by defining its internal label
 //#define LUGE7_SN102
 //#define LUGE7_SN103
-//#define LUGE7_SN104
+#define LUGE7_SN104
 //#define LUGE7_SN105
 //#define LUGE7_SN106
 //#define LUGE7_SN107
-#define LUGE7_SN108
+//#define LUGE7_SN108
 //#define LUGE7_SN202
 //#define MINI6_SN4 // SN1, Tucker West
 //#define MINI5_SN14 // was SN14, now SN2
