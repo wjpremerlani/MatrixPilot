@@ -260,10 +260,11 @@ void update_offset_table(void)
 					(offset_previous[1]+ offset_left[1])/2 ,
 					(offset_previous[2]+ offset_left[2])/2 ) ;	
 		
-				offset_previous[0] = offset_right[0] ;
+
+#endif // 	DEBUG_TABLE_BUILD
+                offset_previous[0] = offset_right[0] ;
 				offset_previous[1] = offset_right[1] ;
 				offset_previous[2] = offset_right[2] ;
-#endif // 	DEBUG_TABLE_BUILD					
 			}
 			else
 			{
