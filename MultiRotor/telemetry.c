@@ -572,7 +572,8 @@ void send_imu_data(void)
 #endif // LOG_PITCH_AND_TWO_FORCES
 #endif // LOG_IMU_WP1
 #ifdef LOG_IMU_WP2
-		{
+        {
+#ifndef LOG_R_UPDATE
 #ifndef CONING_CORRECTION
  			compute_euler();
 			delta_yaw = yaw_angle - yaw_previous ;
@@ -608,6 +609,7 @@ void send_imu_data(void)
 			heading_previous_8k = heading_8k ;
 			yaw_previous_8k = yaw_angle_8k ;
 #endif // CONING_CORRECTION	
+#endif // LOG_R_UPDATE
 #ifdef START_TRACK_LOG
             serial_output("%.3f,%.3f,%.3f,%.3f\r\n",
             	((double)(aero_force[0]))/ACCEL_FACTOR ,
@@ -615,13 +617,8 @@ void send_imu_data(void)
 				((double)(aero_force[2]))/ACCEL_FACTOR ,
 				pitch_angle ) ;				       
 #else 
-		//	serial_output("%i,%i,%i,%i,%i,%i,%i\r\n" , // 7 integers
-		//	serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%i,%i\r\n" , // 10 integers
-		//	serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i\r\n", // 19 integers
-		//	serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u\r\n" , // 6 floats and 1 uint
-		//	serial_output("%i,%i,%i,%i,%.1f,%.1f,%.1f\r\n" , // 4 integers and 3 floats
+#ifndef LOG_R_UPDATE
             serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u\r\n",
-//					omegagyro[0] , omegagyro[1], omegagyro[2],
             	((double)(aero_force[0]))/ACCEL_FACTOR ,
 				((double)(aero_force[1]))/ACCEL_FACTOR ,
 				((double)(aero_force[2]))/ACCEL_FACTOR ,
@@ -633,28 +630,21 @@ void send_imu_data(void)
 				max_gyro/328  ,
                 udb_cpu_load(),
                 record_number ++         
-//					renorm_32_row_3 ,
-//					rmat[0],rmat[1],rmat[2],
-//					rmat[3],rmat[4],rmat[5],
-//					rmat[6],rmat[7],rmat[8],
-//					rmat_32[0]._.W1 , rmat_32[1]._.W1 , rmat_32[2]._.W1 ,
-//					rmat_32[3]._.W1 , rmat_32[4]._.W1 , rmat_32[5]._.W1 ,
-//					rmat_32[6]._.W1 , rmat_32[7]._.W1 , rmat_32[8]._.W1
-	//				rup_copy[0],rup_copy[1],rup_copy[2],
-	//				rup_copy[3],rup_copy[4],rup_copy[5],
-	//				rup_copy[6],rup_copy[7],rup_copy[8],
-	//				rupdate_16[0],rupdate_16[1],rupdate_16[2],
-	//				rupdate_16[3],rupdate_16[4],rupdate_16[5],
-	//				rupdate_16[6],rupdate_16[7],rupdate_16[8]		
-	//				theta[0],theta[1],theta[2],
-	//				theta_16[0],theta_16[1],theta_16[2]
-	//				theta_32[0].WW ,
-	//				theta_32[1].WW ,
-	//				theta_32[2].WW				
-	//				coning_angle_adjustment[0].WW ,
-	//				coning_angle_adjustment[1].WW ,
-	//				coning_angle_adjustment[2].WW
 			);
+#else
+            serial_output("%u,%8lX,%8lX,%8lX,%8lX,%8lX,%8lX,%8lX,%8lX,%8lX\r\n",
+                    udb_cpu_load(),
+                    rupdate_32[0].WW ,
+                    rupdate_32[1].WW ,
+                    rupdate_32[2].WW ,
+                    rupdate_32[3].WW ,
+                    rupdate_32[4].WW ,
+                    rupdate_32[5].WW ,
+                    rupdate_32[6].WW ,
+                    rupdate_32[7].WW ,
+                    rupdate_32[8].WW                  
+                    );
+#endif // LOG_R_UPDATE
 #endif // START_TRACK_LOG
 			max_gyro = 0 ;
 		}

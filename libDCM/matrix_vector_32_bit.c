@@ -71,8 +71,8 @@ int32_t fract_32_mpy( int32_t x , int32_t y )
 		arg2.WW = - (arg2.WW ) ;
 	}	
 	result.WW = __builtin_muluu( arg1._.W1 , arg2._.W1 )
-			+  (__builtin_muluu( arg1._.W1 , arg2._.W0 )>>16 )
-			+  (__builtin_muluu( arg1._.W0 , arg2._.W1 )>>16 ) ;
+			+  ((__builtin_muluu( arg1._.W1 , arg2._.W0 )+0x8000)>>16 )
+			+  ((__builtin_muluu( arg1._.W0 , arg2._.W1 )+0x8000)>>16 ) ;
 	
 	if ( sign < 0)
 	{

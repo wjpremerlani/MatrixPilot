@@ -21,12 +21,13 @@
 // the following defines select what gets sent to the logger
 //#define LOG_IMU_WP1               // logs IMU data during a run for wolf_pac version 1
 #define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
+//#define LOG_R_UPDATE
 //#define START_TRACK_LOG         // logs 3 components of force and pitch
 #define LOG_RESIDUALS         // logs residual offsets between runs
 //#define RESIDUAL_LOG_PERIOD 10  // 6 times per minute
-#define RESIDUAL_LOG_PERIOD 5  // 12 times per minute
+//#define RESIDUAL_LOG_PERIOD 5  // 12 times per minute
 //#define RESIDUAL_LOG_PERIOD 2  // 30 times per minute
-//#define RESIDUAL_LOG_PERIOD 1  // 60 times per minute
+#define RESIDUAL_LOG_PERIOD 1  // 60 times per minute
 
 // the following are used to measure offsets and gains for commissioning
 //#define RECORD_OFFSETS        // record raw accelerometer data
@@ -76,7 +77,7 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	200
+#define LOGGER_HZ	1
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over

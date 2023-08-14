@@ -192,14 +192,14 @@ static inline void read_gyros(void)
     if(accelOn == 1)
     {
 	omegagyro_filtered[0].WW += ((int32_t)(-omegagyro32X[0])>>(GYRO_FILTER_SHIFT-11)) 
-            -((int32_t)(omegagyro_filtered[0].WW )>>GYRO_FILTER_SHIFT)
-            +((int32_t)(gyro_offset_32_coning[0].WW )>>GYRO_FILTER_SHIFT) ;
+          + (( -((int32_t)(omegagyro_filtered[0].WW ))
+            +((int32_t)(gyro_offset_32_coning[0].WW )))>>GYRO_FILTER_SHIFT) ;
 	omegagyro_filtered[1].WW += ((int32_t)(-omegagyro32X[1])>>(GYRO_FILTER_SHIFT-11)) 
-            -((int32_t)(omegagyro_filtered[1].WW )>>GYRO_FILTER_SHIFT)
-            +((int32_t)(gyro_offset_32_coning[1].WW )>>GYRO_FILTER_SHIFT);
+           + (( -((int32_t)(omegagyro_filtered[1].WW ))
+            +((int32_t)(gyro_offset_32_coning[1].WW )))>>GYRO_FILTER_SHIFT);
 	omegagyro_filtered[2].WW += ((int32_t)(-omegagyro32X[2])>>(GYRO_FILTER_SHIFT-11)) 
-            -((int32_t)(omegagyro_filtered[2].WW )>>GYRO_FILTER_SHIFT) 
-            +((int32_t)(gyro_offset_32_coning[2].WW )>>GYRO_FILTER_SHIFT);
+          + ((  -((int32_t)(omegagyro_filtered[2].WW )) 
+            +((int32_t)(gyro_offset_32_coning[2].WW )))>>GYRO_FILTER_SHIFT);
     }
 #else
 	
