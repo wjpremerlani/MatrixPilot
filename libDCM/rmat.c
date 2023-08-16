@@ -154,6 +154,8 @@ void dcm_init_rmat(void)
 }
 
 union longww omegagyro_filtered[] = { { 0 }, { 0 },  { 0 } };
+union longlongLL theta_32_filtered[] = { { 0 }, { 0 },  { 0 } };
+union longlongLL long_long_accum ;
 
 #define GYRO_FILTER_SHIFT 12
 
@@ -163,6 +165,8 @@ union longww gyro_offset_32[] = { { 0 }, { 0 },  { 0 } };
 union longww gyro_offset_32_coning[] = { { 0 }, { 0 },  { 0 } };
 union longww accum32 ;
 extern int32_t omegagyro32X[] ;
+extern union longww theta_32[];
+
 static inline void read_gyros(void)
 {
 	// fetch the gyro signals and subtract the baseline offset, 
@@ -200,6 +204,16 @@ static inline void read_gyros(void)
 	omegagyro_filtered[2].WW += ((int32_t)(-omegagyro32X[2])>>(GYRO_FILTER_SHIFT-11)) 
           + ((  -((int32_t)(omegagyro_filtered[2].WW )) 
             +((int32_t)(gyro_offset_32_coning[2].WW )))>>GYRO_FILTER_SHIFT);
+    
+    long_long_accum._.L0 = 0 ;
+    
+    long_long_accum._.L1 = theta_32[0].WW ;
+    theta_32_filtered[0].LL += ((long_long_accum.LL - theta_32_filtered[0].LL)>>GYRO_FILTER_SHIFT );
+    long_long_accum._.L1 = theta_32[1].WW ;
+    theta_32_filtered[1].LL += ((long_long_accum.LL - theta_32_filtered[1].LL)>>GYRO_FILTER_SHIFT );
+    long_long_accum._.L1 = theta_32[2].WW ;
+    theta_32_filtered[2].LL += ((long_long_accum.LL - theta_32_filtered[2].LL)>>GYRO_FILTER_SHIFT );
+    
     }
 #else
 	

@@ -158,7 +158,8 @@ extern union longww ggain_32[];
 extern int16_t theta_16[];
 
 extern union longww rmat_32[];
-extern int32_t renorm_32_row_3 	;			
+extern int32_t renorm_32_row_3 	;	
+extern union longlongLL theta_32_filtered[];
 
 void send_residual_data(void)
 {
@@ -174,7 +175,7 @@ void send_residual_data(void)
         omgfilt_rounded[1].WW = omegagyro_filtered[1].WW+0x00008000 ;
         omgfilt_rounded[2].WW = omegagyro_filtered[2].WW+0x00008000 ;
         
-		serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i\r\n",
+		serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%li,%li,%li\r\n",
 				mpu_temp.value,
 				accelOn ,
 				omegagyro[0],
@@ -185,8 +186,8 @@ void send_residual_data(void)
 				(int16_t)((omegagyro_filtered[2].WW)>>12) ,
 				omegagyro[0] + omgfilt_rounded[0]._.W1 ,
 				omegagyro[1] + omgfilt_rounded[1]._.W1 ,
-				omegagyro[2] + omgfilt_rounded[2]._.W1 
-  //              omega32[0]._.W1 , omega32[1]._.W1 , omega32[2]._.W1 
+				omegagyro[2] + omgfilt_rounded[2]._.W1 ,
+                theta_32_filtered[0]._.L1 , theta_32_filtered[1]._.L1 ,theta_32_filtered[2]._.L1 
 					);
 	}
 }
@@ -632,17 +633,16 @@ void send_imu_data(void)
                 record_number ++         
 			);
 #else
-            serial_output("%u,%8lX,%8lX,%8lX,%8lX,%8lX,%8lX,%8lX,%8lX,%8lX\r\n",
+            serial_output("%u,%8lX,%8lX,%8lX,%8lX,%8lX,%8lX,%8lX,%8lX\r\n",
                     udb_cpu_load(),
-                    rupdate_32[0].WW ,
-                    rupdate_32[1].WW ,
-                    rupdate_32[2].WW ,
-                    rupdate_32[3].WW ,
-                    rupdate_32[4].WW ,
-                    rupdate_32[5].WW ,
-                    rupdate_32[6].WW ,
-                    rupdate_32[7].WW ,
-                    rupdate_32[8].WW                  
+                    rupdate_32[1].WW + rupdate_32[3].WW ,
+                    rupdate_32[2].WW + rupdate_32[6].WW ,
+                    rupdate_32[5].WW + rupdate_32[7].WW ,
+                    rupdate_32[1].WW - rupdate_32[3].WW ,
+                    rupdate_32[2].WW - rupdate_32[6].WW ,
+                    rupdate_32[5].WW - rupdate_32[7].WW ,                    
+                    rmat_32[6].WW ,
+                    rmat_32[7].WW                  
                     );
 #endif // LOG_R_UPDATE
 #endif // START_TRACK_LOG
