@@ -81,7 +81,7 @@
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
-#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
+#define TILT_STOP_DELAY 1      // delay in seconds to allow for a roll over
 #define TILT_START	15          // tilt angle threshold in degrees to start recording a run
 #define TILT_STOP	60          // tilt angle threshold in degrees to stop recording a run
 

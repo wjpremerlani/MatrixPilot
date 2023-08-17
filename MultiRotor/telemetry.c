@@ -414,7 +414,7 @@ void send_imu_data(void)
 #ifndef LOG_R_UPDATE
                 serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx\r\n");
 #else
-                serial_output("\r\ntheta_sum_x,y,z,r_update_x,y,z,rmat_x,y,z\r\n");
+                serial_output("\r\ntheta_sum_x,y,z,LPF1_x,y,z,LPF2_x,y,z\r\n");
 #endif //   LOG_R_UPDATE              //				serial_output("\r\n\r\ncpu,wx,wy,wz,yaw_xx,pitch_xx,roll_xx,\r\n");
 //              serial_output("\r\n\r\nyaw_xx,pitch_xx,roll_xx,yaw_8k_xx,pitch_8k_xx,roll_8k_xx,max_gyro_pct_xx\r\n") ;
 //				serial_output("\r\n\r\ncpu,r0,r1,r2,r3,r4,r5,r6,r7,r8,rr0,rr1,rr2,rr3,rr4,rr5,rr6,rr7,rr8\r\n");
@@ -642,16 +642,14 @@ void send_imu_data(void)
                 record_number ++         
 			);
 #else
-            serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%i,\r\n",
+            serial_output("%i,%i,%i,%i,%i,%i,%li,%li,%li\r\n",
                     theta_sum[0]._.W1 ,
                     theta_sum[1]._.W1 ,
                     theta_sum[2]._.W1 ,
-                    r_update_sum[0]._.W1 ,
-                    r_update_sum[1]._.W1 ,
-                    r_update_sum[2]._.W1 ,
-                    rmat_sum[0]._.W1 ,
-                    rmat_sum[1]._.W1 ,
-                    rmat_sum[2]._.W1
+                    (int16_t)((omegagyro_filtered[0].WW)>>12) ,
+                    (int16_t)((omegagyro_filtered[1].WW)>>12) ,
+                    (int16_t)((omegagyro_filtered[2].WW)>>12) ,
+                    theta_32_filtered[0]._.L1 , theta_32_filtered[1]._.L1 ,theta_32_filtered[2]._.L1 
                     );
 
 #endif // LOG_R_UPDATE

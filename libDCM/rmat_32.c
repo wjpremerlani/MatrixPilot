@@ -30,6 +30,15 @@ void rmat_32_update(void)
 	if (accelOn == 1 )
 	{
 		convert_16_bit_to_32_bit(9,rmat_32,rmat) ;
+        theta_sum[0].WW = 0 ;
+        theta_sum[1].WW = 0 ;
+        theta_sum[2].WW = 0 ;
+        r_update_sum[0].WW = 0 ;
+        r_update_sum[1].WW = 0 ;
+        r_update_sum[2].WW = 0 ;
+        rmat_sum[0].WW = 0 ;
+        rmat_sum[1].WW = 0 ;
+        rmat_sum[2].WW = 0 ;         
 	}
 	else
 	{
