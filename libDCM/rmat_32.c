@@ -21,6 +21,10 @@ union longww theta_32_adjusted[3];
 
 void normalize_32(void);
 
+union longww theta_sum[] = {{0},{0},{0}} ;
+union longww r_update_sum[] = {{0},{0},{0}} ;
+union longww rmat_sum[] = {{0},{0},{0}} ;
+
 void rmat_32_update(void)
 {
 	if (accelOn == 1 )
@@ -32,6 +36,11 @@ void rmat_32_update(void)
         theta_32_adjusted[0].WW = theta_32[0].WW - theta_32_filtered[0]._.L1 ;
         theta_32_adjusted[1].WW = theta_32[1].WW - theta_32_filtered[1]._.L1 ;
         theta_32_adjusted[2].WW = theta_32[2].WW - theta_32_filtered[2]._.L1 ;            
+    
+        theta_sum[0].WW += theta_32_adjusted[0].WW ;
+        theta_sum[1].WW += theta_32_adjusted[1].WW ;
+        theta_sum[2].WW += theta_32_adjusted[2].WW ;
+               
                 
 		theta_square = ((VectorPower_32(3,theta_32_adjusted))<<2);
 		f1 = (fract_32_mpy(theta_square,(0x40000000/120))<<2) ;
@@ -77,6 +86,11 @@ void rmat_32_update(void)
 		rupdate_32[0].WW += 0x40000000 ;
 		rupdate_32[4].WW += 0x40000000 ;
 		rupdate_32[8].WW += 0x40000000 ;
+        
+        r_update_sum[0].WW += rupdate_32[7].WW ;
+        r_update_sum[1].WW += rupdate_32[2].WW ;
+        r_update_sum[2].WW += rupdate_32[3].WW ;
+        
 		
 		convert_32_bit_to_16_bit(9 , rupdate_16 , rupdate_32) ;
 		
@@ -87,6 +101,11 @@ void rmat_32_update(void)
 		normalize_32();
 		
 		convert_32_bit_to_16_bit(9,rmat_16,rmat_32) ;
+        
+        rmat_sum[0].WW = rmat_32[7].WW ;
+        rmat_sum[1].WW = - rmat_32[6].WW ;
+        rmat_sum[2].WW = rmat_32[3].WW ;
+        
 	}
 }
 

@@ -160,13 +160,18 @@ extern int16_t theta_16[];
 extern union longww rmat_32[];
 extern int32_t renorm_32_row_3 	;	
 extern union longlongLL theta_32_filtered[];
+extern union longww theta_32_adjusted[];
+extern union longww theta_sum[];
+extern union longww r_update_sum[];
+extern union longww rmat_sum[];
 
 void send_residual_data(void)
 {
 	if ( start_residuals == 1)
 	{
 		start_residuals = 0 ;
-		serial_output("\r\n\r\nimu_temp_yy,filter_en_yy,x_rate_yy,y_rate_yy,z_rate_yy,x_filt_16_yy,y_filt_16_yy,z_filt_16_yy,x_err_yy,y_err_yy,z_err_yy\r\n") ;
+//		serial_output("\r\n\r\nimu_temp_yy,filter_en_yy,x_rate_yy,y_rate_yy,z_rate_yy,x_filt_16_yy,y_filt_16_yy,z_filt_16_yy,x_err_yy,y_err_yy,z_err_yy\r\n") ;
+        serial_output("\r\n\r\nimu_temp,filter_en,x_filt_16,y_filt_16,z_filt_16,theta_filtx,y,z\r\n");
 	}
 	else
 	{
@@ -175,18 +180,19 @@ void send_residual_data(void)
         omgfilt_rounded[1].WW = omegagyro_filtered[1].WW+0x00008000 ;
         omgfilt_rounded[2].WW = omegagyro_filtered[2].WW+0x00008000 ;
         
-		serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%li,%li,%li\r\n",
+	//	serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%li,%li,%li\r\n",
+        serial_output("%i,%i,%i,%i,%i,%li,%li,%li\r\n",
 				mpu_temp.value,
 				accelOn ,
-				omegagyro[0],
-				omegagyro[1],
-				omegagyro[2],
+	//			omegagyro[0],
+	//			omegagyro[1],
+	//			omegagyro[2],
 				(int16_t)((omegagyro_filtered[0].WW)>>12) ,
 				(int16_t)((omegagyro_filtered[1].WW)>>12) ,
 				(int16_t)((omegagyro_filtered[2].WW)>>12) ,
-				omegagyro[0] + omgfilt_rounded[0]._.W1 ,
-				omegagyro[1] + omgfilt_rounded[1]._.W1 ,
-				omegagyro[2] + omgfilt_rounded[2]._.W1 ,
+	//			omegagyro[0] + omgfilt_rounded[0]._.W1 ,
+	//			omegagyro[1] + omgfilt_rounded[1]._.W1 ,
+	//			omegagyro[2] + omgfilt_rounded[2]._.W1 ,
                 theta_32_filtered[0]._.L1 , theta_32_filtered[1]._.L1 ,theta_32_filtered[2]._.L1 
 					);
 	}
@@ -405,8 +411,11 @@ void send_imu_data(void)
 #ifdef START_TRACK_LOG
                 serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,pitch_xx\r\n");
 #else
+#ifndef LOG_R_UPDATE
                 serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx\r\n");
-//				serial_output("\r\n\r\ncpu,wx,wy,wz,yaw_xx,pitch_xx,roll_xx,\r\n");
+#else
+                serial_output("\r\ntheta_sum_x,y,z,r_update_x,y,z,rmat_x,y,z\r\n");
+#endif //   LOG_R_UPDATE              //				serial_output("\r\n\r\ncpu,wx,wy,wz,yaw_xx,pitch_xx,roll_xx,\r\n");
 //              serial_output("\r\n\r\nyaw_xx,pitch_xx,roll_xx,yaw_8k_xx,pitch_8k_xx,roll_8k_xx,max_gyro_pct_xx\r\n") ;
 //				serial_output("\r\n\r\ncpu,r0,r1,r2,r3,r4,r5,r6,r7,r8,rr0,rr1,rr2,rr3,rr4,rr5,rr6,rr7,rr8\r\n");
 //				serial_output("\r\n\r\ncpu,tlt_x,tlt_y,tlt_z,theta_x,theta_y,theta_z,t16_x,t16_y,t16_z\r\n");
@@ -633,17 +642,18 @@ void send_imu_data(void)
                 record_number ++         
 			);
 #else
-            serial_output("%u,%8lX,%8lX,%8lX,%8lX,%8lX,%8lX,%8lX,%8lX\r\n",
-                    udb_cpu_load(),
-                    rupdate_32[1].WW + rupdate_32[3].WW ,
-                    rupdate_32[2].WW + rupdate_32[6].WW ,
-                    rupdate_32[5].WW + rupdate_32[7].WW ,
-                    rupdate_32[1].WW - rupdate_32[3].WW ,
-                    rupdate_32[2].WW - rupdate_32[6].WW ,
-                    rupdate_32[5].WW - rupdate_32[7].WW ,                    
-                    rmat_32[6].WW ,
-                    rmat_32[7].WW                  
+            serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%i,\r\n",
+                    theta_sum[0]._.W1 ,
+                    theta_sum[1]._.W1 ,
+                    theta_sum[2]._.W1 ,
+                    r_update_sum[0]._.W1 ,
+                    r_update_sum[1]._.W1 ,
+                    r_update_sum[2]._.W1 ,
+                    rmat_sum[0]._.W1 ,
+                    rmat_sum[1]._.W1 ,
+                    rmat_sum[2]._.W1
                     );
+
 #endif // LOG_R_UPDATE
 #endif // START_TRACK_LOG
 			max_gyro = 0 ;
