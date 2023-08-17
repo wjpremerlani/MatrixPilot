@@ -44,17 +44,11 @@
 
 
 //#define ENABLE_ESP32
-#ifdef ENABLE_ESP32
-#ifdef LOG_IMU_WP1
-    // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
-    // non-printable characters are written out, as header bytes for packets.
-    #define USE_PACKETIZED_TELEMERTY
-#endif
-#endif
 
+// When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
+// non-printable characters are written out, as header bytes for packets.
+//#define USE_PACKETIZED_TELEMERTY
 
-// Enable ENABLE_ESP32 here for wireless debugging without packetized telemetry
-//#define ENABLE_ESP32
 
 // Enable UDB7LUGE in a Board definition ifdef block below for new WolfPac1 wifi boards
 //#define UDB7LUGE
