@@ -22,6 +22,8 @@ uint8_t read_buffer_index = 0;
 uint16_t packet_data_start;
 uint16_t packet_data_length;
 uint8_t num_chunks_buffered = 0;
+boolean is_packet_open = false;
+
 void finalize_packet();
 #else
 uint8_t serial_buffer[SERIAL_BUFFER_SIZE] ;
@@ -36,6 +38,7 @@ extern int16_callback_fptr_t serial_callback_get_byte_to_send ;
 extern callback_uint8_fptr_t serial_callback_received_byte ;
 
 int vsnprintf (char * s, size_t n, const char * format, va_list arg );
+void serial_output_start_end_packet(boolean isStart);
 
 
 void __attribute__((__interrupt__, __no_auto_psv__)) _U2TXInterrupt(void)
@@ -97,6 +100,10 @@ void serial_output(const char* format, ...)
     
     va_start(arglist, format);
     
+    if (!is_packet_open) {
+        serial_output_start_end_packet(true);
+    }
+    
 	start_index = end_index[write_buffer_index];
 	remaining = SERIAL_BUFFER_SIZE - start_index;
 
@@ -152,6 +159,7 @@ void serial_output_start_end_packet(boolean isStart)
         serial_buffer[write_buffer_index][end_index[write_buffer_index]++] = (isStart) ? 0xD1 : 0xD3;
         read_buffer_index = write_buffer_index;
         write_buffer_index = !write_buffer_index;
+        is_packet_open = isStart;
         udb_serial_start_sending_data();
     }
 }

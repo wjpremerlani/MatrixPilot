@@ -196,7 +196,6 @@ void send_imu_data(void)
 #ifndef ALWAYS_LOG
 	if (start_log == 1)
 	{
-        serial_output_start_end_packet(true);
 		hasWrittenHeader = 0 ;
 #ifdef USE_PACKETIZED_TELEMERTY
         is_first_header = 1;
