@@ -5,6 +5,10 @@
 
 //#define SIMULATED_GYRO
 
+#define SIMULATE_TILT
+#define RUN_TIME 180
+#define WARM_UP_TIME 300
+
 #define CONING_CORRECTION
 #define CONING_CORRECTION_IN_RMAT
 

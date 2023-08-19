@@ -165,6 +165,10 @@ extern union longww theta_sum[];
 extern union longww r_update_sum[];
 extern union longww rmat_sum[];
 
+extern int16_t is_level ;
+
+uint16_t warmup_count = 0 ;
+uint16_t run_count = 0 ;
 void send_residual_data(void)
 {
 	if ( start_residuals == 1)
@@ -175,6 +179,11 @@ void send_residual_data(void)
 	}
 	else
 	{
+        if (warmup_count++ >= WARM_UP_TIME)
+        {
+            warmup_count = 0 ;
+            is_level = 1 ;
+        }
         union longww omgfilt_rounded[3];
         omgfilt_rounded[0].WW = omegagyro_filtered[0].WW+0x00008000 ;
         omgfilt_rounded[1].WW = omegagyro_filtered[1].WW+0x00008000 ;
@@ -642,6 +651,11 @@ void send_imu_data(void)
                 record_number ++         
 			);
 #else
+            if ( run_count++ >= RUN_TIME)
+            {
+                run_count = 0 ;
+                is_level = 0 ;
+            }
             serial_output("%i,%i,%i,%i,%i,%i,%li,%li,%li\r\n",
                     theta_sum[0]._.W1 ,
                     theta_sum[1]._.W1 ,
