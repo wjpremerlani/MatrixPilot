@@ -8,9 +8,9 @@
 #define YACCEL_OFFSET	( -80 )
 #define ZACCEL_OFFSET	( -48 )
 #define GYRO_OFFSET_TABLE "../libUDB/gyro_tables/table_luge7_sn107.h"
-#define CALIBRATIONX	1.0000
-#define CALIBRATIONY	1.0000
-#define CALIBRATIONZ	1.0000
+#define CALIBRATIONX	1.0047
+#define CALIBRATIONY	1.0056
+#define CALIBRATIONZ	1.0078
 #define CALIB_GRAVITY	4096
 #define CAL_GRAV_X	4100
 #define CAL_GRAV_Y	4100
