@@ -423,7 +423,7 @@ void send_imu_data(void)
 #ifndef LOG_R_UPDATE
                 serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx\r\n");
 #else
-                serial_output("\r\ntheta_sum_x,y,z,LPF1_x,y,z,LPF2_x,y,z\r\n");
+                serial_output("\r\ngyro_lck,accelOn,theta_sum_x,y,z,LPF1_x,y,z,LPF2_x,y,z\r\n");
 #endif //   LOG_R_UPDATE              //				serial_output("\r\n\r\ncpu,wx,wy,wz,yaw_xx,pitch_xx,roll_xx,\r\n");
 //              serial_output("\r\n\r\nyaw_xx,pitch_xx,roll_xx,yaw_8k_xx,pitch_8k_xx,roll_8k_xx,max_gyro_pct_xx\r\n") ;
 //				serial_output("\r\n\r\ncpu,r0,r1,r2,r3,r4,r5,r6,r7,r8,rr0,rr1,rr2,rr3,rr4,rr5,rr6,rr7,rr8\r\n");
@@ -656,7 +656,9 @@ void send_imu_data(void)
                 run_count = 0 ;
                 is_level = 0 ;
             }
-            serial_output("%i,%i,%i,%i,%i,%i,%li,%li,%li\r\n",
+            serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%li,%li,%li\r\n",
+                    gyro_locking_on ,
+                    accelOn ,
                     theta_sum[0]._.W1 ,
                     theta_sum[1]._.W1 ,
                     theta_sum[2]._.W1 ,

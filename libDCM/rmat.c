@@ -521,7 +521,8 @@ static void roll_pitch_drift(void)
 	}
 	else
 	{
-		motion_reset_counter = 500 ;
+//		motion_reset_counter = 500 ;
+        motion_reset_counter = 2000 ;
 		motion_detect = 1 ;
 	}
 	if((gyro_locking_on == 1)&&(motion_detect == 0))
@@ -582,12 +583,13 @@ static void PI_feedback(void)
 
 void dcm_run_imu_step(void)
 {
+    roll_pitch_drift();         // local
 	rupdate();                  // local
 #ifdef CONING_CORRECTION
 	rmat_32_update();
 #endif // CONING_CORRECTION
 	normalize();                // local
-	roll_pitch_drift();         // local
+
 	PI_feedback();              // local
 #ifdef LOG_VELOCITY
 	estimate_velocity();

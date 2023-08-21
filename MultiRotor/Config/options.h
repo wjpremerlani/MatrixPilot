@@ -5,7 +5,7 @@
 
 //#define SIMULATED_GYRO
 
-#define SIMULATE_TILT
+//#define SIMULATE_TILT
 #define RUN_TIME 180
 #define WARM_UP_TIME 300
 
@@ -713,7 +713,8 @@
 #define HILSIM			0
 
 #if (GYRO_RANGE==1000)
-#define GYRO_OFFSET_MARGIN 100
+#define GYRO_OFFSET_MARGIN 50
+//#define GYRO_OFFSET_MARGIN 100
 #elif (GYRO_RANGE==500)
 #define GYRO_OFFSET_MARGIN 200
 #else
