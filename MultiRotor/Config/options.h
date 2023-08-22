@@ -30,9 +30,9 @@
 
 // the following are used to measure offsets and gains for commissioning
 //#define RECORD_OFFSETS        // record raw accelerometer data
-#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
-#define DEBUG_TABLE_BUILD
-//#define GYRO_OFFSETS          // verifies gyro temperature compensation table
+//#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
+//#define DEBUG_TABLE_BUILD
+#define GYRO_OFFSETS          // verifies gyro temperature compensation table
 //#define GYRO_CALIB            // used to compute gyro calibration
 
 // the following are options used for development and debugging activities
@@ -88,9 +88,9 @@
 //#define LUGE7_SN106
 //#define LUGE7_SN107
 //#define LUGE7_SN108
-//#define LUGE7_SN109
+#define LUGE7_SN109
 //#define LUGE7_SN110
-#define LUGE7_SN111
+//#define LUGE7_SN111
 //#define LUGE7_SN112
 //#define LUGE7_SN113
 //#define LUGE7_SN114
