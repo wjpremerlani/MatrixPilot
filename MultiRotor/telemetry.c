@@ -175,7 +175,8 @@ void send_residual_data(void)
 	{
 		start_residuals = 0 ;
 //		serial_output("\r\n\r\nimu_temp_yy,filter_en_yy,x_rate_yy,y_rate_yy,z_rate_yy,x_filt_16_yy,y_filt_16_yy,z_filt_16_yy,x_err_yy,y_err_yy,z_err_yy\r\n") ;
-        serial_output("\r\n\r\nimu_temp,filter_en,x_filt_16,y_filt_16,z_filt_16,theta_filtx,y,z\r\n");
+//        serial_output("\r\n\r\nimu_temp,filter_en,x_filt_16,y_filt_16,z_filt_16,theta_filtx,y,z\r\n");
+        serial_output("\r\n\r\nimu_temp,filter_en,x_filt_64,y_filt_64,z_filt_64,theta_filtx,y,z\r\n");
 	}
 	else
 	{
@@ -196,9 +197,12 @@ void send_residual_data(void)
 	//			omegagyro[0],
 	//			omegagyro[1],
 	//			omegagyro[2],
-				(int16_t)((omegagyro_filtered[0].WW)>>12) ,
-				(int16_t)((omegagyro_filtered[1].WW)>>12) ,
-				(int16_t)((omegagyro_filtered[2].WW)>>12) ,
+	//			(int16_t)((omegagyro_filtered[0].WW)>>12) , // 16x
+	//			(int16_t)((omegagyro_filtered[1].WW)>>12) ,
+	//			(int16_t)((omegagyro_filtered[2].WW)>>12) ,
+                (int16_t)((omegagyro_filtered[0].WW)>>10) , // 64x
+				(int16_t)((omegagyro_filtered[1].WW)>>10) ,
+				(int16_t)((omegagyro_filtered[2].WW)>>10) ,
 	//			omegagyro[0] + omgfilt_rounded[0]._.W1 ,
 	//			omegagyro[1] + omgfilt_rounded[1]._.W1 ,
 	//			omegagyro[2] + omgfilt_rounded[2]._.W1 ,
@@ -662,9 +666,13 @@ void send_imu_data(void)
                     theta_sum[0]._.W1 ,
                     theta_sum[1]._.W1 ,
                     theta_sum[2]._.W1 ,
-                    (int16_t)((omegagyro_filtered[0].WW)>>12) ,
-                    (int16_t)((omegagyro_filtered[1].WW)>>12) ,
-                    (int16_t)((omegagyro_filtered[2].WW)>>12) ,
+ //                   (int16_t)((omegagyro_filtered[0].WW)>>12) , // 16x
+ //                   (int16_t)((omegagyro_filtered[1].WW)>>12) ,
+ //                   (int16_t)((omegagyro_filtered[2].WW)>>12) ,
+                    (int16_t)((omegagyro_filtered[0].WW)>>10) , // 64x
+                    (int16_t)((omegagyro_filtered[1].WW)>>10) ,
+                    (int16_t)((omegagyro_filtered[2].WW)>>10) ,
+ 
                     theta_32_filtered[0]._.L1 , theta_32_filtered[1]._.L1 ,theta_32_filtered[2]._.L1 
                     );
 
