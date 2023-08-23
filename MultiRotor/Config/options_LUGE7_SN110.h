@@ -1,4 +1,4 @@
-
+#error "not in service"
 
 #ifndef options_LUGE7_SN110_H
 #define	options_LUGE7_SN110_H
