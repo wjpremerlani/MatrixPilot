@@ -176,7 +176,7 @@ void send_residual_data(void)
 		start_residuals = 0 ;
 //		serial_output("\r\n\r\nimu_temp_yy,filter_en_yy,x_rate_yy,y_rate_yy,z_rate_yy,x_filt_16_yy,y_filt_16_yy,z_filt_16_yy,x_err_yy,y_err_yy,z_err_yy\r\n") ;
 //        serial_output("\r\n\r\nimu_temp,filter_en,x_filt_16,y_filt_16,z_filt_16,theta_filtx,y,z\r\n");
-        serial_output("\r\n\r\nimu_temp,filter_en,x_filt_64,y_filt_64,z_filt_64,theta_filtx,y,z\r\n");
+        serial_output("\r\n\r\nimu_temp,filter_en,ax,ay,az,x_filt_64,y,z,theta_filtx,y,z\r\n");
 	}
 	else
 	{
@@ -191,9 +191,12 @@ void send_residual_data(void)
         omgfilt_rounded[2].WW = omegagyro_filtered[2].WW+0x00008000 ;
         
 	//	serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%li,%li,%li\r\n",
-        serial_output("%i,%i,%i,%i,%i,%li,%li,%li\r\n",
+        serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%li,%li,%li\r\n",
 				mpu_temp.value,
 				accelOn ,
+                aero_force[0],
+                aero_force[1],
+                aero_force[2],
 	//			omegagyro[0],
 	//			omegagyro[1],
 	//			omegagyro[2],
