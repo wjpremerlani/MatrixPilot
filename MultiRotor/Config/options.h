@@ -91,13 +91,18 @@
 
 
 // select a wolf_pac by defining its internal label
+#define LUGE7_SN101
 //#define LUGE7_SN102
 //#define LUGE7_SN103
-#define LUGE7_SN104
+//#define LUGE7_SN104
 //#define LUGE7_SN105
 //#define LUGE7_SN106
 //#define LUGE7_SN107
 //#define LUGE7_SN108
+//#define LUGE7_SN109
+//#define LUGE7_SN110
+//#define LUGE7_SN111
+
 //#define LUGE7_SN202
 //#define MINI6_SN4 // SN1, Tucker West
 //#define MINI5_SN14 // was SN14, now SN2
@@ -113,6 +118,19 @@
 //#define MINI5_SN12 // SN12
 //#define MINI6_SN2 // was SN2, now SN14
 //#define MINI6_SN15 // SN15
+
+#ifdef LUGE7_SN101
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	1
+#define SERIAL_NUMBERD2	0
+#define SERIAL_NUMBERD3 1
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN101.h"
+#endif // LUGE7_SN101
 
 #ifdef LUGE7_SN102
 #define ENABLE_ESP32
@@ -202,6 +220,45 @@
 #define LOG_EULER
 #include "options_LUGE7_SN108.h"
 #endif // 
+
+#ifdef LUGE7_SN109
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	1
+#define SERIAL_NUMBERD2	0
+#define SERIAL_NUMBERD3 9
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN109.h"
+#endif // LUGE7_SN109
+
+#ifdef LUGE7_SN110
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	1
+#define SERIAL_NUMBERD2	1
+#define SERIAL_NUMBERD3 0
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN110.h"
+#endif // LUGE7_SN110
+
+#ifdef LUGE7_SN111
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	1
+#define SERIAL_NUMBERD2	1
+#define SERIAL_NUMBERD3 1
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN111.h"
+#endif // LUGE7_SN111
 
 #ifdef LUGE7_SN202
 #define ENABLE_ESP32
