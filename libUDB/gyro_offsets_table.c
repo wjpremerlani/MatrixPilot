@@ -47,6 +47,7 @@ uint16_t index_lsb = 0 ;
 int16_t left_entry[3];
 int16_t right_minus_left[3];
 uint16_t number_entries ;
+int16_t accel_gyro_coupling_compensation[]= { 0 , 0 , 0 };
 #ifdef SIMULATED_GYRO
 void lookup_gyro_offsets(void)
 {
@@ -57,14 +58,26 @@ void lookup_gyro_offsets(void)
 #else
 void lookup_gyro_offsets(void)
 {
+#ifdef X_CROSS_COUPLING
+    accel_gyro_coupling_compensation[0] = 
+            (int16_t)(__builtin_mulss(aero_force[2],X_CROSS_COUPLING)>>11 ) ;
+#endif //
+#ifdef Y_CROSS_COUPLING
+    accel_gyro_coupling_compensation[1] = 
+            (int16_t)(__builtin_mulss(aero_force[2],Y_CROSS_COUPLING)>>11 ) ;   
+#endif //
+#ifdef Z_CROSS_COUPLING
+        accel_gyro_coupling_compensation[2] = 
+            (int16_t)(__builtin_mulss(aero_force[2],Z_CROSS_COUPLING)>>11 ) ;
+#endif //    
 	temperature_index = mpu_temp.value - TABLE_ORIGIN ;
 	if (temperature_index < 0)
 	{
 		index_msb = 0 ;
 		index_lsb = 0 ;
-		gyro_offset[0] = residual_offset[0]+ gyro_offset_table[0].x ;
-		gyro_offset[1] = residual_offset[1]+ gyro_offset_table[0].y ;
-		gyro_offset[2] = residual_offset[2]+ gyro_offset_table[0].z ;
+		gyro_offset[0] = accel_gyro_coupling_compensation[0]+residual_offset[0]+ gyro_offset_table[0].x ;
+		gyro_offset[1] = accel_gyro_coupling_compensation[1]+residual_offset[1]+ gyro_offset_table[0].y ;
+		gyro_offset[2] = accel_gyro_coupling_compensation[2]+residual_offset[2]+ gyro_offset_table[0].z ;
 	}
 	else
 	{
@@ -73,9 +86,9 @@ void lookup_gyro_offsets(void)
 		number_entries = (sizeof (gyro_offset_table))/(sizeof (gyro_offset_table_entry)) ;
 		if ( index_msb >= (number_entries - 1 ))
 		{
-			gyro_offset[0] = residual_offset[0]+ gyro_offset_table[number_entries - 1].x ;
-			gyro_offset[1] = residual_offset[1]+ gyro_offset_table[number_entries - 1].y ;
-			gyro_offset[2] = residual_offset[2]+ gyro_offset_table[number_entries - 1].z ;
+			gyro_offset[0] = accel_gyro_coupling_compensation[0]+residual_offset[0]+ gyro_offset_table[number_entries - 1].x ;
+			gyro_offset[1] = accel_gyro_coupling_compensation[1]+residual_offset[1]+ gyro_offset_table[number_entries - 1].y ;
+			gyro_offset[2] = accel_gyro_coupling_compensation[2]+residual_offset[2]+ gyro_offset_table[number_entries - 1].z ;
 		}
 		else
 		{
@@ -87,13 +100,16 @@ void lookup_gyro_offsets(void)
 			right_minus_left[1]= gyro_offset_table[index_msb+1].y - left_entry[1] ;
 			right_minus_left[2]= gyro_offset_table[index_msb+1].z - left_entry[2] ;
 			
-			gyro_offset[0] = residual_offset[0] 
+			gyro_offset[0] = accel_gyro_coupling_compensation[0]
+                    +residual_offset[0] 
 					+ left_entry[0] 
 					+ __builtin_divsd(__builtin_mulss(right_minus_left[0],index_lsb),STEP_SIZE);
-			gyro_offset[1] = residual_offset[1] 
+			gyro_offset[1] = accel_gyro_coupling_compensation[1]
+                    +residual_offset[1] 
 					+ left_entry[1] 
 					+ __builtin_divsd(__builtin_mulss(right_minus_left[1],index_lsb),STEP_SIZE);
-			gyro_offset[2] = residual_offset[2] 
+			gyro_offset[2] = accel_gyro_coupling_compensation[2]
+                    +residual_offset[2] 
 					+ left_entry[2] + 
 					__builtin_divsd(__builtin_mulss(right_minus_left[2],index_lsb),STEP_SIZE);
 		}
