@@ -94,11 +94,11 @@
 //#define LUGE7_SN112
 //#define LUGE7_SN113
 //#define LUGE7_SN114
-#define LUGE7_SN115
+//#define LUGE7_SN115
 //#define LUGE7_SN116
 //#define LUGE7_SN117
 //#define LUGE7_SN118
-//#define LUGE7_SN119
+#define LUGE7_SN119
 
 //#define LUGE7_SN202
 //#define MINI6_SN4 // SN1, Tucker West
@@ -341,7 +341,7 @@
 #define BOARD LUGE7
 #define SERIAL_NUMBERD1	1
 #define SERIAL_NUMBERD2	1
-#define SERIAL_NUMBERD3 80
+#define SERIAL_NUMBERD3 8
 #define ACCEL_RANGE         8
 #define GYRO_RANGE	    1000
 #define LOG_EULER
