@@ -5,8 +5,8 @@
 
 //#define SIMULATED_GYRO
 
-//#define SIMULATE_TILT
-#define RUN_TIME 15
+#define SIMULATE_TILT
+#define RUN_TIME 60
 #define WARM_UP_TIME 180
 
 #define CONING_CORRECTION
@@ -25,7 +25,7 @@
 // the following defines select what gets sent to the logger
 //#define LOG_IMU_WP1               // logs IMU data during a run for wolf_pac version 1
 #define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
-//#define LOG_R_UPDATE
+#define LOG_R_UPDATE
 //#define START_TRACK_LOG         // logs 3 components of force and pitch
 #define LOG_RESIDUALS         // logs residual offsets between runs
 //#define RESIDUAL_LOG_PERIOD 10  // 6 times per minute
