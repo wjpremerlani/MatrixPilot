@@ -29,11 +29,11 @@
 #define RESIDUAL_LOG_PERIOD 1  // 60 times per minute
 
 // the following are used to measure offsets and gains for commissioning
-#define RECORD_OFFSETS        // record raw accelerometer data
+//#define RECORD_OFFSETS        // record raw accelerometer data
 //#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
 //#define DEBUG_TABLE_BUILD
 //#define GYRO_OFFSETS          // verifies gyro temperature compensation table
-//#define GYRO_CALIB            // used to compute gyro calibration
+#define GYRO_CALIB            // used to compute gyro calibration
 
 // the following are options used for development and debugging activities
 //#define TEST_LOGGER_HZ
@@ -94,11 +94,11 @@
 //#define LUGE7_SN112
 //#define LUGE7_SN113
 //#define LUGE7_SN114
-//#define LUGE7_SN115
+#define LUGE7_SN115
 //#define LUGE7_SN116
 //#define LUGE7_SN117
 //#define LUGE7_SN118
-#define LUGE7_SN119
+//#define LUGE7_SN119
 
 //#define LUGE7_SN202
 //#define MINI6_SN4 // SN1, Tucker West
