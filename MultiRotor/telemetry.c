@@ -174,43 +174,53 @@ void send_residual_data(void)
 	if ( start_residuals == 1)
 	{
 		start_residuals = 0 ;
-//		serial_output("\r\n\r\nimu_temp_yy,filter_en_yy,x_rate_yy,y_rate_yy,z_rate_yy,x_filt_16_yy,y_filt_16_yy,z_filt_16_yy,x_err_yy,y_err_yy,z_err_yy\r\n") ;
-//        serial_output("\r\n\r\nimu_temp,filter_en,x_filt_16,y_filt_16,z_filt_16,theta_filtx,y,z\r\n");
+#ifndef LOG_R_UPDATE
+		serial_output("\r\n\r\nimu_temp_yy,filter_en_yy,x_rate_yy,y_rate_yy,z_rate_yy,x_filt_16_yy,y_filt_16_yy,z_filt_16_yy,x_err_yy,y_err_yy,z_err_yy\r\n") ;
+#else
         serial_output("\r\n\r\nimu_temp,filter_en,ax,ay,az,x_filt_64,y,z,theta_filtx,y,z\r\n");
+#endif // LOG_R_UPDATE
 	}
 	else
 	{
+#ifdef SIMULATE_TILT
         if (warmup_count++ >= WARM_UP_TIME)
         {
             warmup_count = 0 ;
             is_level = 1 ;
         }
+#endif // SIMULATE_TILT
         union longww omgfilt_rounded[3];
         omgfilt_rounded[0].WW = omegagyro_filtered[0].WW+0x00008000 ;
         omgfilt_rounded[1].WW = omegagyro_filtered[1].WW+0x00008000 ;
         omgfilt_rounded[2].WW = omegagyro_filtered[2].WW+0x00008000 ;
-        
-	//	serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%li,%li,%li\r\n",
+
+#ifndef  LOG_R_UPDATE       
+		serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i\r\n",
+                mpu_temp.value,
+				accelOn ,
+    			omegagyro[0],
+                omegagyro[1],
+                omegagyro[2],
+				(int16_t)((omegagyro_filtered[0].WW)>>12) , // 16x
+				(int16_t)((omegagyro_filtered[1].WW)>>12) ,
+				(int16_t)((omegagyro_filtered[2].WW)>>12) ,
+				omegagyro[0] + omgfilt_rounded[0]._.W1 ,
+				omegagyro[1] + omgfilt_rounded[1]._.W1 ,
+				omegagyro[2] + omgfilt_rounded[2]._.W1 
+    				);
+#else
         serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%li,%li,%li\r\n",
 				mpu_temp.value,
 				accelOn ,
                 aero_force[0],
                 aero_force[1],
                 aero_force[2],
-	//			omegagyro[0],
-	//			omegagyro[1],
-	//			omegagyro[2],
-	//			(int16_t)((omegagyro_filtered[0].WW)>>12) , // 16x
-	//			(int16_t)((omegagyro_filtered[1].WW)>>12) ,
-	//			(int16_t)((omegagyro_filtered[2].WW)>>12) ,
                 (int16_t)((omegagyro_filtered[0].WW)>>10) , // 64x
 				(int16_t)((omegagyro_filtered[1].WW)>>10) ,
 				(int16_t)((omegagyro_filtered[2].WW)>>10) ,
-	//			omegagyro[0] + omgfilt_rounded[0]._.W1 ,
-	//			omegagyro[1] + omgfilt_rounded[1]._.W1 ,
-	//			omegagyro[2] + omgfilt_rounded[2]._.W1 ,
                 theta_32_filtered[0]._.L1 , theta_32_filtered[1]._.L1 ,theta_32_filtered[2]._.L1 
 					);
+#endif // LOG_R_UPDATE
 	}
 }
 
@@ -219,7 +229,6 @@ void send_imu_data(void)
 #ifndef ALWAYS_LOG
 	if (start_log == 1)
 	{
-        serial_output_start_end_packet(true);
 		hasWrittenHeader = 0 ;
 #ifdef USE_PACKETIZED_TELEMERTY
         is_first_header = 1;
@@ -431,13 +440,7 @@ void send_imu_data(void)
                 serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx\r\n");
 #else
                 serial_output("\r\ngyro_lck,accelOn,theta_sum_x,y,z,LPF1_x,y,z,LPF2_x,y,z\r\n");
-#endif //   LOG_R_UPDATE              //				serial_output("\r\n\r\ncpu,wx,wy,wz,yaw_xx,pitch_xx,roll_xx,\r\n");
-//              serial_output("\r\n\r\nyaw_xx,pitch_xx,roll_xx,yaw_8k_xx,pitch_8k_xx,roll_8k_xx,max_gyro_pct_xx\r\n") ;
-//				serial_output("\r\n\r\ncpu,r0,r1,r2,r3,r4,r5,r6,r7,r8,rr0,rr1,rr2,rr3,rr4,rr5,rr6,rr7,rr8\r\n");
-//				serial_output("\r\n\r\ncpu,tlt_x,tlt_y,tlt_z,theta_x,theta_y,theta_z,t16_x,t16_y,t16_z\r\n");
-//				serial_output("\r\n\r\ncpu,tlt_x,tlt_y,tlt_z,wx,wy,wz,theta_x,theta_y,theta_z,t32_x,t32_y,t32_z\r\n");
-//				serial_output("\r\n\r\ncpu,wx,wy,wz,theta_x,theta_y,theta_z,t32_x,t32_y,t32_z\r\n");
-//				serial_output("\r\n\r\ncpu,tlt_x,tlt_y,tlt_z,t32_x,t32_y,t32_z\r\n");
+#endif //   LOG_R_UPDATE              
 #endif // START_TRACK_LOG
 #endif // LOG_IMU_WP2
 				
@@ -658,11 +661,13 @@ void send_imu_data(void)
                 record_number ++         
 			);
 #else
+#ifdef SIMULATE_TILT
             if ( run_count++ >= RUN_TIME)
             {
                 run_count = 0 ;
                 is_level = 0 ;
             }
+#endif // SIMULATE_TILT
             serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%li,%li,%li\r\n",
                     gyro_locking_on ,
                     accelOn ,
