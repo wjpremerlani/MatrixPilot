@@ -6,8 +6,9 @@
 //#define SIMULATED_GYRO
 
 #define SIMULATE_TILT
-#define RUN_TIME 10
-#define WARM_UP_TIME 180
+#define RUN_TIME 15
+//#define WARM_UP_TIME 180
+#define WARM_UP_TIME 105
 
 #define CONING_CORRECTION
 #define CONING_CORRECTION_IN_RMAT
@@ -95,10 +96,10 @@
 //#define LUGE7_SN102
 //#define LUGE7_SN103
 //#define LUGE7_SN104
-#define LUGE7_SN105
+//#define LUGE7_SN105
 //#define LUGE7_SN106
 //#define LUGE7_SN107
-//#define LUGE7_SN108
+#define LUGE7_SN108
 //#define LUGE7_SN109
 //#define LUGE7_SN110
 //#define LUGE7_SN111
