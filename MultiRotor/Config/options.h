@@ -20,7 +20,7 @@
 
 // the following defines select what gets sent to the logger
 //#define LOG_IMU_WP1               // logs IMU data during a run for wolf_pac version 1
-//#define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
+#define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
 //#define START_TRACK_LOG         // logs 3 components of force and pitch
 #define LOG_RESIDUALS         // logs residual offsets between runs
 //#define RESIDUAL_LOG_PERIOD 10  // 6 times per minute
@@ -33,7 +33,8 @@
 //#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
 //#define DEBUG_TABLE_BUILD
 //#define GYRO_OFFSETS          // verifies gyro temperature compensation table
-#define GYRO_CALIB            // used to compute gyro calibration
+//#define GYRO_CALIB            // used to compute gyro calibration
+#define CROSS_COUPLING          // measure cross coupling
 
 // the following are options used for development and debugging activities
 //#define TEST_LOGGER_HZ
@@ -818,6 +819,14 @@
 #define ALWAYS_LOG
 #endif // ALWAYS_LOG
 #endif // RECORD_OFFSETS
+
+#ifdef CROSS_COUPLING
+#define ADJUST_THETA
+#define SIMULATE_TILT
+#define LOG_R_UPDATE
+#define WARM_UP_TIME 160
+#define RUN_TIME 20
+#endif // CROSS_COUPLING
 
 #ifdef LOG_VELOCITY
 #undef LOGGER_HZ

@@ -501,7 +501,10 @@ uint16_t omega_magnitude ;
 extern boolean logging_on ;
 
 extern boolean gyro_locking_on ;
-int16_t motion_reset_counter = 500 ;
+#define MOTION_RESET_DELAY 500 // 2.5 seconds
+//#define MOTION_RESET_DELAY 2000 // 10 seconds
+
+int16_t motion_reset_counter = MOTION_RESET_DELAY ;
 int16_t motion_detect = 1 ;
 uint16_t accel_magnitude ;
 static void roll_pitch_drift(void)
@@ -517,11 +520,12 @@ static void roll_pitch_drift(void)
 		else
 		{
 			motion_reset_counter = motion_reset_counter - 1;
+            motion_detect = 1 ;
 		}
 	}
 	else
 	{
-		motion_reset_counter = 500 ;
+        motion_reset_counter = MOTION_RESET_DELAY ;
 		motion_detect = 1 ;
 	}
 	if((gyro_locking_on == 1)&&(motion_detect == 0))
@@ -582,12 +586,13 @@ static void PI_feedback(void)
 
 void dcm_run_imu_step(void)
 {
+    roll_pitch_drift();         // local
 	rupdate();                  // local
 #ifdef CONING_CORRECTION
 	rmat_32_update();
 #endif // CONING_CORRECTION
 	normalize();                // local
-	roll_pitch_drift();         // local
+
 	PI_feedback();              // local
 #ifdef LOG_VELOCITY
 	estimate_velocity();

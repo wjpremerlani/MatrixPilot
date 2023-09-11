@@ -25,6 +25,8 @@ union longww theta_sum[] = {{0},{0},{0}} ;
 union longww r_update_sum[] = {{0},{0},{0}} ;
 union longww rmat_sum[] = {{0},{0},{0}} ;
 
+//#define ADJUST_THETA
+
 void rmat_32_update(void)
 {
 	if (accelOn == 1 )
@@ -42,9 +44,15 @@ void rmat_32_update(void)
 	}
 	else
 	{
+#ifdef ADJUST_THETA
         theta_32_adjusted[0].WW = theta_32[0].WW - theta_32_filtered[0]._.L1 ;
         theta_32_adjusted[1].WW = theta_32[1].WW - theta_32_filtered[1]._.L1 ;
-        theta_32_adjusted[2].WW = theta_32[2].WW - theta_32_filtered[2]._.L1 ;            
+        theta_32_adjusted[2].WW = theta_32[2].WW - theta_32_filtered[2]._.L1 ; 
+#else
+        theta_32_adjusted[0].WW = theta_32[0].WW ;
+        theta_32_adjusted[1].WW = theta_32[1].WW ;
+        theta_32_adjusted[2].WW = theta_32[2].WW ; 
+#endif // ADJUST_THETA
     
         theta_sum[0].WW += theta_32_adjusted[0].WW ;
         theta_sum[1].WW += theta_32_adjusted[1].WW ;
