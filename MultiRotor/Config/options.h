@@ -34,7 +34,7 @@
 //#define DEBUG_TABLE_BUILD
 //#define GYRO_OFFSETS          // verifies gyro temperature compensation table
 //#define GYRO_CALIB            // used to compute gyro calibration
-#define CROSS_COUPLING          // measure cross coupling
+//#define CROSS_COUPLING          // measure cross coupling
 
 // the following are options used for development and debugging activities
 //#define TEST_LOGGER_HZ
@@ -95,13 +95,13 @@
 //#define LUGE7_SN112
 //#define LUGE7_SN113
 //#define LUGE7_SN114
-#define LUGE7_SN115
+//#define LUGE7_SN115
 //#define LUGE7_SN116
 //#define LUGE7_SN117
 //#define LUGE7_SN118
 //#define LUGE7_SN119
 
-//#define LUGE7_SN202
+#define LUGE7_SN050
 //#define MINI6_SN4 // SN1, Tucker West
 //#define MINI5_SN14 // was SN14, now SN2
 //#define MINI6_SN3 // SN3
@@ -362,17 +362,17 @@
 #include "options_LUGE7_SN119.h"
 #endif // LUGE7_SN119
 
-#ifdef LUGE7_SN202
+#ifdef LUGE7_SN050
 #define ENABLE_ESP32
 #define UDB7LUGE
 #define BOARD LUGE7
-#define SERIAL_NUMBERD1	2
-#define SERIAL_NUMBERD2	0
-#define SERIAL_NUMBERD3 2
+#define SERIAL_NUMBERD1	0
+#define SERIAL_NUMBERD2	5
+#define SERIAL_NUMBERD3 0
 #define ACCEL_RANGE         8
 #define GYRO_RANGE	    1000
 #define LOG_EULER
-#include "options_LUGE7_SN202.h"
+#include "options_LUGE7_SN050.h"
 #endif // 
 
 

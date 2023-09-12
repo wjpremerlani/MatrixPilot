@@ -1,7 +1,7 @@
 
 
-#ifndef TABLE_LUGE7_SN202_H
-#define	TABLE_LUGE7_SN202_H
+#ifndef TABLE_LUGE7_SN050_H
+#define	TABLE_LUGE7_SN050_H
 
 // used in LUGE7_SN202 partition size 64
 
@@ -380,5 +380,5 @@ struct gyro_offset_table_entry gyro_offset_table[] = {
 {	-2444	,	-3217	,	421	}
 };
 
-#endif	/* TABLE_LUGE7_SN202_H */
+#endif	/* TABLE_LUGE7_SN050_H */
 
