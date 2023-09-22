@@ -16,5 +16,9 @@
 #define CAL_GRAV_Y	4102
 #define CAL_GRAV_Z	4082
 
+#define X_CROSS_COUPLING 50
+#define Y_CROSS_COUPLING 24
+#define Z_CROSS_COUPLING 0
+
 #endif	/* options_LUGE7_SN115_H */
 

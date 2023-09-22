@@ -1,6 +1,6 @@
 
 
-#define DATE "Wolf_pac_2 , firmware 4.0, 8/13/2023\r\n"
+#define DATE "Wolf_pac_2 , firmware 4.1, 9/22/2023\r\n"
 //#define DATE "Wold_pac_1, rev 2.5, 3/6/2023\r\n"
 
 //#define SIMULATED_GYRO
@@ -81,7 +81,7 @@
 
 
 // select a wolf_pac by defining its internal label
-//#define LUGE7_SN101
+#define LUGE7_SN101
 //#define LUGE7_SN102
 //#define LUGE7_SN103
 //#define LUGE7_SN104
@@ -101,7 +101,7 @@
 //#define LUGE7_SN118
 //#define LUGE7_SN119
 
-#define LUGE7_SN050
+//#define LUGE7_SN050
 //#define MINI6_SN4 // SN1, Tucker West
 //#define MINI5_SN14 // was SN14, now SN2
 //#define MINI6_SN3 // SN3
