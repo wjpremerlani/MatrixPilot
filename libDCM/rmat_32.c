@@ -25,7 +25,7 @@ union longww theta_sum[] = {{0},{0},{0}} ;
 union longww r_update_sum[] = {{0},{0},{0}} ;
 union longww rmat_sum[] = {{0},{0},{0}} ;
 
-//#define ADJUST_THETA
+#define ADJUST_THETA
 
 void rmat_32_update(void)
 {

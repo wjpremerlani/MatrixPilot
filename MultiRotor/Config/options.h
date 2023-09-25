@@ -23,10 +23,10 @@
 #define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
 //#define START_TRACK_LOG         // logs 3 components of force and pitch
 #define LOG_RESIDUALS         // logs residual offsets between runs
-//#define RESIDUAL_LOG_PERIOD 10  // 6 times per minute
+#define RESIDUAL_LOG_PERIOD 10  // 6 times per minute
 //#define RESIDUAL_LOG_PERIOD 5  // 12 times per minute
 //#define RESIDUAL_LOG_PERIOD 2  // 30 times per minute
-#define RESIDUAL_LOG_PERIOD 1  // 60 times per minute
+//#define RESIDUAL_LOG_PERIOD 1  // 60 times per minute
 
 // the following are used to measure offsets and gains for commissioning
 //#define RECORD_OFFSETS        // record raw accelerometer data
@@ -100,6 +100,14 @@
 //#define LUGE7_SN117
 //#define LUGE7_SN118
 //#define LUGE7_SN119
+//#define LUGE7_SN120
+//#define LUGE7_SN121
+//#define LUGE7_SN122
+//#define LUGE7_SN123
+//#define LUGE7_SN124
+//#define LUGE7_SN125
+//#define LUGE7_SN126
+//#define LUGE7_SN127
 
 //#define LUGE7_SN050
 //#define MINI6_SN4 // SN1, Tucker West
@@ -361,6 +369,110 @@
 #define LOG_EULER
 #include "options_LUGE7_SN119.h"
 #endif // LUGE7_SN119
+
+#ifdef LUGE7_SN120
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	1
+#define SERIAL_NUMBERD2	2
+#define SERIAL_NUMBERD3 0
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN120.h"
+#endif // LUGE7_SN120
+
+#ifdef LUGE7_SN121
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	1
+#define SERIAL_NUMBERD2	2
+#define SERIAL_NUMBERD3 1
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN121.h"
+#endif // LUGE7_SN121
+
+#ifdef LUGE7_SN122
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	1
+#define SERIAL_NUMBERD2	2
+#define SERIAL_NUMBERD3 2
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN122.h"
+#endif // LUGE7_SN122
+
+#ifdef LUGE7_SN123
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	1
+#define SERIAL_NUMBERD2	2
+#define SERIAL_NUMBERD3 3
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN123.h"
+#endif // LUGE7_SN123
+
+#ifdef LUGE7_SN124
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	1
+#define SERIAL_NUMBERD2	2
+#define SERIAL_NUMBERD3 4
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN124.h"
+#endif // LUGE7_SN124
+
+#ifdef LUGE7_SN125
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	1
+#define SERIAL_NUMBERD2	2
+#define SERIAL_NUMBERD3 5
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN125.h"
+#endif // LUGE7_SN125
+
+#ifdef LUGE7_SN126
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	1
+#define SERIAL_NUMBERD2	2
+#define SERIAL_NUMBERD3 6
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN126.h"
+#endif // LUGE7_SN126
+
+#ifdef LUGE7_SN127
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	1
+#define SERIAL_NUMBERD2	2
+#define SERIAL_NUMBERD3 7
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN127.h"
+#endif // LUGE7_SN127
 
 #ifdef LUGE7_SN050
 #define ENABLE_ESP32
