@@ -257,8 +257,9 @@ void update_offset_table(void)
 			if (initial_temp_reported == 1)
 			{
 #ifdef DEBUG_TABLE_BUILD
-				serial_output("%i,%li,%i,%i,%i,%i,%li,%li,%li,%li,%li,%i,%i,%i,%i,%i,%i,%i,%i,%i\r\n",
-					udb_cpu_load(),
+				serial_output("%i,%i,%li,%i,%i,%i,%i,%li,%li,%li,%li,%li,%i,%i,%i,%i,%i,%i,%i,%i,%i\r\n",
+                    reported_temperature,
+                    udb_cpu_load(),
 					samples_32t,
 					x_bar,
 					y_bar[0],y_bar[1],y_bar[2],
