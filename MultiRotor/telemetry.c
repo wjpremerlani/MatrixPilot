@@ -434,7 +434,7 @@ void send_imu_data(void)
 				heading_previous_8k = 0.0 ;
 #endif // CONING_CORRECTION
 #ifdef START_TRACK_LOG
-                serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,pitch_xx\r\n");
+                serial_output("\r\nx_force_xx,y_force_xx,pitch_xx\r\n");
 #else
 #ifndef LOG_R_UPDATE
                 serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx\r\n");
@@ -640,10 +640,9 @@ void send_imu_data(void)
 #endif // CONING_CORRECTION	
 #endif // LOG_R_UPDATE
 #ifdef START_TRACK_LOG
-            serial_output("%.3f,%.3f,%.3f,%.3f\r\n",
+            serial_output("%.3f,%.2f,%.3f\r\n",
             	((double)(aero_force[0]))/ACCEL_FACTOR ,
 				((double)(aero_force[1]))/ACCEL_FACTOR ,
-				((double)(aero_force[2]))/ACCEL_FACTOR ,
 				pitch_angle ) ;				       
 #else 
 #ifndef LOG_R_UPDATE
