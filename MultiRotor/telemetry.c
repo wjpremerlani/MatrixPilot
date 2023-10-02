@@ -443,6 +443,10 @@ void send_imu_data(void)
 #endif //   LOG_R_UPDATE              
 #endif // START_TRACK_LOG
 #endif // LOG_IMU_WP2
+                
+#ifdef FILTERED_ACCELEROMETER
+                serial_output("\r\nx_force,y_force,z_force\r\n");               
+#endif //FILTERED_ACCELEROMETER
 				
 #ifdef RECORD_OFFSETS
 				serial_output("tmptur,ax,ay,az,gx_val,gy_val,gz_val,gyr_x,gyr_y,gyr_z\r\n");
@@ -522,6 +526,15 @@ void send_imu_data(void)
 		}
 #endif	
 #endif // TEST_LOGGER_HZ
+#ifdef FILTERED_ACCELEROMETER
+  {
+			serial_output( "%.3f,%.3f,%.3f\r\n" ,
+				((double)(aero_force_filtered[0]._.W1))/ACCEL_FACTOR ,
+				((double)(aero_force_filtered[1]._.W1))/ACCEL_FACTOR ,
+				((double)(aero_force_filtered[2]._.W1))/ACCEL_FACTOR
+				 ) ;	
+		}      
+#endif // FILTERED_ACCELEROMETER
 
 #ifdef LOG_IMU_WP1
 #ifdef LOG_RATE

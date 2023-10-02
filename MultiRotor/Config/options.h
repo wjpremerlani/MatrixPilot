@@ -35,6 +35,7 @@
 //#define GYRO_OFFSETS          // verifies gyro temperature compensation table
 //#define GYRO_CALIB            // used to compute gyro calibration
 //#define CROSS_COUPLING          // measure cross coupling
+#define FILTERED_ACCELEROMETER
 
 // the following are options used for development and debugging activities
 //#define TEST_LOGGER_HZ
@@ -71,7 +72,7 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	200
+#define LOGGER_HZ	2
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
@@ -81,7 +82,7 @@
 
 
 // select a wolf_pac by defining its internal label
-#define LUGE7_SNnew // used to program a WP without a serial number
+//#define LUGE7_SNnew // used to program a WP without a serial number
 //#define LUGE7_SN101 // switched, used to be 108
 //#define LUGE7_SN102
 //#define LUGE7_SN103
@@ -100,7 +101,7 @@
 //#define LUGE7_SN116
 //#define LUGE7_SN117
 //#define LUGE7_SN118
-//#define LUGE7_SN119
+#define LUGE7_SN119
 //#define LUGE7_SN120
 //#define LUGE7_SN121
 //#define LUGE7_SN122
@@ -918,6 +919,14 @@
 #define TILT_STOP 500
 #define UPSIDE_DOWN
 #endif // GYRO_CALIB
+
+#ifdef FILTERED_ACCELEROMETER
+#undef LOGGER_HZ
+#define LOGGER_HZ 2
+#ifndef ALWAYS_LOG
+#define ALWAYS_LOG
+#endif // ALWAYS_LOG
+#endif // FILTERED_ACCELEROMETER
 
 #ifdef GYRO_OFFSETS
 #undef LOGGER_HZ
