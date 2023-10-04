@@ -20,13 +20,13 @@
 
 // the following defines select what gets sent to the logger
 //#define LOG_IMU_WP1               // logs IMU data during a run for wolf_pac version 1
-//#define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
+#define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
 //#define START_TRACK_LOG         // logs 2 components of force and pitch
-//#define LOG_RESIDUALS         // logs residual offsets between runs
+#define LOG_RESIDUALS         // logs residual offsets between runs
 //#define RESIDUAL_LOG_PERIOD 10  // 6 times per minute
 //#define RESIDUAL_LOG_PERIOD 5  // 12 times per minute
 //#define RESIDUAL_LOG_PERIOD 2  // 30 times per minute
-//#define RESIDUAL_LOG_PERIOD 1  // 60 times per minute
+#define RESIDUAL_LOG_PERIOD 1  // 60 times per minute
 
 // the following are used to measure offsets and gains for commissioning
 //#define RECORD_OFFSETS        // record raw accelerometer data
@@ -34,8 +34,8 @@
 //#define DEBUG_TABLE_BUILD
 //#define GYRO_OFFSETS          // verifies gyro temperature compensation table
 //#define GYRO_CALIB            // used to compute gyro calibration
-//#define CROSS_COUPLING          // measure cross coupling
-#define FILTERED_ACCELEROMETER
+#define CROSS_COUPLING          // measure cross coupling
+//#define FILTERED_ACCELEROMETER
 
 // the following are options used for development and debugging activities
 //#define TEST_LOGGER_HZ
@@ -72,7 +72,7 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	2
+#define LOGGER_HZ	1
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
@@ -101,8 +101,8 @@
 //#define LUGE7_SN116
 //#define LUGE7_SN117
 //#define LUGE7_SN118
-#define LUGE7_SN119
-//#define LUGE7_SN120
+//#define LUGE7_SN119
+#define LUGE7_SN120
 //#define LUGE7_SN121
 //#define LUGE7_SN122
 //#define LUGE7_SN123
@@ -964,6 +964,16 @@
 #define LOG_R_UPDATE
 #define WARM_UP_TIME 160
 #define RUN_TIME 20
+#ifndef LOG_IMU_WP2
+#define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
+#endif // LOG_IMU_WP2
+#ifndef LOG_RESIDUALS
+#define LOG_RESIDUALS         // logs residual offsets between runs
+#endif //LOG_RESIDUALS
+#undef RESIDUAL_LOG_PERIOD
+#define RESIDUAL_LOG_PERIOD 1  // 60 times per minute
+#undef LOGGER_HZ
+#define LOGGER_HZ 1
 #endif // CROSS_COUPLING
 
 #ifdef LOG_VELOCITY
