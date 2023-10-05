@@ -287,8 +287,9 @@ void update_offset_table(void)
 			{
 				initial_temp_reported = 1 ;
 #ifdef DEBUG_TABLE_BUILD
-				serial_output("initial temperature = %i\r\n%i,%li,%i,%i,%i,%i,%li,%li,%li,%li,%li,%i,%i,%i,%i,%i,%i,%i,%i,%i\r\n",
+				serial_output("initial temperature = %i\r\n%i,%i,%li,%i,%i,%i,%i,%li,%li,%li,%li,%li,%i,%i,%i,%i,%i,%i,%i,%i,%i\r\n",
 					initial_temperature ,
+                    reported_temperature ,
 					udb_cpu_load(),
 					samples_32t,
 					x_bar,

@@ -30,11 +30,11 @@
 
 // the following are used to measure offsets and gains for commissioning
 //#define RECORD_OFFSETS        // record raw accelerometer data
-//#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
-//#define DEBUG_TABLE_BUILD
+#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
+#define DEBUG_TABLE_BUILD
 //#define GYRO_OFFSETS          // verifies gyro temperature compensation table
 //#define GYRO_CALIB            // used to compute gyro calibration
-#define CROSS_COUPLING          // measure cross coupling
+//#define CROSS_COUPLING          // measure cross coupling
 //#define FILTERED_ACCELEROMETER
 
 // the following are options used for development and debugging activities
@@ -105,10 +105,10 @@
 //#define LUGE7_SN120
 //#define LUGE7_SN121
 //#define LUGE7_SN122
-#define LUGE7_SN123
+//#define LUGE7_SN123
 //#define LUGE7_SN124
 //#define LUGE7_SN125
-//#define LUGE7_SN126
+#define LUGE7_SN126
 //#define LUGE7_SN127
 
 //#define LUGE7_SN050
@@ -951,6 +951,7 @@
 #endif // GYRO_DRIFT
 
 #ifdef RECORD_OFFSETS
+#undef LOG_IMU_WP2
 #undef LOGGER_HZ
 #define LOGGER_HZ 10
 #ifndef ALWAYS_LOG
@@ -1003,6 +1004,7 @@
 
 #ifdef BUILD_OFFSET_TABLE
 #define ALWAYS_LOG
+#undef LOG_IMU_WP2
 #define BUILD_OFFSET_HZ 200
 #endif // 
 
