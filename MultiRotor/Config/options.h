@@ -30,8 +30,8 @@
 
 // the following are used to measure offsets and gains for commissioning
 //#define RECORD_OFFSETS        // record raw accelerometer data
-#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
-#define DEBUG_TABLE_BUILD
+//#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
+//#define DEBUG_TABLE_BUILD
 //#define GYRO_OFFSETS          // verifies gyro temperature compensation table
 //#define GYRO_CALIB            // used to compute gyro calibration
 //#define CROSS_COUPLING          // measure cross coupling
@@ -49,7 +49,7 @@
 
 // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
 // non-printable characters are written out, as header bytes for packets.
-//#define USE_PACKETIZED_TELEMERTY
+#define USE_PACKETIZED_TELEMERTY
 
 
 // Enable UDB7LUGE in a Board definition ifdef block below for new WolfPac1 wifi boards
@@ -102,13 +102,13 @@
 //#define LUGE7_SN117
 //#define LUGE7_SN118
 //#define LUGE7_SN119
-//#define LUGE7_SN120
+#define LUGE7_SN120
 //#define LUGE7_SN121
 //#define LUGE7_SN122
 //#define LUGE7_SN123
 //#define LUGE7_SN124
 //#define LUGE7_SN125
-#define LUGE7_SN126
+//#define LUGE7_SN126
 //#define LUGE7_SN127
 
 //#define LUGE7_SN050
