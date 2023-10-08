@@ -634,6 +634,7 @@ void send_imu_data(void)
 			heading_previous = heading ;
 			yaw_previous = yaw_angle ;
 #else // CONING_CORRECTION
+#ifndef START_TRACK_LOG
 			compute_euler_8k();
 			delta_yaw_8k = yaw_angle_8k - yaw_previous_8k ;
 			if (abs(delta_yaw_8k)<90.0)
@@ -650,6 +651,25 @@ void send_imu_data(void)
 			}
 			heading_previous_8k = heading_8k ;
 			yaw_previous_8k = yaw_angle_8k ;
+#else
+			compute_euler();
+			delta_yaw = yaw_angle - yaw_previous ;
+			if (abs(delta_yaw)<90.0)
+			{
+				heading = heading_previous + delta_yaw ;
+			}
+			else if(delta_yaw>0)
+			{
+				heading = heading_previous + delta_yaw - 360.0 ;
+			}
+			else
+			{
+				heading = heading_previous + delta_yaw + 360.0 ;
+			}
+			heading_previous = heading ;
+			yaw_previous = yaw_angle ;
+         
+#endif // START_TRACK_LOG
 #endif // CONING_CORRECTION	
 #endif // LOG_R_UPDATE
 #ifdef START_TRACK_LOG

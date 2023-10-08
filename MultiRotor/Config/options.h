@@ -21,12 +21,12 @@
 // the following defines select what gets sent to the logger
 //#define LOG_IMU_WP1               // logs IMU data during a run for wolf_pac version 1
 #define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
-//#define START_TRACK_LOG         // logs 2 components of force and pitch
+#define START_TRACK_LOG         // logs 2 components of force and pitch
 #define LOG_RESIDUALS         // logs residual offsets between runs
 //#define RESIDUAL_LOG_PERIOD 10  // 6 times per minute
-//#define RESIDUAL_LOG_PERIOD 5  // 12 times per minute
+#define RESIDUAL_LOG_PERIOD 5  // 12 times per minute
 //#define RESIDUAL_LOG_PERIOD 2  // 30 times per minute
-#define RESIDUAL_LOG_PERIOD 1  // 60 times per minute
+//#define RESIDUAL_LOG_PERIOD 1  // 60 times per minute
 
 // the following are used to measure offsets and gains for commissioning
 //#define RECORD_OFFSETS        // record raw accelerometer data
@@ -49,7 +49,7 @@
 
 // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
 // non-printable characters are written out, as header bytes for packets.
-#define USE_PACKETIZED_TELEMERTY
+//#define USE_PACKETIZED_TELEMERTY
 
 
 // Enable UDB7LUGE in a Board definition ifdef block below for new WolfPac1 wifi boards
@@ -72,7 +72,7 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	1
+#define LOGGER_HZ	200
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
@@ -102,7 +102,7 @@
 //#define LUGE7_SN117
 //#define LUGE7_SN118
 //#define LUGE7_SN119
-#define LUGE7_SN120
+//#define LUGE7_SN120
 //#define LUGE7_SN121
 //#define LUGE7_SN122
 //#define LUGE7_SN123
@@ -121,7 +121,7 @@
 //#define MINI5_SN7 // SN7
 //#define MINI5_SN1 // SN8
 //#define MINI5_SN2 // SN9
-//#define MINI5_SN3 // SN10
+#define MINI5_SN3 // SN10
 //#define MINI5_SN4 // SN11
 //#define MINI5_SN12 // SN12
 //#define MINI6_SN2 // was SN2, now SN14
