@@ -15,7 +15,9 @@
 #define CAL_GRAV_Y	4097
 #define CAL_GRAV_Z	4072
 
-// it was not possible to determine cross coupling factors, data was chaotic
+#define X_CROSS_COUPLING 16
+#define Y_CROSS_COUPLING 0
+#define Z_CROSS_COUPLING 0
 
 #endif	/* options_LUGE7_SN126_H */
 
