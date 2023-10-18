@@ -1,6 +1,6 @@
 
 
-#define DATE "Wolf_pac_2 , firmware 4.1, 9/22/2023\r\n"
+#define DATE "Wolf_pac_2 , firmware 4.2, 10/15/2023\r\n"
 //#define DATE "Wold_pac_1, rev 2.5, 3/6/2023\r\n"
 
 //#define SIMULATED_GYRO
@@ -20,9 +20,10 @@
 
 // the following defines select what gets sent to the logger
 //#define LOG_IMU_WP1               // logs IMU data during a run for wolf_pac version 1
-//#define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
+#define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
 //#define START_TRACK_LOG         // logs 2 components of force and pitch
-//#define LOG_RESIDUALS         // logs residual offsets between runs
+#define LOG_RESIDUALS         // logs residual offsets between runs
+#define RESIDUAL_LOG_PERIOD 30  // 2 times per minute
 //#define RESIDUAL_LOG_PERIOD 15  // 4 times per minute
 //#define RESIDUAL_LOG_PERIOD 10  // 6 times per minute
 //#define RESIDUAL_LOG_PERIOD 5  // 12 times per minute
@@ -50,7 +51,7 @@
 
 // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
 // non-printable characters are written out, as header bytes for packets.
-//#define USE_PACKETIZED_TELEMERTY
+#define USE_PACKETIZED_TELEMERTY
 
 
 // Enable UDB7LUGE in a Board definition ifdef block below for new WolfPac1 wifi boards
@@ -73,7 +74,7 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	1
+#define LOGGER_HZ	100
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
@@ -110,11 +111,14 @@
 //#define LUGE7_SN124
 //#define LUGE7_SN125
 //#define LUGE7_SN126
-#define LUGE7_SN127
+//#define LUGE7_SN127
 //#define LUGE7_SN128
 //#define LUGE7_SN129
 //#define LUGE7_SN130
-
+#define LUGE7_SN131
+//#define LUGE7_SN132
+//#define LUGE7_SN133
+//#define LUGE7_SN134
 
 
 //#define LUGE7_SN050
@@ -536,6 +540,59 @@
 #define LOG_EULER
 #include "options_LUGE7_SN130.h"
 #endif // LUGE7_SN130
+
+#ifdef LUGE7_SN131
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1 1
+#define SERIAL_NUMBERD2	3
+#define SERIAL_NUMBERD3 1
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN131.h"
+#endif // LUGE7_SN131
+
+#ifdef LUGE7_SN132
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	1
+#define SERIAL_NUMBERD2	3
+#define SERIAL_NUMBERD3 2
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN132.h"
+#endif // LUGE7_SN132
+
+#ifdef LUGE7_SN133
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	1
+#define SERIAL_NUMBERD2	3
+#define SERIAL_NUMBERD3 3
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN133.h"
+#endif // LUGE7_SN133
+
+#ifdef LUGE7_SN134
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	1
+#define SERIAL_NUMBERD2	3
+#define SERIAL_NUMBERD3 4
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN134.h"
+#endif // LUGE7_SN134
+
 
 #ifdef LUGE7_SN050
 #define ENABLE_ESP32
