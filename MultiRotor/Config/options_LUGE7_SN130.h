@@ -15,7 +15,7 @@
 #define CAL_GRAV_Y	4099
 #define CAL_GRAV_Z	4071
 
-#define X_CROSS_COUPLING 0
+#define X_CROSS_COUPLING 8
 #define Y_CROSS_COUPLING 0
 #define Z_CROSS_COUPLING 0
 
