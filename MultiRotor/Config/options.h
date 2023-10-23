@@ -118,8 +118,11 @@
 //#define LUGE7_SN131
 //#define LUGE7_SN132
 //#define LUGE7_SN133
-#define LUGE7_SN134
-
+//#define LUGE7_SN134
+#define LUGE7_SN135
+//#define LUGE7_SN136
+//#define LUGE7_SN137
+//#define LUGE7_SN138
 
 //#define LUGE7_SN050
 //#define MINI6_SN4 // SN1, Tucker West
@@ -592,6 +595,58 @@
 #define LOG_EULER
 #include "options_LUGE7_SN134.h"
 #endif // LUGE7_SN134
+
+#ifdef LUGE7_SN135
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	1
+#define SERIAL_NUMBERD2	3
+#define SERIAL_NUMBERD3 5
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN135.h"
+#endif // LUGE7_SN135
+
+#ifdef LUGE7_SN136
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	1
+#define SERIAL_NUMBERD2	3
+#define SERIAL_NUMBERD3 6
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN136.h"
+#endif // LUGE7_SN136
+
+#ifdef LUGE7_SN137
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	1
+#define SERIAL_NUMBERD2	3
+#define SERIAL_NUMBERD3 7
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN137.h"
+#endif // LUGE7_SN137
+
+#ifdef LUGE7_SN138
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	1
+#define SERIAL_NUMBERD2	3
+#define SERIAL_NUMBERD3 8
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN138.h"
+#endif // LUGE7_SN138
 
 
 #ifdef LUGE7_SN050
