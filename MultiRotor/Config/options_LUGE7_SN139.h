@@ -15,6 +15,8 @@
 #define CAL_GRAV_Y	4101
 #define CAL_GRAV_Z	4094
 
+#error "very large cross coupling"
+
 #define X_CROSS_COUPLING 0
 #define Y_CROSS_COUPLING 0
 #define Z_CROSS_COUPLING 0
