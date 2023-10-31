@@ -51,7 +51,7 @@
 
 // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
 // non-printable characters are written out, as header bytes for packets.
-//#define USE_PACKETIZED_TELEMERTY
+#define USE_PACKETIZED_TELEMERTY
 
 
 // Enable UDB7LUGE in a Board definition ifdef block below for new WolfPac1 wifi boards
@@ -84,7 +84,7 @@
 
 
 // select a wolf_pac by defining its internal label
-//#define LUGE7_SNnew // used to program a WP without a serial number
+#define LUGE7_SNnew // used to program a WP without a serial number
 //#define LUGE7_SN101 // switched, used to be 108
 //#define LUGE7_SN102
 //#define LUGE7_SN103
@@ -127,10 +127,12 @@
 //#define LUGE7_SN140
 //#define LUGE7_SN141
 //#define LUGE7_SN142
+
 //#define LUGE7_SN143
 //#define LUGE7_SN144
 //#define LUGE7_SN145
 //#define LUGE7_SN146
+
 //#define LUGE7_SN147
 //#define LUGE7_SN148
 //#define LUGE7_SN149
