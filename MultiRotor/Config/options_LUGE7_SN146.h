@@ -15,6 +15,8 @@
 #define CAL_GRAV_Y	4102
 #define CAL_GRAV_Z	4077
 
+// cross coupling was measured but results were not consistent
+
 #define X_CROSS_COUPLING 0
 #define Y_CROSS_COUPLING 0
 #define Z_CROSS_COUPLING 0
