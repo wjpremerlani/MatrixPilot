@@ -87,10 +87,10 @@
 //#define LUGE7_SNnew // used to program a WP without a serial number
 
 //#define LUGE7_SN050
-#define LUGE7_SN051
+//#define LUGE7_SN051
 //#define LUGE7_SN052
 //#define LUGE7_SN053
-//#define LUGE7_SN054
+#define LUGE7_SN054
 
 
 //#define LUGE7_SN101 // switched, used to be 108
