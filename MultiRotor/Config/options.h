@@ -20,9 +20,9 @@
 
 // the following defines select what gets sent to the logger
 //#define LOG_IMU_WP1               // logs IMU data during a run for wolf_pac version 1
-#define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
+//#define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
 //#define START_TRACK_LOG         // logs 2 components of force and pitch
-#define LOG_RESIDUALS         // logs residual offsets between runs
+//#define LOG_RESIDUALS         // logs residual offsets between runs
 //#define RESIDUAL_LOG_PERIOD 30  // 2 times per minute
 //#define RESIDUAL_LOG_PERIOD 15  // 4 times per minute
 //#define RESIDUAL_LOG_PERIOD 10  // 6 times per minute
@@ -32,8 +32,8 @@
 
 // the following are used to measure offsets and gains for commissioning
 //#define RECORD_OFFSETS        // record raw accelerometer data
-//#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
-//#define DEBUG_TABLE_BUILD
+#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
+#define DEBUG_TABLE_BUILD
 //#define GYRO_OFFSETS          // verifies gyro temperature compensation table
 //#define GYRO_CALIB            // used to compute gyro calibration
 //#define CROSS_COUPLING          // measure cross coupling
@@ -82,7 +82,6 @@
 #define TILT_START	15          // tilt angle threshold in degrees to start recording a run
 #define TILT_STOP	60          // tilt angle threshold in degrees to stop recording a run
 
-
 // select a wolf_pac by defining its internal label
 //#define LUGE7_SNnew // used to program a WP without a serial number
 
@@ -90,8 +89,7 @@
 //#define LUGE7_SN051
 //#define LUGE7_SN052
 //#define LUGE7_SN053
-#define LUGE7_SN054
-
+//#define LUGE7_SN054
 
 //#define LUGE7_SN101 // switched, used to be 108
 //#define LUGE7_SN102
@@ -139,10 +137,12 @@
 //#define LUGE7_SN144
 //#define LUGE7_SN145
 //#define LUGE7_SN146
+
 //#define LUGE7_SN147
 //#define LUGE7_SN148
 //#define LUGE7_SN149
-//#define LUGE7_SN150
+#define LUGE7_SN150
+
 //#define LUGE7_SN151
 //#define LUGE7_SN152
 //#define LUGE7_SN153
@@ -786,6 +786,59 @@
 #define LOG_EULER
 #include "options_LUGE7_SN146.h"
 #endif // LUGE7_SN146
+
+#ifdef LUGE7_SN147
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	1
+#define SERIAL_NUMBERD2	4
+#define SERIAL_NUMBERD3 7
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN147.h"
+#endif // LUGE7_SN147
+
+#ifdef LUGE7_SN148
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	1
+#define SERIAL_NUMBERD2	4
+#define SERIAL_NUMBERD3 8
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN148.h"
+#endif // LUGE7_SN148
+
+#ifdef LUGE7_SN149
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	1
+#define SERIAL_NUMBERD2	4
+#define SERIAL_NUMBERD3 9
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN149.h"
+#endif // LUGE7_SN149
+
+#ifdef LUGE7_SN150
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	1
+#define SERIAL_NUMBERD2	5
+#define SERIAL_NUMBERD3 0
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN150.h"
+#endif // LUGE7_SN150
+
 
 #ifdef LUGE7_SN050
 #define ENABLE_ESP32
