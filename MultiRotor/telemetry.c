@@ -437,7 +437,7 @@ void send_imu_data(void)
                 serial_output("\r\nx_force_xx,y_force_xx,pitch_xx\r\n");
 #else
 #ifndef LOG_R_UPDATE
-                serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx\r\n");
+                serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,tmptur_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx\r\n");
 #else
                 serial_output("\r\ngyro_lck,accelOn,theta_sum_x,y,z,LPF1_x,y,z,LPF2_x,y,z\r\n");
 #endif //   LOG_R_UPDATE              
@@ -679,7 +679,7 @@ void send_imu_data(void)
 				pitch_angle ) ;				       
 #else 
 #ifndef LOG_R_UPDATE
-            serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u\r\n",
+            serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%i,%u,%u,%u\r\n",
             	((double)(aero_force[0]))/ACCEL_FACTOR ,
 				((double)(aero_force[1]))/ACCEL_FACTOR ,
 				((double)(aero_force[2]))/ACCEL_FACTOR ,
@@ -688,6 +688,7 @@ void send_imu_data(void)
 #else
 				heading_8k ,  pitch_angle_8k , roll_angle_8k ,
 #endif
+                mpu_temp.value ,
 				max_gyro/328  ,
                 udb_cpu_load(),
                 record_number ++         
