@@ -16,9 +16,9 @@
 #define CAL_GRAV_Y	4100
 #define CAL_GRAV_Z	4077
 
-#define X_CROSS_COUPLING 50
-#define Y_CROSS_COUPLING 25
-#define Z_CROSS_COUPLING 0
+//#define X_CROSS_COUPLING 50
+//#define Y_CROSS_COUPLING 25
+//#define Z_CROSS_COUPLING 0
 
 
 #endif	/* options_LUGE7_SN107_H */
