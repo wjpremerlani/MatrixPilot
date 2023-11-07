@@ -31,9 +31,9 @@
 #define RESIDUAL_LOG_PERIOD 1  // 60 times per minute
 
 // the following are used to measure offsets and gains for commissioning
-#define RECORD_OFFSETS        // record raw accelerometer data
-//#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
-//#define DEBUG_TABLE_BUILD
+//#define RECORD_OFFSETS        // record raw accelerometer data
+#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
+#define DEBUG_TABLE_BUILD
 //#define GYRO_OFFSETS          // verifies gyro temperature compensation table
 //#define GYRO_CALIB            // used to compute gyro calibration
 //#define CROSS_COUPLING          // measure cross coupling
@@ -145,15 +145,14 @@
 //#define LUGE7_SN152
 //#define LUGE7_SN153
 //#define LUGE7_SN154
-
 //#define LUGE7_SN155
 //#define LUGE7_SN156
 //#define LUGE7_SN157
-#define LUGE7_SN158
+//#define LUGE7_SN158
 
 //#define LUGE7_SN159
 //#define LUGE7_SN160
-//#define LUGE7_SN161
+#define LUGE7_SN161
 
 //#define LUGE7_SN162
 //#define LUGE7_SN163
@@ -943,6 +942,45 @@
 #define LOG_EULER
 #include "options_LUGE7_SN158.h"
 #endif // LUGE7_SN158
+
+#ifdef LUGE7_SN159
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	1
+#define SERIAL_NUMBERD2	5
+#define SERIAL_NUMBERD3 9
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN159.h"
+#endif // LUGE7_SN159
+
+#ifdef LUGE7_SN160
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	1
+#define SERIAL_NUMBERD2	6
+#define SERIAL_NUMBERD3 0
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN160.h"
+#endif // LUGE7_SN160
+
+#ifdef LUGE7_SN161
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	1
+#define SERIAL_NUMBERD2	6
+#define SERIAL_NUMBERD3 1
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN161.h"
+#endif // LUGE7_SN161
 
 
 #ifdef LUGE7_SN050
