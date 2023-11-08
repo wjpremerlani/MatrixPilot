@@ -20,9 +20,9 @@
 
 // the following defines select what gets sent to the logger
 //#define LOG_IMU_WP1               // logs IMU data during a run for wolf_pac version 1
-//#define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
+#define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
 //#define START_TRACK_LOG         // logs 2 components of force and pitch
-//#define LOG_RESIDUALS         // logs residual offsets between runs
+#define LOG_RESIDUALS         // logs residual offsets between runs
 //#define RESIDUAL_LOG_PERIOD 30  // 2 times per minute
 //#define RESIDUAL_LOG_PERIOD 15  // 4 times per minute
 //#define RESIDUAL_LOG_PERIOD 10  // 6 times per minute
@@ -32,8 +32,8 @@
 
 // the following are used to measure offsets and gains for commissioning
 //#define RECORD_OFFSETS        // record raw accelerometer data
-#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
-#define DEBUG_TABLE_BUILD
+//#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
+//#define DEBUG_TABLE_BUILD
 //#define GYRO_OFFSETS          // verifies gyro temperature compensation table
 //#define GYRO_CALIB            // used to compute gyro calibration
 //#define CROSS_COUPLING          // measure cross coupling
