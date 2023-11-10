@@ -85,7 +85,7 @@
 // select a wolf_pac by defining its internal label
 //#define LUGE7_SNnew // used to program a WP without a serial number
 
-//#define LUGE7_SN050
+#define LUGE7_SN050
 //#define LUGE7_SN051
 //#define LUGE7_SN052
 //#define LUGE7_SN053
@@ -151,7 +151,7 @@
 //#define LUGE7_SN158
 //#define LUGE7_SN159
 //#define LUGE7_SN160
-#define LUGE7_SN161
+//#define LUGE7_SN161
 
 //#define LUGE7_SN162
 //#define LUGE7_SN163
