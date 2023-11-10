@@ -12,7 +12,7 @@
 int16_t residual_offset[] = { 0 , 0 , 0 } ;
 
 
-struct gyro_offset_table_entry gyro_offset_table[] = {
+const struct gyro_offset_table_entry gyro_offset_table[] = {
 {	-1656	,	517	,	2869	},
 {	-1655	,	518	,	2874	},
 {	-1656	,	519	,	2875	},
