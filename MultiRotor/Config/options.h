@@ -100,7 +100,7 @@
 //#define LUGE7_SN107
 //#define LUGE7_SN108 // switched, used to be 101
 //#define LUGE7_SN109
-//#define LUGE7_SN110 // not in service, wifi issue at low temp
+//#error #define LUGE7_SN110 // not in service, wifi issue at low temp
 //#define LUGE7_SN111
 //#define LUGE7_SN112
 //#define LUGE7_SN113
@@ -156,9 +156,7 @@
 //#define LUGE7_SN162
 //#define LUGE7_SN163
 //#define LUGE7_SN164
-
-//#define LUGE7_SN165
-//#define LUGE7_SN166
+#define LUGE7_SN165
 
 //#define MINI6_SN4 // SN1, Tucker West
 //#define MINI5_SN14 // was SN14, now SN2
@@ -1020,6 +1018,19 @@
 #define LOG_EULER
 #include "options_LUGE7_SN164.h"
 #endif // LUGE7_SN164
+
+#ifdef LUGE7_SN165
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	1
+#define SERIAL_NUMBERD2	6
+#define SERIAL_NUMBERD3 5
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN165.h"
+#endif // LUGE7_SN165
 
 
 #ifdef LUGE7_SN050
