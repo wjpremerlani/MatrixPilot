@@ -142,6 +142,38 @@ void yaw_drift_reset(void)
 	errorYawground[0] = errorYawground[1] = errorYawground[2] = 0; // turn off yaw drift
 }
 
+void align_roll_pitch(fractional tilt_mat[])
+{
+	fractional vertical[3] ;
+	fractional Z , one_plus_Z ;
+	vertical[0] = gplane[0] ;
+	vertical[1] = gplane[1] ;
+	vertical[2] = gplane[2] ;
+	vector3_normalize( vertical , vertical ) ;
+	tilt_mat[2] = - vertical[0] ;
+	tilt_mat[5] = - vertical[1] ;
+	tilt_mat[6] = vertical[0] ;
+	tilt_mat[7] = vertical[1] ;
+	tilt_mat[8] = vertical[2] ;
+	Z = vertical[2] ;
+	one_plus_Z = RMAX + Z ;
+	if ( one_plus_Z > 0 )
+	{
+		tilt_mat[0] = Z+__builtin_divsd( __builtin_mulss( vertical[1], vertical[1]),one_plus_Z );
+		tilt_mat[4] = Z+__builtin_divsd( __builtin_mulss( vertical[0], vertical[0]),one_plus_Z );
+		tilt_mat[1] = - __builtin_divsd( __builtin_mulss( vertical[0], vertical[1]),one_plus_Z );
+		tilt_mat[3] = tilt_mat[1];
+	}
+	else
+	{
+		// this case cannot happen right now, but we may eventually want to control inverted
+		tilt_mat[0] = Z ;
+		tilt_mat[4] = Z ;
+		tilt_mat[1] = 0 ;
+		tilt_mat[3] = 0 ;
+	}
+}
+
 void dcm_init_rmat(void)
 {
 #if (MAG_YAW_DRIFT == 1)
@@ -246,6 +278,7 @@ inline void read_accel(void)
 	
 	if (first_accel == 1 )
 	{
+        align_roll_pitch(rmat);
 		aero_force[0] = aero_force_new[0] ;
 		aero_force[1] = aero_force_new[1] ;
 		aero_force[2] = aero_force_new[2] ;
@@ -528,9 +561,8 @@ static void roll_pitch_drift(void)
         motion_reset_counter = MOTION_RESET_DELAY ;
 		motion_detect = 1 ;
 	}
-	if((gyro_locking_on == 1)&&(motion_detect == 0))
-	{
-		accelOn = 1 ;
+    if ( logging_on == 0)
+    {
 		int16_t gplane_nomalized[3] ;
 		vector3_normalize( gplane_nomalized , gplane ) ;
 		VectorCross(errorRP, gplane_nomalized, &rmat[6]);
@@ -541,13 +573,21 @@ static void roll_pitch_drift(void)
 	}
 	else
 	{
-		accelOn = 0 ;
 		errorRP[0] = 0 ;
 		errorRP[1] = 0 ;
 		errorRP[2] = 0 ;
 		errorYawplane[0] = 0 ;
 		errorYawplane[1] = 0 ;
 		errorYawplane[2] = 0 ;
+	}
+
+	if((gyro_locking_on == 1)&&(motion_detect == 0))
+	{
+		accelOn = 1 ;
+	}
+	else
+	{
+		accelOn = 0 ;
 	}
 
 }

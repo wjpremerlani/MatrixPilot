@@ -1,5 +1,6 @@
 #include "../libDCM/matrix_vector_32_bit.h"
 #include "../libUDB/udbTypes.h"
+#include "libDCM_internal.h"
 
 extern union longww theta_32[];
 
@@ -27,11 +28,16 @@ union longww rmat_sum[] = {{0},{0},{0}} ;
 
 #define ADJUST_THETA
 
+extern boolean logging_on ;
+
 void rmat_32_update(void)
 {
+    if (logging_on == 0 )
+    {
+        convert_16_bit_to_32_bit(9,rmat_32,rmat) ;
+    }
 	if (accelOn == 1 )
 	{
-		convert_16_bit_to_32_bit(9,rmat_32,rmat) ;
         theta_sum[0].WW = 0 ;
         theta_sum[1].WW = 0 ;
         theta_sum[2].WW = 0 ;
