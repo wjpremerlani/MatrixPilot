@@ -36,7 +36,6 @@ void rmat_32_update(void)
     {
         convert_16_bit_to_32_bit(9,rmat_32,rmat) ;
         convert_32_bit_to_16_bit(9,rmat_16,rmat_32) ;
-        return ;
     }
 	if (accelOn == 1 )
 	{
