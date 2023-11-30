@@ -175,7 +175,11 @@ void send_residual_data(void)
 	{
 		start_residuals = 0 ;
 #ifndef LOG_R_UPDATE
+#ifndef TILT_INIT
 		serial_output("\r\n\r\nimu_temp_yy,filter_en_yy,x_rate_yy,y_rate_yy,z_rate_yy,x_filt_16_yy,y_filt_16_yy,z_filt_16_yy,x_err_yy,y_err_yy,z_err_yy\r\n") ;
+#else
+        serial_output("\r\n\r\nStandbymode\r\naccOn,logOn,nx_force,y_force,z_force,yaw8,pitch8,roll8,yaw,pitch,roll\r\n");        
+#endif // TILT_INIT
 #else
         serial_output("\r\n\r\nimu_temp,filter_en,ax,ay,az,x_filt_64,y,z,theta_filtx,y,z\r\n");
 #endif // LOG_R_UPDATE
@@ -194,7 +198,8 @@ void send_residual_data(void)
         omgfilt_rounded[1].WW = omegagyro_filtered[1].WW+0x00008000 ;
         omgfilt_rounded[2].WW = omegagyro_filtered[2].WW+0x00008000 ;
 
-#ifndef  LOG_R_UPDATE       
+#ifndef  LOG_R_UPDATE 
+#ifndef TILT_INIT
 		serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i\r\n",
                 mpu_temp.value,
 				accelOn ,
@@ -208,6 +213,18 @@ void send_residual_data(void)
 				omegagyro[1] + omgfilt_rounded[1]._.W1 ,
 				omegagyro[2] + omgfilt_rounded[2]._.W1 
     				);
+#else
+        compute_euler();
+        compute_euler_8k();
+                serial_output("%u,%u,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\r\n",
+                        accelOn , logging_on ,
+            	((double)(aero_force[0]))/ACCEL_FACTOR ,
+				((double)(aero_force[1]))/ACCEL_FACTOR ,
+				((double)(aero_force[2]))/ACCEL_FACTOR ,
+                yaw_angle_8k ,  pitch_angle_8k , roll_angle_8k ,     
+				yaw_angle ,  pitch_angle , roll_angle                  
+			);       
+#endif // TILT_DEF
 #else
         serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%li,%li,%li\r\n",
 				mpu_temp.value,
@@ -437,7 +454,11 @@ void send_imu_data(void)
                 serial_output("\r\nx_force_xx,y_force_xx,pitch_xx\r\n");
 #else
 #ifndef LOG_R_UPDATE
+#ifdef TILT_INIT
+                serial_output("\r\n\r\nRunmode\r\naccOn,logOn,nx_force,y_force,z_force,yaw8,pitch8,roll8,yaw,pitch,roll\r\n");        
+#else
                 serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx,tmptur_xx\r\n");
+#endif // TILT_INIT
 #else
                 serial_output("\r\ngyro_lck,accelOn,theta_sum_x,y,z,LPF1_x,y,z,LPF2_x,y,z\r\n");
 #endif //   LOG_R_UPDATE              
@@ -636,6 +657,9 @@ void send_imu_data(void)
 #else // CONING_CORRECTION
 #ifndef START_TRACK_LOG
 			compute_euler_8k();
+#ifdef TILT_INIT
+            compute_euler() ;
+#endif // TILT_INIT
 			delta_yaw_8k = yaw_angle_8k - yaw_previous_8k ;
 			if (abs(delta_yaw_8k)<90.0)
 			{
@@ -677,8 +701,9 @@ void send_imu_data(void)
             	((double)(aero_force[0]))/ACCEL_FACTOR ,
 				((double)(aero_force[1]))/ACCEL_FACTOR ,
 				pitch_angle ) ;				       
-#else 
+#else
 #ifndef LOG_R_UPDATE
+#ifndef TILT_INIT
             serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u,%i\r\n",
             	((double)(aero_force[0]))/ACCEL_FACTOR ,
 				((double)(aero_force[1]))/ACCEL_FACTOR ,
@@ -695,6 +720,17 @@ void send_imu_data(void)
                 mpu_temp.value 
                     
 			);
+#else
+                serial_output("%u,%u,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\r\n",
+                        accelOn , logging_on ,
+            	((double)(aero_force[0]))/ACCEL_FACTOR ,
+				((double)(aero_force[1]))/ACCEL_FACTOR ,
+				((double)(aero_force[2]))/ACCEL_FACTOR ,
+                yaw_angle_8k ,  pitch_angle_8k , roll_angle_8k ,     
+				yaw_angle ,  pitch_angle , roll_angle                  
+			);
+
+#endif // TILT_INIT
 #else
 #ifdef SIMULATE_TILT
             if ( run_count++ >= RUN_TIME)

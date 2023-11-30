@@ -45,8 +45,8 @@ uint16_t spin_rate = 0;
 //#define KPROLLPITCH ( 2048 )
 #define KIROLLPITCH ( (uint32_t) 64*2560 / (uint32_t) HEARTBEAT_HZ)
 
-//#define KPYAW ( 2*2048 )
-#define KPYAW ( 0 )
+#define KPYAW ( 2*2048 )
+//#define KPYAW ( 0 )
 #define KIYAW ((uint32_t) 4*2560/(uint32_t)HEARTBEAT_HZ)
 
 #define GYROSAT 15000
@@ -566,10 +566,20 @@ static void roll_pitch_drift(void)
 		int16_t gplane_nomalized[3] ;
 		vector3_normalize( gplane_nomalized , gplane ) ;
 		VectorCross(errorRP, gplane_nomalized, &rmat[6]);
-		
-		errorYawplane[0] = 0 ;
-		errorYawplane[1] = 0 ;
-		errorYawplane[2] = 0 ;
+        
+        dirOverGndHrmat[0] = rmat[0] ;
+		dirOverGndHrmat[1] = rmat[3] ;
+		dirOverGndHrmat[2] = 0 ;
+		dirOverGndHGPS[0] = RMAX ;
+		dirOverGndHGPS[1] = 0 ;
+		dirOverGndHGPS[2] = 0 ;
+        
+        VectorCross(errorYawground, dirOverGndHrmat , dirOverGndHGPS );
+        
+        // convert to "plane" frame:
+		// *** Note: this accomplishes multiplication rmat transpose times errorYawground!!
+		MatrixMultiply(1, 3, 3, errorYawplane, errorYawground, rmat) ;
+
 	}
 	else
 	{
