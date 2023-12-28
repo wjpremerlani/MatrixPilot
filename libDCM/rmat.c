@@ -166,8 +166,9 @@ void align_roll_pitch(fractional tilt_mat[])
 	}
 	else
 	{
-		// this case cannot happen right now, but we may eventually want to control inverted
-		tilt_mat[0] = Z ;
+        // this is an arbitrary approximation for case of perfectly inverted
+        // because a pure tilt rotation vector for this situation is not unique
+		tilt_mat[0] = - Z ;
 		tilt_mat[4] = Z ;
 		tilt_mat[1] = 0 ;
 		tilt_mat[3] = 0 ;
@@ -543,7 +544,7 @@ uint16_t accel_magnitude ;
 static void roll_pitch_drift(void)
 {	
 	accel_magnitude = vector3_mag(gplane[0],gplane[1],gplane[2]);
-	omega_magnitude = vector3_mag(omegagyro[0],omegagyro[1],0); // z has large drift, x and y are more stable
+	omega_magnitude = vector3_mag(omegagyro[0],omegagyro[1],omegagyro[2]); // z has large drift, x and y are more stable
 	if((omega_magnitude<GYRO_OFFSET_MARGIN )	&& (abs(accel_magnitude-CALIB_GRAVITY/2)<CALIB_GRAVITY/8))
 	{
 		if (motion_reset_counter == 0 )
