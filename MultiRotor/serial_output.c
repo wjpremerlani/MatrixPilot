@@ -6,9 +6,6 @@
 #include "../libUDB/interrupt.h"
 #include "../libUDB/serialIO.h"
 
-//#define SERIAL_BUFFER_SIZE	6800
-//#define NUM_CHUNKS_TO_BUFFER 128
-
 #define SERIAL_BUFFER_SIZE	10200
 #define NUM_CHUNKS_TO_BUFFER 86
 

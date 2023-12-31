@@ -231,7 +231,7 @@ void update_slide_detection(void)
 extern boolean log_residuals ;
 extern void send_residual_data(void) ;
 boolean stop_residuals = 1 ;
-boolean start_residuals = 0 ;
+boolean start_residuals = 1 ;
 extern float yaw_previous , yaw_angle , heading_previous ;
 extern void compute_euler(void);
 uint16_t residual_log_counter = 0 ;

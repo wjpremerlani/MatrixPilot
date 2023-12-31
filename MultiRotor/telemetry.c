@@ -147,7 +147,7 @@ float heading_8k ;
 float heading_previous_8k ;
 float delta_yaw_8k ;
 boolean is_first_header = 1;
-boolean log_residuals = 0 ;
+boolean log_residuals = 1 ;
 extern boolean start_residuals ;
 extern int16_t omega[];
 extern int16_t rup_copy[];
