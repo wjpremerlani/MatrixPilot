@@ -291,7 +291,6 @@ void send_spectral_data(void)
         serial_output("0,0,0,%i,%i\r\n",
             spectral_record_number++,
             udb_cpu_load());
-        spectral_sample_number = 0 ;
         sample_index = 0 ;
         while ( sample_index < SAMPLES_PER_BURST )
         {
