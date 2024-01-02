@@ -369,6 +369,15 @@ static void process_MPU_data(void)
 
 #else
 
+#ifdef SPECTRAL_ANALYSIS
+
+int16_t x_gyro[SAMPLES_PER_BURST];
+int16_t y_gyro[SAMPLES_PER_BURST];
+int16_t z_gyro[SAMPLES_PER_BURST];
+uint16_t spectral_sample_number = 0 ;
+
+#endif // SPECTRAL_ANALYSIS
+
 // executed for each of sample at the 8000 Hz sample rate
 static void process_MPU_data(void)
 {
@@ -391,10 +400,21 @@ static void process_MPU_data(void)
 	xrate32 += ((int32_t)((int16_t)mpu_data[xrate_MPU_channel].BB)) ;
 	yrate32 += ((int32_t)((int16_t)mpu_data[yrate_MPU_channel].BB)) ;
 	zrate32 += ((int32_t)((int16_t)mpu_data[zrate_MPU_channel].BB)) ;
+#ifdef SPECTRAL_ANALYSIS
+    if ( spectral_sample_number < SAMPLES_PER_BURST )
+    {
+        x_gyro[spectral_sample_number] = mpu_data[xrate_MPU_channel].BB ;
+        y_gyro[spectral_sample_number] = mpu_data[yrate_MPU_channel].BB ;
+        z_gyro[spectral_sample_number] = mpu_data[zrate_MPU_channel].BB ;
+        spectral_sample_number ++ ;       
+    }
+#endif // SPECTRAL_ANALYSIS
 
-#ifdef CONING_CORRECTION	
+#ifdef CONING_CORRECTION
+#ifndef SPECTRAL_ANALYSIS	
 	compute_coning_adjustment();
-#endif
+#endif // SPECTRAL_ANALYSIS   
+#endif // CONING_CORRECTION
 	//  trigger synchronous processing of sensor data
 	sample_counter = sample_counter+1 ;
 	// time to pass the consolidation of 40 samples up to the 200 Hz processes

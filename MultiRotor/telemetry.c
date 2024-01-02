@@ -244,6 +244,68 @@ void send_residual_data(void)
 	}
 }
 
+uint16_t spectral_record_number ;
+uint16_t sample_index ;
+
+extern int16_t x_gyro[];
+extern int16_t y_gyro[];
+extern int16_t z_gyro[];
+extern uint16_t spectral_sample_number ;
+
+#ifdef SPECTRAL_ANALYSIS
+void send_spectral_data(void)
+{
+  	if (start_log == 1)
+	{
+		hasWrittenHeader = 0 ;
+#ifdef USE_PACKETIZED_TELEMERTY
+        is_first_header = 1;
+#endif
+		if ( is_first_header)
+		{
+			header_line = 0 ;
+			is_first_header = 0 ;
+		}
+		else
+		{	
+			header_line = 22 ;
+		}
+		start_log = 0 ;
+		logging_on = 1 ;
+#ifdef		ALWAYS_SYNC_GYROS
+		gyro_locking_on = 1 ;
+#else
+		gyro_locking_on = 0 ;
+#endif // ALWAYS_SYNC_GYROS	
+	}
+	if ( stop_log == 1)
+	{
+		stop_log = 0 ;
+		logging_on = 0 ;
+		gyro_locking_on = 1 ;
+        serial_output_start_end_packet(false);
+	}
+	if (logging_on == 0 ) return ;
+    if ( spectral_sample_number == SAMPLES_PER_BURST )
+    {
+        serial_output("0,0,0,%i,%i\r\n",
+            spectral_record_number++,
+            udb_cpu_load());
+        spectral_sample_number = 0 ;
+        sample_index = 0 ;
+        while ( sample_index < SAMPLES_PER_BURST )
+        {
+            serial_output("%i,%i,%i\r\n",
+                x_gyro[sample_index],
+                y_gyro[sample_index],
+                z_gyro[sample_index]                    
+                    );
+            sample_index++ ;        
+        }
+        spectral_sample_number = 0 ;
+    }
+}
+#endif // SPECTRAL_ANALYSIS
 void send_imu_data(void)
 {
 #ifndef ALWAYS_LOG

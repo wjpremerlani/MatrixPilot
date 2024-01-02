@@ -20,9 +20,9 @@
 
 // the following defines select what gets sent to the logger
 //#define LOG_IMU_WP1               // logs IMU data during a run for wolf_pac version 1
-#define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
+//#define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
 //#define START_TRACK_LOG         // logs 2 components of force and pitch
-#define LOG_RESIDUALS         // logs residual offsets between runs
+//#define LOG_RESIDUALS         // logs residual offsets between runs
 //#define RESIDUAL_LOG_PERIOD 30  // 2 times per minute
 //#define RESIDUAL_LOG_PERIOD 15  // 4 times per minute
 //#define RESIDUAL_LOG_PERIOD 10  // 6 times per minute
@@ -46,7 +46,8 @@
 //#define GYRO_DRIFT
 //#define ROAD_TEST
 //#define GYRO_LPF
-
+#define SPECTRAL_ANALYSIS
+#define SAMPLES_PER_BURST 80
 
 //#define ENABLE_ESP32
 
@@ -75,7 +76,7 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	1
+#define LOGGER_HZ	2
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
@@ -84,7 +85,7 @@
 #define TILT_STOP	60          // tilt angle threshold in degrees to stop recording a run
 
 // select a wolf_pac by defining its internal label
-//#define LUGE7_SNnew // used to program a WP without a serial number
+#define LUGE7_SNnew // used to program a WP without a serial number
 
 //#define LUGE7_SN050
 //#define LUGE7_SN051
@@ -95,7 +96,7 @@
 //#define LUGE7_SN101 // switched, used to be 108
 //#define LUGE7_SN102
 //#define LUGE7_SN103
-#define LUGE7_SN104
+//#define LUGE7_SN104
 //#define LUGE7_SN105
 //#define LUGE7_SN106
 //#define LUGE7_SN107
