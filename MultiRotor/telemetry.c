@@ -27,6 +27,7 @@
 #include "../libUDB/servoOut.h"
 #include "../libUDB/ADchannel.h"
 #include "../libUDB/mcu.h"
+#include "../libUDB/libUDB.h"
 #include "../libDCM/matrix_vector_32_bit.h"
 #include "../libDCM/rmat_32.h"
 
@@ -253,6 +254,22 @@ extern int16_t z_gyro[];
 extern uint16_t spectral_sample_number ;
 
 #ifdef SPECTRAL_ANALYSIS
+void log_burst_data(void)
+{
+    sample_index = 0 ;
+    while ( sample_index < SAMPLES_PER_BURST )
+        {
+            serial_output("%i,%i,%i\r\n",
+                x_gyro[sample_index],
+                y_gyro[sample_index],
+                z_gyro[sample_index]                    
+                    );
+            sample_index++ ;        
+        }
+    spectral_sample_number = 0 ; 
+}
+
+
 void send_spectral_data(void)
 {
   	if (start_log == 1)
@@ -291,17 +308,7 @@ void send_spectral_data(void)
         serial_output("0,0,0,%i,%i\r\n",
             spectral_record_number++,
             udb_cpu_load());
-        sample_index = 0 ;
-        while ( sample_index < SAMPLES_PER_BURST )
-        {
-            serial_output("%i,%i,%i\r\n",
-                x_gyro[sample_index],
-                y_gyro[sample_index],
-                z_gyro[sample_index]                    
-                    );
-            sample_index++ ;        
-        }
-        spectral_sample_number = 0 ;
+        udb_background_trigger(&log_burst_data);
     }
 }
 #endif // SPECTRAL_ANALYSIS
