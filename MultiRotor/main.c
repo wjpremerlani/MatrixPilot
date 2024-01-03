@@ -277,11 +277,7 @@ void dcm_heartbeat_callback(void)
 				if ((udb_heartbeat_counter % (HEARTBEAT_HZ/LOGGER_HZ)) == 0)
 #endif //
 				{
-#ifdef SPECTRAL_ANALYSIS
-                    send_spectral_data();
-#else
 					send_imu_data();
-#endif // SPECTRAL_ANALYSIS
 				}
 			}
 		}

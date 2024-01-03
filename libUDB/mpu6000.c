@@ -411,9 +411,7 @@ static void process_MPU_data(void)
 #endif // SPECTRAL_ANALYSIS
 
 #ifdef CONING_CORRECTION
-#ifndef SPECTRAL_ANALYSIS	
-	compute_coning_adjustment();
-#endif // SPECTRAL_ANALYSIS   
+	compute_coning_adjustment();   
 #endif // CONING_CORRECTION
 	//  trigger synchronous processing of sensor data
 	sample_counter = sample_counter+1 ;

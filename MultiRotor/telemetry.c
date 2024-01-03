@@ -256,7 +256,7 @@ extern uint16_t spectral_sample_number ;
 #ifdef SPECTRAL_ANALYSIS
 void log_burst_data(void)
 {
-    sample_index = 0 ;
+    sample_index = 1 ;
     while ( sample_index < SAMPLES_PER_BURST )
         {
             serial_output("%i,%i,%i\r\n",
@@ -529,7 +529,12 @@ void send_imu_data(void)
 #ifdef TILT_INIT
                 serial_output("\r\n\r\nRunmode\r\naccOn,logOn,nx_force,y_force,z_force,yaw8,pitch8,roll8,yaw,pitch,roll\r\n");        
 #else
+#ifdef SPECTRAL_ANALYSIS
+                spectral_sample_number = 0 ;
+                serial_output("\r\nx_gyro_xx,y_gyro_xx,z_gyro_xx,x_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx,tmptur_xx\r\n");
+#else
                 serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx,tmptur_xx\r\n");
+#endif // SPECTRAL_ANALYSIS
 #endif // TILT_INIT
 #else
                 serial_output("\r\ngyro_lck,accelOn,theta_sum_x,y,z,LPF1_x,y,z,LPF2_x,y,z\r\n");
@@ -776,7 +781,12 @@ void send_imu_data(void)
 #else
 #ifndef LOG_R_UPDATE
 #ifndef TILT_INIT
+#ifdef SPECTRAL_ANALYSIS
+            serial_output("%i,%i,%i,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u,%i\r\n",     
+                    x_gyro[0],y_gyro[0],z_gyro[0],
+#else
             serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u,%i\r\n",
+#endif // SPECTRAL_ANALYSIS
             	((double)(aero_force[0]))/ACCEL_FACTOR ,
 				((double)(aero_force[1]))/ACCEL_FACTOR ,
 				((double)(aero_force[2]))/ACCEL_FACTOR ,
@@ -792,6 +802,10 @@ void send_imu_data(void)
                 mpu_temp.value 
                     
 			);
+            
+#ifdef SPECTRAL_ANALYSIS
+            if ( spectral_sample_number == SAMPLES_PER_BURST ) udb_background_trigger(&log_burst_data);
+#endif // SPECTRAL_ANALYSIS
 #else
                 serial_output("%u,%u,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\r\n",
                         accelOn , logging_on ,

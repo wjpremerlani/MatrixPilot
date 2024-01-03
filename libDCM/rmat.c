@@ -640,9 +640,7 @@ void dcm_run_imu_step(void)
     roll_pitch_drift();         // local
 	rupdate();                  // local
 #ifdef CONING_CORRECTION
-#ifndef SPECTRAL_ANALYSIS
 	rmat_32_update();
-#endif // SPECTRAL_ANALYSIS
 #endif // CONING_CORRECTION
 	normalize();                // local
 
