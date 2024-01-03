@@ -383,6 +383,9 @@ void send_imu_data(void)
 		case 3:
 			{
 				serial_output(DATE);
+#ifdef SPECTRAL_ANALYSIS
+                serial_output("Spectral analysis logging.\r\n");
+#endif
 			}
 			break;
 		case 4:
