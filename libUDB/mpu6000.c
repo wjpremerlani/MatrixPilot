@@ -389,6 +389,18 @@ int16_t z_accel[10] ;
 
 #endif // SPECTRAL_ANALYSIS_CONTINUOUS
 
+#ifdef TEST_SLED
+
+uint8_t accel_read_buffer_index = 0 ;
+uint8_t accel_write_buffer_index = 0 ;
+int16_t accel_sample_number = 0 ;
+int16_t x_accel[10] ;
+int16_t y_accel[10] ;
+int16_t z_accel[10] ;
+
+#endif // TEST_SLED
+
+
 // executed for each of sample at the 8000 Hz sample rate
 static void process_MPU_data(void)
 {
@@ -420,7 +432,20 @@ static void process_MPU_data(void)
         spectral_sample_number ++ ;       
     }
 #endif // SPECTRAL_ANALYSIS_BURST
- #define XACCEL_VALUE (XACCEL_SIGN_ORIENTED ((udb_xaccel.value>>1) - (udb_xaccel.offset>>1)))   
+    
+#ifdef TEST_SLED
+    if ( sample_counter%5 == 0 )
+    {
+        accel_sample_number = sample_counter/5 ;
+        x_accel[5*accel_write_buffer_index+accel_sample_number] = 
+               XACCEL_SIGN_ORIENTED (mpu_data[xaccel_MPU_channel].BB-XACCEL_OFFSET) ;
+    //    y_accel[5*accel_write_buffer_index+accel_sample_number] = 
+     //          YACCEL_SIGN_ORIENTED (mpu_data[yaccel_MPU_channel].BB-YACCEL_OFFSET) ;
+    //    z_accel[5*accel_write_buffer_index+accel_sample_number] = 
+    //           ZACCEL_SIGN_ORIENTED (mpu_data[zaccel_MPU_channel].BB-ZACCEL_OFFSET) ;
+    }
+#endif // TEST_SLED
+    
 #ifdef SPECTRAL_ANALYSIS_CONTINUOUS
     if ( sample_counter%5 == 0 )
     {
@@ -433,7 +458,6 @@ static void process_MPU_data(void)
                ZACCEL_SIGN_ORIENTED (mpu_data[zaccel_MPU_channel].BB-ZACCEL_OFFSET) ;
     }
 #endif // SPECTRAL_ANALYSIS_CONTINUOUS
-
 
 #ifdef CONING_CORRECTION
 	compute_coning_adjustment();   
@@ -490,10 +514,16 @@ static void process_MPU_data(void)
 		reset_coning_adjustment();
 #endif // CONING_CORRECTION		
 		sample_counter = 0 ;
+        
 #ifdef SPECTRAL_ANALYSIS_CONTINUOUS
         accel_read_buffer_index = accel_write_buffer_index ;
         accel_write_buffer_index = ! accel_write_buffer_index ;
 #endif // SPECTRAL_ANALYSIS_CONTINUOUS
+        
+#ifdef TEST_SLED
+        accel_read_buffer_index = accel_write_buffer_index ;
+        accel_write_buffer_index = ! accel_write_buffer_index ;
+#endif // TEST_SLED
         
 		// perform the 200 Hz IMU calculations
 	_T2IF = 1; // trigger callback at a lower priority
