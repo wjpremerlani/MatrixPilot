@@ -50,8 +50,8 @@
 //#define SAMPLES_PER_BURST 80
 //#define SPECTRAL_ANALYSIS_CONTINUOUS
 //#define NORMAL_RUN // this one must be turned on for normal operation
-#define TEST_SLED
-//#define KUFEN
+//#define TEST_SLED
+#define KUFEN
 
 //#define ENABLE_ESP32
 

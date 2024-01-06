@@ -400,6 +400,17 @@ int16_t z_accel[10] ;
 
 #endif // TEST_SLED
 
+#ifdef KUFEN
+
+uint8_t accel_read_buffer_index = 0 ;
+uint8_t accel_write_buffer_index = 0 ;
+int16_t accel_sample_number = 0 ;
+int16_t x_accel[10] ;
+int16_t y_accel[10] ;
+int16_t z_accel[10] ;
+
+#endif // KUFEN
+
 
 // executed for each of sample at the 8000 Hz sample rate
 static void process_MPU_data(void)
@@ -445,6 +456,20 @@ static void process_MPU_data(void)
     //           ZACCEL_SIGN_ORIENTED (mpu_data[zaccel_MPU_channel].BB-ZACCEL_OFFSET) ;
     }
 #endif // TEST_SLED
+
+#ifdef KUFEN
+    if ( sample_counter%5 == 0 )
+    {
+        accel_sample_number = sample_counter/5 ;
+    //    x_accel[5*accel_write_buffer_index+accel_sample_number] = 
+     //          XACCEL_SIGN_ORIENTED (mpu_data[xaccel_MPU_channel].BB-XACCEL_OFFSET) ;
+    //    y_accel[5*accel_write_buffer_index+accel_sample_number] = 
+     //          YACCEL_SIGN_ORIENTED (mpu_data[yaccel_MPU_channel].BB-YACCEL_OFFSET) ;
+    z_accel[5*accel_write_buffer_index+accel_sample_number] = 
+                 ZACCEL_SIGN_ORIENTED (mpu_data[zaccel_MPU_channel].BB-ZACCEL_OFFSET) ;
+    }
+
+#endif KUFEN
     
 #ifdef SPECTRAL_ANALYSIS_CONTINUOUS
     if ( sample_counter%5 == 0 )
@@ -524,7 +549,12 @@ static void process_MPU_data(void)
         accel_read_buffer_index = accel_write_buffer_index ;
         accel_write_buffer_index = ! accel_write_buffer_index ;
 #endif // TEST_SLED
-        
+
+#ifdef KUFEN
+        accel_read_buffer_index = accel_write_buffer_index ;
+        accel_write_buffer_index = ! accel_write_buffer_index ;
+#endif // KUFEN
+  
 		// perform the 200 Hz IMU calculations
 	_T2IF = 1; // trigger callback at a lower priority
 //	if (callback) callback();   // was directly calling heartbeat()	if (callback) callback();   // was directl
