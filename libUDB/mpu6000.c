@@ -469,7 +469,7 @@ static void process_MPU_data(void)
                  ZACCEL_SIGN_ORIENTED (mpu_data[zaccel_MPU_channel].BB-ZACCEL_OFFSET) ;
     }
 
-#endif KUFEN
+#endif // KUFEN
     
 #ifdef SPECTRAL_ANALYSIS_CONTINUOUS
     if ( sample_counter%5 == 0 )

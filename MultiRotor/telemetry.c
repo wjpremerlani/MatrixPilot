@@ -256,10 +256,10 @@ extern int16_t z_accel[] ;
 void log_x_accel_data(void)
 {
     serial_output("%i\r\n%i\r\n%i\r\n%i\r\n",
-            x_accel[5*accel_read_buffer_index+1],
-            x_accel[5*accel_read_buffer_index+2],
-            x_accel[5*accel_read_buffer_index+3],
-            x_accel[5*accel_read_buffer_index+4]          
+            -x_accel[5*accel_read_buffer_index+1],
+            -x_accel[5*accel_read_buffer_index+2],
+            -x_accel[5*accel_read_buffer_index+3],
+            -x_accel[5*accel_read_buffer_index+4]          
             );
 }
 
@@ -273,13 +273,13 @@ extern int16_t x_accel[] ;
 extern int16_t y_accel[] ;
 extern int16_t z_accel[] ;
 
-void log_x_accel_data(void)
+void log_z_accel_data(void)
 {
     serial_output("%i\r\n%i\r\n%i\r\n%i\r\n",
-            z_accel[5*accel_read_buffer_index+1],
-            z_accel[5*accel_read_buffer_index+2],
-            z_accel[5*accel_read_buffer_index+3],
-            z_accel[5*accel_read_buffer_index+4]          
+            -z_accel[5*accel_read_buffer_index+1],
+            -z_accel[5*accel_read_buffer_index+2],
+            -z_accel[5*accel_read_buffer_index+3],
+            -z_accel[5*accel_read_buffer_index+4]          
             );
 }
 
@@ -297,18 +297,18 @@ extern int16_t z_accel[] ;
 void log_accel_data(void)
 {
     serial_output("%i,%i,%i\r\n%i,%i,%i\r\n%i,%i,%i\r\n%i,%i,%i\r\n",
-            x_accel[5*accel_read_buffer_index+1],
-            y_accel[5*accel_read_buffer_index+1],
-            z_accel[5*accel_read_buffer_index+1],
-            x_accel[5*accel_read_buffer_index+2],
-            y_accel[5*accel_read_buffer_index+2],
-            z_accel[5*accel_read_buffer_index+2],
-            x_accel[5*accel_read_buffer_index+3],
-            y_accel[5*accel_read_buffer_index+3],
-            z_accel[5*accel_read_buffer_index+3],
-            x_accel[5*accel_read_buffer_index+4],
-            y_accel[5*accel_read_buffer_index+4],
-            z_accel[5*accel_read_buffer_index+4]          
+            -x_accel[5*accel_read_buffer_index+1],
+            -y_accel[5*accel_read_buffer_index+1],
+           -z_accel[5*accel_read_buffer_index+1],
+            -x_accel[5*accel_read_buffer_index+2],
+            -y_accel[5*accel_read_buffer_index+2],
+            -z_accel[5*accel_read_buffer_index+2],
+            -x_accel[5*accel_read_buffer_index+3],
+            -y_accel[5*accel_read_buffer_index+3],
+            -z_accel[5*accel_read_buffer_index+3],
+            -x_accel[5*accel_read_buffer_index+4],
+            -y_accel[5*accel_read_buffer_index+4],
+            -z_accel[5*accel_read_buffer_index+4]          
             );
 }
 
@@ -926,7 +926,7 @@ void send_imu_data(void)
 
 #ifdef TEST_SLED
                 serial_output("%i,%.2f,%u\r\n",
-                x_accel[5*accel_read_buffer_index],
+                -x_accel[5*accel_read_buffer_index],
 #ifndef CONING_CORRECTION
 				pitch_angle , 
 #else
@@ -941,7 +941,7 @@ void send_imu_data(void)
 #ifdef KUFEN
         if(accel_read_buffer_index) {   
                 serial_output("%i,%.2f,%.2f,%u\r\n",
-                z_accel[5*accel_read_buffer_index],
+                -z_accel[5*accel_read_buffer_index],
 #ifndef CONING_CORRECTION
 				yaw_angle , roll_angle ,
 #else
@@ -953,9 +953,9 @@ void send_imu_data(void)
         else
         {
             serial_output("%i\r\n",
-                z_accel[5*accel_read_buffer_index]);
+                -z_accel[5*accel_read_buffer_index]);
         }
-            udb_background_trigger(&log_x_accel_data);            
+            udb_background_trigger(&log_z_accel_data);            
 
 #endif // KUFEN
                 
