@@ -454,16 +454,16 @@ void send_imu_data(void)
 			{
 				serial_output(DATE);
 #ifdef SPECTRAL_ANALYSIS_BURST
-                serial_output("Spectral analysis burst logging.\r\n");
+                serial_output("*--> roll analysis logging <--*\r\n");
 #endif // SPECTRAL_ANALYSIS_BURST
 #ifdef  SPECTRAL_ANALYSIS_CONTINUOUS
-                serial_output("All accel samples and run logging.\r\n");
+                serial_output("*--> force data at 8 kHz and euler angles at 200 Hz <--*\r\n");
 #endif //  SPECTRAL_ANALYSIS_CONTINUOUS
 #ifdef  TEST_SLED
-                serial_output("Sled testing logging.\r\n");
+                serial_output("*--> test sled logging <--*\r\n");
 #endif //  TEST_SLED
 #ifdef  KUFEN
-                serial_output("Kufen logging.\r\n");
+                serial_output("*--> Kufen logging <--*\r\n");
  #endif //  KUFEN                               
 			}
 			break;

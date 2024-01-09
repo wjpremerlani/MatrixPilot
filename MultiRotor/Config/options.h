@@ -1,6 +1,6 @@
 
 
-#define DATE "Wolf_pac_2 , firmware 4.4, 1/3/2024\r\n"
+#define DATE "Wolf_pac_2 , firmware 4.5, 1/9/2024\r\n"
 //#define DATE "Wold_pac_1, rev 2.5, 3/6/2023\r\n"
 
 //#define SIMULATED_GYRO
@@ -26,9 +26,9 @@
 //#define RESIDUAL_LOG_PERIOD 30  // 2 times per minute
 //#define RESIDUAL_LOG_PERIOD 15  // 4 times per minute
 //#define RESIDUAL_LOG_PERIOD 10  // 6 times per minute
-//#define RESIDUAL_LOG_PERIOD 5  // 12 times per minute
+#define RESIDUAL_LOG_PERIOD 5  // 12 times per minute
 //#define RESIDUAL_LOG_PERIOD 2  // 30 times per minute
-#define RESIDUAL_LOG_PERIOD 1  // 60 times per minute
+//#define RESIDUAL_LOG_PERIOD 1  // 60 times per minute
 
 // the following are used to measure offsets and gains for commissioning
 //#define RECORD_OFFSETS        // record raw accelerometer data
@@ -46,12 +46,12 @@
 //#define GYRO_DRIFT
 //#define ROAD_TEST
 //#define GYRO_LPF
-#define SPECTRAL_ANALYSIS_BURST
-#define SAMPLES_PER_BURST 80
+//#define SPECTRAL_ANALYSIS_BURST // 5 hz start at 15
+//#define SAMPLES_PER_BURST 80
 //#define SPECTRAL_ANALYSIS_CONTINUOUS
-//#define NORMAL_RUN // this one must be turned on for normal operation
-//#define TEST_SLED // set logging Hz to 200
-//#define KUFEN // set logging Hz to 200 and start angle to 30 degrees
+//#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
+//#define TEST_SLED // set logging Hz to 200 start at 15
+#define KUFEN // set logging Hz to 200 and start angle to 30 degrees
 
 //#define ENABLE_ESP32
 
@@ -80,12 +80,13 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	100
+#define LOGGER_HZ	200
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
 #define TILT_STOP_DELAY 1      // delay in seconds to allow for a roll over
-#define TILT_START	15          // tilt angle threshold in degrees to start recording a run
+#define TILT_START	30          // tilt angle to start for Kufen
+//#define TILT_START	15          // tilt angle threshold in degrees to start recording a run
 #define TILT_STOP	60          // tilt angle threshold in degrees to stop recording a run
 //#define TILT_STOP	135         // used for some types of ground testing
 
@@ -96,12 +97,12 @@
 //#define LUGE7_SN051
 //#define LUGE7_SN052
 //#define LUGE7_SN053
-//#define LUGE7_SN054
+#define LUGE7_SN054
 
 //#define LUGE7_SN101 // switched, used to be 108
 //#define LUGE7_SN102
 //#define LUGE7_SN103
-#define LUGE7_SN104
+//#define LUGE7_SN104
 //#define LUGE7_SN105
 //#define LUGE7_SN106
 //#define LUGE7_SN107

@@ -445,9 +445,9 @@ static void process_MPU_data(void)
 #endif // SPECTRAL_ANALYSIS_BURST
     
 #ifdef TEST_SLED
-    if ( sample_counter%5 == 0 )
+    if ( sample_counter%8== 0 )
     {
-        accel_sample_number = sample_counter/5 ;
+        accel_sample_number = sample_counter/8 ;
         x_accel[5*accel_write_buffer_index+accel_sample_number] = 
                XACCEL_SIGN_ORIENTED (mpu_data[xaccel_MPU_channel].BB-XACCEL_OFFSET) ;
     //    y_accel[5*accel_write_buffer_index+accel_sample_number] = 
@@ -458,9 +458,9 @@ static void process_MPU_data(void)
 #endif // TEST_SLED
 
 #ifdef KUFEN
-    if ( sample_counter%5 == 0 )
+    if ( sample_counter%8 == 0 )
     {
-        accel_sample_number = sample_counter/5 ;
+        accel_sample_number = sample_counter/8 ;
     //    x_accel[5*accel_write_buffer_index+accel_sample_number] = 
      //          XACCEL_SIGN_ORIENTED (mpu_data[xaccel_MPU_channel].BB-XACCEL_OFFSET) ;
     //    y_accel[5*accel_write_buffer_index+accel_sample_number] = 
@@ -472,9 +472,9 @@ static void process_MPU_data(void)
 #endif // KUFEN
     
 #ifdef SPECTRAL_ANALYSIS_CONTINUOUS
-    if ( sample_counter%5 == 0 )
+    if ( sample_counter%8 == 0 )
     {
-        accel_sample_number = sample_counter/5 ;
+        accel_sample_number = sample_counter/8 ;
         x_accel[5*accel_write_buffer_index+accel_sample_number] = 
                XACCEL_SIGN_ORIENTED (mpu_data[xaccel_MPU_channel].BB-XACCEL_OFFSET) ;
         y_accel[5*accel_write_buffer_index+accel_sample_number] = 
