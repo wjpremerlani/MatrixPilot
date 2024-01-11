@@ -961,9 +961,9 @@ void send_imu_data(void)
                 
 #ifdef SPECTRAL_ANALYSIS_CONTINUOUS
             serial_output("%i,%i,%i,%.2f,%.2f,%.2f,%u,%u,%u,%i\r\n",
-                x_accel[5*accel_read_buffer_index],
-                y_accel[5*accel_read_buffer_index],
-                z_accel[5*accel_read_buffer_index],
+               - x_accel[5*accel_read_buffer_index],
+               - y_accel[5*accel_read_buffer_index],
+               - z_accel[5*accel_read_buffer_index],
 #ifndef CONING_CORRECTION
 				heading ,  pitch_angle , roll_angle ,
 #else
