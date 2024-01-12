@@ -20,9 +20,9 @@
 
 // the following defines select what gets sent to the logger
 //#define LOG_IMU_WP1               // logs IMU data during a run for wolf_pac version 1
-#define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
+//#define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
 //#define START_TRACK_LOG         // logs 2 components of force and pitch
-#define LOG_RESIDUALS         // logs residual offsets between runs
+//#define LOG_RESIDUALS         // logs residual offsets between runs
 //#define RESIDUAL_LOG_PERIOD 30  // 2 times per minute
 //#define RESIDUAL_LOG_PERIOD 15  // 4 times per minute
 //#define RESIDUAL_LOG_PERIOD 10  // 6 times per minute
@@ -34,7 +34,7 @@
 //#define RECORD_OFFSETS        // record raw accelerometer data
 //#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
 //#define DEBUG_TABLE_BUILD
-//#define GYRO_OFFSETS          // verifies gyro temperature compensation table
+#define GYRO_OFFSETS          // verifies gyro temperature compensation table
 //#define GYRO_CALIB            // used to compute gyro calibration
 //#define CROSS_COUPLING          // measure cross coupling
 //#define FILTERED_ACCELEROMETER
@@ -51,13 +51,13 @@
 //#define SPECTRAL_ANALYSIS_CONTINUOUS
 //#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
 //#define TEST_SLED // set logging Hz to 200 start at 15
-#define KUFEN // set logging Hz to 200 and start angle to 30 degrees
+//#define KUFEN // set logging Hz to 200 and start angle to 30 degrees
 
 //#define ENABLE_ESP32
 
 // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
 // non-printable characters are written out, as header bytes for packets.
-#define USE_PACKETIZED_TELEMERTY
+//#define USE_PACKETIZED_TELEMERTY
 
 
 // Enable UDB7LUGE in a Board definition ifdef block below for new WolfPac1 wifi boards
@@ -85,8 +85,8 @@
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
 #define TILT_STOP_DELAY 1      // delay in seconds to allow for a roll over
-#define TILT_START	30          // tilt angle to start for Kufen
-//#define TILT_START	15          // tilt angle threshold in degrees to start recording a run
+//#define TILT_START	30          // tilt angle to start for Kufen
+#define TILT_START	15          // tilt angle threshold in degrees to start recording a run
 #define TILT_STOP	60          // tilt angle threshold in degrees to stop recording a run
 //#define TILT_STOP	135         // used for some types of ground testing
 
@@ -97,7 +97,7 @@
 //#define LUGE7_SN051
 //#define LUGE7_SN052
 //#define LUGE7_SN053
-#define LUGE7_SN054
+//#define LUGE7_SN054
 
 //#define LUGE7_SN101 // switched, used to be 108
 //#define LUGE7_SN102
@@ -122,7 +122,7 @@
 //#define LUGE7_SN121
 //#define LUGE7_SN122
 //#define LUGE7_SN123
-//#define LUGE7_SN124
+#define LUGE7_SN124
 //#define LUGE7_SN125
 //#define LUGE7_SN126
 //#define LUGE7_SN127
