@@ -27,6 +27,7 @@
 #include "../libUDB/servoOut.h"
 #include "../libUDB/ADchannel.h"
 #include "../libUDB/mcu.h"
+#include "../libUDB/libUDB.h"
 #include "../libDCM/matrix_vector_32_bit.h"
 #include "../libDCM/rmat_32.h"
 
@@ -167,6 +168,7 @@ extern union longww rmat_sum[];
 
 extern int16_t is_level ;
 
+
 uint16_t warmup_count = 0 ;
 uint16_t run_count = 0 ;
 void send_residual_data(void)
@@ -243,7 +245,143 @@ void send_residual_data(void)
 #endif // LOG_R_UPDATE
 	}
 }
+#ifdef TEST_SLED
 
+extern uint8_t accel_read_buffer_index ;
+extern uint8_t accel_write_buffer_index ;
+extern int16_t x_accel[] ;
+extern int16_t y_accel[] ;
+extern int16_t z_accel[] ;
+
+void log_x_accel_data(void)
+{
+    serial_output("%i\r\n%i\r\n%i\r\n%i\r\n",
+            -x_accel[5*accel_read_buffer_index+1],
+            -x_accel[5*accel_read_buffer_index+2],
+            -x_accel[5*accel_read_buffer_index+3],
+            -x_accel[5*accel_read_buffer_index+4]          
+            );
+}
+
+#endif // TEST_SLED
+
+#ifdef KUFEN
+
+extern uint8_t accel_read_buffer_index ;
+extern uint8_t accel_write_buffer_index ;
+extern int16_t x_accel[] ;
+extern int16_t y_accel[] ;
+extern int16_t z_accel[] ;
+
+void log_z_accel_data(void)
+{
+    serial_output("%i\r\n%i\r\n%i\r\n%i\r\n",
+            -z_accel[5*accel_read_buffer_index+1],
+            -z_accel[5*accel_read_buffer_index+2],
+            -z_accel[5*accel_read_buffer_index+3],
+            -z_accel[5*accel_read_buffer_index+4]          
+            );
+}
+
+#endif // KUFEN
+
+
+#ifdef SPECTRAL_ANALYSIS_CONTINUOUS
+
+extern uint8_t accel_read_buffer_index ;
+extern uint8_t accel_write_buffer_index ;
+extern int16_t x_accel[] ;
+extern int16_t y_accel[] ;
+extern int16_t z_accel[] ;
+
+void log_accel_data(void)
+{
+    serial_output("%i,%i,%i\r\n%i,%i,%i\r\n%i,%i,%i\r\n%i,%i,%i\r\n",
+            -x_accel[5*accel_read_buffer_index+1],
+            -y_accel[5*accel_read_buffer_index+1],
+           -z_accel[5*accel_read_buffer_index+1],
+            -x_accel[5*accel_read_buffer_index+2],
+            -y_accel[5*accel_read_buffer_index+2],
+            -z_accel[5*accel_read_buffer_index+2],
+            -x_accel[5*accel_read_buffer_index+3],
+            -y_accel[5*accel_read_buffer_index+3],
+            -z_accel[5*accel_read_buffer_index+3],
+            -x_accel[5*accel_read_buffer_index+4],
+            -y_accel[5*accel_read_buffer_index+4],
+            -z_accel[5*accel_read_buffer_index+4]          
+            );
+}
+
+#endif // SPECTRAL_ANALYSIS_CONTINUOUS
+
+
+#ifdef SPECTRAL_ANALYSIS_BURST
+uint16_t spectral_record_number ;
+uint16_t sample_index ;
+
+extern int16_t x_gyro[];
+extern int16_t y_gyro[];
+extern int16_t z_gyro[];
+extern uint16_t spectral_sample_number ;
+
+void log_burst_data(void)
+{
+    sample_index = 1 ;
+    while ( sample_index < SAMPLES_PER_BURST )
+        {
+            serial_output("%i,%i,%i\r\n",
+                x_gyro[sample_index],
+                y_gyro[sample_index],
+                z_gyro[sample_index]                    
+                    );
+            sample_index++ ;        
+        }
+    spectral_sample_number = 0 ; 
+}
+
+
+void send_spectral_data(void)
+{
+  	if (start_log == 1)
+	{
+		hasWrittenHeader = 0 ;
+#ifdef USE_PACKETIZED_TELEMERTY
+        is_first_header = 1;
+#endif
+		if ( is_first_header)
+		{
+			header_line = 0 ;
+			is_first_header = 0 ;
+		}
+		else
+		{	
+			header_line = 22 ;
+		}
+		start_log = 0 ;
+		logging_on = 1 ;
+#ifdef		ALWAYS_SYNC_GYROS
+		gyro_locking_on = 1 ;
+#else
+		gyro_locking_on = 0 ;
+#endif // ALWAYS_SYNC_GYROS	
+	}
+	if ( stop_log == 1)
+	{
+		stop_log = 0 ;
+		logging_on = 0 ;
+		gyro_locking_on = 1 ;
+        serial_output_start_end_packet(false);
+	}
+	if (logging_on == 0 ) return ;
+    if ( spectral_sample_number == SAMPLES_PER_BURST )
+    {
+        serial_output("0,0,0,%i,%i\r\n",
+            spectral_record_number++,
+            udb_cpu_load());
+        udb_background_trigger(&log_burst_data);
+    }
+}
+#endif // SPECTRAL_ANALYSIS_BURST
 void send_imu_data(void)
 {
 #ifndef ALWAYS_LOG
@@ -315,6 +453,18 @@ void send_imu_data(void)
 		case 3:
 			{
 				serial_output(DATE);
+#ifdef SPECTRAL_ANALYSIS_BURST
+                serial_output("*--> roll analysis logging <--*\r\n");
+#endif // SPECTRAL_ANALYSIS_BURST
+#ifdef  SPECTRAL_ANALYSIS_CONTINUOUS
+                serial_output("*--> force data at 1 kHz and euler angles at 200 Hz <--*\r\n");
+#endif //  SPECTRAL_ANALYSIS_CONTINUOUS
+#ifdef  TEST_SLED
+                serial_output("*--> test sled logging <--*\r\n");
+#endif //  TEST_SLED
+#ifdef  KUFEN
+                serial_output("*--> Kufen logging <--*\r\n");
+ #endif //  KUFEN                               
 			}
 			break;
 		case 4:
@@ -461,7 +611,35 @@ void send_imu_data(void)
 #ifdef TILT_INIT
                 serial_output("\r\n\r\nRunmode\r\naccOn,logOn,nx_force,y_force,z_force,yaw8,pitch8,roll8,yaw,pitch,roll\r\n");        
 #else
-                serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx,tmptur_xx\r\n");
+
+//#define SPECTRAL_ANALYSIS_CONTINUOUS
+//#define NORMAL_RUN
+//#define TEST_SLED
+//#define KUFEN                
+//#define SPECTRAL_ANALYSIS_BURST
+                
+#ifdef  NORMAL_RUN
+                serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx,tmptur_xx\r\n");              
+#endif // NORMAL_RUN
+
+#ifdef SPECTRAL_ANALYSIS_BURST
+                spectral_sample_number = 0 ;
+                serial_output("\r\nx_gyro_xx,y_gyro_xx,z_gyro_xx,x_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx,tmptur_xx\r\n");
+#endif //  SPECTRAL_ANALYSIS_BURST              
+
+#ifdef TEST_SLED
+                serial_output("\r\nx_force_xx,pitch_xx,seq_no_xx\r\n");
+#endif // TEST_SLED 
+                
+#ifdef KUFEN
+                serial_output("\r\nz_force_xx,yaw_xx,roll_xx,seq_no_xx\r\n");
+#endif // KUFEN
+                
+#ifdef SPECTRAL_ANALYSIS_CONTINUOUS
+                serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx,tmptur_xx\r\n");              
+#endif // SPECTRAL_ANALYSIS_CONTINUOUS                
+                  
+                
 #endif // TILT_INIT
 #else
                 serial_output("\r\ngyro_lck,accelOn,theta_sum_x,y,z,LPF1_x,y,z,LPF2_x,y,z\r\n");
@@ -708,6 +886,8 @@ void send_imu_data(void)
 #else
 #ifndef LOG_R_UPDATE
 #ifndef TILT_INIT
+
+#ifdef  NORMAL_RUN
             serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u,%i\r\n",
             	((double)(aero_force[0]))/ACCEL_FACTOR ,
 				((double)(aero_force[1]))/ACCEL_FACTOR ,
@@ -716,14 +896,88 @@ void send_imu_data(void)
 				heading ,  pitch_angle , roll_angle ,
 #else
 				heading_8k ,  pitch_angle_8k , roll_angle_8k ,
-#endif
-                
+#endif                
 				max_gyro/328  ,
                 udb_cpu_load(),
                 record_number ++ ,
-                mpu_temp.value 
-                    
+                mpu_temp.value                    
 			);
+
+#endif // NORMAL_RUN
+
+#ifdef SPECTRAL_ANALYSIS_BURST
+            serial_output("%i,%i,%i,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u,%i\r\n",     
+                x_gyro[0],y_gyro[0],z_gyro[0],
+                ((double)(aero_force[0]))/ACCEL_FACTOR ,
+				((double)(aero_force[1]))/ACCEL_FACTOR ,
+				((double)(aero_force[2]))/ACCEL_FACTOR ,
+#ifndef CONING_CORRECTION
+				heading ,  pitch_angle , roll_angle ,
+#else
+				heading_8k ,  pitch_angle_8k , roll_angle_8k ,
+#endif                
+				max_gyro/328  ,
+                udb_cpu_load(),
+                record_number ++ ,
+                mpu_temp.value                    
+			);
+            if ( spectral_sample_number == SAMPLES_PER_BURST ) udb_background_trigger(&log_burst_data);
+#endif //  SPECTRAL_ANALYSIS_BURST              
+
+#ifdef TEST_SLED
+                serial_output("%i,%.2f,%u\r\n",
+                -x_accel[5*accel_read_buffer_index],
+#ifndef CONING_CORRECTION
+				pitch_angle , 
+#else
+				pitch_angle_8k , 
+#endif                
+                record_number ++                  
+			);
+            udb_background_trigger(&log_x_accel_data);            
+
+#endif // TEST_SLED 
+                
+#ifdef KUFEN
+        if(accel_read_buffer_index) {   
+                serial_output("%i,%.2f,%.2f,%u\r\n",
+                -z_accel[5*accel_read_buffer_index],
+#ifndef CONING_CORRECTION
+				yaw_angle , roll_angle ,
+#else
+				yaw_angle_8k , roll_angle_8k ,
+#endif                
+                record_number ++                  
+			);
+        }
+        else
+        {
+            serial_output("%i\r\n",
+                -z_accel[5*accel_read_buffer_index]);
+        }
+            udb_background_trigger(&log_z_accel_data);            
+
+#endif // KUFEN
+                
+#ifdef SPECTRAL_ANALYSIS_CONTINUOUS
+            serial_output("%i,%i,%i,%.2f,%.2f,%.2f,%u,%u,%u,%i\r\n",
+               - x_accel[5*accel_read_buffer_index],
+               - y_accel[5*accel_read_buffer_index],
+               - z_accel[5*accel_read_buffer_index],
+#ifndef CONING_CORRECTION
+				heading ,  pitch_angle , roll_angle ,
+#else
+				heading_8k ,  pitch_angle_8k , roll_angle_8k ,
+#endif                
+				max_gyro/328  ,
+                udb_cpu_load(),
+                record_number ++ ,
+                mpu_temp.value                    
+			);
+            udb_background_trigger(&log_accel_data);            
+#endif // SPECTRAL_ANALYSIS_CONTINUOUS                
+
+         
 #else
                 serial_output("%u,%u,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\r\n",
                         accelOn , logging_on ,
