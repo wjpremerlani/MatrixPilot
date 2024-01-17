@@ -48,8 +48,8 @@
 //#define GYRO_LPF
 //#define SPECTRAL_ANALYSIS_BURST // 5 hz start at 15
 //#define SAMPLES_PER_BURST 80
-//#define SPECTRAL_ANALYSIS_CONTINUOUS
-#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
+#define SPECTRAL_ANALYSIS_CONTINUOUS
+//#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
 //#define TEST_SLED // set logging Hz to 200 start at 15
 //#define KUFEN // set logging Hz to 200 and start angle to 30 degrees
 
@@ -80,7 +80,7 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	100
+#define LOGGER_HZ	200
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
@@ -93,7 +93,7 @@
 // select a wolf_pac by defining its internal label
 //#define LUGE7_SNnew // used to program a WP without a serial number
 
-#define LUGE7_SN050
+//#define LUGE7_SN050
 //#define LUGE7_SN051
 //#define LUGE7_SN052
 //#define LUGE7_SN053
@@ -102,7 +102,7 @@
 //#define LUGE7_SN101 // switched, used to be 108
 //#define LUGE7_SN102
 //#define LUGE7_SN103
-//#define LUGE7_SN104
+#define LUGE7_SN104
 //#define LUGE7_SN105
 //#define LUGE7_SN106
 //#define LUGE7_SN107

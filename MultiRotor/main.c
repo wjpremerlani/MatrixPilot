@@ -88,7 +88,8 @@ int main (void)
 	dcm_init() ;
 	
 #ifdef USE_PACKETIZED_TELEMERTY
-	udb_serial_set_rate(460800) ;
+//	udb_serial_set_rate(460800) ;
+    udb_serial_set_rate(473933) ;
     start_log = 0;
     hasWrittenHeader = 1;
     logging_on = 0 ;
@@ -96,7 +97,8 @@ int main (void)
 #ifndef UDB7LUGE
 	udb_serial_set_rate(57600) ;
 #else
-    udb_serial_set_rate(460800) ;
+//    udb_serial_set_rate(460800) ;
+    udb_serial_set_rate(473933) ;    
 #endif // UDB7LUGE
 #endif // USE_PACKETIZED_TELEMERTY
     

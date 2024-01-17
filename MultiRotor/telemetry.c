@@ -628,11 +628,11 @@ void send_imu_data(void)
 #endif //  SPECTRAL_ANALYSIS_BURST              
 
 #ifdef TEST_SLED
-                serial_output("\r\nx_force_xx,pitch_xx,seq_no_xx\r\n");
+                serial_output("\r\nx_force_xx,pitch_xx,cpu_xx,seq_no_xx\r\n");
 #endif // TEST_SLED 
                 
 #ifdef KUFEN
-                serial_output("\r\nz_force_xx,yaw_xx,roll_xx,seq_no_xx\r\n");
+                serial_output("\r\nz_force_xx,yaw_xx,roll_xx,cpu_xx,seq_no_xx\r\n");
 #endif // KUFEN
                 
 #ifdef SPECTRAL_ANALYSIS_CONTINUOUS
@@ -925,14 +925,14 @@ void send_imu_data(void)
 #endif //  SPECTRAL_ANALYSIS_BURST              
 
 #ifdef TEST_SLED
-                serial_output("%i,%.2f,%u\r\n",
+                serial_output("%i,%.2f,%u,%u\r\n",
                 -x_accel[5*accel_read_buffer_index],
 #ifndef CONING_CORRECTION
 				pitch_angle , 
 #else
 				pitch_angle_8k , 
 #endif                
-                record_number ++                  
+                udb_cpu_load(),record_number ++                  
 			);
             udb_background_trigger(&log_x_accel_data);            
 
@@ -940,14 +940,14 @@ void send_imu_data(void)
                 
 #ifdef KUFEN
         if(accel_read_buffer_index) {   
-                serial_output("%i,%.2f,%.2f,%u\r\n",
+                serial_output("%i,%.2f,%.2f,%u,%u\r\n",
                 -z_accel[5*accel_read_buffer_index],
 #ifndef CONING_CORRECTION
 				yaw_angle , roll_angle ,
 #else
 				yaw_angle_8k , roll_angle_8k ,
 #endif                
-                record_number ++                  
+                udb_cpu_load(),record_number ++                  
 			);
         }
         else
