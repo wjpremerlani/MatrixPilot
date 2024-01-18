@@ -30,6 +30,7 @@
 #include "../libUDB/libUDB.h"
 #include "../libDCM/matrix_vector_32_bit.h"
 #include "../libDCM/rmat_32.h"
+#include "../libUDB/oscillator.h"
 
 // Used for serial debug output
 #include <stdio.h>
@@ -453,6 +454,7 @@ void send_imu_data(void)
 		case 3:
 			{
 				serial_output(DATE);
+                serial_output("%u MIPS\r\n",MIPS);
 #ifdef SPECTRAL_ANALYSIS_BURST
                 serial_output("*--> roll analysis logging <--*\r\n");
 #endif // SPECTRAL_ANALYSIS_BURST
