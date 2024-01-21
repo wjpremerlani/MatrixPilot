@@ -33,9 +33,9 @@
 //#define RESIDUAL_LOG_PERIOD 1  // 60 times per minute
 
 // the following are used to measure offsets and gains for commissioning
-//#define RECORD_OFFSETS        // record raw accelerometer data
-#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
-#define DEBUG_TABLE_BUILD
+#define RECORD_OFFSETS        // record raw accelerometer data
+//#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
+//#define DEBUG_TABLE_BUILD
 //#define GYRO_OFFSETS          // verifies gyro temperature compensation table
 //#define GYRO_CALIB            // used to compute gyro calibration
 //#define CROSS_COUPLING          // measure cross coupling
@@ -167,7 +167,7 @@
 //#define LUGE7_SN164
 //#define LUGE7_SN165
 //#define LUGE7_SN166
-//#define LUGE7_SN167
+#define LUGE7_SN167
 
 
 //#define LUGE7_SN168
@@ -188,7 +188,7 @@
 //#define LUGE7_SN180
 //#define LUGE7_SN181
 //#define LUGE7_SN182
-#define LUGE7_SN183
+//#define LUGE7_SN183
 
 
 //#define MINI6_SN4 // SN1, Tucker West
