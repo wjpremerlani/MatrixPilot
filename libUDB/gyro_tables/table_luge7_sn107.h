@@ -5,7 +5,7 @@
 
 // used in LUGE7_SN107
 
-int16_t residual_offset[] = { 0 , 0 , 0 } ;
+int16_t residual_offset[] = { 1150 , -684 , 422 } ;
 
 #define STEP_SIZE 64
 
