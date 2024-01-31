@@ -33,9 +33,9 @@
 //#define RESIDUAL_LOG_PERIOD 1  // 60 times per minute
 
 // the following are used to measure offsets and gains for commissioning
-#define RECORD_OFFSETS        // record raw accelerometer data
-//#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
-//#define DEBUG_TABLE_BUILD
+//#define RECORD_OFFSETS        // record raw accelerometer data
+#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
+#define DEBUG_TABLE_BUILD
 //#define GYRO_OFFSETS          // verifies gyro temperature compensation table
 //#define GYRO_CALIB            // used to compute gyro calibration
 //#define CROSS_COUPLING          // measure cross coupling
@@ -81,7 +81,7 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	100
+#define LOGGER_HZ	5
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
@@ -106,7 +106,8 @@
 //#define LUGE7_SN083
 
 //#define LUGE7_SN084
-#define LUGE7_SN085
+//#define LUGE7_SN085
+
 //#define LUGE7_SN086
 //#define LUGE7_SN087
 
@@ -192,13 +193,31 @@
 
 //#define LUGE7_SN176
 //#define LUGE7_SN177
+
 //#define LUGE7_SN178
 //#define LUGE7_SN179
-
 //#define LUGE7_SN180
 //#define LUGE7_SN181
+
 //#define LUGE7_SN182
 //#define LUGE7_SN183
+//#define LUGE7_SN184
+//#define LUGE7_SN185
+
+//#define LUGE7_SN186
+//#define LUGE7_SN187
+//#define LUGE7_SN188
+//#define LUGE7_SN189
+
+//#define LUGE7_SN190
+//#define LUGE7_SN191
+//#define LUGE7_SN192
+//#define LUGE7_SN193
+
+//#define LUGE7_SN194
+//#define LUGE7_SN195
+//#define LUGE7_SN196
+//#define LUGE7_SN197
 
 
 //#define MINI6_SN4 // SN1, Tucker West
