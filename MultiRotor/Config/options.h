@@ -212,12 +212,12 @@
 //#define LUGE7_SN190
 //#define LUGE7_SN191
 //#define LUGE7_SN192
-#define LUGE7_SN193
+//#define LUGE7_SN193
 
 //#define LUGE7_SN194
 //#define LUGE7_SN195
 //#define LUGE7_SN196
-//#define LUGE7_SN197
+#define LUGE7_SN197
 
 
 //#define MINI6_SN4 // SN1, Tucker West
