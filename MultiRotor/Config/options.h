@@ -1,6 +1,6 @@
 
 
-#define DATE "Wolf_pac_2 , firmware 4.6, 1/17/2024\r\n"
+#define DATE "Wolf_pac_2 , firmware 4.7, 2/7/2024\r\n"
 //#define DATE "Wold_pac_1, rev 2.5, 3/6/2023\r\n"
 
 //#define SIMULATED_GYRO
@@ -20,20 +20,20 @@
 
 // the following defines select what gets sent to the logger
 //#define LOG_IMU_WP1               // logs IMU data during a run for wolf_pac version 1
-//#define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
+#define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
                                     // you will also need to turn on the following:
-//#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
+#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
 //#define START_TRACK_LOG         // logs 2 components of force and pitch
-//#define LOG_RESIDUALS         // logs residual offsets between runs
+#define LOG_RESIDUALS         // logs residual offsets between runs
 //#define RESIDUAL_LOG_PERIOD 30  // 2 times per minute
 //#define RESIDUAL_LOG_PERIOD 15  // 4 times per minute
 //#define RESIDUAL_LOG_PERIOD 10  // 6 times per minute
-#define RESIDUAL_LOG_PERIOD 5  // 12 times per minute
+//#define RESIDUAL_LOG_PERIOD 5  // 12 times per minute
 //#define RESIDUAL_LOG_PERIOD 2  // 30 times per minute
-//#define RESIDUAL_LOG_PERIOD 1  // 60 times per minute
+#define RESIDUAL_LOG_PERIOD 1  // 60 times per minute
 
 // the following are used to measure offsets and gains for commissioning
-#define RECORD_OFFSETS        // record raw accelerometer data
+//#define RECORD_OFFSETS        // record raw accelerometer data
 //#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
 //#define DEBUG_TABLE_BUILD
 //#define GYRO_OFFSETS          // verifies gyro temperature compensation table
@@ -92,7 +92,7 @@
 //#define TILT_STOP	135         // used for some types of ground testing
 
 // select a wolf_pac by defining its internal label
-//#define LUGE7_SNnew // used to program a WP without a serial number
+#define LUGE7_SNnew // used to program a WP without a serial number
 
 //#define LUGE7_SN050
 //#define LUGE7_SN051
@@ -217,7 +217,7 @@
 //#define LUGE7_SN194
 //#define LUGE7_SN195
 //#define LUGE7_SN196
-#define LUGE7_SN197
+//#define LUGE7_SN197
 
 
 //#define MINI6_SN4 // SN1, Tucker West
@@ -2106,7 +2106,8 @@
 
 #ifdef GYRO_OFFSETS
 #undef LOGGER_HZ
-#define LOGGER_HZ 4
+//#define LOGGER_HZ 4
+#define LOGGER_HZ 1
 #undef ALWAYS_LOG
 #define ALWAYS_LOG
 #undef ALWAYS_SYNC_GYROS
@@ -2130,6 +2131,7 @@
 #undef LOG_IMU_WP2
 #undef LOGGER_HZ
 #define LOGGER_HZ 10
+//#define LOGGER_HZ 1
 #ifndef ALWAYS_LOG
 #define ALWAYS_LOG
 #endif // ALWAYS_LOG
