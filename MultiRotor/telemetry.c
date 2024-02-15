@@ -31,6 +31,7 @@
 #include "../libDCM/matrix_vector_32_bit.h"
 #include "../libDCM/rmat_32.h"
 #include "../libUDB/oscillator.h"
+#include "serial_output.h"
 
 // Used for serial debug output
 #include <stdio.h>
@@ -111,8 +112,6 @@ extern uint16_t max_gyro ;
 
 extern int16_t gplane[];
 extern int16_t aero_force[];
-extern void serial_output(const char* format, ...);
-void serial_output_start_end_packet(boolean isStart);
 // Prepare a line of serial output and start it sending
 // GPS data needs to be passed in
 extern int16_t yaw_rmat[];
@@ -371,7 +370,7 @@ void send_spectral_data(void)
 		stop_log = 0 ;
 		logging_on = 0 ;
 		gyro_locking_on = 1 ;
-        serial_output_start_end_packet(false);
+        serial_output_send_packet_cmd(PKT_CMD_STOP);
 	}
 	if (logging_on == 0 ) return ;
     if ( spectral_sample_number == SAMPLES_PER_BURST )
@@ -388,6 +387,7 @@ void send_imu_data(void)
 #ifndef ALWAYS_LOG
 	if (start_log == 1)
 	{
+		serial_output_send_packet_cmd(PKT_CMD_RUN_START);
 		hasWrittenHeader = 0 ;
 #ifdef USE_PACKETIZED_TELEMERTY
         is_first_header = 1;
@@ -414,7 +414,7 @@ void send_imu_data(void)
 		stop_log = 0 ;
 		logging_on = 0 ;
 		gyro_locking_on = 1 ;
-        serial_output_start_end_packet(false);
+        serial_output_send_packet_cmd(PKT_CMD_STOP);
 	}
 	if (logging_on == 0 ) return ;
 #else

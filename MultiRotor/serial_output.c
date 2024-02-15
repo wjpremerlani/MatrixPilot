@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include "serial_output.h"
 #include "../libUDB/libUDB.h"
 #include "../libUDB/oscillator.h"
 #include "../libUDB/interrupt.h"
@@ -39,7 +40,6 @@ extern int16_callback_fptr_t serial_callback_get_byte_to_send ;
 extern callback_uint8_fptr_t serial_callback_received_byte ;
 
 int vsnprintf (char * s, size_t n, const char * format, va_list arg );
-void serial_output_start_end_packet(boolean isStart);
 
 
 void __attribute__((__interrupt__, __no_auto_psv__)) _U2TXInterrupt(void)
@@ -102,7 +102,7 @@ void serial_output(const char* format, ...)
     va_start(arglist, format);
     
     if (!is_packet_open) {
-        serial_output_start_end_packet(true);
+        serial_output_send_packet_cmd(PKT_CMD_START);
     }
     
 	start_index = end_index[write_buffer_index];
@@ -111,8 +111,8 @@ void serial_output(const char* format, ...)
 	if (remaining > 5)
 	{
         if (num_chunks_buffered == 0) {
-            serial_buffer[write_buffer_index][start_index++] = 0xDE;
-            serial_buffer[write_buffer_index][start_index++] = 0xD2;
+            serial_buffer[write_buffer_index][start_index++] = PKT_CMD_HEADER;
+            serial_buffer[write_buffer_index][start_index++] = PKT_CMD_MSG;
             serial_buffer[write_buffer_index][start_index++] = 0x00; // Save space for length bytes
             serial_buffer[write_buffer_index][start_index++] = 0x00;
             packet_data_start = start_index;
@@ -148,7 +148,7 @@ void finalize_packet()
     }
 }
 
-void serial_output_start_end_packet(boolean isStart)
+void serial_output_send_packet_cmd(uint8_t cmd)
 {
     while (end_index[read_buffer_index]) ;
     
@@ -156,11 +156,13 @@ void serial_output_start_end_packet(boolean isStart)
     
 	int16_t remaining = SERIAL_BUFFER_SIZE - end_index[write_buffer_index];
     if (remaining > 2) {
-        serial_buffer[write_buffer_index][end_index[write_buffer_index]++] = 0xDE;
-        serial_buffer[write_buffer_index][end_index[write_buffer_index]++] = (isStart) ? 0xD1 : 0xD3;
+        serial_buffer[write_buffer_index][end_index[write_buffer_index]++] = PKT_CMD_HEADER;
+        serial_buffer[write_buffer_index][end_index[write_buffer_index]++] = cmd;
         read_buffer_index = write_buffer_index;
         write_buffer_index = !write_buffer_index;
-        is_packet_open = isStart;
+        if (cmd == PKT_CMD_START || cmd == PKT_CMD_STOP) {
+            is_packet_open = (cmd == PKT_CMD_START);
+        }
         udb_serial_start_sending_data();
     }
 }
@@ -203,7 +205,7 @@ void serial_output(const char* format, ...)
 	va_end(arglist);
 }
 
-void serial_output_start_end_packet(boolean isStart) {}
+void serial_output_send_packet_cmd(uint8_t cmd) {}
 
 int16_t udb_serial_callback_get_byte_to_send(void)
 {
