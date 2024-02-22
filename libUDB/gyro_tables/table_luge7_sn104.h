@@ -7,7 +7,8 @@
 
 #define STEP_SIZE 64
 
-int16_t residual_offset[] = { 0 , 0 , 0 } ;
+// resid off recorded 2/22/2024
+int16_t residual_offset[] = { 921 , -85 , 177 } ;
 
 #define TABLE_ORIGIN  ( -14796 )
 

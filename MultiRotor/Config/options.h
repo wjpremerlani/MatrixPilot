@@ -1,6 +1,6 @@
 
 
-#define DATE "Wolf_pac_2 , firmware 4.7, 2/7/2024\r\n"
+#define DATE "Wolf_pac_2 , firmware 4.8, 2/20/2024\r\n"
 //#define DATE "Wold_pac_1, rev 2.5, 3/6/2023\r\n"
 
 //#define SIMULATED_GYRO
@@ -34,9 +34,9 @@
 
 // the following are used to measure offsets and gains for commissioning
 //#define RECORD_OFFSETS        // record raw accelerometer data
-#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
-#define DEBUG_TABLE_BUILD
-//#define GYRO_OFFSETS          // verifies gyro temperature compensation table
+//#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
+//#define DEBUG_TABLE_BUILD
+#define GYRO_OFFSETS          // verifies gyro temperature compensation table
 //#define GYRO_CALIB            // used to compute gyro calibration
 //#define CROSS_COUPLING          // measure cross coupling
 //#define FILTERED_ACCELEROMETER
@@ -96,7 +96,7 @@
 
 //bill's research boards
 //#define LUGE7_SNts1
-#define LUGE7_SNts2
+//#define LUGE7_SNts2
 
 
 //#define LUGE7_SN050
@@ -120,7 +120,7 @@
 //#define LUGE7_SN101 // switched, used to be 108
 //#define LUGE7_SN102
 //#define LUGE7_SN103
-//#define LUGE7_SN104
+#define LUGE7_SN104
 //#define LUGE7_SN105
 //#define LUGE7_SN106
 //#define LUGE7_SN107
