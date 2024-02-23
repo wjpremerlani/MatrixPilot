@@ -12,10 +12,19 @@
 #define CALIBRATIONX	1.0167
 #define CALIBRATIONY	1.0175
 #define CALIBRATIONZ	1.0184
+#if (ACCEL_RANGE == 8)
 #define CALIB_GRAVITY	4096
 #define CAL_GRAV_X	4109
 #define CAL_GRAV_Y	4101
 #define CAL_GRAV_Z	4083
+#endif // ACCEL_RANGE == 8 
+
+#if (ACCEL_RANGE == 2)
+#define CALIB_GRAVITY	16384
+#define CAL_GRAV_X	16384
+#define CAL_GRAV_Y	16384
+#define CAL_GRAV_Z	16384
+#endif // ACCEL_RANGE == 2 
 
 // cross coupling not measured yet
 #define X_CROSS_COUPLING 0

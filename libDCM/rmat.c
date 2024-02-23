@@ -726,9 +726,9 @@ void estimate_velocity(void)
 	omegaAccum_float[1] = (((float)omegaAccum[1])*((float)GYRO_RANGE))/(57.296*((float)16384)) ;
 	omegaAccum_float[2] = (((float)omegaAccum[2])*((float)GYRO_RANGE))/(57.296*((float)16384)) ;
 			
-	gravity_long[0].WW= __builtin_mulss(rmat[6],2*CALIB_GRAVITY);
-	gravity_long[1].WW= __builtin_mulss(rmat[7],2*CALIB_GRAVITY);
-	gravity_long[2].WW= __builtin_mulss(rmat[8],2*CALIB_GRAVITY);
+	gravity_long[0].WW= 2*__builtin_mulss(rmat[6],CALIB_GRAVITY);
+	gravity_long[1].WW= 2*__builtin_mulss(rmat[7],CALIB_GRAVITY);
+	gravity_long[2].WW= 2*__builtin_mulss(rmat[8],CALIB_GRAVITY);
 	
 	gravity_estimate[0] = gravity_long[0]._.W1 ;
 	gravity_estimate[1] = gravity_long[1]._.W1 ;
