@@ -309,30 +309,30 @@ void log_x_accel_data(void)
     interpolated_tilt4[2].WW = interpolation_vector4[2].WW + bottom_row[2].WW ;
  
     
-    serial_output("%i,%i,%i,%i\r\n%i,%i,%i,%i\r\n%i,%i,%i,%i\r\n%i,%i,%i,%i\r\n",
+    serial_output("%i,%i\r\n%i,%i\r\n%i,%i\r\n%i,%i\r\n",
             -x_accel[5*accel_read_buffer_index+1],
      
             interpolated_tilt1[0]._.W1 ,
-            interpolated_tilt1[1]._.W1 ,
-            interpolated_tilt1[2]._.W1 ,
+            //interpolated_tilt1[1]._.W1 ,
+            //interpolated_tilt1[2]._.W1 ,
       
             -x_accel[5*accel_read_buffer_index+2],
  
             interpolated_tilt2[0]._.W1 ,
-            interpolated_tilt2[1]._.W1 ,
-            interpolated_tilt2[2]._.W1 ,
+            //interpolated_tilt2[1]._.W1 ,
+            //interpolated_tilt2[2]._.W1 ,
             
             -x_accel[5*accel_read_buffer_index+3],
  
             interpolated_tilt3[0]._.W1 ,
-            interpolated_tilt3[1]._.W1 ,
-            interpolated_tilt3[2]._.W1 ,    
+            //interpolated_tilt3[1]._.W1 ,
+            //interpolated_tilt3[2]._.W1 ,    
             
             -x_accel[5*accel_read_buffer_index+4] , 
             
-            interpolated_tilt4[0]._.W1 ,
-            interpolated_tilt4[1]._.W1 ,
-            interpolated_tilt4[2]._.W1 
+            interpolated_tilt4[0]._.W1 
+            //interpolated_tilt4[1]._.W1 ,
+            //interpolated_tilt4[2]._.W1 
  
                  
             );
@@ -537,7 +537,7 @@ void send_imu_data(void)
                 serial_output("*--> force data at 1 kHz and euler angles at 200 Hz <--*\r\n");
 #endif //  SPECTRAL_ANALYSIS_CONTINUOUS
 #ifdef  TEST_SLED
-                serial_output("*--> test sled logging <--*\r\n");
+                serial_output("*--> test sled, x_force and pitch logged at 1kHz <--*\r\n");
 #endif //  TEST_SLED
 #ifdef  KUFEN
                 serial_output("*--> Kufen logging <--*\r\n");
@@ -1006,9 +1006,11 @@ void send_imu_data(void)
 #endif //  SPECTRAL_ANALYSIS_BURST              
 
 #ifdef TEST_SLED
-                serial_output("%i,%i,%i,%i,%u,%u\r\n",
+                serial_output("%i,%i,%u,%u\r\n",
                 -x_accel[5*accel_read_buffer_index],
-                 rmat_32[6]._.W1 ,rmat_32[7]._.W1 ,rmat_32[8]._.W1 ,
+                 rmat_32[6]._.W1 ,
+                        
+                        //rmat_32[7]._.W1 ,rmat_32[8]._.W1 ,
                         
                 udb_cpu_load(),record_number ++                  
 			);
