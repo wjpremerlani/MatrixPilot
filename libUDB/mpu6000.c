@@ -397,7 +397,9 @@ int16_t accel_sample_number = 0 ;
 int16_t x_accel[10] ;
 int16_t y_accel[10] ;
 int16_t z_accel[10] ;
-
+union longww x_theta_32[10] ;
+union longww y_theta_32[10] ;
+union longww z_theta_32[10] ;
 #endif // TEST_SLED
 
 #ifdef KUFEN
@@ -450,6 +452,9 @@ static void process_MPU_data(void)
         accel_sample_number = sample_counter/8 ;
         x_accel[5*accel_write_buffer_index+accel_sample_number] = 
                XACCEL_SIGN_ORIENTED (mpu_data[xaccel_MPU_channel].BB-XACCEL_OFFSET) ;
+        x_theta_32[5*accel_write_buffer_index+accel_sample_number].WW = _theta_32[0].WW ;
+        y_theta_32[5*accel_write_buffer_index+accel_sample_number].WW = _theta_32[1].WW ;
+        z_theta_32[5*accel_write_buffer_index+accel_sample_number].WW = _theta_32[2].WW ;
     //    y_accel[5*accel_write_buffer_index+accel_sample_number] = 
      //          YACCEL_SIGN_ORIENTED (mpu_data[yaccel_MPU_channel].BB-YACCEL_OFFSET) ;
     //    z_accel[5*accel_write_buffer_index+accel_sample_number] = 

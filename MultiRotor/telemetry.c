@@ -252,14 +252,89 @@ extern uint8_t accel_write_buffer_index ;
 extern int16_t x_accel[] ;
 extern int16_t y_accel[] ;
 extern int16_t z_accel[] ;
+extern union longww x_theta_32[] ;
+extern union longww y_theta_32[] ;
+extern union longww z_theta_32[] ;
+
+union longww bottom_row[3] ;
+union longww coning_vector[3];
+union longww interpolation_vector1[3];
+union longww interpolation_vector2[3];
+union longww interpolation_vector3[3];
+union longww interpolation_vector4[3];
+union longww interpolated_tilt1[3];
+union longww interpolated_tilt2[3];
+union longww interpolated_tilt3[3];
+union longww interpolated_tilt4[3];
+
+
 
 void log_x_accel_data(void)
 {
-    serial_output("%i\r\n%i\r\n%i\r\n%i\r\n",
+    bottom_row[0].WW = rmat_32[6].WW ;
+    bottom_row[1].WW = rmat_32[7].WW ;
+    bottom_row[2].WW = rmat_32[8].WW ;
+    
+    coning_vector[0].WW = x_theta_32[5*accel_read_buffer_index+1].WW ;
+    coning_vector[1].WW = y_theta_32[5*accel_read_buffer_index+1].WW ;
+    coning_vector[2].WW = z_theta_32[5*accel_read_buffer_index+1].WW ;
+    VectorCross_32(interpolation_vector1,bottom_row,coning_vector ) ;
+    interpolated_tilt1[0].WW = interpolation_vector1[0].WW + bottom_row[0].WW ;
+    interpolated_tilt1[1].WW = interpolation_vector1[1].WW + bottom_row[1].WW ;
+    interpolated_tilt1[2].WW = interpolation_vector1[2].WW + bottom_row[2].WW ;
+ 
+    coning_vector[0].WW = x_theta_32[5*accel_read_buffer_index+2].WW ;
+    coning_vector[1].WW = y_theta_32[5*accel_read_buffer_index+2].WW ;
+    coning_vector[2].WW = z_theta_32[5*accel_read_buffer_index+2].WW ;
+    VectorCross_32(interpolation_vector2,bottom_row,coning_vector ) ;
+    interpolated_tilt2[0].WW = interpolation_vector2[0].WW + bottom_row[0].WW ;
+    interpolated_tilt2[1].WW = interpolation_vector2[1].WW + bottom_row[1].WW ;
+    interpolated_tilt2[2].WW = interpolation_vector2[2].WW + bottom_row[2].WW ;
+ 
+ 
+    coning_vector[0].WW = x_theta_32[5*accel_read_buffer_index+3].WW ;
+    coning_vector[1].WW = y_theta_32[5*accel_read_buffer_index+3].WW ;
+    coning_vector[2].WW = z_theta_32[5*accel_read_buffer_index+3].WW ;
+    VectorCross_32(interpolation_vector3,bottom_row,coning_vector ) ;
+    interpolated_tilt3[0].WW = interpolation_vector3[0].WW + bottom_row[0].WW ;
+    interpolated_tilt3[1].WW = interpolation_vector3[1].WW + bottom_row[1].WW ;
+    interpolated_tilt3[2].WW = interpolation_vector3[2].WW + bottom_row[2].WW ;
+ 
+    coning_vector[0].WW = x_theta_32[5*accel_read_buffer_index+4].WW ;
+    coning_vector[1].WW = y_theta_32[5*accel_read_buffer_index+4].WW ;
+    coning_vector[2].WW = z_theta_32[5*accel_read_buffer_index+4].WW ;
+    VectorCross_32(interpolation_vector4,bottom_row,coning_vector ) ;
+    interpolated_tilt4[0].WW = interpolation_vector4[0].WW + bottom_row[0].WW ;
+    interpolated_tilt4[1].WW = interpolation_vector4[1].WW + bottom_row[1].WW ;
+    interpolated_tilt4[2].WW = interpolation_vector4[2].WW + bottom_row[2].WW ;
+ 
+    
+    serial_output("%i,%i\r\n%i,%i\r\n%i,%i\r\n%i,%i\r\n",
             -x_accel[5*accel_read_buffer_index+1],
+     
+            interpolated_tilt1[0]._.W1 ,
+            //interpolated_tilt1[1]._.W1 ,
+            //interpolated_tilt1[2]._.W1 ,
+      
             -x_accel[5*accel_read_buffer_index+2],
+ 
+            interpolated_tilt2[0]._.W1 ,
+            //interpolated_tilt2[1]._.W1 ,
+            //interpolated_tilt2[2]._.W1 ,
+            
             -x_accel[5*accel_read_buffer_index+3],
-            -x_accel[5*accel_read_buffer_index+4]          
+ 
+            interpolated_tilt3[0]._.W1 ,
+            //interpolated_tilt3[1]._.W1 ,
+            //interpolated_tilt3[2]._.W1 ,    
+            
+            -x_accel[5*accel_read_buffer_index+4] , 
+            
+            interpolated_tilt4[0]._.W1 
+            //interpolated_tilt4[1]._.W1 ,
+            //interpolated_tilt4[2]._.W1 
+ 
+                 
             );
 }
 
@@ -462,7 +537,7 @@ void send_imu_data(void)
                 serial_output("*--> force data at 1 kHz and euler angles at 200 Hz <--*\r\n");
 #endif //  SPECTRAL_ANALYSIS_CONTINUOUS
 #ifdef  TEST_SLED
-                serial_output("*--> test sled logging <--*\r\n");
+                serial_output("*--> test sled, x_force and pitch logged at 1kHz <--*\r\n");
 #endif //  TEST_SLED
 #ifdef  KUFEN
                 serial_output("*--> Kufen logging <--*\r\n");
@@ -602,9 +677,11 @@ void send_imu_data(void)
 				yaw_previous = yaw_angle ;
 				heading_previous = 0.0 ;
 #else // CONING_CORRECTION
+#ifndef TEST_SLED
 				compute_euler_8k();
 				yaw_previous_8k = yaw_angle_8k ;
 				heading_previous_8k = 0.0 ;
+#endif // TEST_SLED
 #endif // CONING_CORRECTION
 #ifdef START_TRACK_LOG
                 serial_output("\r\nx_force_xx,y_force_xx,pitch_xx\r\n");
@@ -840,7 +917,9 @@ void send_imu_data(void)
 			yaw_previous = yaw_angle ;
 #else // CONING_CORRECTION
 #ifndef START_TRACK_LOG
+#ifndef TEST_SLED
 			compute_euler_8k();
+#endif // TEST_SLED
 #ifdef TILT_INIT
             compute_euler() ;
 #endif // TILT_INIT
@@ -927,13 +1006,12 @@ void send_imu_data(void)
 #endif //  SPECTRAL_ANALYSIS_BURST              
 
 #ifdef TEST_SLED
-                serial_output("%i,%.2f,%u,%u\r\n",
+                serial_output("%i,%i,%u,%u\r\n",
                 -x_accel[5*accel_read_buffer_index],
-#ifndef CONING_CORRECTION
-				pitch_angle , 
-#else
-				pitch_angle_8k , 
-#endif                
+                 rmat_32[6]._.W1 ,
+                        
+                        //rmat_32[7]._.W1 ,rmat_32[8]._.W1 ,
+                        
                 udb_cpu_load(),record_number ++                  
 			);
             udb_background_trigger(&log_x_accel_data);            
