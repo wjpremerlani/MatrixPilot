@@ -553,10 +553,6 @@ uint16_t omega_magnitude ;
 extern boolean logging_on ;
 
 extern boolean gyro_locking_on ;
-#define MOTION_RESET_DELAY 500 // 2.5 seconds
-//#define MOTION_RESET_DELAY 2000 // 10 seconds
-
-int16_t motion_reset_counter = MOTION_RESET_DELAY ;
 
 uint16_t accel_magnitude ;
 
@@ -565,20 +561,7 @@ static void roll_pitch_drift(void)
 	accel_magnitude = vector3_mag(gplane[0],gplane[1],gplane[2]);
 	omega_magnitude = vector3_mag(omegagyro[0],omegagyro[1],omegagyro[2]); // z has large drift, x and y are more stable
 	if((omega_magnitude>GYRO_OFFSET_MARGIN )	|| (abs(accel_magnitude-CALIB_GRAVITY/2)>CALIB_GRAVITY/8))
-//	{
-	//	if (motion_reset_counter == 0 )
-	//	{
-	//		motion_detect = 0 ;
-	//	}
-	//	else
-	//	{
-	//		motion_reset_counter = motion_reset_counter - 1;
-      //      motion_detect = 1 ;
-	//	}
-	//}
-	//else
 	{
- //       motion_reset_counter = MOTION_RESET_DELAY ;
 		motion_detect = 1 ;
 	}
     if ( logging_on == 0)
