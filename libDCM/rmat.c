@@ -192,6 +192,7 @@ union longlongLL long_long_accum ;
 
 #define GYRO_FILTER_SHIFT 12
 
+int16_t motion_detect = 1 ;
 extern int16_t accelOn ;
 extern int16_t gyro_offset[];
 union longww gyro_offset_32[] = { { 0 }, { 0 },  { 0 } };
@@ -199,12 +200,29 @@ union longww gyro_offset_32_coning[] = { { 0 }, { 0 },  { 0 } };
 union longww accum32 ;
 extern int32_t omegagyro32X[] ;
 extern union longww theta_32[];
-
+union longww omegagyro_filtered_backup[]= { { 0 }, { 0 },  { 0 } } ;
+extern int16_t check_for_jostle ;
 static inline void read_gyros(void)
 {
 	// fetch the gyro signals and subtract the baseline offset, 
 	// and adjust for variations in supply voltage
-	
+	if ( check_for_jostle == 1 )
+    {
+        if ( motion_detect == 1 )
+        {
+            omegagyro_filtered[0].WW = omegagyro_filtered_backup[0].WW ;
+            omegagyro_filtered[1].WW = omegagyro_filtered_backup[1].WW ;
+            omegagyro_filtered[2].WW = omegagyro_filtered_backup[2].WW ;
+            motion_detect = 0 ;             
+        }
+        else
+        {
+            omegagyro_filtered_backup[0].WW = omegagyro_filtered[0].WW ;
+            omegagyro_filtered_backup[1].WW = omegagyro_filtered[1].WW ;
+            omegagyro_filtered_backup[2].WW = omegagyro_filtered[2].WW ;
+        }
+        check_for_jostle = 0 ;
+    }
 	lookup_gyro_offsets();
 	gyro_offset_32[0].WW += ((int32_t)gyro_offset[0]) << 10 ;
 	gyro_offset_32[1].WW += ((int32_t)gyro_offset[1]) << 10 ;
@@ -539,27 +557,28 @@ extern boolean gyro_locking_on ;
 //#define MOTION_RESET_DELAY 2000 // 10 seconds
 
 int16_t motion_reset_counter = MOTION_RESET_DELAY ;
-int16_t motion_detect = 1 ;
+
 uint16_t accel_magnitude ;
+
 static void roll_pitch_drift(void)
 {	
 	accel_magnitude = vector3_mag(gplane[0],gplane[1],gplane[2]);
 	omega_magnitude = vector3_mag(omegagyro[0],omegagyro[1],omegagyro[2]); // z has large drift, x and y are more stable
-	if((omega_magnitude<GYRO_OFFSET_MARGIN )	&& (abs(accel_magnitude-CALIB_GRAVITY/2)<CALIB_GRAVITY/8))
+	if((omega_magnitude>GYRO_OFFSET_MARGIN )	|| (abs(accel_magnitude-CALIB_GRAVITY/2)>CALIB_GRAVITY/8))
+//	{
+	//	if (motion_reset_counter == 0 )
+	//	{
+	//		motion_detect = 0 ;
+	//	}
+	//	else
+	//	{
+	//		motion_reset_counter = motion_reset_counter - 1;
+      //      motion_detect = 1 ;
+	//	}
+	//}
+	//else
 	{
-		if (motion_reset_counter == 0 )
-		{
-			motion_detect = 0 ;
-		}
-		else
-		{
-			motion_reset_counter = motion_reset_counter - 1;
-            motion_detect = 1 ;
-		}
-	}
-	else
-	{
-        motion_reset_counter = MOTION_RESET_DELAY ;
+ //       motion_reset_counter = MOTION_RESET_DELAY ;
 		motion_detect = 1 ;
 	}
     if ( logging_on == 0)
