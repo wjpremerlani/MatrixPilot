@@ -171,6 +171,7 @@ extern int16_t is_level ;
 
 uint16_t warmup_count = 0 ;
 uint16_t run_count = 0 ;
+int16_t check_for_jostle = 0 ;
 void send_residual_data(void)
 {
 	if ( start_residuals == 1)
@@ -218,6 +219,7 @@ void send_residual_data(void)
 		//		omegagyro[1] + omgfilt_rounded[1]._.W1 ,
 		//		omegagyro[2] + omgfilt_rounded[2]._.W1 
     				);
+        check_for_jostle = 1;
 #else
         compute_euler();
         compute_euler_8k();

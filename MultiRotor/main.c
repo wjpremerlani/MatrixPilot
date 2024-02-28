@@ -64,6 +64,7 @@ void udb_blink_red(void)
 }
 void udb_blink_green(void)
 {
+#ifndef DEBUG_JOSTLE
     if ((udb_heartbeat_counter % BLINK_PERIOD) <= BLINK_ON_TIME)
     {
         LED_GREEN = LED_ON ;
@@ -72,6 +73,7 @@ void udb_blink_green(void)
     {
         LED_GREEN = LED_OFF ;
     }
+#endif // DEBUG_JOSTLE
 }
 
 int main (void)
@@ -188,19 +190,19 @@ void update_slide_detection(void)
 				slide_in_progress = 0 ;
 				LED_RED = LED_OFF ;
                 udb_blink_green();
-//				udb_led_toggle(LED_GREEN);
 			}
 			else
 			{
 				stop_count ++ ;
 //				LED_RED = LED_ON ;
                 udb_blink_red();
+#ifndef DEBUG_JOSTLE             
 				LED_GREEN = LED_OFF ;
+#endif // DEBUG_JOSTLE
 			}
 		else
 			{
 				stop_count = 0 ;
-//				udb_led_toggle(LED_RED);
                 udb_blink_red();
 				LED_GREEN = LED_OFF ;
 			}
@@ -216,14 +218,14 @@ void update_slide_detection(void)
 				stop_count = 0 ;
 				start_log = 1 ;
 				slide_in_progress = 1 ;
-//				udb_led_toggle(LED_RED);
                 udb_blink_red();
+#ifndef DEBUG_JOSTLE
 				LED_GREEN = LED_OFF ;
+#endif // DEBUG_JOSTLE 
 			}
 		else
 			{
 				LED_RED = LED_OFF ;
-//				udb_led_toggle(LED_GREEN);
                 udb_blink_green();
 			}
 		}
