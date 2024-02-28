@@ -18,6 +18,8 @@
 #define LUGE7 "UDBluge7 hardware, 200 Hz sampling.\r\n"
 #endif // CONING_CORRECTION
 
+#define DEBUG_JOSTLE
+
 // the following defines select what gets sent to the logger
 //#define LOG_IMU_WP1               // logs IMU data during a run for wolf_pac version 1
 #define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2

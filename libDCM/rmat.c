@@ -563,7 +563,14 @@ static void roll_pitch_drift(void)
 	if((omega_magnitude>GYRO_OFFSET_MARGIN )	|| (abs(accel_magnitude-CALIB_GRAVITY/2)>CALIB_GRAVITY/8))
 	{
 		motion_detect = 1 ;
+#ifdef DEBUG_JOSTLE
+        LED_GREEN = LED_ON ;     
 	}
+    else
+    {
+        LED_GREEN = LED_OFF ;
+#endif // DEBUG_JOSTLE
+    }
     if ( logging_on == 0)
     {
 		int16_t gplane_nomalized[3] ;
