@@ -1,6 +1,6 @@
 
 
-#define DATE "Wolf_pac_2 , firmware 4.8, 2/20/2024\r\n"
+#define DATE "Wolf_pac_2 , firmware 5.0, 2/28/2024\r\n"
 //#define DATE "Wold_pac_1, rev 2.5, 3/6/2023\r\n"
 
 //#define SIMULATED_GYRO
@@ -18,13 +18,13 @@
 #define LUGE7 "UDBluge7 hardware, 200 Hz sampling.\r\n"
 #endif // CONING_CORRECTION
 
-#define DEBUG_JOSTLE
+//#define DEBUG_JOSTLE // option for using the green LED for jostle testing
 
 // the following defines select what gets sent to the logger
 //#define LOG_IMU_WP1               // logs IMU data during a run for wolf_pac version 1
 #define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
                                     // you will also need to turn on the following:
-//#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
+#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
 //#define START_TRACK_LOG         // logs 2 components of force and pitch
 #define LOG_RESIDUALS         // logs residual offsets between runs
 //#define RESIDUAL_LOG_PERIOD 30  // 2 times per minute
@@ -53,7 +53,7 @@
 //#define SPECTRAL_ANALYSIS_BURST // 5 hz, start at 15, remember to also uncomment the following line
 //#define SAMPLES_PER_BURST 80 
 //#define SPECTRAL_ANALYSIS_CONTINUOUS
-#define TEST_SLED // set logging Hz to 200 start at 15
+//#define TEST_SLED // set logging Hz to 200 start at 15
 //#define KUFEN // set logging Hz to 200 and start angle to 30 degrees
 
 //#define ENABLE_ESP32

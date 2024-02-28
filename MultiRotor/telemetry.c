@@ -165,6 +165,7 @@ extern union longww theta_32_adjusted[];
 extern union longww theta_sum[];
 extern union longww r_update_sum[];
 extern union longww rmat_sum[];
+extern int16_t residual_offset[];
 
 extern int16_t is_level ;
 
@@ -600,6 +601,11 @@ void send_imu_data(void)
 			}
 			break ;
 		case 14:
+            {
+                serial_output("Gyro strain offsets are x=%i, y=%i, z=%i.\r\n",
+                        residual_offset[0] , residual_offset[1] , residual_offset[2]
+                        );
+            }
 			break ;
 		case 16:
 			{
