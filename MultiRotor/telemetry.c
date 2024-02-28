@@ -550,6 +550,9 @@ void send_imu_data(void)
 		case 4:
 			{
 				serial_output("Measurements expressed in north-east-down body frame.\r\n") ;
+#if (BOARD_ORIENTATION == ORIENTATION_YAWCCW)
+                serial_output("***>>> Special mounting must be rotated 90 degrees CCW <<<***\r\n") ;
+#endif // ORIENTATION_YAWCCW
 			}
 			break ;	
 		case 5:

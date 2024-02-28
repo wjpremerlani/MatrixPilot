@@ -210,9 +210,17 @@ extern int16_t subtract_saturate(int16_t x , int16_t y , int16_t margin ) ;
 
 
 #if ((BOARD_ORIENTATION == ORIENTATION_YAWCW) || (BOARD_ORIENTATION == ORIENTATION_YAWCCW))
-#define YRATE_VALUE  (XRATE_SIGN_ORIENTED  ((udb_xrate.value>>1)  - (udb_xrate.offset>>1) + vref_adj))
-#define XRATE_VALUE  (YRATE_SIGN_ORIENTED  ((udb_yrate.value>>1)  - (udb_yrate.offset>>1) + vref_adj))
-#define ZRATE_VALUE  (ZRATE_SIGN_ORIENTED  ((udb_zrate.value>>1)  - (udb_zrate.offset>>1) + vref_adj))
+#if ( GYRO_RANGE == 500)
+#define YRATE_VALUE  (XRATE_SIGN_ORIENTED  ((udb_xrate.value>>1)  - (udb_xrate.offset>>1)))
+#define XRATE_VALUE  (YRATE_SIGN_ORIENTED  ((udb_yrate.value>>1)  - (udb_yrate.offset>>1)))
+#define ZRATE_VALUE  (ZRATE_SIGN_ORIENTED  ((udb_zrate.value>>1)  - (udb_zrate.offset>>1)))
+#elif ( GYRO_RANGE == 1000)
+#define YRATE_VALUE  XRATE_SIGN_ORIENTED  subtract_saturate(udb_xrate.value,udb_xrate.offset,GYRO_OFFSET_MARGIN)
+#define XRATE_VALUE  YRATE_SIGN_ORIENTED  subtract_saturate(udb_yrate.value,udb_yrate.offset,GYRO_OFFSET_MARGIN)
+#define ZRATE_VALUE  ZRATE_SIGN_ORIENTED  subtract_saturate(udb_zrate.value,udb_zrate.offset,GYRO_OFFSET_MARGIN)
+#else
+#error "GYRO_RANGE must be either 500 or 1000"
+#endif // GYRO_RANGE
 #define YACCEL_VALUE (XACCEL_SIGN_ORIENTED ((udb_xaccel.value>>1) - (udb_xaccel.offset>>1)))
 #define XACCEL_VALUE (YACCEL_SIGN_ORIENTED ((udb_yaccel.value>>1) - (udb_yaccel.offset>>1)))
 #define ZACCEL_VALUE (ZACCEL_SIGN_ORIENTED ((udb_zaccel.value>>1) - (udb_zaccel.offset>>1)))
