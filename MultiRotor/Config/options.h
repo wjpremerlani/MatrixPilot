@@ -2221,7 +2221,7 @@
 #endif // 
 
 #ifdef CONING_CORRECTION
-#define FILTERING "1000 Hz force data is averaged in blocks of 5 samples.\r\n"
+#define FILTERING "Force data reported at 100 or 200 Hz is a 5 sample average of 1000 Hz sampling.\r\n"
 #else
 #define FILTERING "Force data is filtered by averaging pairs of 200 Hz samples.\r\n"
 #endif // CONING_CORRECTION

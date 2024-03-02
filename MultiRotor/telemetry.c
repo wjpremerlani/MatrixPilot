@@ -315,29 +315,28 @@ void log_x_accel_data(void)
     serial_output("%i,%i\r\n%i,%i\r\n%i,%i\r\n%i,%i\r\n",
             -x_accel[5*accel_read_buffer_index+1],
      
-            interpolated_tilt1[0]._.W1 ,
+            - interpolated_tilt1[0]._.W1 ,
             //interpolated_tilt1[1]._.W1 ,
             //interpolated_tilt1[2]._.W1 ,
       
             -x_accel[5*accel_read_buffer_index+2],
  
-            interpolated_tilt2[0]._.W1 ,
+            - interpolated_tilt2[0]._.W1 ,
             //interpolated_tilt2[1]._.W1 ,
             //interpolated_tilt2[2]._.W1 ,
             
             -x_accel[5*accel_read_buffer_index+3],
  
-            interpolated_tilt3[0]._.W1 ,
+           - interpolated_tilt3[0]._.W1 ,
             //interpolated_tilt3[1]._.W1 ,
             //interpolated_tilt3[2]._.W1 ,    
             
             -x_accel[5*accel_read_buffer_index+4] , 
             
-            interpolated_tilt4[0]._.W1 
+            - interpolated_tilt4[0]._.W1 
             //interpolated_tilt4[1]._.W1 ,
             //interpolated_tilt4[2]._.W1 
- 
-                 
+              
             );
 }
 
@@ -632,8 +631,13 @@ void send_imu_data(void)
 			break;
 		case 20:
 			{
+#ifdef KUFEN
+				serial_output("Run data rate is %i records/s.\r\nBetween runs residuals are logged every %i seconds.\r\n", 
+                        LOGGER_HZ/2 , RESIDUAL_LOG_PERIOD  );   
+#else
 				serial_output("Run data rate is %i records/s.\r\nBetween runs residuals are logged every %i seconds.\r\n", 
                         LOGGER_HZ , RESIDUAL_LOG_PERIOD  );
+#endif // KUFEN
 			}
 			break;
 		case 21:
@@ -1016,7 +1020,7 @@ void send_imu_data(void)
 #ifdef TEST_SLED
                 serial_output("%i,%i,%u,%u\r\n",
                 -x_accel[5*accel_read_buffer_index],
-                 rmat_32[6]._.W1 ,
+                 - rmat_32[6]._.W1 ,
                         
                         //rmat_32[7]._.W1 ,rmat_32[8]._.W1 ,
                         
