@@ -1,6 +1,6 @@
 
 
-#define DATE "Wolf_pac_2 , firmware 5.0, 2/28/2024\r\n"
+#define DATE "Wolf_pac_2 , firmware 5.1, 3/3/2024\r\n"
 //#define DATE "Wold_pac_1, rev 2.5, 3/6/2023\r\n"
 
 //#define SIMULATED_GYRO
