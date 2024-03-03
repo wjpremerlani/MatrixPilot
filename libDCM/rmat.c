@@ -201,6 +201,7 @@ union longww accum32 ;
 extern int32_t omegagyro32X[] ;
 extern union longww theta_32[];
 union longww omegagyro_filtered_backup[]= { { 0 }, { 0 },  { 0 } } ;
+union longlongLL theta_32_filtered_backup[] = { { 0 }, { 0 },  { 0 } };
 extern int16_t check_for_jostle ;
 static inline void read_gyros(void)
 {
@@ -213,6 +214,10 @@ static inline void read_gyros(void)
             omegagyro_filtered[0].WW = omegagyro_filtered_backup[0].WW ;
             omegagyro_filtered[1].WW = omegagyro_filtered_backup[1].WW ;
             omegagyro_filtered[2].WW = omegagyro_filtered_backup[2].WW ;
+            theta_32_filtered[0].LL = theta_32_filtered_backup[0].LL ;
+            theta_32_filtered[1].LL = theta_32_filtered_backup[1].LL ;
+            theta_32_filtered[2].LL = theta_32_filtered_backup[2].LL ;
+            
             motion_detect = 0 ;             
         }
         else
@@ -220,6 +225,9 @@ static inline void read_gyros(void)
             omegagyro_filtered_backup[0].WW = omegagyro_filtered[0].WW ;
             omegagyro_filtered_backup[1].WW = omegagyro_filtered[1].WW ;
             omegagyro_filtered_backup[2].WW = omegagyro_filtered[2].WW ;
+            theta_32_filtered_backup[0].LL = theta_32_filtered[0].LL ;
+            theta_32_filtered_backup[1].LL = theta_32_filtered[1].LL ;
+            theta_32_filtered_backup[2].LL = theta_32_filtered[2].LL ;          
         }
         check_for_jostle = 0 ;
     }
