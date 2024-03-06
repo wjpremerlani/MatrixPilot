@@ -18,8 +18,6 @@
 #define LUGE7 "UDBluge7 hardware, 200 Hz sampling.\r\n"
 #endif // CONING_CORRECTION
 
-//#define DEBUG_JOSTLE // option for using the green LED for jostle testing
-
 // the following defines select what gets sent to the logger
 //#define LOG_IMU_WP1               // logs IMU data during a run for wolf_pac version 1
 #define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
@@ -83,7 +81,7 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	100
+#define LOGGER_HZ	1
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
@@ -143,7 +141,7 @@
 //#define LUGE7_SN122
 //#define LUGE7_SN123
 //#define LUGE7_SN124
-//#define LUGE7_SN125
+#define LUGE7_SN125
 //#define LUGE7_SN126
 //#define LUGE7_SN127
 //#define LUGE7_SN128
@@ -224,7 +222,7 @@
 //#define LUGE7_SN194
 //#define LUGE7_SN195
 //#define LUGE7_SN196
-#define LUGE7_SN197
+//#define LUGE7_SN197
 
 
 //#define MINI6_SN4 // SN1, Tucker West

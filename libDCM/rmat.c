@@ -561,6 +561,12 @@ uint16_t omega_magnitude ;
 extern boolean logging_on ;
 
 extern boolean gyro_locking_on ;
+extern boolean slide_in_progress ;
+extern void udb_blink_red(void);
+extern void udb_blink_green(void);
+
+extern boolean led_red_run ;
+extern boolean led_green_standby ;
 
 uint16_t accel_magnitude ;
 
@@ -571,13 +577,34 @@ static void roll_pitch_drift(void)
 	if((omega_magnitude>GYRO_OFFSET_MARGIN )	|| (abs(accel_magnitude-CALIB_GRAVITY/2)>CALIB_GRAVITY/8))
 	{
 		motion_detect = 1 ;
-#ifdef DEBUG_JOSTLE
-        LED_GREEN = LED_ON ;     
-	}
+        if (slide_in_progress == 1 )
+        {
+            LED_RED = LED_ON ;
+        }
+        else
+        {
+            LED_GREEN = LED_ON ;
+        }
+    }
     else
     {
-        LED_GREEN = LED_OFF ;
-#endif // DEBUG_JOSTLE
+        if ( led_red_run == 1)
+        {
+            LED_RED = LED_ON ;
+        }
+        else
+        {
+            LED_RED = LED_OFF ;
+        }
+    
+        if ( led_green_standby == 1)
+        {
+            LED_GREEN = LED_ON ;
+        }
+        else
+        {
+            LED_GREEN = LED_OFF ;
+        }
     }
     if ( logging_on == 0)
     {
