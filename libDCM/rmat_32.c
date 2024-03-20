@@ -1,6 +1,7 @@
 #include "../libDCM/matrix_vector_32_bit.h"
 #include "../libUDB/udbTypes.h"
 #include "libDCM_internal.h"
+#include "../libUDB/heartbeat.h"
 
 extern union longww theta_32[];
 
@@ -29,9 +30,30 @@ union longww rmat_sum[] = {{0},{0},{0}} ;
 #define ADJUST_THETA
 
 extern boolean logging_on ;
+extern boolean matrix_jostle ;
+
+uint16_t matrix_jostle_counter = 0 ;
 
 void rmat_32_update(void)
 {
+#if ( CONTINUOUS_MATRIX_LOCKING == 1 )
+    if ((udb_heartbeat_counter % HEARTBEAT_HZ )== 0) matrix_jostle_counter ++ ;
+	if ( matrix_jostle_counter == JOSTLE_CHECK_PERIOD ) 
+	{
+		matrix_jostle_counter = 0 ;
+        if (matrix_jostle == 1)
+        {
+            matrix_jostle = 0 ;
+        }
+        else
+        {
+            convert_16_bit_to_32_bit(9,rmat_32,rmat) ;
+            convert_32_bit_to_16_bit(9,rmat_16,rmat_32) ;
+            return ;
+        }		
+    }   
+#endif
+    
     if (logging_on == 0 )
     {
         convert_16_bit_to_32_bit(9,rmat_32,rmat) ;
@@ -132,7 +154,6 @@ void rmat_32_update(void)
         
 	}
 }
-
 int32_t norm_32 ;
 int32_t renorm_32 ;
 int32_t error_32 ;

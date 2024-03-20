@@ -32,6 +32,7 @@
 #define RESIDUAL_LOG_PERIOD 2  // 30 times per minute
 //#define RESIDUAL_LOG_PERIOD 1  // 60 times per minute
 #define JOSTLE_CHECK_PERIOD 2 // check jostle every 2 seconds
+#define CONTINUOUS_MATRIX_LOCKING 1
 
 // the following are used to measure offsets and gains for commissioning
 //#define RECORD_OFFSETS        // record raw accelerometer data
