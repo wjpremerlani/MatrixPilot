@@ -201,6 +201,7 @@ union longww accum32 ;
 extern int32_t omegagyro32X[] ;
 extern union longww theta_32[];
 union longww omegagyro_filtered_backup[]= { { 0 }, { 0 },  { 0 } } ;
+union longlongLL theta_32_filtered_backup[] = { { 0 }, { 0 },  { 0 } };
 extern int16_t check_for_jostle ;
 static inline void read_gyros(void)
 {
@@ -213,6 +214,10 @@ static inline void read_gyros(void)
             omegagyro_filtered[0].WW = omegagyro_filtered_backup[0].WW ;
             omegagyro_filtered[1].WW = omegagyro_filtered_backup[1].WW ;
             omegagyro_filtered[2].WW = omegagyro_filtered_backup[2].WW ;
+            theta_32_filtered[0].LL = theta_32_filtered_backup[0].LL ;
+            theta_32_filtered[1].LL = theta_32_filtered_backup[1].LL ;
+            theta_32_filtered[2].LL = theta_32_filtered_backup[2].LL ;
+            
             motion_detect = 0 ;             
         }
         else
@@ -220,6 +225,9 @@ static inline void read_gyros(void)
             omegagyro_filtered_backup[0].WW = omegagyro_filtered[0].WW ;
             omegagyro_filtered_backup[1].WW = omegagyro_filtered[1].WW ;
             omegagyro_filtered_backup[2].WW = omegagyro_filtered[2].WW ;
+            theta_32_filtered_backup[0].LL = theta_32_filtered[0].LL ;
+            theta_32_filtered_backup[1].LL = theta_32_filtered[1].LL ;
+            theta_32_filtered_backup[2].LL = theta_32_filtered[2].LL ;          
         }
         check_for_jostle = 0 ;
     }
@@ -553,6 +561,12 @@ uint16_t omega_magnitude ;
 extern boolean logging_on ;
 
 extern boolean gyro_locking_on ;
+extern boolean slide_in_progress ;
+extern void udb_blink_red(void);
+extern void udb_blink_green(void);
+
+extern boolean led_red_run ;
+extern boolean led_green_standby ;
 
 uint16_t accel_magnitude ;
 
@@ -563,13 +577,34 @@ static void roll_pitch_drift(void)
 	if((omega_magnitude>GYRO_OFFSET_MARGIN )	|| (abs(accel_magnitude-CALIB_GRAVITY/2)>CALIB_GRAVITY/8))
 	{
 		motion_detect = 1 ;
-#ifdef DEBUG_JOSTLE
-        LED_GREEN = LED_ON ;     
-	}
+        if (slide_in_progress == 1 )
+        {
+            LED_RED = LED_ON ;
+        }
+        else
+        {
+            LED_GREEN = LED_ON ;
+        }
+    }
     else
     {
-        LED_GREEN = LED_OFF ;
-#endif // DEBUG_JOSTLE
+        if ( led_red_run == 1)
+        {
+            LED_RED = LED_ON ;
+        }
+        else
+        {
+            LED_RED = LED_OFF ;
+        }
+    
+        if ( led_green_standby == 1)
+        {
+            LED_GREEN = LED_ON ;
+        }
+        else
+        {
+            LED_GREEN = LED_OFF ;
+        }
     }
     if ( logging_on == 0)
     {

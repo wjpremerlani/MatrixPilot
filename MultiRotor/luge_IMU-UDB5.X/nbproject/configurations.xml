@@ -317,6 +317,7 @@
           <itemPath>../Config/options_LUGE7_SNts2.h</itemPath>
         </logicalFolder>
         <itemPath>../rotorLib.h</itemPath>
+        <itemPath>../serial_output.h</itemPath>
       </logicalFolder>
       <logicalFolder name="MultiRotor/Config"
                      displayName="MultiRotor/Config"

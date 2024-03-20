@@ -49,31 +49,32 @@ void offsets_init(void) ;
 const int max_tilt = 0 ;  // maximum tilt in byte cicular
 int commanded_tilt_gain ;
 
-#define BLINK_PERIOD 100
+//#define BLINK_PERIOD 100
+#define BLINK_PERIOD 200
 #define BLINK_ON_TIME 20 
+boolean led_red_run = 0 ;
+boolean led_green_standby = 0 ;
 void udb_blink_red(void)
 {
     if ((udb_heartbeat_counter % BLINK_PERIOD) <= BLINK_ON_TIME)
     {
-        LED_RED = LED_ON ;
+        led_red_run = 1 ;
     }
     else
     {
-        LED_RED = LED_OFF ;
+        led_red_run = 0 ;
     }
 }
 void udb_blink_green(void)
 {
-#ifndef DEBUG_JOSTLE
     if ((udb_heartbeat_counter % BLINK_PERIOD) <= BLINK_ON_TIME)
     {
-        LED_GREEN = LED_ON ;
+        led_green_standby = 1 ;
     }
     else
     {
-        LED_GREEN = LED_OFF ;
+        led_green_standby = 0 ;
     }
-#endif // DEBUG_JOSTLE
 }
 
 int main (void)
@@ -189,22 +190,22 @@ void update_slide_detection(void)
 				stop_log = 1 ;
 				slide_in_progress = 0 ;
 				LED_RED = LED_OFF ;
+                led_red_run = 0 ;
                 udb_blink_green();
 			}
 			else
 			{
 				stop_count ++ ;
-//				LED_RED = LED_ON ;
-                udb_blink_red();
-#ifndef DEBUG_JOSTLE             
+                udb_blink_red();             
 				LED_GREEN = LED_OFF ;
-#endif // DEBUG_JOSTLE
+                led_green_standby = 0 ;
 			}
 		else
 			{
 				stop_count = 0 ;
                 udb_blink_red();
 				LED_GREEN = LED_OFF ;
+                led_green_standby = 0 ;
 			}
 		}
 	else
@@ -219,13 +220,13 @@ void update_slide_detection(void)
 				start_log = 1 ;
 				slide_in_progress = 1 ;
                 udb_blink_red();
-#ifndef DEBUG_JOSTLE
 				LED_GREEN = LED_OFF ;
-#endif // DEBUG_JOSTLE 
+                led_green_standby = 0 ;
 			}
 		else
 			{
 				LED_RED = LED_OFF ;
+                led_red_run = 0 ;
                 udb_blink_green();
 			}
 		}
