@@ -203,10 +203,17 @@ extern union longww theta_32[];
 union longww omegagyro_filtered_backup[]= { { 0 }, { 0 },  { 0 } } ;
 union longlongLL theta_32_filtered_backup[] = { { 0 }, { 0 },  { 0 } };
 extern int16_t check_for_jostle ;
+uint16_t jostle_counter = 0 ;
 static inline void read_gyros(void)
 {
 	// fetch the gyro signals and subtract the baseline offset, 
 	// and adjust for variations in supply voltage
+    if ((udb_heartbeat_counter % HEARTBEAT_HZ )== 0) jostle_counter ++ ;
+			if ( jostle_counter == JOSTLE_CHECK_PERIOD ) 
+			{
+				jostle_counter = 0 ;
+				check_for_jostle = 1 ;
+			}
 	if ( check_for_jostle == 1 )
     {
         if ( motion_detect == 1 )
@@ -252,7 +259,7 @@ static inline void read_gyros(void)
 
     
 #ifdef CONING_CORRECTION
-    if(accelOn == 1)
+    if(motion_detect == 0)
     {
 	omegagyro_filtered[0].WW += ((int32_t)(-omegagyro32X[0])>>(GYRO_FILTER_SHIFT-11)) 
           + (( -((int32_t)(omegagyro_filtered[0].WW ))
@@ -276,7 +283,7 @@ static inline void read_gyros(void)
     }
 #else
 	
-	if (accelOn == 1)
+	if (motion_detect == 0 )
 	{
 	accum32._.W1 = -omegagyro[0] ;
 	accum32._.W0 = 0 ;

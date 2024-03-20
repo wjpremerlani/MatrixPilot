@@ -1,6 +1,6 @@
 
 
-#define DATE "Wolf_pac_2 , firmware 5.1, 3/8/2024\r\n"
+#define DATE "Wolf_pac_2 , firmware 5.2, 3/20/2024\r\n"
 //#define DATE "Wold_pac_1, rev 2.5, 3/6/2023\r\n"
 
 //#define SIMULATED_GYRO
@@ -20,23 +20,24 @@
 
 // the following defines select what gets sent to the logger
 //#define LOG_IMU_WP1               // logs IMU data during a run for wolf_pac version 1
-//#define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
+#define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
                                     // you will also need to turn on the following:
-//#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
+#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
 //#define START_TRACK_LOG         // logs 2 components of force and pitch
-//#define LOG_RESIDUALS         // logs residual offsets between runs
+#define LOG_RESIDUALS         // logs residual offsets between runs
 //#define RESIDUAL_LOG_PERIOD 30  // 2 times per minute
 //#define RESIDUAL_LOG_PERIOD 15  // 4 times per minute
 //#define RESIDUAL_LOG_PERIOD 10  // 6 times per minute
 //#define RESIDUAL_LOG_PERIOD 5  // 12 times per minute
 #define RESIDUAL_LOG_PERIOD 2  // 30 times per minute
 //#define RESIDUAL_LOG_PERIOD 1  // 60 times per minute
+#define JOSTLE_CHECK_PERIOD 2 // check jostle every 2 seconds
 
 // the following are used to measure offsets and gains for commissioning
 //#define RECORD_OFFSETS        // record raw accelerometer data
 //#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
 //#define DEBUG_TABLE_BUILD
-#define GYRO_OFFSETS          // verifies gyro temperature compensation table
+//#define GYRO_OFFSETS          // verifies gyro temperature compensation table
 //#define GYRO_CALIB            // used to compute gyro calibration
 //#define CROSS_COUPLING          // measure cross coupling
 //#define FILTERED_ACCELEROMETER
@@ -81,7 +82,7 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	5
+#define LOGGER_HZ	1
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
@@ -96,7 +97,7 @@
 
 //bill's research boards
 //#define LUGE7_SNts1
-//#define LUGE7_SNts2
+#define LUGE7_SNts2
 
 
 //#define LUGE7_SN050
@@ -108,7 +109,7 @@
 //#define LUGE7_SN080
 //#define LUGE7_SN081
 //#define LUGE7_SN082
-#define LUGE7_SN083
+//#define LUGE7_SN083
 
 //#define LUGE7_SN084
 //#define LUGE7_SN085
