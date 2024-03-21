@@ -444,7 +444,7 @@ static void rupdate(void)
 
 #ifdef CONING_CORRECTION_IN_RMAT
 
-	if (accelOn == 1 )
+	if ((accelOn == 1 ) ||(CONTINUOUS_MATRIX_LOCKING==1))
 	{
 		// construct the delta angle matrix without coning correction
 		// because it includes residual offset compensation
