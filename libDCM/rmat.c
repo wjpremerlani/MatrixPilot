@@ -203,10 +203,17 @@ extern union longww theta_32[];
 union longww omegagyro_filtered_backup[]= { { 0 }, { 0 },  { 0 } } ;
 union longlongLL theta_32_filtered_backup[] = { { 0 }, { 0 },  { 0 } };
 extern int16_t check_for_jostle ;
+uint16_t jostle_counter = 0 ;
 static inline void read_gyros(void)
 {
 	// fetch the gyro signals and subtract the baseline offset, 
 	// and adjust for variations in supply voltage
+    if ((udb_heartbeat_counter % HEARTBEAT_HZ )== 0) jostle_counter ++ ;
+			if ( jostle_counter == JOSTLE_CHECK_PERIOD ) 
+			{
+				jostle_counter = 0 ;
+				check_for_jostle = 1 ;
+			}
 	if ( check_for_jostle == 1 )
     {
         if ( motion_detect == 1 )
@@ -252,7 +259,7 @@ static inline void read_gyros(void)
 
     
 #ifdef CONING_CORRECTION
-    if(accelOn == 1)
+    if(motion_detect == 0)
     {
 	omegagyro_filtered[0].WW += ((int32_t)(-omegagyro32X[0])>>(GYRO_FILTER_SHIFT-11)) 
           + (( -((int32_t)(omegagyro_filtered[0].WW ))
@@ -276,7 +283,7 @@ static inline void read_gyros(void)
     }
 #else
 	
-	if (accelOn == 1)
+	if (motion_detect == 0 )
 	{
 	accum32._.W1 = -omegagyro[0] ;
 	accum32._.W0 = 0 ;
@@ -400,7 +407,7 @@ static void rupdate(void)
 	
 	// gyro_fraction._.W0 intentionally not zeroed out
 		
-	if (accelOn == 1 )
+	if ((accelOn == 1 ) ||(CONTINUOUS_MATRIX_LOCKING==1))
 	{
 		gyro_fraction[0].WW = gyro_fraction[0].WW + gyroCorrectionIntegral[0].WW ;
 		gyro_fraction[1].WW = gyro_fraction[1].WW + gyroCorrectionIntegral[1].WW ;
@@ -437,7 +444,7 @@ static void rupdate(void)
 
 #ifdef CONING_CORRECTION_IN_RMAT
 
-	if (accelOn == 1 )
+	if ((accelOn == 1 ) ||(CONTINUOUS_MATRIX_LOCKING==1))
 	{
 		// construct the delta angle matrix without coning correction
 		// because it includes residual offset compensation
@@ -569,12 +576,20 @@ extern boolean led_red_run ;
 extern boolean led_green_standby ;
 
 uint16_t accel_magnitude ;
+boolean matrix_jostle = 0 ;
+#define MATRIX_GYRO_OFFSET_MARGIN 300
 
 static void roll_pitch_drift(void)
 {	
 	accel_magnitude = vector3_mag(gplane[0],gplane[1],gplane[2]);
 	omega_magnitude = vector3_mag(omegagyro[0],omegagyro[1],omegagyro[2]); // z has large drift, x and y are more stable
-	if((omega_magnitude>GYRO_OFFSET_MARGIN )	|| (abs(accel_magnitude-CALIB_GRAVITY/2)>CALIB_GRAVITY/8))
+	if((omega_magnitude>MATRIX_GYRO_OFFSET_MARGIN )	|| (abs(accel_magnitude-CALIB_GRAVITY/2)>CALIB_GRAVITY/8))
+	{
+        matrix_jostle = 1 ;
+    }
+    
+    
+    if((omega_magnitude>GYRO_OFFSET_MARGIN )	|| (abs(accel_magnitude-CALIB_GRAVITY/2)>CALIB_GRAVITY/8))
 	{
 		motion_detect = 1 ;
         if (slide_in_progress == 1 )
@@ -606,7 +621,7 @@ static void roll_pitch_drift(void)
             LED_GREEN = LED_OFF ;
         }
     }
-    if ( logging_on == 0)
+    if (( logging_on == 0)||(CONTINUOUS_MATRIX_LOCKING==1))
     {
 		int16_t gplane_nomalized[3] ;
 		vector3_normalize( gplane_nomalized , gplane ) ;
@@ -619,11 +634,22 @@ static void roll_pitch_drift(void)
 		dirOverGndHGPS[1] = 0 ;
 		dirOverGndHGPS[2] = 0 ;
         
-        VectorCross(errorYawground, dirOverGndHrmat , dirOverGndHGPS );
+        if ( logging_on == 0)
+        {
         
-        // convert to "plane" frame:
-		// *** Note: this accomplishes multiplication rmat transpose times errorYawground!!
-		MatrixMultiply(1, 3, 3, errorYawplane, errorYawground, rmat) ;
+            VectorCross(errorYawground, dirOverGndHrmat , dirOverGndHGPS );
+        
+            // convert to "plane" frame:
+            // *** Note: this accomplishes multiplication rmat transpose times errorYawground!!
+            MatrixMultiply(1, 3, 3, errorYawplane, errorYawground, rmat) ;
+        }
+        else
+        {
+            errorYawplane[0]= 0 ;
+            errorYawplane[1]= 0 ;
+            errorYawplane[2]= 0 ;
+            
+        }
 
 	}
 	else

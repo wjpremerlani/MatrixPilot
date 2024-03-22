@@ -220,7 +220,6 @@ void send_residual_data(void)
 		//		omegagyro[1] + omgfilt_rounded[1]._.W1 ,
 		//		omegagyro[2] + omgfilt_rounded[2]._.W1 
     				);
-        check_for_jostle = 1;
 #else
         compute_euler();
         compute_euler_8k();
