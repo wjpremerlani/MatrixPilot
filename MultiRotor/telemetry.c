@@ -605,6 +605,13 @@ void send_imu_data(void)
                         );
             }
 			break ;
+        case 15:
+            {
+                serial_output("Gyro jostle detection thresholds are %i, %i.\r\n",
+                        GYRO_OFFSET_MARGIN , MATRIX_GYRO_OFFSET_MARGIN 
+                        );
+            }
+            break ;
 		case 16:
 			{
 				serial_output("Tilt start angle = %i deg, stop = %i deg.\r\n", TILT_START , TILT_STOP);
@@ -709,7 +716,11 @@ void send_imu_data(void)
 //#define SPECTRAL_ANALYSIS_BURST
                 
 #ifdef  NORMAL_RUN
+#ifdef LOG_PITCH_RATE
+                serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx,pitch_rate_xx\r\n");                              
+#else
                 serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx,tmptur_xx\r\n");              
+#endif // LOG_PITCH_RATE
 #endif // NORMAL_RUN
 
 #ifdef SPECTRAL_ANALYSIS_BURST
@@ -992,7 +1003,11 @@ void send_imu_data(void)
 				max_gyro/328  ,
                 udb_cpu_load(),
                 record_number ++ ,
-                mpu_temp.value                    
+#ifdef LOG_PITCH_RATE
+                omegagyro[1]
+#else
+                mpu_temp.value 
+#endif // LOG_PITCH_RATE
 			);
 
 #endif // NORMAL_RUN

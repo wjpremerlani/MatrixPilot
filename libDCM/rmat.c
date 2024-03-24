@@ -577,7 +577,6 @@ extern boolean led_green_standby ;
 
 uint16_t accel_magnitude ;
 boolean matrix_jostle = 0 ;
-#define MATRIX_GYRO_OFFSET_MARGIN 300
 
 static void roll_pitch_drift(void)
 {	

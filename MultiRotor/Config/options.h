@@ -24,6 +24,7 @@
                                     // you will also need to turn on the following:
 #define NORMAL_RUN // this one must be turned on for normal operation 100 hz
 //#define START_TRACK_LOG         // logs 2 components of force and pitch
+#define LOG_PITCH_RATE
 #define LOG_RESIDUALS         // logs residual offsets between runs
 //#define RESIDUAL_LOG_PERIOD 30  // 2 times per minute
 //#define RESIDUAL_LOG_PERIOD 15  // 4 times per minute
@@ -95,7 +96,7 @@
 //#define LUGE7_SNnew // used to program a WP without a serial number
 
 //bill's research boards
-//#define LUGE7_SNts1
+#define LUGE7_SNts1
 //#define LUGE7_SNts2
 
 
@@ -219,7 +220,7 @@
 //#define LUGE7_SN192
 //#define LUGE7_SN193
 
-#define LUGE7_SN194
+//#define LUGE7_SN194
 //#define LUGE7_SN195
 //#define LUGE7_SN196
 //#define LUGE7_SN197
@@ -2240,13 +2241,14 @@
 #define HILSIM			0
 
 #if (GYRO_RANGE==1000)
-//#define GYRO_OFFSET_MARGIN 100
 #define GYRO_OFFSET_MARGIN 25
 #elif (GYRO_RANGE==500)
-#define GYRO_OFFSET_MARGIN 200
+#define GYRO_OFFSET_MARGIN 50
 #else
 #error "invalid GYRO_RANGE"
 #endif // GYRO_RANGE
+
+#define MATRIX_GYRO_OFFSET_MARGIN 300
 
 ////////////////////////////////////////////////////////////////////////////////
 // Use board orientation to change the mounting direction of the board.
