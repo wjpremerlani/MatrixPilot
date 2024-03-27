@@ -180,7 +180,7 @@ void send_residual_data(void)
 		start_residuals = 0 ;
 #ifndef LOG_R_UPDATE
 #ifndef TILT_INIT
-		serial_output("\r\n\r\nimu_temp_yy,filter_en_yy,x_force_yy,y_force_yy,z_force_yy,x_rate_yy,y_rate_yy,z_rate_yy,x_filt_16_yy,y_filt_16_yy,z_filt_16_yy\r\n") ;
+		serial_output("\r\n\r\nimu_temp_yy,filter_en_yy,x_force_yy,y_force_yy,z_force_yy,x_rate_yy,y_rate_yy,z_rate_yy,rms_rate_yy,x_filt_16_yy,y_filt_16_yy,z_filt_16_yy\r\n") ;
 #else
         serial_output("\r\n\r\nStandbymode\r\naccOn,logOn,nx_force,y_force,z_force,yaw8,pitch8,roll8,yaw,pitch,roll\r\n");        
 #endif // TILT_INIT
@@ -204,7 +204,7 @@ void send_residual_data(void)
 
 #ifndef  LOG_R_UPDATE 
 #ifndef TILT_INIT
-		serial_output("%i,%i,%.1f,%.1f,%.1f,%i,%i,%i,%i,%i,%i\r\n",
+		serial_output("%i,%i,%.1f,%.1f,%.1f,%i,%i,%i,%i,%i,%i,%i\r\n",
                 mpu_temp.value,
 				accelOn ,
                 ((double)(aero_force[0]))/ACCEL_FACTOR ,
@@ -213,6 +213,7 @@ void send_residual_data(void)
     			omegagyro[0],
                 omegagyro[1],
                 omegagyro[2],
+                vector3_mag(omegagyro[0],omegagyro[1],omegagyro[2]),
 				(int16_t)((omegagyro_filtered[0].WW)>>12) , // 16x
 				(int16_t)((omegagyro_filtered[1].WW)>>12) ,
 				(int16_t)((omegagyro_filtered[2].WW)>>12) 

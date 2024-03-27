@@ -1,6 +1,6 @@
 
 
-#define DATE "Wolf_pac_2 , firmware 5.2, 3/20/2024\r\n"
+#define DATE "Wolf_pac_2 , firmware 5.2, 3/27/2024\r\n"
 //#define DATE "Wold_pac_1, rev 2.5, 3/6/2023\r\n"
 
 //#define SIMULATED_GYRO
@@ -22,9 +22,9 @@
 //#define LOG_IMU_WP1               // logs IMU data during a run for wolf_pac version 1
 #define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
                                     // you will also need to turn on the following:
-//#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
+#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
 //#define START_TRACK_LOG         // logs 2 components of force and pitch
-//#define LOG_PITCH_RATE
+#define LOG_PITCH_RATE
 #define LOG_RESIDUALS         // logs residual offsets between runs
 //#define RESIDUAL_LOG_PERIOD 30  // 2 times per minute
 //#define RESIDUAL_LOG_PERIOD 15  // 4 times per minute
@@ -52,7 +52,7 @@
 //#define SPECTRAL_ANALYSIS_BURST // 5 hz, start at 15, remember to also uncomment the following line
 //#define SAMPLES_PER_BURST 80 
 //#define SPECTRAL_ANALYSIS_CONTINUOUS
-#define TEST_SLED // set logging Hz to 200 start at 15
+//#define TEST_SLED // set logging Hz to 200 start at 15
 //#define KUFEN // set logging Hz to 200 and start angle to 30 degrees
 
 //#define ENABLE_ESP32
@@ -82,7 +82,7 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	200
+#define LOGGER_HZ	100
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
@@ -106,7 +106,7 @@
 //#define LUGE7_SN053
 //#define LUGE7_SN054
 
-#define LUGE7_SN080
+//#define LUGE7_SN080
 //#define LUGE7_SN081
 //#define LUGE7_SN082
 //#define LUGE7_SN083
@@ -222,7 +222,7 @@
 
 //#define LUGE7_SN194
 //#define LUGE7_SN195
-//#define LUGE7_SN196
+#define LUGE7_SN196
 //#define LUGE7_SN197
 
 
