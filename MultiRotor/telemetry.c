@@ -22,6 +22,7 @@
 #include "../libDCM/gpsData.h"
 #include "../libDCM/gpsParseCommon.h"
 #include "../libDCM/rmat.h"
+#include "../libDCM/mathlibNAV.h"
 #include "../libUDB/heartbeat.h"
 #include "../libUDB/serialIO.h"
 #include "../libUDB/servoOut.h"
@@ -180,7 +181,7 @@ void send_residual_data(void)
 		start_residuals = 0 ;
 #ifndef LOG_R_UPDATE
 #ifndef TILT_INIT
-		serial_output("\r\n\r\nimu_temp_yy,filter_en_yy,x_force_yy,y_force_yy,z_force_yy,x_rate_yy,y_rate_yy,z_rate_yy,x_filt_16_yy,y_filt_16_yy,z_filt_16_yy\r\n") ;
+		serial_output("\r\n\r\nimu_temp_yy,filter_en_yy,x_force_yy,y_force_yy,z_force_yy,x_rate_yy,y_rate_yy,z_rate_yy,rms_rate_yy,x_filt_16_yy,y_filt_16_yy,z_filt_16_yy\r\n") ;
 #else
         serial_output("\r\n\r\nStandbymode\r\naccOn,logOn,nx_force,y_force,z_force,yaw8,pitch8,roll8,yaw,pitch,roll\r\n");        
 #endif // TILT_INIT
@@ -204,7 +205,7 @@ void send_residual_data(void)
 
 #ifndef  LOG_R_UPDATE 
 #ifndef TILT_INIT
-		serial_output("%i,%i,%.1f,%.1f,%.1f,%i,%i,%i,%i,%i,%i\r\n",
+		serial_output("%i,%i,%.1f,%.1f,%.1f,%i,%i,%i,%i,%i,%i,%i\r\n",
                 mpu_temp.value,
 				accelOn ,
                 ((double)(aero_force[0]))/ACCEL_FACTOR ,
@@ -213,6 +214,7 @@ void send_residual_data(void)
     			omegagyro[0],
                 omegagyro[1],
                 omegagyro[2],
+                vector3_mag(omegagyro[0],omegagyro[1],omegagyro[2]),
 				(int16_t)((omegagyro_filtered[0].WW)>>12) , // 16x
 				(int16_t)((omegagyro_filtered[1].WW)>>12) ,
 				(int16_t)((omegagyro_filtered[2].WW)>>12) 
@@ -605,6 +607,13 @@ void send_imu_data(void)
                         );
             }
 			break ;
+        case 15:
+            {
+                serial_output("Gyro jostle detection thresholds are %i, %i.\r\n",
+                        GYRO_OFFSET_MARGIN , MATRIX_GYRO_OFFSET_MARGIN 
+                        );
+            }
+            break ;
 		case 16:
 			{
 				serial_output("Tilt start angle = %i deg, stop = %i deg.\r\n", TILT_START , TILT_STOP);
@@ -709,7 +718,11 @@ void send_imu_data(void)
 //#define SPECTRAL_ANALYSIS_BURST
                 
 #ifdef  NORMAL_RUN
+#ifdef LOG_PITCH_RATE
+                serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx,pitch_rate_xx\r\n");                              
+#else
                 serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx,tmptur_xx\r\n");              
+#endif // LOG_PITCH_RATE
 #endif // NORMAL_RUN
 
 #ifdef SPECTRAL_ANALYSIS_BURST
@@ -992,7 +1005,11 @@ void send_imu_data(void)
 				max_gyro/328  ,
                 udb_cpu_load(),
                 record_number ++ ,
-                mpu_temp.value                    
+#ifdef LOG_PITCH_RATE
+                omegagyro[1]
+#else
+                mpu_temp.value 
+#endif // LOG_PITCH_RATE
 			);
 
 #endif // NORMAL_RUN
