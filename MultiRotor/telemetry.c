@@ -167,6 +167,7 @@ extern union longww theta_sum[];
 extern union longww r_update_sum[];
 extern union longww rmat_sum[];
 extern int16_t residual_offset[];
+extern int16_t misalignment[];
 
 extern int16_t is_level ;
 
@@ -729,7 +730,7 @@ void send_imu_data(void)
 #ifdef LOG_PITCH_RATE
             serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx,pitch_rate_xx\r\n");                              
 #elif (TEST_RUNTIME_TILT_ALIGN == 1)
-            serial_output("\r\nx_force,y_force,z_force,yaw_32,pitch_32,roll_32,max_gyro,cpu,seq_no,tmptur,yaw_16,pitch_16,roll_16,lpx,lpy,lpz\r\n");              
+            serial_output("\r\nx_force,y_force,z_force,yaw_32,pitch_32,roll_32,max_gyro,cpu,seq_no,tmptur,yaw_16,pitch_16,roll_16,lpx,lpy,lpz,algn_x,algn_y,algn_z\r\n");              
               
 #else
            serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx,tmptur_xx\r\n");              
@@ -1024,11 +1025,15 @@ void send_imu_data(void)
 			);
 #if ( TEST_RUNTIME_TILT_ALIGN == 1 )
             compute_euler() ;
-            serial_output(",%.2f,%.2f,%.2f,%i,%i,%i\r\n",
+            serial_output(",%.2f,%.2f,%.2f,%i,%i,%i,%i,%i,%i\r\n",
                     yaw_angle, pitch_angle, roll_angle ,
                 (int16_t)((omegagyro_filtered[0].WW)>>12) , // 16x
 				(int16_t)((omegagyro_filtered[1].WW)>>12) ,
-				(int16_t)((omegagyro_filtered[2].WW)>>12) );
+				(int16_t)((omegagyro_filtered[2].WW)>>12) ,
+                    misalignment[0],
+                    misalignment[1],
+                    misalignment[2]                   
+                    );
 #else
             serial_output("\r\n");
 #endif // TEST_RUNTIME_TILT_ALIGN

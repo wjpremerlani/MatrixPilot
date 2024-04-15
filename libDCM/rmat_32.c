@@ -2,6 +2,7 @@
 #include "../libUDB/udbTypes.h"
 #include "libDCM_internal.h"
 #include "../libUDB/heartbeat.h"
+#include "../libDCM/mathlibNAV.h"
 
 extern union longww theta_32[];
 
@@ -33,6 +34,10 @@ extern boolean logging_on ;
 extern boolean matrix_jostle ;
 
 uint16_t matrix_jostle_counter = 0 ;
+
+int16_t tilt_rmat[3];
+int16_t tilt_rmat_32[3];
+int16_t misalignment[3];
 
 void rmat_32_update(void)
 {
@@ -86,7 +91,24 @@ void rmat_32_update(void)
         theta_sum[0].WW += theta_32_adjusted[0].WW ;
         theta_sum[1].WW += theta_32_adjusted[1].WW ;
         theta_sum[2].WW += theta_32_adjusted[2].WW ;
-               
+        
+        // copy the tilt row of rmat
+        tilt_rmat[0] = rmat[6];
+        tilt_rmat[1] = rmat[7];
+        tilt_rmat[2] = rmat[8];
+        // copy the tilt row of rmat_32
+        tilt_rmat_32[0] = rmat_32[6]._.W1 ;
+        tilt_rmat_32[1] = rmat_32[7]._.W1 ;
+        tilt_rmat_32[2] = rmat_32[8]._.W1 ;
+        
+        VectorCross(misalignment,tilt_rmat,tilt_rmat_32);   
+        
+        if ( matrix_jostle == 0 )
+        {
+            theta_32_adjusted[0].WW = theta_32_adjusted[0].WW + (((int32_t)misalignment[0])<< 5);
+            theta_32_adjusted[1].WW = theta_32_adjusted[1].WW + (((int32_t)misalignment[1])<< 5);
+            theta_32_adjusted[2].WW = theta_32_adjusted[2].WW + (((int32_t)misalignment[2])<< 5);       
+        }
                 
 		theta_square = ((VectorPower_32(3,theta_32_adjusted))<<2);
 		f1 = (fract_32_mpy(theta_square,(0x40000000/120))<<2) ;
