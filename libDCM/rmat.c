@@ -620,7 +620,7 @@ static void roll_pitch_drift(void)
             LED_GREEN = LED_OFF ;
         }
     }
-    if (( logging_on == 0)||(CONTINUOUS_MATRIX_LOCKING==1))
+    if ((( logging_on == 0)||(CONTINUOUS_MATRIX_LOCKING==1))&&(matrix_jostle == 0 ))
     {
 		int16_t gplane_nomalized[3] ;
 		vector3_normalize( gplane_nomalized , gplane ) ;
