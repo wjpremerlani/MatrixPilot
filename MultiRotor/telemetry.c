@@ -167,6 +167,7 @@ extern union longww theta_sum[];
 extern union longww r_update_sum[];
 extern union longww rmat_sum[];
 extern int16_t residual_offset[];
+extern int16_t misalignment[];
 
 extern int16_t is_level ;
 
@@ -181,7 +182,11 @@ void send_residual_data(void)
 		start_residuals = 0 ;
 #ifndef LOG_R_UPDATE
 #ifndef TILT_INIT
+#if ( TEST_RUNTIME_TILT_ALIGN == 1 )
+   		serial_output("\r\n\r\nimu_temp_yy,filter_en_yy,x_force_yy,y_force_yy,z_force_yy,x_rate_yy,y_rate_yy,z_rate_yy,rms_rate_yy,x_filt_16_yy,y_filt_16_yy,z_filt_16_yy,yaw_yy,pitch_yy,roll_yy\r\n") ;    
+#else
 		serial_output("\r\n\r\nimu_temp_yy,filter_en_yy,x_force_yy,y_force_yy,z_force_yy,x_rate_yy,y_rate_yy,z_rate_yy,rms_rate_yy,x_filt_16_yy,y_filt_16_yy,z_filt_16_yy\r\n") ;
+#endif // TEST_RUNTIME_TILT_ALIGN
 #else
         serial_output("\r\n\r\nStandbymode\r\naccOn,logOn,nx_force,y_force,z_force,yaw8,pitch8,roll8,yaw,pitch,roll\r\n");        
 #endif // TILT_INIT
@@ -205,7 +210,7 @@ void send_residual_data(void)
 
 #ifndef  LOG_R_UPDATE 
 #ifndef TILT_INIT
-		serial_output("%i,%i,%.1f,%.1f,%.1f,%i,%i,%i,%i,%i,%i,%i\r\n",
+		serial_output("%i,%i,%.1f,%.1f,%.1f,%i,%i,%i,%i,%i,%i,%i",
                 mpu_temp.value,
 				accelOn ,
                 ((double)(aero_force[0]))/ACCEL_FACTOR ,
@@ -218,10 +223,14 @@ void send_residual_data(void)
 				(int16_t)((omegagyro_filtered[0].WW)>>12) , // 16x
 				(int16_t)((omegagyro_filtered[1].WW)>>12) ,
 				(int16_t)((omegagyro_filtered[2].WW)>>12) 
-		//		omegagyro[0] + omgfilt_rounded[0]._.W1 ,
-		//		omegagyro[1] + omgfilt_rounded[1]._.W1 ,
-		//		omegagyro[2] + omgfilt_rounded[2]._.W1 
     				);
+#if (TEST_RUNTIME_TILT_ALIGN == 1 )
+        compute_euler();
+        serial_output(",%.2f,%.2f,%.2f\r\n",
+                yaw_angle , pitch_angle , roll_angle );
+#else
+        serial_output("\r\n") ;
+#endif // TEST_RUNTIME_TILT_ALIGN
 #else
         compute_euler();
         compute_euler_8k();
@@ -719,10 +728,13 @@ void send_imu_data(void)
                 
 #ifdef  NORMAL_RUN
 #ifdef LOG_PITCH_RATE
-                serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx,pitch_rate_xx\r\n");                              
+            serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx,pitch_rate_xx\r\n");                              
+#elif (TEST_RUNTIME_TILT_ALIGN == 1)
+            serial_output("\r\nx_force,y_force,z_force,yaw_32,pitch_32,roll_32,max_gyro,cpu,seq_no,tmptur,yaw_16,pitch_16,roll_16,lpx,lpy,lpz,algn_x,algn_y,algn_z\r\n");              
+              
 #else
-                serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx,tmptur_xx\r\n");              
-#endif // LOG_PITCH_RATE
+           serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx,tmptur_xx\r\n");              
+#endif // LOG_PITCH_RATE , TEST_RUNTIME_TILT_ALIGN
 #endif // NORMAL_RUN
 
 #ifdef SPECTRAL_ANALYSIS_BURST
@@ -993,7 +1005,7 @@ void send_imu_data(void)
 #ifndef TILT_INIT
 
 #ifdef  NORMAL_RUN
-            serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u,%i\r\n",
+            serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u,%i",
             	((double)(aero_force[0]))/ACCEL_FACTOR ,
 				((double)(aero_force[1]))/ACCEL_FACTOR ,
 				((double)(aero_force[2]))/ACCEL_FACTOR ,
@@ -1011,6 +1023,20 @@ void send_imu_data(void)
                 mpu_temp.value 
 #endif // LOG_PITCH_RATE
 			);
+#if ( TEST_RUNTIME_TILT_ALIGN == 1 )
+            compute_euler() ;
+            serial_output(",%.2f,%.2f,%.2f,%i,%i,%i,%i,%i,%i\r\n",
+                    yaw_angle, pitch_angle, roll_angle ,
+                (int16_t)((omegagyro_filtered[0].WW)>>12) , // 16x
+				(int16_t)((omegagyro_filtered[1].WW)>>12) ,
+				(int16_t)((omegagyro_filtered[2].WW)>>12) ,
+                    misalignment[0],
+                    misalignment[1],
+                    misalignment[2]                   
+                    );
+#else
+            serial_output("\r\n");
+#endif // TEST_RUNTIME_TILT_ALIGN
 
 #endif // NORMAL_RUN
 

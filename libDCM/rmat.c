@@ -49,7 +49,7 @@ uint16_t spin_rate = 0;
 //#define KPYAW ( 0 )
 #define KIYAW ((uint32_t) 4*2560/(uint32_t)HEARTBEAT_HZ)
 
-#define GYROSAT 15000
+//#define GYROSAT 15000 // no longer used
 // threshold at which gyros may be saturated
 
 // rmat is the matrix of direction cosines relating
@@ -581,7 +581,7 @@ boolean matrix_jostle = 0 ;
 static void roll_pitch_drift(void)
 {	
 	accel_magnitude = vector3_mag(gplane[0],gplane[1],gplane[2]);
-	omega_magnitude = vector3_mag(omegagyro[0],omegagyro[1],omegagyro[2]); // z has large drift, x and y are more stable
+	omega_magnitude = vector3_mag(omegagyro[0],omegagyro[1],omegagyro[2]); 
 	if((omega_magnitude>MATRIX_GYRO_OFFSET_MARGIN )	|| (abs(accel_magnitude-CALIB_GRAVITY/2)>CALIB_GRAVITY/8))
 	{
         matrix_jostle = 1 ;
@@ -620,7 +620,7 @@ static void roll_pitch_drift(void)
             LED_GREEN = LED_OFF ;
         }
     }
-    if (( logging_on == 0)||(CONTINUOUS_MATRIX_LOCKING==1))
+    if ((( logging_on == 0)||(CONTINUOUS_MATRIX_LOCKING==1))&&(matrix_jostle == 0 ))
     {
 		int16_t gplane_nomalized[3] ;
 		vector3_normalize( gplane_nomalized , gplane ) ;
