@@ -2276,5 +2276,5 @@
 // while waiting for the track to clear, must be set to 1 to use the option
 #define JOSTLE_CHECK_PERIOD 2 // check jostle every 2 seconds
 
-#define TEST_RUNTIME_TILT_ALIGN 1
+#define TEST_RUNTIME_TILT_ALIGN 0
 
