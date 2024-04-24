@@ -16,6 +16,15 @@
 #define YACCEL_OFFSET	( -1 )
 #define ZACCEL_OFFSET	( -72 )
 #endif // ACCEL_RANGE == 8
+#if (ACCEL_RANGE == 4)
+#define CALIB_GRAVITY	8192
+#define CAL_GRAV_X	8207
+#define CAL_GRAV_Y	8204
+#define CAL_GRAV_Z	8197
+#define XACCEL_OFFSET	( -29 )
+#define YACCEL_OFFSET	( -22 )
+#define ZACCEL_OFFSET	( -205 )
+#endif // ACCEL_RANGE == 4
 #if (ACCEL_RANGE == 2)
 #define CALIB_GRAVITY	16384
 #define CAL_GRAV_X	16418
