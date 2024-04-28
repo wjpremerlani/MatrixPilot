@@ -214,7 +214,10 @@ static void gps_parse_common_callback(void)
 void gps_parse_common(void)
 {
 	// TODO: perhaps have a boolean variable to reset gps_data_age??
-	udb_background_trigger(&gps_parse_common_callback);
+    if(0)
+    {
+	udb_background_trigger(&gps_parse_common_callback); // NOT USED
+    }
 }
 
 #define MS_PER_DAY 86400000 // = (24 * 60 * 60 * 1000)

@@ -25,35 +25,36 @@
 
 
 #define INT_PRI_T1      6   // background.c : high priority HEARTBEAT of libUDB
+#define INT_PRI_T2	4   // used for 200 Hz processing
 //#define INT_PRI_T2      ?   // radioIn.c : does not use the timer interrupt
 //#define INT_PRI_T3      ?   // unused
-#define INT_PRI_T4      7   // servoOut.c : highest priority interrupt for pwm
+#define INT_PRI_T4      7   // servoOut.c : high priority interrupt for pwm
 #define INT_PRI_T5      6   // background.c : high priority, but ISR is very short - used to measure CPU usage.
 #define INT_PRI_T6      3   // background.c : trigger HEARTBEAT processing at a lower priority - NOTE: timer 6 is not actually being used
-#define INT_PRI_T7      2   // background.c : trigger navigation processing after new data is received from the GPS
+#define INT_PRI_T7      1   // background.c : trigger navigation processing after new data is received from the GPS
 
-#define INT_PRI_MPUSPI  6   // mpu6000.c : SPI1 (UDB4 or AUAV3) or SPI2 (UDB4 or UDB5)
-#define INT_PRI_INT1    6   // mpu6000.c : mpu on SPI1 uses external interrupt 1
-#define INT_PRI_INT3    6   // mpu6000.c : mpu on SPI3 uses external interrupt 3
+#define INT_PRI_MPUSPI  7   // mpu6000.c : SPI1 (UDB4 or AUAV3) or SPI2 (UDB4 or UDB5)
+#define INT_PRI_INT1    7   // mpu6000.c : mpu on SPI1 uses external interrupt 1
+#define INT_PRI_INT3    7   // mpu6000.c : mpu on SPI3 uses external interrupt 3
 
 #define INT_PRI_IC      6   // radioIn.c : input capture interrupt
 
-#define INT_PRI_I2C1    5   // I2C1.c
-#define INT_PRI_I2C2    5   // I2C2.c
+#define INT_PRI_I2C1    3   // I2C1.c
+#define INT_PRI_I2C2    3   // I2C2.c
 
-#define INT_PRI_AD1     5   // analog2digital_xxx.c
-#define INT_PRI_DMA0    5   // analog2digital_xxx.c
-#define INT_PRI_DMA1    5   // AT45D_DMA.c
-#define INT_PRI_DMA2    5   // AT45D_DMA.c
+#define INT_PRI_AD1     2   // analog2digital_xxx.c
+#define INT_PRI_DMA0    2   // analog2digital_xxx.c
+#define INT_PRI_DMA1    2   // AT45D_DMA.c
+#define INT_PRI_DMA2    2   // AT45D_DMA.c
 
-#define INT_PRI_U1TX    3   // serialIO.c : mid range priority, no urgent reason
-#define INT_PRI_U1RX    3   // serialIO.c : mid range priority, no urgent reason
-#define INT_PRI_U2TX    3   // serialIO.c : mid range priority, no urgent reason
-#define INT_PRI_U2RX    3   // serialIO.c : mid range priority, no urgent reason
+#define INT_PRI_U1TX    5  
+#define INT_PRI_U1RX    5   
+#define INT_PRI_U2TX    5   
+#define INT_PRI_U2RX    5   
 
 #define INT_PRI_USB1    4   // USB available only on AUAV3
 
-#define INT_PRI_EVENTM  2   // events.c : trigger M uses the C1 interrupt
+#define INT_PRI_EVENTM  1   // events.c : trigger M uses the C1 interrupt
 #define INT_PRI_EVENTL  1   // events.c : trigger L uses the C2 interrupt
 
 
@@ -65,7 +66,7 @@ uint16_t SP_start(void);
 uint16_t SP_limit(void);
 uint16_t SP_current(void);
 
-#define TEST_INTERRUPT_PRIORITY_TIMINGS    0
+#define TEST_INTERRUPT_PRIORITY_TIMINGS    1
 #if (TEST_INTERRUPT_PRIORITY_TIMINGS == 1)
 // Set Interrupt Priority on associated Output Pin for timing analysis with Logic Analyzer
 // Servos should be disconnected from OUTPUT pins when using this feature

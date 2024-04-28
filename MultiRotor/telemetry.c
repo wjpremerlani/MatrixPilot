@@ -22,11 +22,17 @@
 #include "../libDCM/gpsData.h"
 #include "../libDCM/gpsParseCommon.h"
 #include "../libDCM/rmat.h"
+#include "../libDCM/mathlibNAV.h"
 #include "../libUDB/heartbeat.h"
 #include "../libUDB/serialIO.h"
 #include "../libUDB/servoOut.h"
 #include "../libUDB/ADchannel.h"
 #include "../libUDB/mcu.h"
+#include "../libUDB/libUDB.h"
+#include "../libDCM/matrix_vector_32_bit.h"
+#include "../libDCM/rmat_32.h"
+#include "../libUDB/oscillator.h"
+#include "serial_output.h"
 
 // Used for serial debug output
 #include <stdio.h>
@@ -78,9 +84,11 @@ extern fractional magAlignment[4];
 extern int16_t udb_magOffset[3] , errorYawplane[3] , magGain[3] ;
 extern uint16_t mission_time ;
 extern void compute_euler(void);
+extern void compute_euler_8k(void);
 extern void compute_bill_angles(void);
 extern void update_offset_table(void);
 extern float roll_angle , pitch_angle , yaw_angle ;
+extern float roll_angle_8k , pitch_angle_8k , yaw_angle_8k ;
 extern float bill_angle_x , bill_angle_y , bill_angle_z ;
 extern int16_t omegacorrI[];
 extern uint16_t omega_magnitude ;
@@ -101,11 +109,10 @@ extern int32_t xy_bar[] ;
 extern int16_t x_bar ;
 extern int16_t y_bar[] ;
 extern int16_t gyro_offset[];
+extern uint16_t max_gyro ;
 
 extern int16_t gplane[];
 extern int16_t aero_force[];
-extern void serial_output(const char* format, ...);
-void serial_output_start_end_packet(boolean isStart);
 // Prepare a line of serial output and start it sending
 // GPS data needs to be passed in
 extern int16_t yaw_rmat[];
@@ -137,43 +144,293 @@ float yaw_previous ;
 float heading ;
 float heading_previous ;
 float delta_yaw ;
+float yaw_previous_8k ;
+float heading_8k ;
+float heading_previous_8k ;
+float delta_yaw_8k ;
 boolean is_first_header = 1;
-boolean log_residuals = 0 ;
+boolean log_residuals = 1 ;
 extern boolean start_residuals ;
 extern int16_t omega[];
+extern int16_t rup_copy[];
+extern union longww coning_angle_adjustment[];
+extern union longww omega32[];
+extern union longww theta_32[];
+extern union longww ggain_32[];
+extern int16_t theta_16[];
+
+extern union longww rmat_32[];
+extern int32_t renorm_32_row_3 	;	
+extern union longlongLL theta_32_filtered[];
+extern union longww theta_32_adjusted[];
+extern union longww theta_sum[];
+extern union longww r_update_sum[];
+extern union longww rmat_sum[];
+extern int16_t residual_offset[];
+extern int16_t misalignment[];
+
+extern int16_t is_level ;
 
 
+uint16_t warmup_count = 0 ;
+uint16_t run_count = 0 ;
+int16_t check_for_jostle = 0 ;
 void send_residual_data(void)
 {
 	if ( start_residuals == 1)
 	{
 		start_residuals = 0 ;
-		serial_output("\r\n\r\nimu_temp_yy,filter_en_yy,x_rate_yy,y_rate_yy,z_rate_yy,x_filt_16_yy,y_filt_16_yy,z_filt_16_yy,x_err_yy,y_err_yy,z_err_yy\r\n") ;
+#ifndef LOG_R_UPDATE
+#ifndef TILT_INIT
+#if ( TEST_RUNTIME_TILT_ALIGN == 1 )
+   		serial_output("\r\n\r\nimu_temp_yy,filter_en_yy,x_force_yy,y_force_yy,z_force_yy,x_rate_yy,y_rate_yy,z_rate_yy,rms_rate_yy,x_filt_16_yy,y_filt_16_yy,z_filt_16_yy,yaw_yy,pitch_yy,roll_yy\r\n") ;    
+#else
+		serial_output("\r\n\r\nimu_temp_yy,filter_en_yy,x_force_yy,y_force_yy,z_force_yy,x_rate_yy,y_rate_yy,z_rate_yy,rms_rate_yy,x_filt_16_yy,y_filt_16_yy,z_filt_16_yy\r\n") ;
+#endif // TEST_RUNTIME_TILT_ALIGN
+#else
+        serial_output("\r\n\r\nStandbymode\r\naccOn,logOn,nx_force,y_force,z_force,yaw8,pitch8,roll8,yaw,pitch,roll\r\n");        
+#endif // TILT_INIT
+#else
+        serial_output("\r\n\r\nimu_temp,filter_en,ax,ay,az,x_filt_64,y,z,theta_filtx,y,z\r\n");
+#endif // LOG_R_UPDATE
 	}
 	else
 	{
-		serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i\r\n",
+#ifdef SIMULATE_TILT
+        if (warmup_count++ >= WARM_UP_TIME)
+        {
+            warmup_count = 0 ;
+            is_level = 1 ;
+        }
+#endif // SIMULATE_TILT
+        union longww omgfilt_rounded[3];
+        omgfilt_rounded[0].WW = omegagyro_filtered[0].WW+0x00008000 ;
+        omgfilt_rounded[1].WW = omegagyro_filtered[1].WW+0x00008000 ;
+        omgfilt_rounded[2].WW = omegagyro_filtered[2].WW+0x00008000 ;
+
+#ifndef  LOG_R_UPDATE 
+#ifndef TILT_INIT
+		serial_output("%i,%i,%.1f,%.1f,%.1f,%i,%i,%i,%i,%i,%i,%i",
+                mpu_temp.value,
+				accelOn ,
+                ((double)(aero_force[0]))/ACCEL_FACTOR ,
+				((double)(aero_force[1]))/ACCEL_FACTOR ,
+				((double)(aero_force[2]))/ACCEL_FACTOR ,
+    			omegagyro[0],
+                omegagyro[1],
+                omegagyro[2],
+                vector3_mag(omegagyro[0],omegagyro[1],omegagyro[2]),
+				(int16_t)((omegagyro_filtered[0].WW)>>12) , // 16x
+				(int16_t)((omegagyro_filtered[1].WW)>>12) ,
+				(int16_t)((omegagyro_filtered[2].WW)>>12) 
+    				);
+#if (TEST_RUNTIME_TILT_ALIGN == 1 )
+        compute_euler();
+        serial_output(",%.2f,%.2f,%.2f\r\n",
+                yaw_angle , pitch_angle , roll_angle );
+#else
+        serial_output("\r\n") ;
+#endif // TEST_RUNTIME_TILT_ALIGN
+#else
+        compute_euler();
+        compute_euler_8k();
+                serial_output("%u,%u,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\r\n",
+                        accelOn , logging_on ,
+            	((double)(aero_force[0]))/ACCEL_FACTOR ,
+				((double)(aero_force[1]))/ACCEL_FACTOR ,
+				((double)(aero_force[2]))/ACCEL_FACTOR ,
+                yaw_angle_8k ,  pitch_angle_8k , roll_angle_8k ,     
+				yaw_angle ,  pitch_angle , roll_angle                  
+			);       
+#endif // TILT_DEF
+#else
+        serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%li,%li,%li\r\n",
 				mpu_temp.value,
 				accelOn ,
-				omegagyro[0],
-				omegagyro[1],
-				omegagyro[2],
-				(int16_t)((omegagyro_filtered[0].WW)>>12) ,
-				(int16_t)((omegagyro_filtered[1].WW)>>12) ,
-				(int16_t)((omegagyro_filtered[2].WW)>>12) ,
-				omegagyro[0] + omegagyro_filtered[0]._.W1 ,
-				omegagyro[1] + omegagyro_filtered[1]._.W1 ,
-				omegagyro[2] + omegagyro_filtered[2]._.W1
+                aero_force[0],
+                aero_force[1],
+                aero_force[2],
+                (int16_t)((omegagyro_filtered[0].WW)>>10) , // 64x
+				(int16_t)((omegagyro_filtered[1].WW)>>10) ,
+				(int16_t)((omegagyro_filtered[2].WW)>>10) ,
+                theta_32_filtered[0]._.L1 , theta_32_filtered[1]._.L1 ,theta_32_filtered[2]._.L1 
 					);
+#endif // LOG_R_UPDATE
 	}
 }
+#ifdef TEST_SLED
 
-void send_imu_data(void)
+extern uint8_t accel_read_buffer_index ;
+extern uint8_t accel_write_buffer_index ;
+extern int16_t x_accel[] ;
+extern int16_t y_accel[] ;
+extern int16_t z_accel[] ;
+extern union longww x_theta_32[] ;
+extern union longww y_theta_32[] ;
+extern union longww z_theta_32[] ;
+
+union longww bottom_row[3] ;
+union longww coning_vector[3];
+union longww interpolation_vector1[3];
+union longww interpolation_vector2[3];
+union longww interpolation_vector3[3];
+union longww interpolation_vector4[3];
+union longww interpolated_tilt1[3];
+union longww interpolated_tilt2[3];
+union longww interpolated_tilt3[3];
+union longww interpolated_tilt4[3];
+
+
+
+void log_x_accel_data(void)
 {
-#ifndef ALWAYS_LOG
-	if (start_log == 1)
+    bottom_row[0].WW = rmat_32[6].WW ;
+    bottom_row[1].WW = rmat_32[7].WW ;
+    bottom_row[2].WW = rmat_32[8].WW ;
+    
+    coning_vector[0].WW = x_theta_32[5*accel_read_buffer_index+1].WW ;
+    coning_vector[1].WW = y_theta_32[5*accel_read_buffer_index+1].WW ;
+    coning_vector[2].WW = z_theta_32[5*accel_read_buffer_index+1].WW ;
+    VectorCross_32(interpolation_vector1,bottom_row,coning_vector ) ;
+    interpolated_tilt1[0].WW = interpolation_vector1[0].WW + bottom_row[0].WW ;
+    interpolated_tilt1[1].WW = interpolation_vector1[1].WW + bottom_row[1].WW ;
+    interpolated_tilt1[2].WW = interpolation_vector1[2].WW + bottom_row[2].WW ;
+ 
+    coning_vector[0].WW = x_theta_32[5*accel_read_buffer_index+2].WW ;
+    coning_vector[1].WW = y_theta_32[5*accel_read_buffer_index+2].WW ;
+    coning_vector[2].WW = z_theta_32[5*accel_read_buffer_index+2].WW ;
+    VectorCross_32(interpolation_vector2,bottom_row,coning_vector ) ;
+    interpolated_tilt2[0].WW = interpolation_vector2[0].WW + bottom_row[0].WW ;
+    interpolated_tilt2[1].WW = interpolation_vector2[1].WW + bottom_row[1].WW ;
+    interpolated_tilt2[2].WW = interpolation_vector2[2].WW + bottom_row[2].WW ;
+ 
+ 
+    coning_vector[0].WW = x_theta_32[5*accel_read_buffer_index+3].WW ;
+    coning_vector[1].WW = y_theta_32[5*accel_read_buffer_index+3].WW ;
+    coning_vector[2].WW = z_theta_32[5*accel_read_buffer_index+3].WW ;
+    VectorCross_32(interpolation_vector3,bottom_row,coning_vector ) ;
+    interpolated_tilt3[0].WW = interpolation_vector3[0].WW + bottom_row[0].WW ;
+    interpolated_tilt3[1].WW = interpolation_vector3[1].WW + bottom_row[1].WW ;
+    interpolated_tilt3[2].WW = interpolation_vector3[2].WW + bottom_row[2].WW ;
+ 
+    coning_vector[0].WW = x_theta_32[5*accel_read_buffer_index+4].WW ;
+    coning_vector[1].WW = y_theta_32[5*accel_read_buffer_index+4].WW ;
+    coning_vector[2].WW = z_theta_32[5*accel_read_buffer_index+4].WW ;
+    VectorCross_32(interpolation_vector4,bottom_row,coning_vector ) ;
+    interpolated_tilt4[0].WW = interpolation_vector4[0].WW + bottom_row[0].WW ;
+    interpolated_tilt4[1].WW = interpolation_vector4[1].WW + bottom_row[1].WW ;
+    interpolated_tilt4[2].WW = interpolation_vector4[2].WW + bottom_row[2].WW ;
+ 
+    
+    serial_output("%i,%i\r\n%i,%i\r\n%i,%i\r\n%i,%i\r\n",
+            -x_accel[5*accel_read_buffer_index+1],
+     
+            - interpolated_tilt1[0]._.W1 ,
+            //interpolated_tilt1[1]._.W1 ,
+            //interpolated_tilt1[2]._.W1 ,
+      
+            -x_accel[5*accel_read_buffer_index+2],
+ 
+            - interpolated_tilt2[0]._.W1 ,
+            //interpolated_tilt2[1]._.W1 ,
+            //interpolated_tilt2[2]._.W1 ,
+            
+            -x_accel[5*accel_read_buffer_index+3],
+ 
+           - interpolated_tilt3[0]._.W1 ,
+            //interpolated_tilt3[1]._.W1 ,
+            //interpolated_tilt3[2]._.W1 ,    
+            
+            -x_accel[5*accel_read_buffer_index+4] , 
+            
+            - interpolated_tilt4[0]._.W1 
+            //interpolated_tilt4[1]._.W1 ,
+            //interpolated_tilt4[2]._.W1 
+              
+            );
+}
+
+#endif // TEST_SLED
+
+#ifdef KUFEN
+
+extern uint8_t accel_read_buffer_index ;
+extern uint8_t accel_write_buffer_index ;
+extern int16_t x_accel[] ;
+extern int16_t y_accel[] ;
+extern int16_t z_accel[] ;
+
+void log_z_accel_data(void)
+{
+    serial_output("%i\r\n%i\r\n%i\r\n%i\r\n",
+            -z_accel[5*accel_read_buffer_index+1],
+            -z_accel[5*accel_read_buffer_index+2],
+            -z_accel[5*accel_read_buffer_index+3],
+            -z_accel[5*accel_read_buffer_index+4]          
+            );
+}
+
+#endif // KUFEN
+
+
+#ifdef SPECTRAL_ANALYSIS_CONTINUOUS
+
+extern uint8_t accel_read_buffer_index ;
+extern uint8_t accel_write_buffer_index ;
+extern int16_t x_accel[] ;
+extern int16_t y_accel[] ;
+extern int16_t z_accel[] ;
+
+void log_accel_data(void)
+{
+    serial_output("%i,%i,%i\r\n%i,%i,%i\r\n%i,%i,%i\r\n%i,%i,%i\r\n",
+            -x_accel[5*accel_read_buffer_index+1],
+            -y_accel[5*accel_read_buffer_index+1],
+           -z_accel[5*accel_read_buffer_index+1],
+            -x_accel[5*accel_read_buffer_index+2],
+            -y_accel[5*accel_read_buffer_index+2],
+            -z_accel[5*accel_read_buffer_index+2],
+            -x_accel[5*accel_read_buffer_index+3],
+            -y_accel[5*accel_read_buffer_index+3],
+            -z_accel[5*accel_read_buffer_index+3],
+            -x_accel[5*accel_read_buffer_index+4],
+            -y_accel[5*accel_read_buffer_index+4],
+            -z_accel[5*accel_read_buffer_index+4]          
+            );
+}
+
+#endif // SPECTRAL_ANALYSIS_CONTINUOUS
+
+
+#ifdef SPECTRAL_ANALYSIS_BURST
+uint16_t spectral_record_number ;
+uint16_t sample_index ;
+
+extern int16_t x_gyro[];
+extern int16_t y_gyro[];
+extern int16_t z_gyro[];
+extern uint16_t spectral_sample_number ;
+
+void log_burst_data(void)
+{
+    sample_index = 1 ;
+    while ( sample_index < SAMPLES_PER_BURST )
+        {
+            serial_output("%i,%i,%i\r\n",
+                x_gyro[sample_index],
+                y_gyro[sample_index],
+                z_gyro[sample_index]                    
+                    );
+            sample_index++ ;        
+        }
+    spectral_sample_number = 0 ; 
+}
+
+
+void send_spectral_data(void)
+{
+  	if (start_log == 1)
 	{
-        serial_output_start_end_packet(true);
 		hasWrittenHeader = 0 ;
 #ifdef USE_PACKETIZED_TELEMERTY
         is_first_header = 1;
@@ -200,7 +457,51 @@ void send_imu_data(void)
 		stop_log = 0 ;
 		logging_on = 0 ;
 		gyro_locking_on = 1 ;
-        serial_output_start_end_packet(false);
+        serial_output_send_packet_cmd(PKT_CMD_STOP);
+	}
+	if (logging_on == 0 ) return ;
+    if ( spectral_sample_number == SAMPLES_PER_BURST )
+    {
+        serial_output("0,0,0,%i,%i\r\n",
+            spectral_record_number++,
+            udb_cpu_load());
+        udb_background_trigger(&log_burst_data);
+    }
+}
+#endif // SPECTRAL_ANALYSIS_BURST
+void send_imu_data(void)
+{
+#ifndef ALWAYS_LOG
+	if (start_log == 1)
+	{
+		serial_output_send_packet_cmd(PKT_CMD_RUN_START);
+		hasWrittenHeader = 0 ;
+#ifdef USE_PACKETIZED_TELEMERTY
+        is_first_header = 1;
+#endif
+		if ( is_first_header)
+		{
+			header_line = 0 ;
+			is_first_header = 0 ;
+		}
+		else
+		{	
+			header_line = 22 ;
+		}
+		start_log = 0 ;
+		logging_on = 1 ;
+#ifdef		ALWAYS_SYNC_GYROS
+		gyro_locking_on = 1 ;
+#else
+		gyro_locking_on = 0 ;
+#endif // ALWAYS_SYNC_GYROS	
+	}
+	if ( stop_log == 1)
+	{
+		stop_log = 0 ;
+		logging_on = 0 ;
+		gyro_locking_on = 1 ;
+        serial_output_send_packet_cmd(PKT_CMD_STOP);
 	}
 	if (logging_on == 0 ) return ;
 #else
@@ -240,6 +541,19 @@ void send_imu_data(void)
 		case 3:
 			{
 				serial_output(DATE);
+                serial_output("%u MIPS\r\n",MIPS);
+#ifdef SPECTRAL_ANALYSIS_BURST
+                serial_output("*--> roll analysis logging <--*\r\n");
+#endif // SPECTRAL_ANALYSIS_BURST
+#ifdef  SPECTRAL_ANALYSIS_CONTINUOUS
+                serial_output("*--> force data at 1 kHz and euler angles at 200 Hz <--*\r\n");
+#endif //  SPECTRAL_ANALYSIS_CONTINUOUS
+#ifdef  TEST_SLED
+                serial_output("*--> test sled, x_force and pitch logged at 1kHz <--*\r\n");
+#endif //  TEST_SLED
+#ifdef  KUFEN
+                serial_output("*--> Kufen logging <--*\r\n");
+ #endif //  KUFEN                               
 			}
 			break;
 		case 4:
@@ -296,7 +610,19 @@ void send_imu_data(void)
 			}
 			break ;
 		case 14:
+            {
+                serial_output("Gyro strain offsets are x=%i, y=%i, z=%i.\r\n",
+                        residual_offset[0] , residual_offset[1] , residual_offset[2]
+                        );
+            }
 			break ;
+        case 15:
+            {
+                serial_output("Gyro jostle detection thresholds are %i, %i.\r\n",
+                        GYRO_OFFSET_MARGIN , MATRIX_GYRO_OFFSET_MARGIN 
+                        );
+            }
+            break ;
 		case 16:
 			{
 				serial_output("Tilt start angle = %i deg, stop = %i deg.\r\n", TILT_START , TILT_STOP);
@@ -322,7 +648,13 @@ void send_imu_data(void)
 			break;
 		case 20:
 			{
-				serial_output("Data rate is %i records/s.\r\n", LOGGER_HZ );
+#ifdef KUFEN
+				serial_output("Run data rate is %i records/s.\r\nBetween runs residuals are logged every %i seconds.\r\n", 
+                        LOGGER_HZ/2 , RESIDUAL_LOG_PERIOD  );   
+#else
+				serial_output("Run data rate is %i records/s.\r\nBetween runs residuals are logged every %i seconds.\r\n", 
+                        LOGGER_HZ , RESIDUAL_LOG_PERIOD  );
+#endif // KUFEN
 			}
 			break;
 		case 21:
@@ -340,7 +672,7 @@ void send_imu_data(void)
 			break;
 		case 23:
 			{
-#ifdef LOG_IMU
+#ifdef LOG_IMU_WP1
 				// initialize the unwrapping of yaw angle
 				compute_euler();
 				yaw_previous = yaw_angle ;
@@ -350,7 +682,11 @@ void send_imu_data(void)
 #endif // LOG_RATE
 #ifdef LOG_EULER
 #ifndef THETA_LOG
-				serial_output( "\r\n\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx\r\n" ) ;
+#ifndef UDB7LUGE
+				serial_output( "\r\n\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx\r\n" ) ;
+#else
+				serial_output( "\r\n\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx,cpu,line_no\r\n" ) ;
+#endif // UDB7LUGE
 #else
 				serial_output("\r\r\r\nx_theta,y_theta,x_omega,y_omega,pitch,roll\r\n") ;
 #endif // THETA_LOG
@@ -361,7 +697,74 @@ void send_imu_data(void)
 #ifdef LOG_PITCH_AND_TWO_FORCES
 				serial_output( "\r\n\r\nx_force_xx,z_force,pitch_xx\r\n" ) ;	
 #endif // LOG_PITCH_AND_TWO_FORCES
-#endif // LOG_IMU
+#endif // LOG_IMU_WP1
+				
+#ifdef LOG_IMU_WP2
+				max_gyro = 0 ;
+#ifndef CONING_CORRECTION
+				compute_euler();
+				yaw_previous = yaw_angle ;
+				heading_previous = 0.0 ;
+#else // CONING_CORRECTION
+#ifndef TEST_SLED
+				compute_euler_8k();
+				yaw_previous_8k = yaw_angle_8k ;
+				heading_previous_8k = 0.0 ;
+#endif // TEST_SLED
+#endif // CONING_CORRECTION
+#ifdef START_TRACK_LOG
+                serial_output("\r\nx_force_xx,y_force_xx,pitch_xx\r\n");
+#else
+#ifndef LOG_R_UPDATE
+#ifdef TILT_INIT
+                serial_output("\r\n\r\nRunmode\r\naccOn,logOn,nx_force,y_force,z_force,yaw8,pitch8,roll8,yaw,pitch,roll\r\n");        
+#else
+
+//#define SPECTRAL_ANALYSIS_CONTINUOUS
+//#define NORMAL_RUN
+//#define TEST_SLED
+//#define KUFEN                
+//#define SPECTRAL_ANALYSIS_BURST
+                
+#ifdef  NORMAL_RUN
+#ifdef LOG_PITCH_RATE
+            serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx,pitch_rate_xx\r\n");                              
+#elif (TEST_RUNTIME_TILT_ALIGN == 1)
+            serial_output("\r\nx_force,y_force,z_force,yaw_32,pitch_32,roll_32,max_gyro,cpu,seq_no,tmptur,yaw_16,pitch_16,roll_16,lpx,lpy,lpz,algn_x,algn_y,algn_z\r\n");              
+              
+#else
+           serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx,tmptur_xx\r\n");              
+#endif // LOG_PITCH_RATE , TEST_RUNTIME_TILT_ALIGN
+#endif // NORMAL_RUN
+
+#ifdef SPECTRAL_ANALYSIS_BURST
+                spectral_sample_number = 0 ;
+                serial_output("\r\nx_gyro_xx,y_gyro_xx,z_gyro_xx,x_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx,tmptur_xx\r\n");
+#endif //  SPECTRAL_ANALYSIS_BURST              
+
+#ifdef TEST_SLED
+                serial_output("\r\nx_force_xx,pitch_xx,cpu_xx,seq_no_xx\r\n");
+#endif // TEST_SLED 
+                
+#ifdef KUFEN
+                serial_output("\r\nz_force_xx,yaw_xx,roll_xx,cpu_xx,seq_no_xx\r\n");
+#endif // KUFEN
+                
+#ifdef SPECTRAL_ANALYSIS_CONTINUOUS
+                serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx,tmptur_xx\r\n");              
+#endif // SPECTRAL_ANALYSIS_CONTINUOUS                
+                  
+                
+#endif // TILT_INIT
+#else
+                serial_output("\r\ngyro_lck,accelOn,theta_sum_x,y,z,LPF1_x,y,z,LPF2_x,y,z\r\n");
+#endif //   LOG_R_UPDATE              
+#endif // START_TRACK_LOG
+#endif // LOG_IMU_WP2
+                
+#ifdef FILTERED_ACCELEROMETER
+                serial_output("\r\nx_force,y_force,z_force\r\n");               
+#endif //FILTERED_ACCELEROMETER
 				
 #ifdef RECORD_OFFSETS
 				serial_output("tmptur,ax,ay,az,gx_val,gy_val,gz_val,gyr_x,gyr_y,gyr_z\r\n");
@@ -390,7 +793,7 @@ void send_imu_data(void)
 		serial_output("synch,gx,gy,gyz,ax,ay,az,r6,r7,r8\r\n");
 #endif // ROAD_TEST
 #ifdef BUILD_OFFSET_TABLE
-		serial_output("\r\ncpu,samples,X_bar,Y_bar_x,Y_bar_y,Y_bar_z,XX_bar,XY_bar_x,XY_bar_y,XY_bar_z,denom,lft_o_x,lft_o_y,lft_o_z,rght_o_x,rght_o_y,rght_o_z,offx,offy,offz\r\n");
+		serial_output("\r\ntmptr,cpu,smpls,X_bar,Y_bar_x,Y_bar_y,Y_bar_z,XX_bar,XY_bar_x,XY_bar_y,XY_bar_z,denom,lft_o_x,lft_o_y,lft_o_z,rght_o_x,rght_o_y,rght_o_z,offx,offy,offz\r\n");
 #endif //BUILD_OFFSET_TABLE
 			}
 			break ;	
@@ -441,8 +844,17 @@ void send_imu_data(void)
 		}
 #endif	
 #endif // TEST_LOGGER_HZ
+#ifdef FILTERED_ACCELEROMETER
+  {
+			serial_output( "%.3f,%.3f,%.3f\r\n" ,
+				((double)(aero_force_filtered[0]._.W1))/ACCEL_FACTOR ,
+				((double)(aero_force_filtered[1]._.W1))/ACCEL_FACTOR ,
+				((double)(aero_force_filtered[2]._.W1))/ACCEL_FACTOR
+				 ) ;	
+		}      
+#endif // FILTERED_ACCELEROMETER
 
-#ifdef LOG_IMU
+#ifdef LOG_IMU_WP1
 #ifdef LOG_RATE
 		{
 			serial_output( "%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\r\n" ,
@@ -473,11 +885,24 @@ void send_imu_data(void)
 			heading_previous = heading ;
 			yaw_previous = yaw_angle ;
 #ifndef THETA_LOG
-			serial_output( "%.2f,%.1f,%.1f,%.1f,%.2f,%.1f\r\n" ,
+#ifndef UDB7LUGE
+			serial_output( "%.2f,%.1f,%.1f,%.1f,%.2f,%.1f,%u\r\n" ,
 				((double)(aero_force[0]))/ACCEL_FACTOR ,
 				((double)(aero_force[1]))/ACCEL_FACTOR ,
 				((double)(aero_force[2]))/ACCEL_FACTOR ,
-				heading ,  pitch_angle , roll_angle  ) ;	
+				heading ,  pitch_angle , roll_angle , max_gyro/328  ) ;	
+			max_gyro = 0 ;
+#else
+
+            serial_output( "%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u\r\n" ,
+				((double)(aero_force[0]))/ACCEL_FACTOR ,
+				((double)(aero_force[1]))/ACCEL_FACTOR ,
+				((double)(aero_force[2]))/ACCEL_FACTOR ,
+				heading ,  pitch_angle , roll_angle , max_gyro/328 , udb_cpu_load() , record_number ++   ) ;	
+			max_gyro = 0 ;
+            
+#endif // UDB7LUGE
+
 #else
 			serial_output("%i,%i,%i,%i,%.2f,%.2f\r\n" ,
 					theta[0] , theta[1] ,
@@ -505,7 +930,228 @@ void send_imu_data(void)
 				pitch_angle   ) ;	
 		}	
 #endif // LOG_PITCH_AND_TWO_FORCES
-#endif // LOG_IMU
+#endif // LOG_IMU_WP1
+#ifdef LOG_IMU_WP2
+        {
+#ifndef LOG_R_UPDATE
+#ifndef CONING_CORRECTION
+ 			compute_euler();
+			delta_yaw = yaw_angle - yaw_previous ;
+			if (abs(delta_yaw)<90.0)
+			{
+				heading = heading_previous + delta_yaw ;
+			}
+			else if(delta_yaw>0)
+			{
+				heading = heading_previous + delta_yaw - 360.0 ;
+			}
+			else
+			{
+				heading = heading_previous + delta_yaw + 360.0 ;
+			}
+			heading_previous = heading ;
+			yaw_previous = yaw_angle ;
+#else // CONING_CORRECTION
+#ifndef START_TRACK_LOG
+#ifndef TEST_SLED
+			compute_euler_8k();
+#endif // TEST_SLED
+#ifdef TILT_INIT
+            compute_euler() ;
+#endif // TILT_INIT
+			delta_yaw_8k = yaw_angle_8k - yaw_previous_8k ;
+			if (abs(delta_yaw_8k)<90.0)
+			{
+				heading_8k = heading_previous_8k + delta_yaw_8k ;
+			}
+			else if(delta_yaw_8k>0)
+			{
+				heading_8k = heading_previous_8k + delta_yaw_8k - 360.0 ;
+			}
+			else
+			{
+				heading_8k = heading_previous_8k + delta_yaw_8k + 360.0 ;
+			}
+			heading_previous_8k = heading_8k ;
+			yaw_previous_8k = yaw_angle_8k ;
+#else
+			compute_euler();
+			delta_yaw = yaw_angle - yaw_previous ;
+			if (abs(delta_yaw)<90.0)
+			{
+				heading = heading_previous + delta_yaw ;
+			}
+			else if(delta_yaw>0)
+			{
+				heading = heading_previous + delta_yaw - 360.0 ;
+			}
+			else
+			{
+				heading = heading_previous + delta_yaw + 360.0 ;
+			}
+			heading_previous = heading ;
+			yaw_previous = yaw_angle ;
+         
+#endif // START_TRACK_LOG
+#endif // CONING_CORRECTION	
+#endif // LOG_R_UPDATE
+#ifdef START_TRACK_LOG
+            serial_output("%.3f,%.2f,%.3f\r\n",
+            	((double)(aero_force[0]))/ACCEL_FACTOR ,
+				((double)(aero_force[1]))/ACCEL_FACTOR ,
+				pitch_angle ) ;				       
+#else
+#ifndef LOG_R_UPDATE
+#ifndef TILT_INIT
+
+#ifdef  NORMAL_RUN
+            serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u,%i",
+            	((double)(aero_force[0]))/ACCEL_FACTOR ,
+				((double)(aero_force[1]))/ACCEL_FACTOR ,
+				((double)(aero_force[2]))/ACCEL_FACTOR ,
+#ifndef CONING_CORRECTION
+				heading ,  pitch_angle , roll_angle ,
+#else
+				heading_8k ,  pitch_angle_8k , roll_angle_8k ,
+#endif                
+				max_gyro/328  ,
+                udb_cpu_load(),
+                record_number ++ ,
+#ifdef LOG_PITCH_RATE
+                omegagyro[1]
+#else
+                mpu_temp.value 
+#endif // LOG_PITCH_RATE
+			);
+#if ( TEST_RUNTIME_TILT_ALIGN == 1 )
+            compute_euler() ;
+            serial_output(",%.2f,%.2f,%.2f,%i,%i,%i,%i,%i,%i\r\n",
+                    yaw_angle, pitch_angle, roll_angle ,
+                (int16_t)((omegagyro_filtered[0].WW)>>12) , // 16x
+				(int16_t)((omegagyro_filtered[1].WW)>>12) ,
+				(int16_t)((omegagyro_filtered[2].WW)>>12) ,
+                    misalignment[0],
+                    misalignment[1],
+                    misalignment[2]                   
+                    );
+#else
+            serial_output("\r\n");
+#endif // TEST_RUNTIME_TILT_ALIGN
+
+#endif // NORMAL_RUN
+
+#ifdef SPECTRAL_ANALYSIS_BURST
+            serial_output("%i,%i,%i,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u,%i\r\n",     
+                x_gyro[0],y_gyro[0],z_gyro[0],
+                ((double)(aero_force[0]))/ACCEL_FACTOR ,
+				((double)(aero_force[1]))/ACCEL_FACTOR ,
+				((double)(aero_force[2]))/ACCEL_FACTOR ,
+#ifndef CONING_CORRECTION
+				heading ,  pitch_angle , roll_angle ,
+#else
+				heading_8k ,  pitch_angle_8k , roll_angle_8k ,
+#endif                
+				max_gyro/328  ,
+                udb_cpu_load(),
+                record_number ++ ,
+                mpu_temp.value                    
+			);
+            if ( spectral_sample_number == SAMPLES_PER_BURST ) udb_background_trigger(&log_burst_data);
+#endif //  SPECTRAL_ANALYSIS_BURST              
+
+#ifdef TEST_SLED
+                serial_output("%i,%i,%u,%u\r\n",
+                -x_accel[5*accel_read_buffer_index],
+                 - rmat_32[6]._.W1 ,
+                        
+                        //rmat_32[7]._.W1 ,rmat_32[8]._.W1 ,
+                        
+                udb_cpu_load(),record_number ++                  
+			);
+            udb_background_trigger(&log_x_accel_data);            
+
+#endif // TEST_SLED 
+                
+#ifdef KUFEN
+        if(accel_read_buffer_index) {   
+                serial_output("%i,%.2f,%.2f,%u,%u\r\n",
+                -z_accel[5*accel_read_buffer_index],
+#ifndef CONING_CORRECTION
+				yaw_angle , roll_angle ,
+#else
+				yaw_angle_8k , roll_angle_8k ,
+#endif                
+                udb_cpu_load(),record_number ++                  
+			);
+        }
+        else
+        {
+            serial_output("%i\r\n",
+                -z_accel[5*accel_read_buffer_index]);
+        }
+            udb_background_trigger(&log_z_accel_data);            
+
+#endif // KUFEN
+                
+#ifdef SPECTRAL_ANALYSIS_CONTINUOUS
+            serial_output("%i,%i,%i,%.2f,%.2f,%.2f,%u,%u,%u,%i\r\n",
+               - x_accel[5*accel_read_buffer_index],
+               - y_accel[5*accel_read_buffer_index],
+               - z_accel[5*accel_read_buffer_index],
+#ifndef CONING_CORRECTION
+				heading ,  pitch_angle , roll_angle ,
+#else
+				heading_8k ,  pitch_angle_8k , roll_angle_8k ,
+#endif                
+				max_gyro/328  ,
+                udb_cpu_load(),
+                record_number ++ ,
+                mpu_temp.value                    
+			);
+            udb_background_trigger(&log_accel_data);            
+#endif // SPECTRAL_ANALYSIS_CONTINUOUS                
+
+         
+#else
+                serial_output("%u,%u,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\r\n",
+                        accelOn , logging_on ,
+            	((double)(aero_force[0]))/ACCEL_FACTOR ,
+				((double)(aero_force[1]))/ACCEL_FACTOR ,
+				((double)(aero_force[2]))/ACCEL_FACTOR ,
+                yaw_angle_8k ,  pitch_angle_8k , roll_angle_8k ,     
+				yaw_angle ,  pitch_angle , roll_angle                  
+			);
+
+#endif // TILT_INIT
+#else
+#ifdef SIMULATE_TILT
+            if ( run_count++ >= RUN_TIME)
+            {
+                run_count = 0 ;
+                is_level = 0 ;
+            }
+#endif // SIMULATE_TILT
+            serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%li,%li,%li\r\n",
+                    gyro_locking_on ,
+                    accelOn ,
+                    theta_sum[0]._.W1 ,
+                    theta_sum[1]._.W1 ,
+                    theta_sum[2]._.W1 ,
+ //                   (int16_t)((omegagyro_filtered[0].WW)>>12) , // 16x
+ //                   (int16_t)((omegagyro_filtered[1].WW)>>12) ,
+ //                   (int16_t)((omegagyro_filtered[2].WW)>>12) ,
+                    (int16_t)((omegagyro_filtered[0].WW)>>10) , // 64x
+                    (int16_t)((omegagyro_filtered[1].WW)>>10) ,
+                    (int16_t)((omegagyro_filtered[2].WW)>>10) ,
+ 
+                    theta_32_filtered[0]._.L1 , theta_32_filtered[1]._.L1 ,theta_32_filtered[2]._.L1 
+                    );
+
+#endif // LOG_R_UPDATE
+#endif // START_TRACK_LOG
+			max_gyro = 0 ;
+		}
+#endif // LOG_IMU_WP2
 #ifdef GYRO_CALIB
 
 		{	compute_bill_angles();

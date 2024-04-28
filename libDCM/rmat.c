@@ -7,6 +7,8 @@
 #include "../libUDB/heartbeat.h"
 #include "../libUDB/ADchannel.h"
 #include <math.h>
+#include "../libDCM/matrix_vector_32_bit.h"
+#include "../libDCM/rmat_32.h"
 
 // These are the routines for maintaining a direction cosine matrix
 // that can be used to transform vectors between the earth and plane
@@ -29,6 +31,10 @@
 #define GGAINZ CALIBRATIONZ*SCALEGYRO*6*(RMAX*(1.0/HEARTBEAT_HZ)) // integration multiplier for gyros
 fractional ggain[] =  { GGAINX, GGAINY, GGAINZ };
 
+#if (GYRO_RANGE != 1000)
+#error "only GYRO_RANGE 1000 is presently supported"
+#endif // GYRO_RANGE
+
 uint16_t spin_rate = 0;
 
 // the gains are constant because the gravity vector is normalized
@@ -39,11 +45,11 @@ uint16_t spin_rate = 0;
 //#define KPROLLPITCH ( 2048 )
 #define KIROLLPITCH ( (uint32_t) 64*2560 / (uint32_t) HEARTBEAT_HZ)
 
-//#define KPYAW ( 2*2048 )
-#define KPYAW ( 0 )
+#define KPYAW ( 2*2048 )
+//#define KPYAW ( 0 )
 #define KIYAW ((uint32_t) 4*2560/(uint32_t)HEARTBEAT_HZ)
 
-#define GYROSAT 15000
+//#define GYROSAT 15000 // no longer used
 // threshold at which gyros may be saturated
 
 // rmat is the matrix of direction cosines relating
@@ -136,6 +142,39 @@ void yaw_drift_reset(void)
 	errorYawground[0] = errorYawground[1] = errorYawground[2] = 0; // turn off yaw drift
 }
 
+void align_roll_pitch(fractional tilt_mat[])
+{
+	fractional vertical[3] ;
+	fractional Z , one_plus_Z ;
+	vertical[0] = gplane[0] ;
+	vertical[1] = gplane[1] ;
+	vertical[2] = gplane[2] ;
+	vector3_normalize( vertical , vertical ) ;
+	tilt_mat[2] = - vertical[0] ;
+	tilt_mat[5] = - vertical[1] ;
+	tilt_mat[6] = vertical[0] ;
+	tilt_mat[7] = vertical[1] ;
+	tilt_mat[8] = vertical[2] ;
+	Z = vertical[2] ;
+	one_plus_Z = RMAX + Z ;
+	if ( one_plus_Z > 0 )
+	{
+		tilt_mat[0] = Z+__builtin_divsd( __builtin_mulss( vertical[1], vertical[1]),one_plus_Z );
+		tilt_mat[4] = Z+__builtin_divsd( __builtin_mulss( vertical[0], vertical[0]),one_plus_Z );
+		tilt_mat[1] = - __builtin_divsd( __builtin_mulss( vertical[0], vertical[1]),one_plus_Z );
+		tilt_mat[3] = tilt_mat[1];
+	}
+	else
+	{
+        // this is an arbitrary approximation for case of perfectly inverted
+        // because a pure tilt rotation vector for this situation is not unique
+		tilt_mat[0] = - Z ;
+		tilt_mat[4] = Z ;
+		tilt_mat[1] = 0 ;
+		tilt_mat[3] = 0 ;
+	}
+}
+
 void dcm_init_rmat(void)
 {
 #if (MAG_YAW_DRIFT == 1)
@@ -148,42 +187,113 @@ void dcm_init_rmat(void)
 }
 
 union longww omegagyro_filtered[] = { { 0 }, { 0 },  { 0 } };
+union longlongLL theta_32_filtered[] = { { 0 }, { 0 },  { 0 } };
+union longlongLL long_long_accum ;
 
 #define GYRO_FILTER_SHIFT 12
 
+int16_t motion_detect = 1 ;
 extern int16_t accelOn ;
 extern int16_t gyro_offset[];
 union longww gyro_offset_32[] = { { 0 }, { 0 },  { 0 } };
+union longww gyro_offset_32_coning[] = { { 0 }, { 0 },  { 0 } };
+union longww accum32 ;
+extern int32_t omegagyro32X[] ;
+extern union longww theta_32[];
+union longww omegagyro_filtered_backup[]= { { 0 }, { 0 },  { 0 } } ;
+union longlongLL theta_32_filtered_backup[] = { { 0 }, { 0 },  { 0 } };
+extern int16_t check_for_jostle ;
+uint16_t jostle_counter = 0 ;
 static inline void read_gyros(void)
 {
 	// fetch the gyro signals and subtract the baseline offset, 
 	// and adjust for variations in supply voltage
-	
+    if ((udb_heartbeat_counter % HEARTBEAT_HZ )== 0) jostle_counter ++ ;
+			if ( jostle_counter == JOSTLE_CHECK_PERIOD ) 
+			{
+				jostle_counter = 0 ;
+				check_for_jostle = 1 ;
+			}
+	if ( check_for_jostle == 1 )
+    {
+        if ( motion_detect == 1 )
+        {
+            omegagyro_filtered[0].WW = omegagyro_filtered_backup[0].WW ;
+            omegagyro_filtered[1].WW = omegagyro_filtered_backup[1].WW ;
+            omegagyro_filtered[2].WW = omegagyro_filtered_backup[2].WW ;
+            theta_32_filtered[0].LL = theta_32_filtered_backup[0].LL ;
+            theta_32_filtered[1].LL = theta_32_filtered_backup[1].LL ;
+            theta_32_filtered[2].LL = theta_32_filtered_backup[2].LL ;
+            
+            motion_detect = 0 ;             
+        }
+        else
+        {
+            omegagyro_filtered_backup[0].WW = omegagyro_filtered[0].WW ;
+            omegagyro_filtered_backup[1].WW = omegagyro_filtered[1].WW ;
+            omegagyro_filtered_backup[2].WW = omegagyro_filtered[2].WW ;
+            theta_32_filtered_backup[0].LL = theta_32_filtered[0].LL ;
+            theta_32_filtered_backup[1].LL = theta_32_filtered[1].LL ;
+            theta_32_filtered_backup[2].LL = theta_32_filtered[2].LL ;          
+        }
+        check_for_jostle = 0 ;
+    }
 	lookup_gyro_offsets();
 	gyro_offset_32[0].WW += ((int32_t)gyro_offset[0]) << 10 ;
 	gyro_offset_32[1].WW += ((int32_t)gyro_offset[1]) << 10 ;
 	gyro_offset_32[2].WW += ((int32_t)gyro_offset[2]) << 10 ;
+
+	gyro_offset_32_coning[0].WW = XRATE_SIGN_ORIENTED(((int32_t)gyro_offset[0]) << 10) ;
+	gyro_offset_32_coning[1].WW = YRATE_SIGN_ORIENTED(((int32_t)gyro_offset[1]) << 10) ;
+	gyro_offset_32_coning[2].WW = ZRATE_SIGN_ORIENTED(((int32_t)gyro_offset[2]) << 10) ;
+
 	udb_xrate.offset = (gyro_offset_32[0]._.W1) ;
 	udb_yrate.offset = (gyro_offset_32[1]._.W1) ;
 	udb_zrate.offset = (gyro_offset_32[2]._.W1) ;
 	gyro_offset_32[0]._.W1 = 0 ;
 	gyro_offset_32[1]._.W1 = 0 ;
 	gyro_offset_32[2]._.W1 = 0 ;
-
-	omegagyro[0] = XRATE_VALUE;
+    omegagyro[0] = XRATE_VALUE;
 	omegagyro[1] = YRATE_VALUE;
 	omegagyro[2] = ZRATE_VALUE;
-	union longww accum32 ;
+
+    
+#ifdef CONING_CORRECTION
+    if(motion_detect == 0)
+    {
+	omegagyro_filtered[0].WW += ((int32_t)(-omegagyro32X[0])>>(GYRO_FILTER_SHIFT-11)) 
+          + (( -((int32_t)(omegagyro_filtered[0].WW ))
+            +((int32_t)(gyro_offset_32_coning[0].WW )))>>GYRO_FILTER_SHIFT) ;
+	omegagyro_filtered[1].WW += ((int32_t)(-omegagyro32X[1])>>(GYRO_FILTER_SHIFT-11)) 
+           + (( -((int32_t)(omegagyro_filtered[1].WW ))
+            +((int32_t)(gyro_offset_32_coning[1].WW )))>>GYRO_FILTER_SHIFT);
+	omegagyro_filtered[2].WW += ((int32_t)(-omegagyro32X[2])>>(GYRO_FILTER_SHIFT-11)) 
+          + ((  -((int32_t)(omegagyro_filtered[2].WW )) 
+            +((int32_t)(gyro_offset_32_coning[2].WW )))>>GYRO_FILTER_SHIFT);
+    
+    long_long_accum._.L0 = 0 ;
+    
+    long_long_accum._.L1 = theta_32[0].WW ;
+    theta_32_filtered[0].LL += ((long_long_accum.LL - theta_32_filtered[0].LL)>>GYRO_FILTER_SHIFT );
+    long_long_accum._.L1 = theta_32[1].WW ;
+    theta_32_filtered[1].LL += ((long_long_accum.LL - theta_32_filtered[1].LL)>>GYRO_FILTER_SHIFT );
+    long_long_accum._.L1 = theta_32[2].WW ;
+    theta_32_filtered[2].LL += ((long_long_accum.LL - theta_32_filtered[2].LL)>>GYRO_FILTER_SHIFT );
+    
+    }
+#else
 	
-	if (accelOn == 1)
+	if (motion_detect == 0 )
 	{
 	accum32._.W1 = -omegagyro[0] ;
+	accum32._.W0 = 0 ;
 	omegagyro_filtered[0].WW += ((int32_t)(accum32.WW)>>GYRO_FILTER_SHIFT) -((int32_t)(omegagyro_filtered[0].WW )>>GYRO_FILTER_SHIFT) ;
 	accum32._.W1 = -omegagyro[1] ;
 	omegagyro_filtered[1].WW += ((int32_t)(accum32.WW)>>GYRO_FILTER_SHIFT) -((int32_t)(omegagyro_filtered[1].WW )>>GYRO_FILTER_SHIFT) ;
 	accum32._.W1 = -omegagyro[2] ;
 	omegagyro_filtered[2].WW += ((int32_t)(accum32.WW)>>GYRO_FILTER_SHIFT) -((int32_t)(omegagyro_filtered[2].WW )>>GYRO_FILTER_SHIFT) ;
 	}
+#endif // CONING_CORRECTION
 }
 boolean first_accel = 1 ;
 int16_t aero_force_new[] = { 0 , 0 , 0 } ;
@@ -202,6 +312,7 @@ inline void read_accel(void)
 	
 	if (first_accel == 1 )
 	{
+        align_roll_pitch(rmat);
 		aero_force[0] = aero_force_new[0] ;
 		aero_force[1] = aero_force_new[1] ;
 		aero_force[2] = aero_force_new[2] ;
@@ -226,6 +337,9 @@ inline void read_accel(void)
 		aero_force_filtered[0]._.W1 = aero_force[0] ;
 		aero_force_filtered[1]._.W1 = aero_force[1] ;
 		aero_force_filtered[2]._.W1 = aero_force[2] ;
+		aero_force_filtered[0]._.W0 = 0 ;
+		aero_force_filtered[1]._.W0 = 0 ;
+		aero_force_filtered[2]._.W0 = 0 ;
 		first_accel = 0 ;
 	}
 	else
@@ -270,6 +384,8 @@ void udb_callback_read_sensors(void)
 }
 
 fractional theta[3];
+extern int16_t theta_16[];
+fractional rup_copy[9];
 // The update algorithm!!
 static void rupdate(void)
 {
@@ -289,7 +405,9 @@ static void rupdate(void)
 	gyro_fraction[1]._.W1 = omegagyro[1] ;
 	gyro_fraction[2]._.W1 = omegagyro[2] ;
 	
-	if (accelOn == 1 )
+	// gyro_fraction._.W0 intentionally not zeroed out
+		
+	if ((accelOn == 1 ) ||(CONTINUOUS_MATRIX_LOCKING==1))
 	{
 		gyro_fraction[0].WW = gyro_fraction[0].WW + gyroCorrectionIntegral[0].WW ;
 		gyro_fraction[1].WW = gyro_fraction[1].WW + gyroCorrectionIntegral[1].WW ;
@@ -324,6 +442,38 @@ static void rupdate(void)
 	rup[6] = 0 ;
 	rup[7] = 0 ;
 
+#ifdef CONING_CORRECTION_IN_RMAT
+
+	if ((accelOn == 1 ) ||(CONTINUOUS_MATRIX_LOCKING==1))
+	{
+		// construct the delta angle matrix without coning correction
+		// because it includes residual offset compensation
+		// and coning correction is not needed during standby mode
+		delta_angle[0] = 0 ;
+		delta_angle[1] = -theta[2];
+		delta_angle[2] =  theta[1];
+		delta_angle[3] =  theta[2];
+		delta_angle[4] = 0 ;
+		delta_angle[5] = -theta[0];
+		delta_angle[6] = -theta[1];
+		delta_angle[7] =  theta[0];
+		delta_angle[8] = 0 ;
+	}
+	else
+	{
+		// construct the delta angle matrix with coning correction:
+		delta_angle[0] = 0 ;
+		delta_angle[1] = -theta_16[2];
+		delta_angle[2] =  theta_16[1];
+		delta_angle[3] =  theta_16[2];
+		delta_angle[4] = 0 ;
+		delta_angle[5] = -theta_16[0];
+		delta_angle[6] = -theta_16[1];
+		delta_angle[7] =  theta_16[0];
+		delta_angle[8] = 0 ;
+	}
+#else
+	
 	// construct the delta angle matrix:
 	delta_angle[0] = 0 ;
 	delta_angle[1] = -theta[2];
@@ -334,6 +484,7 @@ static void rupdate(void)
 	delta_angle[6] = -theta[1];
 	delta_angle[7] =  theta[0];
 	delta_angle[8] = 0 ;
+#endif // CONING_CORRECTION_IN_RMAT
 	
 	// compute 1/2 of square of the delta angle matrix
 	// since a matrix multiply divides by 2, we get it for free	
@@ -354,6 +505,8 @@ static void rupdate(void)
 	MatrixAdd(3, 3, rup, rup, delta_angle_square_over_2 );
 	MatrixAdd(3, 3, rup, rup, delta_angle_cube_over_6 );
 
+	// for debugging
+	VectorCopy(9,rup_copy,rup);
 	// matrix multiply the rmatrix by the update matrix
 	MatrixMultiply(3, 3, 3, rbuff, rmat, rup);
 	// multiply by 2 and copy back from rbuff to rmat:
@@ -413,58 +566,108 @@ int16_t omega_scaled[3] ;
 int16_t omega_yaw_drift[3] ;
 uint16_t omega_magnitude ;
 extern boolean logging_on ;
-#if (GYRO_RANGE==1000)
-#define MAX_OMEGA 100
-#elif (GYRO_RANGE==500)
-#define MAX_OMEGA 200
-#else
-#error "invalid GYRO_RANGE"
-#endif // GYRO_RANGE
-#
+
 extern boolean gyro_locking_on ;
-int16_t motion_reset_counter = 500 ;
-int16_t motion_detect = 1 ;
+extern boolean slide_in_progress ;
+extern void udb_blink_red(void);
+extern void udb_blink_green(void);
+
+extern boolean led_red_run ;
+extern boolean led_green_standby ;
+
 uint16_t accel_magnitude ;
+boolean matrix_jostle = 0 ;
+
 static void roll_pitch_drift(void)
 {	
 	accel_magnitude = vector3_mag(gplane[0],gplane[1],gplane[2]);
-	omega_magnitude = vector3_mag(omegagyro[0],omegagyro[1],0); // z has large drift, x and y are more stable
-	if((omega_magnitude<MAX_OMEGA )	&& (abs(accel_magnitude-CALIB_GRAVITY/2)<CALIB_GRAVITY/8))
+	omega_magnitude = vector3_mag(omegagyro[0],omegagyro[1],omegagyro[2]); 
+	if((omega_magnitude>MATRIX_GYRO_OFFSET_MARGIN )	|| (abs(accel_magnitude-CALIB_GRAVITY/2)>CALIB_GRAVITY/8))
 	{
-		if (motion_reset_counter == 0 )
-		{
-			motion_detect = 0 ;
-		}
-		else
-		{
-			motion_reset_counter = motion_reset_counter - 1;
-		}
-	}
-	else
+        matrix_jostle = 1 ;
+    }
+    
+    
+    if((omega_magnitude>GYRO_OFFSET_MARGIN )	|| (abs(accel_magnitude-CALIB_GRAVITY/2)>CALIB_GRAVITY/8))
 	{
-		motion_reset_counter = 500 ;
 		motion_detect = 1 ;
-	}
-	if((gyro_locking_on == 1)&&(motion_detect == 0))
-	{
-		accelOn = 1 ;
+        if (slide_in_progress == 1 )
+        {
+            LED_RED = LED_ON ;
+        }
+        else
+        {
+            LED_GREEN = LED_ON ;
+        }
+    }
+    else
+    {
+        if ( led_red_run == 1)
+        {
+            LED_RED = LED_ON ;
+        }
+        else
+        {
+            LED_RED = LED_OFF ;
+        }
+    
+        if ( led_green_standby == 1)
+        {
+            LED_GREEN = LED_ON ;
+        }
+        else
+        {
+            LED_GREEN = LED_OFF ;
+        }
+    }
+    if ((( logging_on == 0)||(CONTINUOUS_MATRIX_LOCKING==1))&&(matrix_jostle == 0 ))
+    {
 		int16_t gplane_nomalized[3] ;
 		vector3_normalize( gplane_nomalized , gplane ) ;
 		VectorCross(errorRP, gplane_nomalized, &rmat[6]);
-		
-		errorYawplane[0] = 0 ;
-		errorYawplane[1] = 0 ;
-		errorYawplane[2] = 0 ;
+        
+        dirOverGndHrmat[0] = rmat[0] ;
+		dirOverGndHrmat[1] = rmat[3] ;
+		dirOverGndHrmat[2] = 0 ;
+		dirOverGndHGPS[0] = RMAX ;
+		dirOverGndHGPS[1] = 0 ;
+		dirOverGndHGPS[2] = 0 ;
+        
+        if ( logging_on == 0)
+        {
+        
+            VectorCross(errorYawground, dirOverGndHrmat , dirOverGndHGPS );
+        
+            // convert to "plane" frame:
+            // *** Note: this accomplishes multiplication rmat transpose times errorYawground!!
+            MatrixMultiply(1, 3, 3, errorYawplane, errorYawground, rmat) ;
+        }
+        else
+        {
+            errorYawplane[0]= 0 ;
+            errorYawplane[1]= 0 ;
+            errorYawplane[2]= 0 ;
+            
+        }
+
 	}
 	else
 	{
-		accelOn = 0 ;
 		errorRP[0] = 0 ;
 		errorRP[1] = 0 ;
 		errorRP[2] = 0 ;
 		errorYawplane[0] = 0 ;
 		errorYawplane[1] = 0 ;
 		errorYawplane[2] = 0 ;
+	}
+
+	if((gyro_locking_on == 1)&&(motion_detect == 0))
+	{
+		accelOn = 1 ;
+	}
+	else
+	{
+		accelOn = 0 ;
 	}
 
 }
@@ -503,24 +706,50 @@ static void PI_feedback(void)
 
 void dcm_run_imu_step(void)
 {
+    roll_pitch_drift();         // local
 	rupdate();                  // local
+#ifdef CONING_CORRECTION
+	rmat_32_update();
+#endif // CONING_CORRECTION
 	normalize();                // local
-	roll_pitch_drift();         // local
+
 	PI_feedback();              // local
+#ifdef LOG_VELOCITY
 	estimate_velocity();
+#endif // LOG_VELOCITY
 }
 float roll_angle , pitch_angle , yaw_angle ;
+float roll_angle_8k , pitch_angle_8k , yaw_angle_8k ;
 float bill_angle_x , bill_angle_y , bill_angle_z ;
 float rmat_f[9];
+float rmat_f_8k[9];
+extern int16_t rmat_16[];
 #define DEG_PER_RAD 57.296
+void compute_euler_8k(void)
+{
+	rmat_f_8k[0]=(float)rmat_16[0] ;
+	//rmat_f_8k[1]=(float)rmat_16[1] ;
+	//rmat_f_8k[2]=(float)rmat_16[2] ;
+	rmat_f_8k[3]=(float)rmat_16[3] ;
+	//rmat_f_8k[4]=(float)rmat_16[4] ;
+	//rmat_f_8k[5]=(float)rmat_16[5] ;
+	rmat_f_8k[6]=(float)rmat_16[6] ;
+	rmat_f_8k[7]=(float)rmat_16[7] ;
+	rmat_f_8k[8]=(float)rmat_16[8] ;
+
+	pitch_angle_8k = DEG_PER_RAD*atan2f(-rmat_f_8k[6],sqrtf(rmat_f_8k[7]*rmat_f_8k[7]+rmat_f_8k[8]*rmat_f_8k[8]));
+	roll_angle_8k = DEG_PER_RAD*atan2f(rmat_f_8k[7],rmat_f_8k[8]);
+	yaw_angle_8k = DEG_PER_RAD*atan2f(rmat_f_8k[3],rmat_f_8k[0]);
+}
+
 void compute_euler(void)
 {
 	rmat_f[0]=(float)rmat[0] ;
-	rmat_f[1]=(float)rmat[1] ;
-	rmat_f[2]=(float)rmat[2] ;
+//	rmat_f[1]=(float)rmat[1] ;
+//	rmat_f[2]=(float)rmat[2] ;
 	rmat_f[3]=(float)rmat[3] ;
-	rmat_f[4]=(float)rmat[4] ;
-	rmat_f[5]=(float)rmat[5] ;
+//	rmat_f[4]=(float)rmat[4] ;
+//	rmat_f[5]=(float)rmat[5] ;
 	rmat_f[6]=(float)rmat[6] ;
 	rmat_f[7]=(float)rmat[7] ;
 	rmat_f[8]=(float)rmat[8] ;
@@ -535,12 +764,12 @@ void compute_bill_angles(void)
 	rmat_f[0]=(float)rmat[0] ;
 	rmat_f[1]=(float)rmat[1] ;
 	rmat_f[2]=(float)rmat[2] ;
-	rmat_f[3]=(float)rmat[3] ;
-	rmat_f[4]=(float)rmat[4] ;
-	rmat_f[5]=(float)rmat[5] ;
-	rmat_f[6]=(float)rmat[6] ;
-	rmat_f[7]=(float)rmat[7] ;
-	rmat_f[8]=(float)rmat[8] ;
+//	rmat_f[3]=(float)rmat[3] ;
+//	rmat_f[4]=(float)rmat[4] ;
+//	rmat_f[5]=(float)rmat[5] ;
+//	rmat_f[6]=(float)rmat[6] ;
+//	rmat_f[7]=(float)rmat[7] ;
+//	rmat_f[8]=(float)rmat[8] ;
 
 	bill_angle_x = DEG_PER_RAD*atan2f(rmat_f[2],rmat_f[1]);
 	bill_angle_y = DEG_PER_RAD*atan2f(rmat_f[0],rmat_f[2]);
@@ -566,9 +795,9 @@ void estimate_velocity(void)
 	omegaAccum_float[1] = (((float)omegaAccum[1])*((float)GYRO_RANGE))/(57.296*((float)16384)) ;
 	omegaAccum_float[2] = (((float)omegaAccum[2])*((float)GYRO_RANGE))/(57.296*((float)16384)) ;
 			
-	gravity_long[0].WW= __builtin_mulss(rmat[6],2*CALIB_GRAVITY);
-	gravity_long[1].WW= __builtin_mulss(rmat[7],2*CALIB_GRAVITY);
-	gravity_long[2].WW= __builtin_mulss(rmat[8],2*CALIB_GRAVITY);
+	gravity_long[0].WW= 2*__builtin_mulss(rmat[6],CALIB_GRAVITY);
+	gravity_long[1].WW= 2*__builtin_mulss(rmat[7],CALIB_GRAVITY);
+	gravity_long[2].WW= 2*__builtin_mulss(rmat[8],CALIB_GRAVITY);
 	
 	gravity_estimate[0] = gravity_long[0]._.W1 ;
 	gravity_estimate[1] = gravity_long[1]._.W1 ;

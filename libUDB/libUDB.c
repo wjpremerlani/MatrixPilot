@@ -78,10 +78,10 @@ void udb_init(void)
 {
 	udb_flags.B = 0;
 
-	init_analogs();
+//	init_analogs();
 
-	udb_init_ADC();
-	init_events();
+//	udb_init_ADC();
+//	init_events();
 #if (USE_I2C1_DRIVER == 1)
 	I2C1_Init();
 #endif
@@ -102,11 +102,11 @@ void udb_init(void)
 //	osd_init();
 
 //FIXME: add AUAV3 support
-#if (BOARD_TYPE == UDB4_BOARD || BOARD_TYPE == UDB5_BOARD)
+#if (BOARD_TYPE == UDB4_BOARD || BOARD_TYPE == UDB5_BOARD || BOARD_TYPE == UDB7LUGE_BOARD)
 //	udb_eeprom_init();
 #endif
 
-#if (BOARD_TYPE == UDB5_BOARD || BOARD_TYPE == AUAV3_BOARD)
+#if (BOARD_TYPE == UDB5_BOARD || BOARD_TYPE == AUAV3_BOARD || BOARD_TYPE == UDB7LUGE_BOARD)
 	MPU6000_init16(&heartbeat);
 #endif
 

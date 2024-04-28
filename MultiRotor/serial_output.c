@@ -1,13 +1,15 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include "serial_output.h"
 #include "../libUDB/libUDB.h"
 #include "../libUDB/oscillator.h"
 #include "../libUDB/interrupt.h"
 #include "../libUDB/serialIO.h"
 
-#define SERIAL_BUFFER_SIZE	1536
-#define NUM_CHUNKS_TO_BUFFER 16
+#define SERIAL_BUFFER_SIZE	10200
+#define NUM_CHUNKS_TO_BUFFER 86
+
 
 // Set up two serial buffers, and swap back and forth between then as we buffer
 // and send long messages in bursts, to create longer times between each burst
@@ -22,6 +24,8 @@ uint8_t read_buffer_index = 0;
 uint16_t packet_data_start;
 uint16_t packet_data_length;
 uint8_t num_chunks_buffered = 0;
+boolean is_packet_open = false;
+
 void finalize_packet();
 #else
 uint8_t serial_buffer[SERIAL_BUFFER_SIZE] ;
@@ -97,14 +101,18 @@ void serial_output(const char* format, ...)
     
     va_start(arglist, format);
     
+    if (!is_packet_open) {
+        serial_output_send_packet_cmd(PKT_CMD_START);
+    }
+    
 	start_index = end_index[write_buffer_index];
 	remaining = SERIAL_BUFFER_SIZE - start_index;
 
 	if (remaining > 5)
 	{
         if (num_chunks_buffered == 0) {
-            serial_buffer[write_buffer_index][start_index++] = 0xDE;
-            serial_buffer[write_buffer_index][start_index++] = 0xD2;
+            serial_buffer[write_buffer_index][start_index++] = PKT_CMD_HEADER;
+            serial_buffer[write_buffer_index][start_index++] = PKT_CMD_MSG;
             serial_buffer[write_buffer_index][start_index++] = 0x00; // Save space for length bytes
             serial_buffer[write_buffer_index][start_index++] = 0x00;
             packet_data_start = start_index;
@@ -140,7 +148,7 @@ void finalize_packet()
     }
 }
 
-void serial_output_start_end_packet(boolean isStart)
+void serial_output_send_packet_cmd(uint8_t cmd)
 {
     while (end_index[read_buffer_index]) ;
     
@@ -148,10 +156,13 @@ void serial_output_start_end_packet(boolean isStart)
     
 	int16_t remaining = SERIAL_BUFFER_SIZE - end_index[write_buffer_index];
     if (remaining > 2) {
-        serial_buffer[write_buffer_index][end_index[write_buffer_index]++] = 0xDE;
-        serial_buffer[write_buffer_index][end_index[write_buffer_index]++] = (isStart) ? 0xD1 : 0xD3;
+        serial_buffer[write_buffer_index][end_index[write_buffer_index]++] = PKT_CMD_HEADER;
+        serial_buffer[write_buffer_index][end_index[write_buffer_index]++] = cmd;
         read_buffer_index = write_buffer_index;
         write_buffer_index = !write_buffer_index;
+        if (cmd == PKT_CMD_START || cmd == PKT_CMD_STOP) {
+            is_packet_open = (cmd == PKT_CMD_START);
+        }
         udb_serial_start_sending_data();
     }
 }
@@ -194,7 +205,7 @@ void serial_output(const char* format, ...)
 	va_end(arglist);
 }
 
-void serial_output_start_end_packet(boolean isStart) {}
+void serial_output_send_packet_cmd(uint8_t cmd) {}
 
 int16_t udb_serial_callback_get_byte_to_send(void)
 {

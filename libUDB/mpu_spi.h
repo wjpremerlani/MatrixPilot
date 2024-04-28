@@ -38,7 +38,7 @@
 #define MPU_SPI 1
 #define _TRISMPUINT _TRISA12
 
-#elif (BOARD_TYPE == UDB5_BOARD)
+#elif (BOARD_TYPE == UDB5_BOARD || BOARD_TYPE == UDB7LUGE_BOARD)
 #define MPU_SPI 2
 #define _TRISMPUINT _TRISA14
 
@@ -69,7 +69,7 @@ void writeMPUSPIreg16(uint16_t addr, uint16_t data);
 uint16_t readMPUSPIreg16(uint16_t addr);
 
 // n-word, non-blocking SPI read, followed by call_back
-void readMPUSPI_burst16n(uint16_t data[], int16_t n, uint16_t addr, void (*call_back)(void));
+void readMPUSPI_burst16n(union intbb data[], int16_t n, uint16_t addr, void (*call_back)(void));
 
 
 #endif // MPU_SPI_H

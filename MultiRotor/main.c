@@ -49,6 +49,34 @@ void offsets_init(void) ;
 const int max_tilt = 0 ;  // maximum tilt in byte cicular
 int commanded_tilt_gain ;
 
+//#define BLINK_PERIOD 100
+#define BLINK_PERIOD 200
+#define BLINK_ON_TIME 20 
+boolean led_red_run = 0 ;
+boolean led_green_standby = 0 ;
+void udb_blink_red(void)
+{
+    if ((udb_heartbeat_counter % BLINK_PERIOD) <= BLINK_ON_TIME)
+    {
+        led_red_run = 1 ;
+    }
+    else
+    {
+        led_red_run = 0 ;
+    }
+}
+void udb_blink_green(void)
+{
+    if ((udb_heartbeat_counter % BLINK_PERIOD) <= BLINK_ON_TIME)
+    {
+        led_green_standby = 1 ;
+    }
+    else
+    {
+        led_green_standby = 0 ;
+    }
+}
+
 int main (void)
 {
 //	offsets_init();
@@ -63,13 +91,19 @@ int main (void)
 	dcm_init() ;
 	
 #ifdef USE_PACKETIZED_TELEMERTY
-	udb_serial_set_rate(460800) ;
+//	udb_serial_set_rate(460800) ;
+    udb_serial_set_rate(473933) ;
     start_log = 0;
     hasWrittenHeader = 1;
     logging_on = 0 ;
 #else
+#ifndef UDB7LUGE
 	udb_serial_set_rate(57600) ;
-#endif
+#else
+//    udb_serial_set_rate(460800) ;
+    udb_serial_set_rate(473933) ;    
+#endif // UDB7LUGE
+#endif // USE_PACKETIZED_TELEMERTY
     
 	LED_GREEN = LED_OFF ;
 	LED_RED = LED_OFF ;
@@ -138,6 +172,7 @@ extern uint16_t altitude ;
 float tilt_angle ;
 boolean start_log = 1 , stop_log = 0 , slide_in_progress = 0 ;
 uint16_t stop_count = 0 ;
+int16_t is_level = 0 ;
 void update_slide_detection(void)
 {
 	int16_t tilt_angle_int ;
@@ -145,41 +180,54 @@ void update_slide_detection(void)
 	tilt_angle_int = (int16_t)tilt_angle ;
 	if ( slide_in_progress == 1)
 		{
+#ifndef SIMULATE_TILT
 		if ( tilt_angle_int > TILT_STOP )
+#else
+        if (is_level == 0 )
+#endif // SIMULATE_TILT
 			if ( stop_count == SLIDE_DET_HZ*TILT_STOP_DELAY)
 			{
 				stop_log = 1 ;
 				slide_in_progress = 0 ;
 				LED_RED = LED_OFF ;
-				udb_led_toggle(LED_GREEN);
+                led_red_run = 0 ;
+                udb_blink_green();
 			}
 			else
 			{
 				stop_count ++ ;
-				LED_RED = LED_ON ;
+                udb_blink_red();             
 				LED_GREEN = LED_OFF ;
+                led_green_standby = 0 ;
 			}
 		else
 			{
 				stop_count = 0 ;
-				udb_led_toggle(LED_RED);
+                udb_blink_red();
 				LED_GREEN = LED_OFF ;
+                led_green_standby = 0 ;
 			}
 		}
 	else
 		{
+#ifndef SIMULATE_TILT
 		if ( tilt_angle_int < TILT_START )
+#else
+            if (is_level == 1 )
+#endif // SIMULATE_TILT
 			{
 				stop_count = 0 ;
 				start_log = 1 ;
 				slide_in_progress = 1 ;
-				udb_led_toggle(LED_RED);
+                udb_blink_red();
 				LED_GREEN = LED_OFF ;
+                led_green_standby = 0 ;
 			}
 		else
 			{
 				LED_RED = LED_OFF ;
-				udb_led_toggle(LED_GREEN);
+                led_red_run = 0 ;
+                udb_blink_green();
 			}
 		}
 }
@@ -187,8 +235,9 @@ void update_slide_detection(void)
 // Called at heartbeat Hz, before sending servo pulses
 extern boolean log_residuals ;
 extern void send_residual_data(void) ;
+extern void send_spectral_data(void) ;
 boolean stop_residuals = 1 ;
-boolean start_residuals = 0 ;
+boolean start_residuals = 1 ;
 extern float yaw_previous , yaw_angle , heading_previous ;
 extern void compute_euler(void);
 uint16_t residual_log_counter = 0 ;
@@ -227,7 +276,11 @@ void dcm_heartbeat_callback(void)
 			}
 			
 			{
+#ifdef BUILD_OFFSET_TABLE
+                if ((udb_heartbeat_counter % (HEARTBEAT_HZ/BUILD_OFFSET_HZ)) == 0)
+#else
 				if ((udb_heartbeat_counter % (HEARTBEAT_HZ/LOGGER_HZ)) == 0)
+#endif //
 				{
 					send_imu_data();
 				}
