@@ -107,7 +107,7 @@
 //#define LUGE7_SN054
 
 //#define LUGE7_SN080
-#define LUGE7_SN081
+//#define LUGE7_SN081
 //#define LUGE7_SN082
 //#define LUGE7_SN083
 
@@ -174,7 +174,7 @@
 //#define LUGE7_SN154
 //#define LUGE7_SN155
 //#define LUGE7_SN156
-//#define LUGE7_SN157
+#define LUGE7_SN157
 //#define LUGE7_SN158
 //#define LUGE7_SN159
 //#define LUGE7_SN160
