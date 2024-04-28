@@ -35,9 +35,10 @@
 
 // the following are used to measure offsets and gains for commissioning
 //#define RECORD_OFFSETS        // record raw accelerometer data
-//#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
+#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
 //#define DEBUG_TABLE_BUILD
-#define GYRO_OFFSETS          // verifies gyro temperature compensation table
+#define ACCEL_AND_GYRO_OFFSETS
+//#define GYRO_OFFSETS          // verifies gyro temperature compensation table
 //#define GYRO_CALIB            // used to compute gyro calibration
 //#define CROSS_COUPLING          // measure cross coupling
 //#define FILTERED_ACCELEROMETER

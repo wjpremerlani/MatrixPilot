@@ -323,3 +323,124 @@ void update_offset_table(void)
 		}
 	}		
 }
+int32_t acc_sum[] = { 0 , 0 , 0 } ;
+int16_t acc_bar[] = { 0 , 0 , 0 } ;
+int16_t acc_prev[] = { 0 , 0 , 0 } ;
+int16_t acc_base[3] ;
+int16_t acc_off_entry[3] ;
+
+void update_offset_table_gyros_and_accelerometers(void)
+{
+	reported_temperature = mpu_temp.value ;
+	if ( initial_temp_recorded == 0 )
+	{
+		initial_temperature = reported_temperature ;
+        acc_base[0] = udb_xaccel.value ;
+        acc_base[1] = udb_yaccel.value ;
+        acc_base[2] = udb_zaccel.value ;
+		temperature_offset = initial_temperature ;
+		initial_temp_recorded = 1 ;
+		LED_RED = LED_ON ;
+		LED_GREEN = LED_OFF ;
+	}
+	adjusted_temperature = reported_temperature - temperature_offset ;
+	{
+		gyro_offset_entry[0]= 64*udb_xrate.value ;
+		gyro_offset_entry[1]= 64*udb_yrate.value ;
+		gyro_offset_entry[2]= 64*udb_zrate.value ;
+     
+        acc_off_entry[0]= 64*(udb_xaccel.value-acc_base[0]) ;
+		acc_off_entry[1]= 64*(udb_yaccel.value-acc_base[1]) ;
+		acc_off_entry[2]= 64*(udb_zaccel.value-acc_base[2]) ;
+    		
+		y_sum[0] += (int32_t ) gyro_offset_entry[0] ;
+		y_sum[1] += (int32_t ) gyro_offset_entry[1] ;
+		y_sum[2] += (int32_t ) gyro_offset_entry[2] ;
+        
+        acc_sum[0] += (int32_t ) acc_off_entry[0] ;
+	    acc_sum[1] += (int32_t ) acc_off_entry[1] ;
+	    acc_sum[2] += (int32_t ) acc_off_entry[2] ;
+		
+		samples_32t ++ ;
+		
+		if ( adjusted_temperature >= STEP_SIZE )
+		{
+			udb_led_toggle(LED_GREEN);
+			udb_led_toggle(LED_RED);
+			temperature_offset += STEP_SIZE ;
+			samples_64t = (int64_t)samples_32t ;
+			if (samples_32t>0)
+			{
+				y_bar[0] = (int16_t)(y_sum[0]/samples_32t);
+				y_bar[1] = (int16_t)(y_sum[1]/samples_32t);
+				y_bar[2] = (int16_t)(y_sum[2]/samples_32t);		
+                acc_off_entry[0]= (int16_t)(acc_sum[0]/samples_32t);
+                acc_off_entry[1]= (int16_t)(acc_sum[1]/samples_32t);
+                acc_off_entry[2]= (int16_t)(acc_sum[2]/samples_32t);
+               
+			}
+			else
+			{
+				y_bar[0] = 0 ;
+				y_bar[1] = 0 ;
+				y_bar[2] = 0 ;
+                acc_off_entry[0]= 0;
+                acc_off_entry[1]= 0;
+                acc_off_entry[2]= 0;
+			}
+			if (initial_temp_reported == 1)
+			{               
+				serial_output("%i,%i,%li,%i,%i,%i,%i,%i,%i\r\n",
+                    reported_temperature,
+                    udb_cpu_load(),
+					samples_32t,
+					(offset_previous[0]+ y_bar[0])/2 ,
+					(offset_previous[1]+ y_bar[1])/2 ,
+					(offset_previous[2]+ y_bar[2])/2 ,
+                    (acc_prev[0]+ acc_off_entry[0])/2 , 
+                    (acc_prev[1]+ acc_off_entry[1])/2 , 
+                    (acc_prev[2]+ acc_off_entry[2])/2                
+                        ) ;	
+
+                offset_previous[0] = y_bar[0] ;
+				offset_previous[1] = y_bar[1] ;
+				offset_previous[2] = y_bar[2] ;
+                acc_prev[0] = acc_off_entry[0] ;
+                acc_prev[1] = acc_off_entry[1] ;
+                acc_prev[2] = acc_off_entry[2] ;
+                
+			}
+			else
+			{
+				initial_temp_reported = 1 ;
+                
+                serial_output("initial temperature = %i\r\n%i,%i,%li,%i,%i,%i,%i,%i,%i\r\n",
+                    initial_temperature ,
+                    reported_temperature,
+                    udb_cpu_load(),
+					samples_32t,
+					y_bar[0] ,
+					y_bar[1] ,
+					y_bar[2] ,
+                    acc_off_entry[0] ,
+                    acc_off_entry[1] ,
+                    acc_off_entry[2] 
+                        ) ;	
+	
+				offset_previous[0] = y_bar[0] ;
+				offset_previous[1] = y_bar[1] ;
+				offset_previous[2] = y_bar[2] ;
+                acc_prev[0] = acc_off_entry[0] ;
+                acc_prev[1] = acc_off_entry[1] ;
+                acc_prev[2] = acc_off_entry[2] ;
+			}	
+			samples_32t = 0 ;
+			y_sum[0] = 0 ;
+			y_sum[1] = 0 ;
+			y_sum[2] = 0 ;
+            acc_sum[0] = 0 ;
+            acc_sum[1] = 0 ;
+            acc_sum[2] = 0 ;      
+		}
+	}		
+}
