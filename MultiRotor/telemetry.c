@@ -796,7 +796,7 @@ void send_imu_data(void)
 #endif // ROAD_TEST
 #ifdef BUILD_OFFSET_TABLE
 #ifdef ACCEL_AND_GYRO_OFFSETS
-        serial_output ("\r\ntmptr,cpu,smpls,gyro_off_x,gyro_off_y,gyro_off_z,acc_x,acc_y,acc_z\r\n");
+        //serial_output ("\r\ntmptr,cpu,smpls,gyro_mag,gyro_off_x,gyro_off_y,gyro_off_z,gyro_raw_x,gyro_raw_y,gyro_raw_z,acc_x,acc_y,acc_z\r\n");
 #else
 		serial_output("\r\ntmptr,cpu,smpls,X_bar,Y_bar_x,Y_bar_y,Y_bar_z,XX_bar,XY_bar_x,XY_bar_y,XY_bar_z,denom,lft_o_x,lft_o_y,lft_o_z,rght_o_x,rght_o_y,rght_o_z,offx,offy,offz\r\n");
 #endif //

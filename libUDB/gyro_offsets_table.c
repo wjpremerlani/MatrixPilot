@@ -324,10 +324,17 @@ void update_offset_table(void)
 	}		
 }
 int32_t acc_sum[] = { 0 , 0 , 0 } ;
-int16_t acc_bar[] = { 0 , 0 , 0 } ;
 int16_t acc_prev[] = { 0 , 0 , 0 } ;
 int16_t acc_base[3] ;
 int16_t acc_off_entry[3] ;
+int32_t gyro_value_sum[] = { 0 , 0 , 0 } ;
+int16_t gyro_value_bar[] = { 0 , 0 , 0 } ;
+int16_t gyro_value_prev[] = { 0 , 0 , 0 } ;
+int16_t gyro_value_entry[] = { 0 , 0 , 0 } ;
+int32_t gyro_offset_sum[] = { 0 , 0 , 0 } ;
+int16_t gyro_offset_bar[] = { 0 , 0 , 0 } ;
+int16_t gyro_offset_prev[] = { 0 , 0 , 0 } ;
+extern uint16_t omega_magnitude ;
 
 void update_offset_table_gyros_and_accelerometers(void)
 {
@@ -345,17 +352,27 @@ void update_offset_table_gyros_and_accelerometers(void)
 	}
 	adjusted_temperature = reported_temperature - temperature_offset ;
 	{
-		gyro_offset_entry[0]= 64*udb_xrate.value ;
-		gyro_offset_entry[1]= 64*udb_yrate.value ;
-		gyro_offset_entry[2]= 64*udb_zrate.value ;
+        
+        gyro_value_entry[0]= 64*udb_xrate.value ;
+		gyro_value_entry[1]= 64*udb_yrate.value ;
+		gyro_value_entry[2]= 64*udb_zrate.value ;
+
+        
+		gyro_offset_entry[0]= gyro_offset[0] ;
+		gyro_offset_entry[1]= gyro_offset[1] ;
+		gyro_offset_entry[2]= gyro_offset[2] ;
      
         acc_off_entry[0]= 64*(udb_xaccel.value-acc_base[0]) ;
 		acc_off_entry[1]= 64*(udb_yaccel.value-acc_base[1]) ;
 		acc_off_entry[2]= 64*(udb_zaccel.value-acc_base[2]) ;
     		
-		y_sum[0] += (int32_t ) gyro_offset_entry[0] ;
-		y_sum[1] += (int32_t ) gyro_offset_entry[1] ;
-		y_sum[2] += (int32_t ) gyro_offset_entry[2] ;
+		gyro_offset_sum[0] += (int32_t ) gyro_offset_entry[0] ;
+		gyro_offset_sum[1] += (int32_t ) gyro_offset_entry[1] ;
+		gyro_offset_sum[2] += (int32_t ) gyro_offset_entry[2] ;
+
+		gyro_value_sum[0] += (int32_t ) gyro_value_entry[0] ;
+		gyro_value_sum[1] += (int32_t ) gyro_value_entry[1] ;
+		gyro_value_sum[2] += (int32_t ) gyro_value_entry[2] ;
         
         acc_sum[0] += (int32_t ) acc_off_entry[0] ;
 	    acc_sum[1] += (int32_t ) acc_off_entry[1] ;
@@ -371,9 +388,14 @@ void update_offset_table_gyros_and_accelerometers(void)
 			samples_64t = (int64_t)samples_32t ;
 			if (samples_32t>0)
 			{
-				y_bar[0] = (int16_t)(y_sum[0]/samples_32t);
-				y_bar[1] = (int16_t)(y_sum[1]/samples_32t);
-				y_bar[2] = (int16_t)(y_sum[2]/samples_32t);		
+				gyro_value_bar[0] = (int16_t)(gyro_value_sum[0]/samples_32t);
+				gyro_value_bar[1] = (int16_t)(gyro_value_sum[1]/samples_32t);
+				gyro_value_bar[2] = (int16_t)(gyro_value_sum[2]/samples_32t);
+ 
+                gyro_offset_bar[0] = (int16_t)(gyro_offset_sum[0]/samples_32t);
+				gyro_offset_bar[1] = (int16_t)(gyro_offset_sum[1]/samples_32t);
+				gyro_offset_bar[2] = (int16_t)(gyro_offset_sum[2]/samples_32t);
+ 
                 acc_off_entry[0]= (int16_t)(acc_sum[0]/samples_32t);
                 acc_off_entry[1]= (int16_t)(acc_sum[1]/samples_32t);
                 acc_off_entry[2]= (int16_t)(acc_sum[2]/samples_32t);
@@ -381,30 +403,46 @@ void update_offset_table_gyros_and_accelerometers(void)
 			}
 			else
 			{
-				y_bar[0] = 0 ;
-				y_bar[1] = 0 ;
-				y_bar[2] = 0 ;
+				gyro_value_bar[0] = 0 ;
+				gyro_value_bar[1] = 0 ;
+				gyro_value_bar[2] = 0 ;
+                
+                gyro_offset_bar[0] = 0;
+				gyro_offset_bar[1] = 0;
+				gyro_offset_bar[2] = 0;             
+                
                 acc_off_entry[0]= 0;
                 acc_off_entry[1]= 0;
                 acc_off_entry[2]= 0;
 			}
 			if (initial_temp_reported == 1)
 			{               
-				serial_output("%i,%i,%li,%i,%i,%i,%i,%i,%i\r\n",
+				serial_output("%i,%i,%li,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i\r\n",
                     reported_temperature,
                     udb_cpu_load(),
 					samples_32t,
-					(offset_previous[0]+ y_bar[0])/2 ,
-					(offset_previous[1]+ y_bar[1])/2 ,
-					(offset_previous[2]+ y_bar[2])/2 ,
+                     omega_magnitude ,
+					(gyro_offset_prev[0]+ gyro_offset_bar[0])/2 ,
+					(gyro_offset_prev[1]+ gyro_offset_bar[1])/2 ,
+					(gyro_offset_prev[2]+ gyro_offset_bar[2])/2 ,
+                        
+ 					(gyro_value_prev[0]+ gyro_value_bar[0])/2 ,
+  					(gyro_value_prev[1]+ gyro_value_bar[1])/2 ,
+ 					(gyro_value_prev[2]+ gyro_value_bar[2])/2 ,
+                       
                     (acc_prev[0]+ acc_off_entry[0])/2 , 
                     (acc_prev[1]+ acc_off_entry[1])/2 , 
                     (acc_prev[2]+ acc_off_entry[2])/2                
                         ) ;	
 
-                offset_previous[0] = y_bar[0] ;
-				offset_previous[1] = y_bar[1] ;
-				offset_previous[2] = y_bar[2] ;
+                gyro_value_prev[0] = gyro_value_bar[0] ;
+				gyro_value_prev[1] = gyro_value_bar[1] ;
+				gyro_value_prev[2] = gyro_value_bar[2] ;
+                
+                gyro_offset_prev[0] = gyro_offset_bar[0];              
+                gyro_offset_prev[1] = gyro_offset_bar[1];              
+                gyro_offset_prev[2] = gyro_offset_bar[2];              
+                
                 acc_prev[0] = acc_off_entry[0] ;
                 acc_prev[1] = acc_off_entry[1] ;
                 acc_prev[2] = acc_off_entry[2] ;
@@ -414,30 +452,50 @@ void update_offset_table_gyros_and_accelerometers(void)
 			{
 				initial_temp_reported = 1 ;
                 
-                serial_output("initial temperature = %i\r\n%i,%i,%li,%i,%i,%i,%i,%i,%i\r\n",
-                    initial_temperature ,
+                serial_output("\r\ninitial temperature = %i\r\n", initial_temperature);
+                serial_output("\r\ntmptr,cpu,smpls,gyro_mag,gyro_off_x,gyro_off_y,gyro_off_z,gyro_raw_x,gyro_raw_y,gyro_raw_z,acc_x,acc_y,acc_z\r\n");
+                serial_output("%i,%i,%li,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i\r\n",   
                     reported_temperature,
                     udb_cpu_load(),
 					samples_32t,
-					y_bar[0] ,
-					y_bar[1] ,
-					y_bar[2] ,
+                    omega_magnitude ,
+                        
+					gyro_offset_bar[0],
+                    gyro_offset_bar[1],
+                    gyro_offset_bar[2],
+                        
+ 					gyro_value_bar[0] ,
+  					gyro_value_bar[1] ,
+ 					gyro_value_bar[2] ,
+                       
                     acc_off_entry[0] ,
                     acc_off_entry[1] ,
-                    acc_off_entry[2] 
+                    acc_off_entry[2]                 
                         ) ;	
-	
-				offset_previous[0] = y_bar[0] ;
-				offset_previous[1] = y_bar[1] ;
-				offset_previous[2] = y_bar[2] ;
+
+                gyro_value_prev[0] = gyro_value_bar[0] ;
+				gyro_value_prev[1] = gyro_value_bar[1] ;
+				gyro_value_prev[2] = gyro_value_bar[2] ;
+                
+                gyro_offset_prev[0] = gyro_offset_bar[0];              
+                gyro_offset_prev[1] = gyro_offset_bar[1];              
+                gyro_offset_prev[2] = gyro_offset_bar[2];              
+                
                 acc_prev[0] = acc_off_entry[0] ;
                 acc_prev[1] = acc_off_entry[1] ;
                 acc_prev[2] = acc_off_entry[2] ;
+                
 			}	
 			samples_32t = 0 ;
-			y_sum[0] = 0 ;
-			y_sum[1] = 0 ;
-			y_sum[2] = 0 ;
+            
+			gyro_offset_sum[0] = 0 ;
+			gyro_offset_sum[1] = 0 ;
+			gyro_offset_sum[2] = 0 ;
+            
+            gyro_value_sum[0] = 0 ;
+            gyro_value_sum[1] = 0 ;
+            gyro_value_sum[2] = 0 ;
+                     
             acc_sum[0] = 0 ;
             acc_sum[1] = 0 ;
             acc_sum[2] = 0 ;      
