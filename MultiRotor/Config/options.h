@@ -34,10 +34,10 @@
 //#define RESIDUAL_LOG_PERIOD 1  // 60 times per minute
 
 // the following are used to measure offsets and gains for commissioning
-//#define RECORD_OFFSETS        // record raw accelerometer data
-#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
+#define RECORD_OFFSETS        // record raw accelerometer data
+//#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
 //#define DEBUG_TABLE_BUILD
-#define ACCEL_AND_GYRO_OFFSETS
+//#define ACCEL_AND_GYRO_OFFSETS
 //#define GYRO_OFFSETS          // verifies gyro temperature compensation table
 //#define GYRO_CALIB            // used to compute gyro calibration
 //#define CROSS_COUPLING          // measure cross coupling
@@ -97,7 +97,7 @@
 //#define LUGE7_SNnew // used to program a WP without a serial number
 
 //bill's research boards
-//#define LUGE7_SNts1
+#define LUGE7_SNts1
 //#define LUGE7_SNts2
 
 
@@ -175,7 +175,7 @@
 //#define LUGE7_SN154
 //#define LUGE7_SN155
 //#define LUGE7_SN156
-#define LUGE7_SN157
+//#define LUGE7_SN157
 //#define LUGE7_SN158
 //#define LUGE7_SN159
 //#define LUGE7_SN160
@@ -2164,8 +2164,8 @@
 #ifdef RECORD_OFFSETS
 #undef LOG_IMU_WP2
 #undef LOGGER_HZ
-#define LOGGER_HZ 10
-//#define LOGGER_HZ 1
+//#define LOGGER_HZ 10
+#define LOGGER_HZ 1
 #ifndef ALWAYS_LOG
 #define ALWAYS_LOG
 #endif // ALWAYS_LOG

@@ -814,10 +814,12 @@ void send_imu_data(void)
 	else
 	{
 #ifdef RECORD_OFFSETS 
-		{	
+		{
 			serial_output( "%i,%i,%i,%i,%i,%i,%i,%i,%i,%i\r\n" ,
 			mpu_temp.value,
-			udb_xaccel.value , udb_yaccel.value , udb_zaccel.value ,
+			udb_xaccel.value - udb_xaccel.offset , 
+            udb_yaccel.value - udb_yaccel.offset , 
+            udb_zaccel.value - udb_zaccel.offset ,
 			udb_xrate.value , udb_yrate.value , udb_zrate.value	,
 			omegagyro[0],omegagyro[1],omegagyro[2]
 			 ) ;

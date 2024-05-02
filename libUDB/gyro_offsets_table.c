@@ -117,6 +117,73 @@ void lookup_gyro_offsets(void)
 }
 #endif // SIMULATED_GYRO
 
+#ifdef ACCEL_TABLE
+
+int16_t accel_offset[3] ;
+
+void lookup_accel_offsets(void)
+{
+  	temperature_index = mpu_temp.value - ACCEL_TABLE_ORIGIN ;
+	if (temperature_index < 0)
+	{
+		index_msb = 0 ;
+		index_lsb = 0 ;
+		accel_offset[0] = accel_residual_offset[0]+ accel_offset_table[0].x ;
+        accel_offset[1] = accel_residual_offset[1]+ accel_offset_table[0].y ;
+        accel_offset[2] = accel_residual_offset[2]+ accel_offset_table[0].z ;
+
+	}
+	else
+	{
+		index_lsb = temperature_index & LOOKUP_LSB_MASK ;
+		index_msb = temperature_index >> MSB_SHIFT ; 
+		number_entries = (sizeof (accel_offset_table))/(sizeof (gyro_offset_table_entry)) ;
+		if ( index_msb >= (number_entries - 1 ))
+		{
+			accel_offset[0] = accel_residual_offset[0]+ accel_offset_table[number_entries - 1].x ;
+            accel_offset[1] = accel_residual_offset[1]+ accel_offset_table[number_entries - 1].y ;
+			accel_offset[2] = accel_residual_offset[2]+ accel_offset_table[number_entries - 1].z ;
+				
+        }
+		else
+		{
+			left_entry[0]= accel_offset_table[index_msb].x ;
+			left_entry[1]= accel_offset_table[index_msb].y ;
+			left_entry[2]= accel_offset_table[index_msb].z ;
+			
+			right_minus_left[0]= accel_offset_table[index_msb+1].x - left_entry[0] ;
+			right_minus_left[1]= accel_offset_table[index_msb+1].y - left_entry[1] ;
+			right_minus_left[2]= accel_offset_table[index_msb+1].z - left_entry[2] ;
+			
+			accel_offset[0] = 
+                    accel_residual_offset[0] 
+					+ left_entry[0] 
+					+ __builtin_divsd(__builtin_mulss(right_minus_left[0],index_lsb),STEP_SIZE);
+			accel_offset[1] = 
+                    accel_residual_offset[1] 
+					+ left_entry[1] 
+					+ __builtin_divsd(__builtin_mulss(right_minus_left[1],index_lsb),STEP_SIZE);
+			accel_offset[2] = 
+                    accel_residual_offset[2] 
+					+ left_entry[2] 
+					+ __builtin_divsd(__builtin_mulss(right_minus_left[2],index_lsb),STEP_SIZE);
+			
+		}
+	} 
+    udb_xaccel.offset = accel_offset[0] ;
+	udb_yaccel.offset = accel_offset[1] ;
+	udb_zaccel.offset = accel_offset[2] ;
+}
+
+#else
+
+void lookup_accel_offsets(void)
+{
+    
+}
+
+#endif // ACCEL_TABLE
+
 int64_t samples_64t = 0 ;
 int32_t samples_32t = 0 ;
 int16_t gyro_offset_entry[] = { 0 , 0 , 0 } ;

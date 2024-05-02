@@ -136,6 +136,7 @@ union intbb dcm_declination_angle;
 void estimate_velocity(void);
 
 void lookup_gyro_offsets(void);
+void lookup_accel_offsets(void);
 
 void yaw_drift_reset(void)
 {
@@ -239,6 +240,7 @@ static inline void read_gyros(void)
         check_for_jostle = 0 ;
     }
 	lookup_gyro_offsets();
+    lookup_accel_offsets();
 	gyro_offset_32[0].WW += ((int32_t)gyro_offset[0]) << 10 ;
 	gyro_offset_32[1].WW += ((int32_t)gyro_offset[1]) << 10 ;
 	gyro_offset_32[2].WW += ((int32_t)gyro_offset[2]) << 10 ;
