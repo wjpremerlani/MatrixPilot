@@ -451,7 +451,7 @@ static void process_MPU_data(void)
     {
         accel_sample_number = sample_counter/8 ;
         x_accel[5*accel_write_buffer_index+accel_sample_number] = 
-               XACCEL_SIGN_ORIENTED (mpu_data[xaccel_MPU_channel].BB-XACCEL_OFFSET) ;
+               XACCEL_SIGN_ORIENTED (mpu_data[xaccel_MPU_channel].BB-udb_xaccel.offset) ;
         x_theta_32[5*accel_write_buffer_index+accel_sample_number].WW = _theta_32[0].WW ;
         y_theta_32[5*accel_write_buffer_index+accel_sample_number].WW = _theta_32[1].WW ;
         z_theta_32[5*accel_write_buffer_index+accel_sample_number].WW = _theta_32[2].WW ;
@@ -467,11 +467,11 @@ static void process_MPU_data(void)
     {
         accel_sample_number = sample_counter/8 ;
     //    x_accel[5*accel_write_buffer_index+accel_sample_number] = 
-     //          XACCEL_SIGN_ORIENTED (mpu_data[xaccel_MPU_channel].BB-XACCEL_OFFSET) ;
+     //          XACCEL_SIGN_ORIENTED (mpu_data[xaccel_MPU_channel].BB-udb_xaccel.offset) ;
     //    y_accel[5*accel_write_buffer_index+accel_sample_number] = 
-     //          YACCEL_SIGN_ORIENTED (mpu_data[yaccel_MPU_channel].BB-YACCEL_OFFSET) ;
+     //          YACCEL_SIGN_ORIENTED (mpu_data[yaccel_MPU_channel].BB-udb_yaccel.offset) ;
     z_accel[5*accel_write_buffer_index+accel_sample_number] = 
-                 ZACCEL_SIGN_ORIENTED (mpu_data[zaccel_MPU_channel].BB-ZACCEL_OFFSET) ;
+                 ZACCEL_SIGN_ORIENTED (mpu_data[zaccel_MPU_channel].BB-udb_zaccel.offset) ;
     }
 
 #endif // KUFEN
@@ -481,11 +481,11 @@ static void process_MPU_data(void)
     {
         accel_sample_number = sample_counter/8 ;
         x_accel[5*accel_write_buffer_index+accel_sample_number] = 
-               XACCEL_SIGN_ORIENTED (mpu_data[xaccel_MPU_channel].BB-XACCEL_OFFSET) ;
+               XACCEL_SIGN_ORIENTED (mpu_data[xaccel_MPU_channel].BB-udb_xaccel.offset) ;
         y_accel[5*accel_write_buffer_index+accel_sample_number] = 
-               YACCEL_SIGN_ORIENTED (mpu_data[yaccel_MPU_channel].BB-YACCEL_OFFSET) ;
+               YACCEL_SIGN_ORIENTED (mpu_data[yaccel_MPU_channel].BB-udb_yaccel.offset) ;
         z_accel[5*accel_write_buffer_index+accel_sample_number] = 
-               ZACCEL_SIGN_ORIENTED (mpu_data[zaccel_MPU_channel].BB-ZACCEL_OFFSET) ;
+               ZACCEL_SIGN_ORIENTED (mpu_data[zaccel_MPU_channel].BB-udb_zaccel.offset) ;
     }
 #endif // SPECTRAL_ANALYSIS_CONTINUOUS
 
