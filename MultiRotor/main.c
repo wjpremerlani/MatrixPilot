@@ -175,6 +175,9 @@ uint16_t stop_count = 0 ;
 int16_t is_level = 0 ;
 void update_slide_detection(void)
 {
+#ifdef BUILD_OFFSET_TABLE
+    return ;
+#endif // BUILD_OFFSET_TABLE
 	int16_t tilt_angle_int ;
 	tilt_angle = DEG_PER_RAD*atan2f(sqrtf(((float)aero_force_filtered[0]._.W1)*((float)aero_force_filtered[0]._.W1)+((float)aero_force_filtered[1]._.W1)*((float)aero_force_filtered[1]._.W1)),-(float)aero_force_filtered[2]._.W1);
 	tilt_angle_int = (int16_t)tilt_angle ;

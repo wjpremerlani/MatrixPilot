@@ -50,10 +50,15 @@ int16_t GetAofA(void)
 
 void offsets_init(void)
 {
-	
+#ifdef 	XACCEL_OFFSET
 	udb_xaccel.offset = XACCEL_OFFSET ;
 	udb_yaccel.offset = YACCEL_OFFSET ;
 	udb_zaccel.offset = ZACCEL_OFFSET ;
+#else
+   	udb_xaccel.offset = 0 ;
+	udb_yaccel.offset = 0 ;
+	udb_zaccel.offset = 0 ; 
+#endif
 //	udb_xrate.offset  = XRATE_OFFSET;
 //	udb_yrate.offset  = YRATE_OFFSET;
 //	udb_zrate.offset  = ZRATE_OFFSET;

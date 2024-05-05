@@ -136,6 +136,7 @@ union intbb dcm_declination_angle;
 void estimate_velocity(void);
 
 void lookup_gyro_offsets(void);
+void lookup_accel_offsets(void);
 
 void yaw_drift_reset(void)
 {
@@ -239,6 +240,7 @@ static inline void read_gyros(void)
         check_for_jostle = 0 ;
     }
 	lookup_gyro_offsets();
+    lookup_accel_offsets();
 	gyro_offset_32[0].WW += ((int32_t)gyro_offset[0]) << 10 ;
 	gyro_offset_32[1].WW += ((int32_t)gyro_offset[1]) << 10 ;
 	gyro_offset_32[2].WW += ((int32_t)gyro_offset[2]) << 10 ;
@@ -582,6 +584,9 @@ static void roll_pitch_drift(void)
 {	
 	accel_magnitude = vector3_mag(gplane[0],gplane[1],gplane[2]);
 	omega_magnitude = vector3_mag(omegagyro[0],omegagyro[1],omegagyro[2]); 
+#ifdef BUILD_OFFSET_TABLE // the following interferes with LED signals during table build
+    return ;
+#endif // BUILD_OFFSET_TABLE
 	if((omega_magnitude>MATRIX_GYRO_OFFSET_MARGIN )	|| (abs(accel_magnitude-CALIB_GRAVITY/2)>CALIB_GRAVITY/8))
 	{
         matrix_jostle = 1 ;

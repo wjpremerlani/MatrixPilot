@@ -171,6 +171,8 @@ extern int16_t misalignment[];
 
 extern int16_t is_level ;
 
+extern void update_offset_table_gyros_and_accelerometers(void);
+
 
 uint16_t warmup_count = 0 ;
 uint16_t run_count = 0 ;
@@ -630,11 +632,13 @@ void send_imu_data(void)
 			break ;
 		case 18:
 			{
+#ifdef XACCEL_OFFSET
 				serial_output( "Accel offsets are x=%i, y=%i, z=%i.\r\n",
 					XACCEL_OFFSET ,
 					YACCEL_OFFSET , 
 					ZACCEL_OFFSET 
 					 );	
+#endif // XACCEL_OFFSET
 			}
 			break;
 		case 19:
@@ -793,7 +797,11 @@ void send_imu_data(void)
 		serial_output("synch,gx,gy,gyz,ax,ay,az,r6,r7,r8\r\n");
 #endif // ROAD_TEST
 #ifdef BUILD_OFFSET_TABLE
+#ifdef ACCEL_AND_GYRO_OFFSETS
+        //serial_output ("\r\ntmptr,cpu,smpls,gyro_mag,gyro_off_x,gyro_off_y,gyro_off_z,gyro_raw_x,gyro_raw_y,gyro_raw_z,acc_x,acc_y,acc_z\r\n");
+#else
 		serial_output("\r\ntmptr,cpu,smpls,X_bar,Y_bar_x,Y_bar_y,Y_bar_z,XX_bar,XY_bar_x,XY_bar_y,XY_bar_z,denom,lft_o_x,lft_o_y,lft_o_z,rght_o_x,rght_o_y,rght_o_z,offx,offy,offz\r\n");
+#endif //
 #endif //BUILD_OFFSET_TABLE
 			}
 			break ;	
@@ -808,10 +816,12 @@ void send_imu_data(void)
 	else
 	{
 #ifdef RECORD_OFFSETS 
-		{	
+		{
 			serial_output( "%i,%i,%i,%i,%i,%i,%i,%i,%i,%i\r\n" ,
 			mpu_temp.value,
-			udb_xaccel.value , udb_yaccel.value , udb_zaccel.value ,
+			udb_xaccel.value - udb_xaccel.offset , 
+            udb_yaccel.value - udb_yaccel.offset , 
+            udb_zaccel.value - udb_zaccel.offset ,
 			udb_xrate.value , udb_yrate.value , udb_zrate.value	,
 			omegagyro[0],omegagyro[1],omegagyro[2]
 			 ) ;
@@ -1182,10 +1192,12 @@ void send_imu_data(void)
 #endif // GYRO_DRIFT
 		
 #ifdef BUILD_OFFSET_TABLE
-		update_offset_table();
-	
-		
-#endif //
+#ifdef ACCEL_AND_GYRO_OFFSETS
+        update_offset_table_gyros_and_accelerometers();
+#else
+		update_offset_table();	
+#endif // ACCEL_AND_GYRO_OFFSETS
+#endif // BUILD_OFFSET_TABLE
 
 #ifdef ROAD_TEST
 		serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%i,%i\r\n",
