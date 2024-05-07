@@ -1,6 +1,6 @@
 
 
-#define DATE "Wolf_pac_2 , firmware 5.3, 4/24/2024\r\n"
+#define DATE "Wolf_pac_2 , firmware 5.4, 5/5/2024\r\n"
 //#define DATE "Wold_pac_1, rev 2.5, 3/6/2023\r\n"
 
 //#define SIMULATED_GYRO
@@ -20,12 +20,12 @@
 
 // the following defines select what gets sent to the logger
 //#define LOG_IMU_WP1               // logs IMU data during a run for wolf_pac version 1
-#define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
+//#define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
                                     // you will also need to turn on the following:
-#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
+//#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
 //#define START_TRACK_LOG         // logs 2 components of force and pitch
 //#define LOG_PITCH_RATE
-#define LOG_RESIDUALS         // logs residual offsets between runs
+//#define LOG_RESIDUALS         // logs residual offsets between runs
 //#define RESIDUAL_LOG_PERIOD 30  // 2 times per minute
 //#define RESIDUAL_LOG_PERIOD 15  // 4 times per minute
 //#define RESIDUAL_LOG_PERIOD 10  // 6 times per minute
@@ -38,7 +38,7 @@
 //#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
 //#define DEBUG_TABLE_BUILD
 //#define ACCEL_AND_GYRO_OFFSETS
-//#define GYRO_OFFSETS          // verifies gyro temperature compensation table
+#define GYRO_OFFSETS          // verifies gyro temperature compensation table
 //#define GYRO_CALIB            // used to compute gyro calibration
 //#define CROSS_COUPLING          // measure cross coupling
 //#define FILTERED_ACCELEROMETER
@@ -97,7 +97,7 @@
 //#define LUGE7_SNnew // used to program a WP without a serial number
 
 //bill's research boards
-#define LUGE7_SNts1
+//#define LUGE7_SNts1
 //#define LUGE7_SNts2
 
 
@@ -189,7 +189,7 @@
 //#define LUGE7_SN167
 
 //#define LUGE7_SN168
-//#define LUGE7_SN169
+#define LUGE7_SN169
 //#define LUGE7_SN170
 //#define LUGE7_SN171
 
@@ -1644,7 +1644,8 @@
 #define SERIAL_NUMBERD1	0
 #define SERIAL_NUMBERD2	8
 #define SERIAL_NUMBERD3 2
-#define ACCEL_RANGE         8
+//#define ACCEL_RANGE         8
+#define ACCEL_RANGE         2
 #define GYRO_RANGE	    1000
 #define LOG_EULER
 #include "options_LUGE7_SN082.h"
@@ -1670,7 +1671,7 @@
 #define SERIAL_NUMBERD1	0
 #define SERIAL_NUMBERD2	8
 #define SERIAL_NUMBERD3 4
-#define ACCEL_RANGE         8
+#define ACCEL_RANGE         4
 #define GYRO_RANGE	    1000
 #define LOG_EULER
 #include "options_LUGE7_SN084.h"

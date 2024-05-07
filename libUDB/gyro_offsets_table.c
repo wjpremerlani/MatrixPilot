@@ -429,9 +429,9 @@ void update_offset_table_gyros_and_accelerometers(void)
 		gyro_offset_entry[1]= gyro_offset[1] ;
 		gyro_offset_entry[2]= gyro_offset[2] ;
      
-        acc_off_entry[0]= 64*(udb_xaccel.value-acc_base[0]) ;
-		acc_off_entry[1]= 64*(udb_yaccel.value-acc_base[1]) ;
-		acc_off_entry[2]= 64*(udb_zaccel.value-acc_base[2]) ;
+        acc_off_entry[0]= (udb_xaccel.value-acc_base[0]) ;
+		acc_off_entry[1]= (udb_yaccel.value-acc_base[1]) ;
+		acc_off_entry[2]= (udb_zaccel.value-acc_base[2]) ;
     		
 		gyro_offset_sum[0] += (int32_t ) gyro_offset_entry[0] ;
 		gyro_offset_sum[1] += (int32_t ) gyro_offset_entry[1] ;
