@@ -292,7 +292,7 @@ const struct gyro_offset_table_entry gyro_offset_table[] = {
 {	21	,	-1149	,	-37	},
 {	23	,	-1147	,	-37	},
 {	24	,	-1144	,	-37	},
-{	24	,	-1146	,	-36	}
+{	24	,	-1146	,	-36	},
 };
 
 
@@ -603,7 +603,7 @@ const struct gyro_offset_table_entry accel_offset_table[] = {
 {-39,-153,106},
 {-39,-153,107},
 {-39,-153,108},
-{-39,-153,108}
+{-39,-153,108},
 };
 
 #endif	/* TABLE_LUGE7_SNts1_H */

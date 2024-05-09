@@ -97,7 +97,7 @@
 //#define LUGE7_SNnew // used to program a WP without a serial number
 
 //bill's research boards
-#define LUGE7_SNts1
+//#define LUGE7_SNts1
 //#define LUGE7_SNts2
 
 
@@ -223,7 +223,7 @@
 
 //#define LUGE7_SN194
 //#define LUGE7_SN195
-//#define LUGE7_SN196
+#define LUGE7_SN196
 //#define LUGE7_SN197
 
 
