@@ -18,9 +18,9 @@
 #if (ACCEL_RANGE == 2 )
 
 #define CALIB_GRAVITY	16384
-#define CAL_GRAV_X	16384
-#define CAL_GRAV_Y	16384
-#define CAL_GRAV_Z	16384
+#define CAL_GRAV_X	16417
+#define CAL_GRAV_Y	16440
+#define CAL_GRAV_Z	16412
 #endif // (ACCEL_RANGE == 2 )
 
 

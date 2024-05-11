@@ -16,9 +16,9 @@
 
 #if (ACCEL_RANGE == 4)
 #define CALIB_GRAVITY	8192
-#define CAL_GRAV_X	8192
-#define CAL_GRAV_Y	8192
-#define CAL_GRAV_Z	8192
+#define CAL_GRAV_X	8203
+#define CAL_GRAV_Y	8219
+#define CAL_GRAV_Z	8159
 #endif // (ACCEL_RANGE == 4)    
     
 #define GYRO_OFFSET_TABLE "../libUDB/gyro_tables/table_luge7_sn084.h"

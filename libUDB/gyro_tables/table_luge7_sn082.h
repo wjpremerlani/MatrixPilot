@@ -339,14 +339,14 @@ const struct gyro_offset_table_entry gyro_offset_table[] = {
 {	642	,	-191	,	-457	}
 };
 
-
+#if ( ACCEL_RANGE == 2 )
 
 #define ACCEL_TABLE
 
 
 #define ACCEL_TABLE_ORIGIN ( -11686)
 
-int16_t accel_residual_offset[] = { 0 , 0 , 0 } ; 
+int16_t accel_residual_offset[] = {  103 , 27 , 117 } ; 
 
 const struct gyro_offset_table_entry accel_offset_table[] = {
 {7,16,-1},
@@ -598,7 +598,7 @@ const struct gyro_offset_table_entry accel_offset_table[] = {
 {-139,-249,22},
 };
 
-
+#endif // ACCEL_RANGE == 2
 
 
 #endif	/* TABLE_LUGE7_SN082_H */
