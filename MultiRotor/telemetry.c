@@ -110,6 +110,7 @@ extern int16_t x_bar ;
 extern int16_t y_bar[] ;
 extern int16_t gyro_offset[];
 extern uint16_t max_gyro ;
+extern int32_t yaw_rate ;
 
 extern int16_t gplane[];
 extern int16_t aero_force[];
@@ -737,7 +738,7 @@ void send_imu_data(void)
             serial_output("\r\nx_force,y_force,z_force,yaw_32,pitch_32,roll_32,max_gyro,cpu,seq_no,tmptur,yaw_16,pitch_16,roll_16,lpx,lpy,lpz,algn_x,algn_y,algn_z\r\n");              
               
 #else
-           serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx,tmptur_xx\r\n");              
+           serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,yaw_rate_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx,tmptur_xx\r\n");              
 #endif // LOG_PITCH_RATE , TEST_RUNTIME_TILT_ALIGN
 #endif // NORMAL_RUN
 
@@ -1015,7 +1016,7 @@ void send_imu_data(void)
 #ifndef TILT_INIT
 
 #ifdef  NORMAL_RUN
-            serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u,%i",
+            serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u,%i",
             	((double)(aero_force[0]))/ACCEL_FACTOR ,
 				((double)(aero_force[1]))/ACCEL_FACTOR ,
 				((double)(aero_force[2]))/ACCEL_FACTOR ,
@@ -1023,7 +1024,8 @@ void send_imu_data(void)
 				heading ,  pitch_angle , roll_angle ,
 #else
 				heading_8k ,  pitch_angle_8k , roll_angle_8k ,
-#endif                
+#endif 
+                ((double) (yaw_rate))/ ((double)93701.65) ,    
 				max_gyro/328  ,
                 udb_cpu_load(),
                 record_number ++ ,

@@ -39,6 +39,8 @@ int16_t tilt_rmat[3];
 int16_t tilt_rmat_32[3];
 int16_t misalignment[3];
 
+int32_t yaw_rate ;
+
 void rmat_32_update(void)
 {
 #if ( CONTINUOUS_MATRIX_LOCKING == 1 )
@@ -82,6 +84,7 @@ void rmat_32_update(void)
         theta_32_adjusted[0].WW = theta_32[0].WW - theta_32_filtered[0]._.L1 ;
         theta_32_adjusted[1].WW = theta_32[1].WW - theta_32_filtered[1]._.L1 ;
         theta_32_adjusted[2].WW = theta_32[2].WW - theta_32_filtered[2]._.L1 ; 
+        yaw_rate = theta_32_adjusted[2].WW ;
 #else
         theta_32_adjusted[0].WW = theta_32[0].WW ;
         theta_32_adjusted[1].WW = theta_32[1].WW ;
