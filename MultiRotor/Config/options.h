@@ -23,7 +23,7 @@
 #define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
                                     // you will also need to turn on the following:
 #define NORMAL_RUN // this one must be turned on for normal operation 100 hz
-//#define START_TRACK_LOG         // logs 2 components of force and pitch
+//#define START_TRACK_LOG       // logs 2 components of force and pitch
 //#define LOG_PITCH_RATE
 #define LOG_RESIDUALS         // logs residual offsets between runs
 //#define RESIDUAL_LOG_PERIOD 30  // 2 times per minute
@@ -52,7 +52,7 @@
 //#define GYRO_LPF
 //#define SPECTRAL_ANALYSIS_BURST // 5 hz, start at 15, remember to also uncomment the following line
 //#define SAMPLES_PER_BURST 80 
-//#define SPECTRAL_ANALYSIS_CONTINUOUS
+//#define SPECTRAL_ANALYSIS_CONTINUOUS // also known as the fire hose
 //#define TEST_SLED // set logging Hz to 200 start at 15
 //#define KUFEN // set logging Hz to 200 and start angle to 30 degrees
 
@@ -60,7 +60,7 @@
 
 // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
 // non-printable characters are written out, as header bytes for packets.
-//#define USE_PACKETIZED_TELEMERTY
+#define USE_PACKETIZED_TELEMERTY
 
 
 // Enable UDB7LUGE in a Board definition ifdef block below for new WolfPac1 wifi boards
@@ -83,7 +83,7 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	5
+#define LOGGER_HZ	100
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
@@ -189,7 +189,7 @@
 //#define LUGE7_SN167
 
 //#define LUGE7_SN168
-//#define LUGE7_SN169
+#define LUGE7_SN169
 //#define LUGE7_SN170
 //#define LUGE7_SN171
 
@@ -223,7 +223,7 @@
 
 //#define LUGE7_SN194
 //#define LUGE7_SN195
-#define LUGE7_SN196
+//#define LUGE7_SN196
 //#define LUGE7_SN197
 
 
@@ -2279,4 +2279,8 @@
 #define JOSTLE_CHECK_PERIOD 2 // check jostle every 2 seconds
 
 #define TEST_RUNTIME_TILT_ALIGN 0
+
+#ifdef START_TRACK_LOG
+#error "START_TRACK_LOG is probably not the option you are looking for"
+#endif // START_TRACK_LOG
 
