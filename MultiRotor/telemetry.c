@@ -772,7 +772,7 @@ void send_imu_data(void)
 #endif //FILTERED_ACCELEROMETER
 				
 #ifdef RECORD_OFFSETS
-				serial_output("tmptur,ax,ay,az,gx_val,gy_val,gz_val,gyr_x,gyr_y,gyr_z\r\n");
+				serial_output("tmptur,ax,ay,az,gx_val,gy_val,gz_val,gyr_x,gyr_y,gyr_z,gyr_rms\r\n");
 #endif // RECORD_OFFSETS
 				
 #ifdef TEST_LOGGER_HZ
@@ -818,13 +818,14 @@ void send_imu_data(void)
 	{
 #ifdef RECORD_OFFSETS 
 		{
-			serial_output( "%i,%i,%i,%i,%i,%i,%i,%i,%i,%i\r\n" ,
+			serial_output( "%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i\r\n" ,
 			mpu_temp.value,
 			udb_xaccel.value - udb_xaccel.offset , 
             udb_yaccel.value - udb_yaccel.offset , 
             udb_zaccel.value - udb_zaccel.offset ,
 			udb_xrate.value , udb_yrate.value , udb_zrate.value	,
-			omegagyro[0],omegagyro[1],omegagyro[2]
+			omegagyro[0],omegagyro[1],omegagyro[2] ,
+            vector3_mag(omegagyro[0],omegagyro[1],omegagyro[2])
 			 ) ;
 		}
 #endif // RECORD_OFFSETS
