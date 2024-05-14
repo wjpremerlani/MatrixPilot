@@ -1,9 +1,6 @@
 
 
 #define DATE "Wolf_pac_2 , firmware 5.4, 5/5/2024\r\n"
-//#define DATE "Wold_pac_1, rev 2.5, 3/6/2023\r\n"
-
-//#define SIMULATED_GYRO
 
 #define CONING_CORRECTION
 #define CONING_CORRECTION_IN_RMAT
@@ -19,71 +16,39 @@
 #endif // CONING_CORRECTION
 
 // the following defines select what gets sent to the logger
-//#define LOG_IMU_WP1               // logs IMU data during a run for wolf_pac version 1
 //#define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
                                     // you will also need to turn on the following:
 //#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
-//#define START_TRACK_LOG       // logs 2 components of force and pitch
-//#define LOG_PITCH_RATE
+//#define LOG_PITCH_RATE // not commonly used
 //#define LOG_RESIDUALS         // logs residual offsets between runs
-//#define RESIDUAL_LOG_PERIOD 30  // 2 times per minute
-//#define RESIDUAL_LOG_PERIOD 15  // 4 times per minute
-//#define RESIDUAL_LOG_PERIOD 10  // 6 times per minute
-//#define RESIDUAL_LOG_PERIOD 5  // 12 times per minute
 #define RESIDUAL_LOG_PERIOD 2  // 30 times per minute
 //#define RESIDUAL_LOG_PERIOD 1  // 60 times per minute
 
 // the following are used to measure offsets and gains for commissioning
-#define RECORD_OFFSETS        // record raw accelerometer data
+#define RECORD_OFFSETS        // record raw accelerometer data and verify residual gyro offsets
+// the following two options are presently used together
 //#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
-//#define DEBUG_TABLE_BUILD
 //#define ACCEL_AND_GYRO_OFFSETS
-//#define GYRO_OFFSETS          // verifies gyro temperature compensation table
-//#define GYRO_CALIB            // used to compute gyro calibration
-//#define CROSS_COUPLING          // measure cross coupling
-//#define FILTERED_ACCELEROMETER
-//#define TILT_INIT
 
-// the following are options used for development and debugging activities
-//#define TEST_LOGGER_HZ
-//#define LOG_VELOCITY
-//#define GYRO_DRIFT
-//#define ROAD_TEST
-//#define GYRO_LPF
+// the following are special logging options
 //#define SPECTRAL_ANALYSIS_BURST // 5 hz, start at 15, remember to also uncomment the following line
 //#define SAMPLES_PER_BURST 80 
 //#define SPECTRAL_ANALYSIS_CONTINUOUS // also known as the fire hose
 //#define TEST_SLED // set logging Hz to 200 start at 15
 //#define KUFEN // set logging Hz to 200 and start angle to 30 degrees
 
-//#define ENABLE_ESP32
 
 // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
 // non-printable characters are written out, as header bytes for packets.
-#define USE_PACKETIZED_TELEMERTY
+//#define USE_PACKETIZED_TELEMERTY
 
-
-// Enable UDB7LUGE in a Board definition ifdef block below for new WolfPac1 wifi boards
-//#define UDB7LUGE
-
-
-
-// options to override the normal mission logic and always log and/or always remove gyro offsets
-//#define ALWAYS_LOG
-//#define ALWAYS_SYNC_GYROS
-//#define THETA_LOG
-
-// for IMU log, there are two options related to the gyros. pick one or the other
-// LOG_RATE reports the gyro rates, degrees/sec
-// LOG_EULER reports roll, pitch and yaw Euler angles in NED
-//#define LOG_RATE
 #define LOG_EULER
 //#define LOG_RATE_AND_EULER
 //#define LOG_PITCH_AND_TWO_FORCES
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	100
+#define LOGGER_HZ	5
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
@@ -153,7 +118,7 @@
 //#define LUGE7_SN132
 //#define LUGE7_SN133
 //#define LUGE7_SN134
-#define LUGE7_SN135
+//#define LUGE7_SN135
 //#define LUGE7_SN136
 //#define LUGE7_SN137
 //#define LUGE7_SN138
@@ -191,7 +156,7 @@
 //#define LUGE7_SN168
 //#define LUGE7_SN169
 //#define LUGE7_SN170
-//#define LUGE7_SN171
+#define LUGE7_SN171
 
 //#define LUGE7_SN172
 //#define LUGE7_SN173
