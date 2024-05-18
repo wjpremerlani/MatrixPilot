@@ -9,7 +9,7 @@
 
 #define TABLE_ORIGIN  ( -14502 )
 
-int16_t residual_offset[] = { -707 , 72 , 353 } ;
+int16_t residual_offset[] = { -707 -4*69 , 72 +4 , 353 -20 } ;
 
 
 const struct gyro_offset_table_entry gyro_offset_table[] = {
