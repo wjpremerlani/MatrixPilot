@@ -213,7 +213,16 @@ void send_residual_data(void)
 
 #ifndef  LOG_R_UPDATE 
 #ifndef TILT_INIT
-		serial_output("%i,%i,%.1f,%.1f,%.1f,%i,%i,%i,%i,%i,%i,%i",
+        int16_t omega_filt_16[3];
+        omega_filt_16[0]=(int16_t)((omegagyro_filtered[0].WW)>>12);
+        omega_filt_16[1]=(int16_t)((omegagyro_filtered[1].WW)>>12);
+        omega_filt_16[2]=(int16_t)((omegagyro_filtered[2].WW)>>12);  
+
+#if ( RMS_GAUGE == 1 )
+        serial_output("%i,%i,%.1f,%.1f,%.1f,%i,%i,%i,%i,%i,%i,%i,(%u)",
+#else
+        serial_output("%i,%i,%.1f,%.1f,%.1f,%i,%i,%i,%i,%i,%i,%i",        
+#endif
                 mpu_temp.value,
 				accelOn ,
                 ((double)(aero_force[0]))/ACCEL_FACTOR ,
@@ -223,9 +232,14 @@ void send_residual_data(void)
                 omegagyro[1],
                 omegagyro[2],
                 vector3_mag(omegagyro[0],omegagyro[1],omegagyro[2]),
-				(int16_t)((omegagyro_filtered[0].WW)>>12) , // 16x
-				(int16_t)((omegagyro_filtered[1].WW)>>12) ,
-				(int16_t)((omegagyro_filtered[2].WW)>>12) 
+				omega_filt_16[0] , // 16x
+				omega_filt_16[1] ,
+#if ( RMS_GAUGE == 1 )
+				omega_filt_16[2] ,
+                vector3_mag(omega_filt_16[0],omega_filt_16[1],omega_filt_16[2])/16            
+#else
+                omega_filt_16[2]
+#endif
     				);
 #if (TEST_RUNTIME_TILT_ALIGN == 1 )
         compute_euler();
@@ -1017,7 +1031,16 @@ void send_imu_data(void)
 #ifndef TILT_INIT
 
 #ifdef  NORMAL_RUN
+#if ( RMS_GAUGE == 1 )
+            int16_t omega_filt_16[3];
+            omega_filt_16[0]=(int16_t)((omegagyro_filtered[0].WW)>>12);
+            omega_filt_16[1]=(int16_t)((omegagyro_filtered[1].WW)>>12);
+            omega_filt_16[2]=(int16_t)((omegagyro_filtered[2].WW)>>12);  
+
+            serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u,%i,(%u)",           
+#else            
             serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u,%i",
+#endif // RMS_GAUGE 
             	((double)(aero_force[0]))/ACCEL_FACTOR ,
 				((double)(aero_force[1]))/ACCEL_FACTOR ,
 				((double)(aero_force[2]))/ACCEL_FACTOR ,
@@ -1035,6 +1058,10 @@ void send_imu_data(void)
 #else
                 mpu_temp.value 
 #endif // LOG_PITCH_RATE
+#if ( RMS_GAUGE == 1 )   
+                    , vector3_mag(omega_filt_16[0],omega_filt_16[1],omega_filt_16[2])/16            
+
+#endif // 
 			);
 #if ( TEST_RUNTIME_TILT_ALIGN == 1 )
             compute_euler() ;

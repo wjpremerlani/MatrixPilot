@@ -41,7 +41,7 @@
 
 // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
 // non-printable characters are written out, as header bytes for packets.
-#define USE_PACKETIZED_TELEMERTY
+//#define USE_PACKETIZED_TELEMERTY
 
 #define LOG_EULER
 //#define LOG_RATE_AND_EULER
@@ -49,7 +49,7 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	100
+#define LOGGER_HZ	1 
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
@@ -60,7 +60,7 @@
 //#define TILT_STOP	135         // used for some types of ground testing
 
 // select a wolf_pac by defining its internal label
-//#define LUGE7_SNnew // used to program a WP without a serial number
+#define LUGE7_SNnew // used to program a WP without a serial number
 
 //bill's research boards
 //#define LUGE7_SNts1
@@ -184,7 +184,7 @@
 
 //#define LUGE7_SN190
 //#define LUGE7_SN191
-#define LUGE7_SN192
+//#define LUGE7_SN192
 //#define LUGE7_SN193
 
 //#define LUGE7_SN194
@@ -2209,7 +2209,8 @@
 #define HILSIM			0
 
 #if (GYRO_RANGE==1000)
-#define GYRO_OFFSET_MARGIN 25
+#define GYRO_OFFSET_MARGIN 1000
+//#define GYRO_OFFSET_MARGIN 25
 //#define GYRO_OFFSET_MARGIN 30
 #elif (GYRO_RANGE==500)
 #define GYRO_OFFSET_MARGIN 50
@@ -2250,4 +2251,6 @@
 #ifdef START_TRACK_LOG
 #error "START_TRACK_LOG is probably not the option you are looking for"
 #endif // START_TRACK_LOG
+
+#define RMS_GAUGE 1
 
