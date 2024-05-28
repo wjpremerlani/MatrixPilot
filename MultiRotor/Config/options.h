@@ -1,6 +1,6 @@
 
 
-#define DATE "Wolf_pac_2 , firmware 5.4, 5/5/2024\r\n"
+#define DATE "Wolf_pac_2 , firmware 5.5, 5/28/2024\r\n"
 
 #define CONING_CORRECTION
 #define CONING_CORRECTION_IN_RMAT
@@ -60,7 +60,7 @@
 //#define TILT_STOP	135         // used for some types of ground testing
 
 // select a wolf_pac by defining its internal label
-#define LUGE7_SNnew // used to program a WP without a serial number
+//#define LUGE7_SNnew // used to program a WP without a serial number
 
 //bill's research boards
 //#define LUGE7_SNts1
@@ -111,7 +111,7 @@
 //#define LUGE7_SN124
 //#define LUGE7_SN125
 //#define LUGE7_SN126
-//#define LUGE7_SN127
+#define LUGE7_SN127
 //#define LUGE7_SN128
 //#define LUGE7_SN129
 //#define LUGE7_SN130
@@ -2209,9 +2209,8 @@
 #define HILSIM			0
 
 #if (GYRO_RANGE==1000)
-#define GYRO_OFFSET_MARGIN 1000
-//#define GYRO_OFFSET_MARGIN 25
-//#define GYRO_OFFSET_MARGIN 30
+//#define GYRO_OFFSET_MARGIN 1000
+#define GYRO_OFFSET_MARGIN 25
 #elif (GYRO_RANGE==500)
 #define GYRO_OFFSET_MARGIN 50
 #else
@@ -2252,5 +2251,5 @@
 #error "START_TRACK_LOG is probably not the option you are looking for"
 #endif // START_TRACK_LOG
 
-#define RMS_GAUGE 1
+#define RMS_GAUGE 0
 

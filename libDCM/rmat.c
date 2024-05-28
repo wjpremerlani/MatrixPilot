@@ -187,8 +187,15 @@ void dcm_init_rmat(void)
 #endif
 }
 
-union longww omegagyro_filtered[] = { { 0 }, { 0 },  { 0 } };
+union longww omegagyro_filtered_backup[]= { { 0 }, { 0 },  { 0 } } ;
+union longlongLL theta_32_filtered_backup[] = { { 0 }, { 0 },  { 0 } };
+
+union longww omegagyro_filtered[]= { { 0 }, { 0 },  { 0 } } ;
 union longlongLL theta_32_filtered[] = { { 0 }, { 0 },  { 0 } };
+
+union longww omegagyro_filtered_temporary[] = { { 0 }, { 0 },  { 0 } };
+union longlongLL theta_32_filtered_temporary[] = { { 0 }, { 0 },  { 0 } };
+
 union longlongLL long_long_accum ;
 
 #define GYRO_FILTER_SHIFT 12
@@ -201,8 +208,8 @@ union longww gyro_offset_32_coning[] = { { 0 }, { 0 },  { 0 } };
 union longww accum32 ;
 extern int32_t omegagyro32X[] ;
 extern union longww theta_32[];
-union longww omegagyro_filtered_backup[]= { { 0 }, { 0 },  { 0 } } ;
-union longlongLL theta_32_filtered_backup[] = { { 0 }, { 0 },  { 0 } };
+
+
 extern int16_t check_for_jostle ;
 uint16_t jostle_counter = 0 ;
 static inline void read_gyros(void)
@@ -219,23 +226,23 @@ static inline void read_gyros(void)
     {
         if ( motion_detect == 1 )
         {
-            omegagyro_filtered[0].WW = omegagyro_filtered_backup[0].WW ;
-            omegagyro_filtered[1].WW = omegagyro_filtered_backup[1].WW ;
-            omegagyro_filtered[2].WW = omegagyro_filtered_backup[2].WW ;
-            theta_32_filtered[0].LL = theta_32_filtered_backup[0].LL ;
-            theta_32_filtered[1].LL = theta_32_filtered_backup[1].LL ;
-            theta_32_filtered[2].LL = theta_32_filtered_backup[2].LL ;
+            omegagyro_filtered[0].WW = omegagyro_filtered_temporary[0].WW = omegagyro_filtered_backup[0].WW ;
+            omegagyro_filtered[1].WW = omegagyro_filtered_temporary[1].WW = omegagyro_filtered_backup[1].WW ;
+            omegagyro_filtered[2].WW = omegagyro_filtered_temporary[2].WW = omegagyro_filtered_backup[2].WW ;
+            theta_32_filtered[0].LL = theta_32_filtered_temporary[0].LL = theta_32_filtered_backup[0].LL ;
+            theta_32_filtered[1].LL = theta_32_filtered_temporary[1].LL = theta_32_filtered_backup[1].LL ;
+            theta_32_filtered[2].LL = theta_32_filtered_temporary[2].LL = theta_32_filtered_backup[2].LL ;
             
             motion_detect = 0 ;             
         }
         else
         {
-            omegagyro_filtered_backup[0].WW = omegagyro_filtered[0].WW ;
-            omegagyro_filtered_backup[1].WW = omegagyro_filtered[1].WW ;
-            omegagyro_filtered_backup[2].WW = omegagyro_filtered[2].WW ;
-            theta_32_filtered_backup[0].LL = theta_32_filtered[0].LL ;
-            theta_32_filtered_backup[1].LL = theta_32_filtered[1].LL ;
-            theta_32_filtered_backup[2].LL = theta_32_filtered[2].LL ;          
+            omegagyro_filtered_backup[0].WW = omegagyro_filtered[0].WW = omegagyro_filtered_temporary[0].WW ;
+            omegagyro_filtered_backup[1].WW = omegagyro_filtered[1].WW = omegagyro_filtered_temporary[1].WW;
+            omegagyro_filtered_backup[2].WW = omegagyro_filtered[2].WW = omegagyro_filtered_temporary[2].WW;
+            theta_32_filtered_backup[0].LL = theta_32_filtered[0].LL = theta_32_filtered_temporary[0].LL ;
+            theta_32_filtered_backup[1].LL = theta_32_filtered[1].LL = theta_32_filtered_temporary[1].LL ;
+            theta_32_filtered_backup[2].LL = theta_32_filtered[2].LL = theta_32_filtered_temporary[2].LL;          
         }
         check_for_jostle = 0 ;
     }
@@ -263,24 +270,24 @@ static inline void read_gyros(void)
 #ifdef CONING_CORRECTION
     if(motion_detect == 0)
     {
-	omegagyro_filtered[0].WW += ((int32_t)(-omegagyro32X[0])>>(GYRO_FILTER_SHIFT-11)) 
-          + (( -((int32_t)(omegagyro_filtered[0].WW ))
+	omegagyro_filtered_temporary[0].WW += ((int32_t)(-omegagyro32X[0])>>(GYRO_FILTER_SHIFT-11)) 
+          + (( -((int32_t)(omegagyro_filtered_temporary[0].WW ))
             +((int32_t)(gyro_offset_32_coning[0].WW )))>>GYRO_FILTER_SHIFT) ;
-	omegagyro_filtered[1].WW += ((int32_t)(-omegagyro32X[1])>>(GYRO_FILTER_SHIFT-11)) 
-           + (( -((int32_t)(omegagyro_filtered[1].WW ))
+	omegagyro_filtered_temporary[1].WW += ((int32_t)(-omegagyro32X[1])>>(GYRO_FILTER_SHIFT-11)) 
+           + (( -((int32_t)(omegagyro_filtered_temporary[1].WW ))
             +((int32_t)(gyro_offset_32_coning[1].WW )))>>GYRO_FILTER_SHIFT);
-	omegagyro_filtered[2].WW += ((int32_t)(-omegagyro32X[2])>>(GYRO_FILTER_SHIFT-11)) 
-          + ((  -((int32_t)(omegagyro_filtered[2].WW )) 
+	omegagyro_filtered_temporary[2].WW += ((int32_t)(-omegagyro32X[2])>>(GYRO_FILTER_SHIFT-11)) 
+          + ((  -((int32_t)(omegagyro_filtered_temporary[2].WW )) 
             +((int32_t)(gyro_offset_32_coning[2].WW )))>>GYRO_FILTER_SHIFT);
     
     long_long_accum._.L0 = 0 ;
     
     long_long_accum._.L1 = theta_32[0].WW ;
-    theta_32_filtered[0].LL += ((long_long_accum.LL - theta_32_filtered[0].LL)>>GYRO_FILTER_SHIFT );
+    theta_32_filtered_temporary[0].LL += ((long_long_accum.LL - theta_32_filtered_temporary[0].LL)>>GYRO_FILTER_SHIFT );
     long_long_accum._.L1 = theta_32[1].WW ;
-    theta_32_filtered[1].LL += ((long_long_accum.LL - theta_32_filtered[1].LL)>>GYRO_FILTER_SHIFT );
+    theta_32_filtered_temporary[1].LL += ((long_long_accum.LL - theta_32_filtered_temporary[1].LL)>>GYRO_FILTER_SHIFT );
     long_long_accum._.L1 = theta_32[2].WW ;
-    theta_32_filtered[2].LL += ((long_long_accum.LL - theta_32_filtered[2].LL)>>GYRO_FILTER_SHIFT );
+    theta_32_filtered_temporary[2].LL += ((long_long_accum.LL - theta_32_filtered_temporary[2].LL)>>GYRO_FILTER_SHIFT );
     
     }
 #else
