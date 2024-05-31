@@ -291,6 +291,12 @@ void dcm_heartbeat_callback(void)
 		}
 	//
 #ifdef LOG_RESIDUALS
+#if (RMS_GAUGE == 1 )
+        if ((udb_heartbeat_counter % LOGGER_HZ )== 0)
+        {
+            send_residual_data();
+        }
+#else
 		if (log_residuals == 1)
 		{
 			if ((udb_heartbeat_counter % HEARTBEAT_HZ )== 0) residual_log_counter ++ ;
@@ -300,6 +306,7 @@ void dcm_heartbeat_callback(void)
 				send_residual_data();
 			}
 		}
+#endif // RMS_GAUGE
 #endif // LOG_RESIDUALS
 	}
 	return ;

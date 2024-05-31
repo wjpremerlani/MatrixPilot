@@ -60,6 +60,8 @@
 #error "invalid ACCEL_RANGE"
 #endif // ACCEL_RANGE 	
 
+int16_t rms_filt_16 = 0 ;
+
 
 char debug_buffer[1024] ;
 int db_index = 0 ;
@@ -219,7 +221,8 @@ void send_residual_data(void)
         omega_filt_16[2]=(int16_t)((omegagyro_filtered[2].WW)>>12);  
 
 #if ( RMS_GAUGE == 1 )
-        serial_output("%i,%i,%.1f,%.1f,%.1f,%i,%i,%i,%i,%i,%i,%i,(%u)",
+        rms_filt_16 += (((((int16_t)vector3_mag(omegagyro[0],omegagyro[1],omegagyro[2]))<<4)-rms_filt_16)>>4);
+        serial_output("%i,%i,%.1f,%.1f,%.1f,%i,%i,(w%i),(r%i),(x%i),(y%i),(z%i)",
 #else
         serial_output("%i,%i,%.1f,%.1f,%.1f,%i,%i,%i,%i,%i,%i,%i",        
 #endif
@@ -231,15 +234,14 @@ void send_residual_data(void)
     			omegagyro[0],
                 omegagyro[1],
                 omegagyro[2],
+#if ( RMS_GAUGE == 1 )
+                rms_filt_16>>4,
+#else
                 vector3_mag(omegagyro[0],omegagyro[1],omegagyro[2]),
+#endif // RMS_GAUGE
 				omega_filt_16[0] , // 16x
 				omega_filt_16[1] ,
-#if ( RMS_GAUGE == 1 )
-				omega_filt_16[2] ,
-                vector3_mag(omega_filt_16[0],omega_filt_16[1],omega_filt_16[2])/16            
-#else
                 omega_filt_16[2]
-#endif
     				);
 #if (TEST_RUNTIME_TILT_ALIGN == 1 )
         compute_euler();
@@ -1035,9 +1037,9 @@ void send_imu_data(void)
             int16_t omega_filt_16[3];
             omega_filt_16[0]=(int16_t)((omegagyro_filtered[0].WW)>>12);
             omega_filt_16[1]=(int16_t)((omegagyro_filtered[1].WW)>>12);
-            omega_filt_16[2]=(int16_t)((omegagyro_filtered[2].WW)>>12);  
-
-            serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u,%i,(%u)",           
+            omega_filt_16[2]=(int16_t)((omegagyro_filtered[2].WW)>>12);
+            rms_filt_16 += (((((int16_t)vector3_mag(omegagyro[0],omegagyro[1],omegagyro[2]))<<4)-rms_filt_16)>>4);
+            serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u,%i,(w10),(r%u),(x%i),(y%i),(z%i)",           
 #else            
             serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u,%i",
 #endif // RMS_GAUGE 
@@ -1059,7 +1061,8 @@ void send_imu_data(void)
                 mpu_temp.value 
 #endif // LOG_PITCH_RATE
 #if ( RMS_GAUGE == 1 )   
-                    , vector3_mag(omega_filt_16[0],omega_filt_16[1],omega_filt_16[2])/16            
+                    , rms_filt_16>>4  
+                    , omega_filt_16[0] , omega_filt_16[1] , omega_filt_16[2]
 
 #endif // 
 			);
