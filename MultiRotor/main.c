@@ -299,13 +299,6 @@ void dcm_heartbeat_callback(void)
             send_rms_and_lpf();
         }
 #endif // RMS_AND_LPF_GUI
-
-#if (EULER_GUI == 1 )
-        if ((udb_heartbeat_counter % (HEARTBEAT_HZ/LOGGER_HZ) )== 0)
-        {
-            send_euler_angles();
-        }
-#endif // EULER_GUI
         
         
 #ifdef LOG_RESIDUALS
