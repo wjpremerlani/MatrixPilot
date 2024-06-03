@@ -736,9 +736,13 @@ void send_imu_data(void)
 				serial_output(FILTERING);
 #ifndef ALWAYS_LOG
 #ifndef USE_PACKETIZED_TELEMERTY
+#if (EULER_GUI==1)
+                hasWrittenHeader = 1 ;
+#else
 				stop_log = 1 ;
 				start_residuals = 1 ;
 				hasWrittenHeader = 1 ;
+#endif // EULER_GUI
 #endif
 #endif // ALWAYS_LOG
 				

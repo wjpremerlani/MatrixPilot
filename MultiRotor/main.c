@@ -172,7 +172,11 @@ extern uint16_t altitude ;
 
 #define DEG_PER_RAD 57.296
 float tilt_angle ;
+#if (EULER_GUI==1)
+boolean start_log = 1 , stop_log = 0 , slide_in_progress = 1 ;
+#else
 boolean start_log = 1 , stop_log = 0 , slide_in_progress = 0 ;
+#endif // EULER_GUI
 uint16_t stop_count = 0 ;
 int16_t is_level = 0 ;
 void update_slide_detection(void)
