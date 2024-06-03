@@ -49,7 +49,7 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	1 
+#define LOGGER_HZ	10 
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
@@ -2253,7 +2253,7 @@
 
 #define RMS_AND_LPF_GUI 0
 
-#define EULER_GUI 1
+#define EULER_GUI 0
 
 #if (RMS_AND_LPF_GUI==1)
 #undef LOG_IMU_WP2
