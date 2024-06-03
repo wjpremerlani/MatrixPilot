@@ -19,7 +19,7 @@
 // for a normal production run, define LOG_IMU_WP2, NORMAL_RUN, LOG_RESIDUALS AND RESIDUAL_LOG_PERIOD
 #define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
                                     // you will also need to turn on the following:
-//#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
+#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
 #define LOG_RESIDUALS         // logs residual offsets between runs
 #define RESIDUAL_LOG_PERIOD 2  // 30 times per minute
 
@@ -35,13 +35,13 @@
 //#define SPECTRAL_ANALYSIS_BURST // 5 hz, start at 15, remember to also uncomment the following line
 //#define SAMPLES_PER_BURST 80 
 //#define SPECTRAL_ANALYSIS_CONTINUOUS // also known as the fire hose
-#define TEST_SLED // set logging Hz to 200 start at 15
+//#define TEST_SLED // set logging Hz to 200 start at 15
 //#define KUFEN // set logging Hz to 200 and start angle to 30 degrees
 
 
 // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
 // non-printable characters are written out, as header bytes for packets.
-#define USE_PACKETIZED_TELEMERTY
+//#define USE_PACKETIZED_TELEMERTY
 
 #define LOG_EULER
 //#define LOG_RATE_AND_EULER
@@ -49,7 +49,7 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	200 
+#define LOGGER_HZ	10 
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
@@ -78,7 +78,7 @@
 //#define LUGE7_SN082
 //#define LUGE7_SN083
 
-#define LUGE7_SN084
+//#define LUGE7_SN084
 //#define LUGE7_SN085
 
 //#define LUGE7_SN086
@@ -111,7 +111,7 @@
 //#define LUGE7_SN124
 //#define LUGE7_SN125
 //#define LUGE7_SN126
-//#define LUGE7_SN127
+#define LUGE7_SN127
 //#define LUGE7_SN128
 //#define LUGE7_SN129
 //#define LUGE7_SN130
@@ -2251,5 +2251,20 @@
 #error "START_TRACK_LOG is probably not the option you are looking for"
 #endif // START_TRACK_LOG
 
-#define RMS_GAUGE 0
+#define RMS_AND_LPF_GUI 0
+
+#define EULER_GUI 0
+
+#if (RMS_AND_LPF_GUI==1)
+#undef LOG_IMU_WP2
+#undef LOG_RESIDUALS
+#undef NORMAL_RUN
+#undef LOGGER_HZ
+#define LOGGER_HZ 10
+#endif // RMS_AND_LPF_GUI
+
+#if (EULER_GUI==1)
+#undef LOGGER_HZ
+#define LOGGER_HZ 10
+#endif // EULER_GUI_GUI
 

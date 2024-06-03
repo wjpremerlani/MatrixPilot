@@ -46,6 +46,8 @@ void send_imu_data(void);
 void motorCntrl( void ) ;
 void offsets_init(void) ;
 
+void send_rms_and_lpf(void) ;
+
 const int max_tilt = 0 ;  // maximum tilt in byte cicular
 int commanded_tilt_gain ;
 
@@ -170,7 +172,11 @@ extern uint16_t altitude ;
 
 #define DEG_PER_RAD 57.296
 float tilt_angle ;
+#if (EULER_GUI==1)
+boolean start_log = 1 , stop_log = 0 , slide_in_progress = 1 ;
+#else
 boolean start_log = 1 , stop_log = 0 , slide_in_progress = 0 ;
+#endif // EULER_GUI
 uint16_t stop_count = 0 ;
 int16_t is_level = 0 ;
 void update_slide_detection(void)
@@ -243,6 +249,7 @@ boolean stop_residuals = 1 ;
 boolean start_residuals = 1 ;
 extern float yaw_previous , yaw_angle , heading_previous ;
 extern void compute_euler(void);
+extern void send_euler_angles(void);
 uint16_t residual_log_counter = 0 ;
 void dcm_heartbeat_callback(void)
 {
@@ -290,13 +297,15 @@ void dcm_heartbeat_callback(void)
 			}
 		}
 	//
-#ifdef LOG_RESIDUALS
-#if (RMS_GAUGE == 1 )
-        if ((udb_heartbeat_counter % LOGGER_HZ )== 0)
+#if (RMS_AND_LPF_GUI == 1 )
+        if ((udb_heartbeat_counter % (HEARTBEAT_HZ/LOGGER_HZ) )== 0)
         {
-            send_residual_data();
+            send_rms_and_lpf();
         }
-#else
+#endif // RMS_AND_LPF_GUI
+        
+        
+#ifdef LOG_RESIDUALS
 		if (log_residuals == 1)
 		{
 			if ((udb_heartbeat_counter % HEARTBEAT_HZ )== 0) residual_log_counter ++ ;
@@ -306,7 +315,6 @@ void dcm_heartbeat_callback(void)
 				send_residual_data();
 			}
 		}
-#endif // RMS_GAUGE
 #endif // LOG_RESIDUALS
 	}
 	return ;

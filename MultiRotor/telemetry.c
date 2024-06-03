@@ -176,10 +176,67 @@ extern int16_t is_level ;
 
 extern void update_offset_table_gyros_and_accelerometers(void);
 
+int16_t omega_filt_16_previous[] = {0,0,0};
+
+void send_euler_angles(void)
+{
+    int16_t omega_filt_16[3];
+    omega_filt_16[0]=(int16_t)((omegagyro_filtered[0].WW)>>12);
+    omega_filt_16[1]=(int16_t)((omegagyro_filtered[1].WW)>>12);
+    omega_filt_16[2]=(int16_t)((omegagyro_filtered[2].WW)>>12); 
+
+    compute_euler_8k();
+    serial_output("(W10),(L%i),(Y%.1f),(P%.1f),(R%.1f)\r\n", 
+            vector3_mag(
+            omega_filt_16[0]-omega_filt_16_previous[0],
+            omega_filt_16[1]-omega_filt_16_previous[1],
+            omega_filt_16[2]-omega_filt_16_previous[2]),
+            yaw_angle_8k , pitch_angle_8k , roll_angle_8k);
+    omega_filt_16_previous[0]=omega_filt_16[0];
+    omega_filt_16_previous[1]=omega_filt_16[1];
+    omega_filt_16_previous[2]=omega_filt_16[2];  
+    
+}
+
+ 
+void send_rms_and_lpf(void)
+{
+    int16_t omega_filt_16[3];
+    omega_filt_16[0]=(int16_t)((omegagyro_filtered[0].WW)>>12);
+    omega_filt_16[1]=(int16_t)((omegagyro_filtered[1].WW)>>12);
+    omega_filt_16[2]=(int16_t)((omegagyro_filtered[2].WW)>>12); 
+    rms_filt_16 += (((((int16_t)vector3_mag(omegagyro[0],omegagyro[1],omegagyro[2]))<<4)-rms_filt_16)>>4);
+    serial_output("(w10),(r%i),(x%i),(y%i),(z%i)\r\n",
+                rms_filt_16>>4,
+				omega_filt_16[0] , // 16x
+				omega_filt_16[1] ,
+                omega_filt_16[2] ); 
+}
 
 uint16_t warmup_count = 0 ;
 uint16_t run_count = 0 ;
 int16_t check_for_jostle = 0 ;
+#if ( EULER_GUI == 1)
+void send_residual_data(void)
+{
+    int16_t omega_filt_16[3];
+    omega_filt_16[0]=(int16_t)((omegagyro_filtered[0].WW)>>12);
+    omega_filt_16[1]=(int16_t)((omegagyro_filtered[1].WW)>>12);
+    omega_filt_16[2]=(int16_t)((omegagyro_filtered[2].WW)>>12); 
+
+    compute_euler();
+    serial_output("(W10),(L%i),(Y%.1f),(P%.1f),(R%.1f)\r\n", 
+            vector3_mag(
+            omega_filt_16[0]-omega_filt_16_previous[0],
+            omega_filt_16[1]-omega_filt_16_previous[1],
+            omega_filt_16[2]-omega_filt_16_previous[2]),
+            yaw_angle , pitch_angle , roll_angle);
+    omega_filt_16_previous[0]=omega_filt_16[0];
+    omega_filt_16_previous[1]=omega_filt_16[1];
+    omega_filt_16_previous[2]=omega_filt_16[2];  
+   
+}
+#else
 void send_residual_data(void)
 {
 	if ( start_residuals == 1)
@@ -219,13 +276,7 @@ void send_residual_data(void)
         omega_filt_16[0]=(int16_t)((omegagyro_filtered[0].WW)>>12);
         omega_filt_16[1]=(int16_t)((omegagyro_filtered[1].WW)>>12);
         omega_filt_16[2]=(int16_t)((omegagyro_filtered[2].WW)>>12);  
-
-#if ( RMS_GAUGE == 1 )
-        rms_filt_16 += (((((int16_t)vector3_mag(omegagyro[0],omegagyro[1],omegagyro[2]))<<4)-rms_filt_16)>>4);
-        serial_output("%i,%i,%.1f,%.1f,%.1f,%i,%i,(w%i),(r%i),(x%i),(y%i),(z%i)",
-#else
         serial_output("%i,%i,%.1f,%.1f,%.1f,%i,%i,%i,%i,%i,%i,%i",        
-#endif
                 mpu_temp.value,
 				accelOn ,
                 ((double)(aero_force[0]))/ACCEL_FACTOR ,
@@ -234,11 +285,7 @@ void send_residual_data(void)
     			omegagyro[0],
                 omegagyro[1],
                 omegagyro[2],
-#if ( RMS_GAUGE == 1 )
-                rms_filt_16>>4,
-#else
                 vector3_mag(omegagyro[0],omegagyro[1],omegagyro[2]),
-#endif // RMS_GAUGE
 				omega_filt_16[0] , // 16x
 				omega_filt_16[1] ,
                 omega_filt_16[2]
@@ -274,9 +321,11 @@ void send_residual_data(void)
 				(int16_t)((omegagyro_filtered[2].WW)>>10) ,
                 theta_32_filtered[0]._.L1 , theta_32_filtered[1]._.L1 ,theta_32_filtered[2]._.L1 
 					);
+
 #endif // LOG_R_UPDATE
 	}
 }
+#endif // EULER_GUI
 #ifdef TEST_SLED
 
 extern uint8_t accel_read_buffer_index ;
@@ -490,6 +539,10 @@ void send_spectral_data(void)
 #endif // SPECTRAL_ANALYSIS_BURST
 void send_imu_data(void)
 {
+#if ( RMS_AND_LPF_GUI == 1 )
+    return ;
+#endif // RMS_AND_LPF_GUI   
+    
 #ifndef ALWAYS_LOG
 	if (start_log == 1)
 	{
@@ -683,9 +736,13 @@ void send_imu_data(void)
 				serial_output(FILTERING);
 #ifndef ALWAYS_LOG
 #ifndef USE_PACKETIZED_TELEMERTY
+#if (EULER_GUI==1)
+                hasWrittenHeader = 1 ;
+#else
 				stop_log = 1 ;
 				start_residuals = 1 ;
 				hasWrittenHeader = 1 ;
+#endif // EULER_GUI
 #endif
 #endif // ALWAYS_LOG
 				
@@ -1032,17 +1089,25 @@ void send_imu_data(void)
 #ifndef LOG_R_UPDATE
 #ifndef TILT_INIT
 
-#ifdef  NORMAL_RUN
-#if ( RMS_GAUGE == 1 )
-            int16_t omega_filt_16[3];
-            omega_filt_16[0]=(int16_t)((omegagyro_filtered[0].WW)>>12);
-            omega_filt_16[1]=(int16_t)((omegagyro_filtered[1].WW)>>12);
-            omega_filt_16[2]=(int16_t)((omegagyro_filtered[2].WW)>>12);
-            rms_filt_16 += (((((int16_t)vector3_mag(omegagyro[0],omegagyro[1],omegagyro[2]))<<4)-rms_filt_16)>>4);
-            serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u,%i,(w10),(r%u),(x%i),(y%i),(z%i)",           
-#else            
-            serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u,%i",
-#endif // RMS_GAUGE 
+#ifdef  NORMAL_RUN 
+#if (EULER_GUI==1)
+    int16_t omega_filt_16[3];
+    omega_filt_16[0]=(int16_t)((omegagyro_filtered[0].WW)>>12);
+    omega_filt_16[1]=(int16_t)((omegagyro_filtered[1].WW)>>12);
+    omega_filt_16[2]=(int16_t)((omegagyro_filtered[2].WW)>>12); 
+
+    compute_euler_8k();
+    serial_output("(W10),(L%i),(Y%.1f),(P%.1f),(R%.1f)\r\n", 
+            vector3_mag(
+            omega_filt_16[0]-omega_filt_16_previous[0],
+            omega_filt_16[1]-omega_filt_16_previous[1],
+            omega_filt_16[2]-omega_filt_16_previous[2]),
+            yaw_angle_8k , pitch_angle_8k , roll_angle_8k);
+    omega_filt_16_previous[0]=omega_filt_16[0];
+    omega_filt_16_previous[1]=omega_filt_16[1];
+    omega_filt_16_previous[2]=omega_filt_16[2];  
+#else
+            serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u,%i", 
             	((double)(aero_force[0]))/ACCEL_FACTOR ,
 				((double)(aero_force[1]))/ACCEL_FACTOR ,
 				((double)(aero_force[2]))/ACCEL_FACTOR ,
@@ -1060,11 +1125,6 @@ void send_imu_data(void)
 #else
                 mpu_temp.value 
 #endif // LOG_PITCH_RATE
-#if ( RMS_GAUGE == 1 )   
-                    , rms_filt_16>>4  
-                    , omega_filt_16[0] , omega_filt_16[1] , omega_filt_16[2]
-
-#endif // 
 			);
 #if ( TEST_RUNTIME_TILT_ALIGN == 1 )
             compute_euler() ;
@@ -1080,7 +1140,7 @@ void send_imu_data(void)
 #else
             serial_output("\r\n");
 #endif // TEST_RUNTIME_TILT_ALIGN
-
+#endif // EULER_GUI
 #endif // NORMAL_RUN
 
 #ifdef SPECTRAL_ANALYSIS_BURST
