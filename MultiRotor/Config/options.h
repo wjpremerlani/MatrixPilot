@@ -17,16 +17,16 @@
 
 // the following defines select what gets sent to the logger
 // for a normal production run, define LOG_IMU_WP2, NORMAL_RUN, LOG_RESIDUALS AND RESIDUAL_LOG_PERIOD
-//#define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
+#define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
                                     // you will also need to turn on the following:
-//#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
-//#define LOG_RESIDUALS         // logs residual offsets between runs
+#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
+#define LOG_RESIDUALS         // logs residual offsets between runs
 #define RESIDUAL_LOG_PERIOD 2  // 30 times per minute
 
 //#define LOG_PITCH_RATE // not commonly used
 
 // the following are used to measure offsets and gains for commissioning
-#define RECORD_OFFSETS        // record raw accelerometer data and verify residual gyro offsets
+//#define RECORD_OFFSETS        // record raw accelerometer data and verify residual gyro offsets
 // the following two options are presently used together
 //#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
 //#define ACCEL_AND_GYRO_OFFSETS
@@ -175,7 +175,7 @@
 //#define LUGE7_SN182
 //#define LUGE7_SN183
 //#define LUGE7_SN184
-//#define LUGE7_SN185
+#define LUGE7_SN185
 
 //#define LUGE7_SN186
 //#define LUGE7_SN187
@@ -188,7 +188,7 @@
 //#define LUGE7_SN193
 
 //#define LUGE7_SN194
-#define LUGE7_SN195
+//#define LUGE7_SN195
 //#define LUGE7_SN196
 //#define LUGE7_SN197
 
