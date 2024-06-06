@@ -26,10 +26,10 @@
 //#define LOG_PITCH_RATE // not commonly used
 
 // the following are used to measure offsets and gains for commissioning
-//#define RECORD_OFFSETS        // record raw accelerometer data and verify residual gyro offsets
+#define RECORD_OFFSETS        // record raw accelerometer data and verify residual gyro offsets
 // the following two options are presently used together
-#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
-#define ACCEL_AND_GYRO_OFFSETS
+//#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
+//#define ACCEL_AND_GYRO_OFFSETS
 
 // the following are special logging options
 //#define SPECTRAL_ANALYSIS_BURST // 5 hz, start at 15, remember to also uncomment the following line
