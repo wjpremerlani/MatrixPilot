@@ -49,7 +49,7 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	1 
+#define LOGGER_HZ	10 
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
@@ -111,7 +111,7 @@
 //#define LUGE7_SN124
 //#define LUGE7_SN125
 //#define LUGE7_SN126
-//#define LUGE7_SN127
+#define LUGE7_SN127
 //#define LUGE7_SN128
 //#define LUGE7_SN129
 //#define LUGE7_SN130
@@ -175,7 +175,7 @@
 //#define LUGE7_SN182
 //#define LUGE7_SN183
 //#define LUGE7_SN184
-#define LUGE7_SN185
+//#define LUGE7_SN185
 
 //#define LUGE7_SN186
 //#define LUGE7_SN187
@@ -2253,7 +2253,7 @@
 
 #define RMS_AND_LPF_GUI 0
 
-#define EULER_GUI 0
+#define EULER_GUI 1
 
 #if (RMS_AND_LPF_GUI==1)
 #undef LOG_IMU_WP2
@@ -2264,7 +2264,14 @@
 #endif // RMS_AND_LPF_GUI
 
 #if (EULER_GUI==1)
+#undef USE_PACKETIZED_TELEMERTY
 #undef LOGGER_HZ
+#undef LOG_IMU_WP2              
+#undef NORMAL_RUN
+#undef LOG_RESIDUALS
+#define LOG_IMU_WP2              
+#define NORMAL_RUN
+#define LOG_RESIDUALS
 #define LOGGER_HZ 10
 #endif // EULER_GUI_GUI
 
