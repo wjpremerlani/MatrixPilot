@@ -1,0 +1,50 @@
+// these are options that are not in common use any more.
+
+//#define DATE "Wold_pac_1, rev 2.5, 3/6/2023\r\n"
+
+//#define SIMULATED_GYRO
+
+//#define LOG_IMU_WP1               // logs IMU data during a run for wolf_pac version 1
+
+//#define START_TRACK_LOG       // logs 2 components of force and pitch
+
+//#define RESIDUAL_LOG_PERIOD 30  // 2 times per minute
+//#define RESIDUAL_LOG_PERIOD 15  // 4 times per minute
+//#define RESIDUAL_LOG_PERIOD 10  // 6 times per minute
+//#define RESIDUAL_LOG_PERIOD 5  // 12 times per minute
+
+//#define DEBUG_TABLE_BUILD
+
+//#define GYRO_OFFSETS          // verifies gyro temperature compensation table
+//#define GYRO_CALIB            // used to compute gyro calibration
+//#define CROSS_COUPLING          // measure cross coupling
+//#define FILTERED_ACCELEROMETER
+//#define TILT_INIT
+
+//#define TEST_LOGGER_HZ
+//#define LOG_VELOCITY
+//#define GYRO_DRIFT
+//#define ROAD_TEST
+//#define GYRO_LPF
+
+//#define ENABLE_ESP32
+
+
+// Enable UDB7LUGE in a Board definition ifdef block below for new WolfPac1 wifi boards
+//#define UDB7LUGE
+
+
+
+// options to override the normal mission logic and always log and/or always remove gyro offsets
+//#define ALWAYS_LOG
+//#define ALWAYS_SYNC_GYROS
+//#define THETA_LOG
+
+// for IMU log, there are two options related to the gyros. pick one or the other
+// LOG_RATE reports the gyro rates, degrees/sec
+// LOG_EULER reports roll, pitch and yaw Euler angles in NED
+//#define LOG_RATE
+
+
+// Enable UDB7LUGE in a Board definition ifdef block below for new WolfPac1 wifi boards
+//#define UDB7LUGE
