@@ -28,8 +28,8 @@
 // the following are used to measure offsets and gains for commissioning
 //#define RECORD_OFFSETS        // record raw accelerometer data and verify residual gyro offsets
 // the following two options are presently used together
-#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
-#define ACCEL_AND_GYRO_OFFSETS
+//#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
+//#define ACCEL_AND_GYRO_OFFSETS
 
 // the following are special logging options
 //#define SPECTRAL_ANALYSIS_BURST // 5 hz, start at 15, remember to also uncomment the following line
@@ -76,7 +76,7 @@
 //#define LUGE7_SN080
 //#define LUGE7_SN081
 //#define LUGE7_SN082
-//#define LUGE7_SN083
+#define LUGE7_SN083
 
 //#define LUGE7_SN084
 //#define LUGE7_SN085
@@ -156,7 +156,7 @@
 
 //#define LUGE7_SN168
 //#define LUGE7_SN169
-#define LUGE7_SN170
+//#define LUGE7_SN170
 //#define LUGE7_SN171
 
 //#define LUGE7_SN172
@@ -2253,7 +2253,7 @@
 
 #define RMS_AND_LPF_GUI 0
 
-#define EULER_GUI 0
+#define EULER_GUI 1
 
 #if (RMS_AND_LPF_GUI==1)
 #undef LOG_IMU_WP2
