@@ -26,10 +26,10 @@
 //#define LOG_PITCH_RATE // not commonly used
 
 // the following are used to measure offsets and gains for commissioning
-#define RECORD_OFFSETS        // record raw accelerometer data and verify residual gyro offsets
+//#define RECORD_OFFSETS        // record raw accelerometer data and verify residual gyro offsets
 // the following two options are presently used together
-//#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
-//#define ACCEL_AND_GYRO_OFFSETS
+#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
+#define ACCEL_AND_GYRO_OFFSETS
 
 // the following are special logging options
 //#define SPECTRAL_ANALYSIS_BURST // 5 hz, start at 15, remember to also uncomment the following line
@@ -49,7 +49,7 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	10 
+#define LOGGER_HZ	1 
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
@@ -81,9 +81,10 @@
 //#define LUGE7_SN084
 //#define LUGE7_SN085
 
-//#define LUGE7_SN086
+#define LUGE7_SN086
 //#define LUGE7_SN087
-
+//#define LUGE7_SN088
+//#define LUGE7_SN089
 
 //#define LUGE7_SN101 // switched, used to be 108
 //#define LUGE7_SN102
@@ -144,7 +145,7 @@
 //#define LUGE7_SN157
 //#define LUGE7_SN158
 //#define LUGE7_SN159
-#define LUGE7_SN160
+//#define LUGE7_SN160
 //#define LUGE7_SN161
 //#define LUGE7_SN162
 //#define LUGE7_SN163
@@ -1682,6 +1683,31 @@
 #include "options_LUGE7_SN087.h"
 #endif // LUGE7_SN087
 
+#ifdef LUGE7_SN088
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	0
+#define SERIAL_NUMBERD2	8
+#define SERIAL_NUMBERD3 8
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN088.h"
+#endif // LUGE7_SN088
+
+#ifdef LUGE7_SN089
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	0
+#define SERIAL_NUMBERD2	8
+#define SERIAL_NUMBERD3 9
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN089.h"
+#endif // LUGE7_SNnew
 
 #ifdef LUGE7_SN102
 #define CUSTOM_OFFSETS

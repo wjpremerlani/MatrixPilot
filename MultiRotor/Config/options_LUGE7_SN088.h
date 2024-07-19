@@ -1,12 +1,12 @@
 
-#ifndef options_LUGE7_SN086_H
-#define	options_LUGE7_SN086_H
+#ifndef options_LUGE7_SN088_H
+#define	options_LUGE7_SN088_H
 
 //#define CUSTOM_OFFSETS
 //#define XACCEL_OFFSET	( 0 )
 //#define YACCEL_OFFSET	( 0 )
 //#define ZACCEL_OFFSET	( 0 )
-#define GYRO_OFFSET_TABLE "../libUDB/gyro_tables/table_luge7_sn086.h"
+#define GYRO_OFFSET_TABLE "../libUDB/gyro_tables/table_luge7_sn088.h"
 #define CALIBRATIONX	1.0134
 #define CALIBRATIONY	1.0134
 #define CALIBRATIONZ	1.0134
@@ -19,5 +19,5 @@
 #define Y_CROSS_COUPLING 0
 #define Z_CROSS_COUPLING 0
 
-#endif	/* options_LUGE7_SN086_H */
+#endif	/* options_LUGE7_SN088_H */
 
