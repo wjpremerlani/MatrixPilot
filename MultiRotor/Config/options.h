@@ -49,7 +49,7 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	1
+#define LOGGER_HZ	10
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
@@ -84,7 +84,7 @@
 //#define LUGE7_SN086
 //#define LUGE7_SN087
 //#define LUGE7_SN088
-#define LUGE7_SN089
+//#define LUGE7_SN089
 
 //#define LUGE7_SN101 // switched, used to be 108
 //#define LUGE7_SN102
@@ -111,7 +111,7 @@
 //#define LUGE7_SN123
 //#define LUGE7_SN124
 //#define LUGE7_SN125
-//#define LUGE7_SN126
+#define LUGE7_SN126
 //#define LUGE7_SN127
 //#define LUGE7_SN128
 //#define LUGE7_SN129
