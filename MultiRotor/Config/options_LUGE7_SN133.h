@@ -3,9 +3,9 @@
 #define	options_LUGE7_SN133_H
 
 #define CUSTOM_OFFSETS
-#define XACCEL_OFFSET	( 4 )
-#define YACCEL_OFFSET	( -41 )
-#define ZACCEL_OFFSET	( 8 )
+//#define XACCEL_OFFSET	( 4 )
+//#define YACCEL_OFFSET	( -41 )
+//#define ZACCEL_OFFSET	( 8 )
 #define GYRO_OFFSET_TABLE "../libUDB/gyro_tables/table_luge7_sn133.h"
 #define CALIBRATIONX	1.0134
 #define CALIBRATIONY	1.0134
