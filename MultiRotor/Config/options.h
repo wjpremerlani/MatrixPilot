@@ -49,7 +49,7 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	10 
+#define LOGGER_HZ	10
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
@@ -83,7 +83,8 @@
 
 //#define LUGE7_SN086
 //#define LUGE7_SN087
-
+//#define LUGE7_SN088
+//#define LUGE7_SN089
 
 //#define LUGE7_SN101 // switched, used to be 108
 //#define LUGE7_SN102
@@ -110,8 +111,8 @@
 //#define LUGE7_SN123
 //#define LUGE7_SN124
 //#define LUGE7_SN125
-//#define LUGE7_SN126
-#define LUGE7_SN127
+#define LUGE7_SN126
+//#define LUGE7_SN127
 //#define LUGE7_SN128
 //#define LUGE7_SN129
 //#define LUGE7_SN130
@@ -1682,6 +1683,31 @@
 #include "options_LUGE7_SN087.h"
 #endif // LUGE7_SN087
 
+#ifdef LUGE7_SN088
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	0
+#define SERIAL_NUMBERD2	8
+#define SERIAL_NUMBERD3 8
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN088.h"
+#endif // LUGE7_SN088
+
+#ifdef LUGE7_SN089
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	0
+#define SERIAL_NUMBERD2	8
+#define SERIAL_NUMBERD3 9
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN089.h"
+#endif // LUGE7_SNnew
 
 #ifdef LUGE7_SN102
 #define CUSTOM_OFFSETS
@@ -2264,7 +2290,14 @@
 #endif // RMS_AND_LPF_GUI
 
 #if (EULER_GUI==1)
+#undef USE_PACKETIZED_TELEMERTY
 #undef LOGGER_HZ
+#undef LOG_IMU_WP2              
+#undef NORMAL_RUN
+#undef LOG_RESIDUALS
+#define LOG_IMU_WP2              
+#define NORMAL_RUN
+#define LOG_RESIDUALS
 #define LOGGER_HZ 10
 #endif // EULER_GUI_GUI
 
