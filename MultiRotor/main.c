@@ -184,6 +184,13 @@ void update_slide_detection(void)
 #ifdef BUILD_OFFSET_TABLE
     return ;
 #endif // BUILD_OFFSET_TABLE
+#if (EULER_GUI==1)
+    slide_in_progress = 1 ;
+    LED_RED = LED_OFF ;
+    led_red_run = 0 ;
+    udb_blink_green();
+    return ;
+#endif // EULER_GUI
 	int16_t tilt_angle_int ;
 	tilt_angle = DEG_PER_RAD*atan2f(sqrtf(((float)aero_force_filtered[0]._.W1)*((float)aero_force_filtered[0]._.W1)+((float)aero_force_filtered[1]._.W1)*((float)aero_force_filtered[1]._.W1)),-(float)aero_force_filtered[2]._.W1);
 	tilt_angle_int = (int16_t)tilt_angle ;

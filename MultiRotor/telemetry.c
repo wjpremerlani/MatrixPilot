@@ -219,21 +219,23 @@ int16_t check_for_jostle = 0 ;
 #if ( EULER_GUI == 1)
 void send_residual_data(void)
 {
-    int16_t omega_filt_16[3];
+    // no need to do anything, it is always in "run" mode
+/*    int16_t omega_filt_16[3];
     omega_filt_16[0]=(int16_t)((omegagyro_filtered[0].WW)>>12);
     omega_filt_16[1]=(int16_t)((omegagyro_filtered[1].WW)>>12);
     omega_filt_16[2]=(int16_t)((omegagyro_filtered[2].WW)>>12); 
 
-    compute_euler();
+    compute_euler_8k();
     serial_output("(W10),(L%i),(Y%.1f),(P%.1f),(R%.1f)\r\n", 
             vector3_mag(
             omega_filt_16[0]-omega_filt_16_previous[0],
             omega_filt_16[1]-omega_filt_16_previous[1],
             omega_filt_16[2]-omega_filt_16_previous[2]),
-            yaw_angle , pitch_angle , roll_angle);
+            yaw_angle_8k , pitch_angle_8k , roll_angle_8k);
     omega_filt_16_previous[0]=omega_filt_16[0];
     omega_filt_16_previous[1]=omega_filt_16[1];
-    omega_filt_16_previous[2]=omega_filt_16[2];  
+    omega_filt_16_previous[2]=omega_filt_16[2]; 
+ */ 
    
 }
 #else
@@ -1099,13 +1101,13 @@ void send_imu_data(void)
     compute_euler_8k();
     serial_output("(W10),(L%i),(Y%.1f),(P%.1f),(R%.1f)\r\n", 
             vector3_mag(
-            omega_filt_16[0]-omega_filt_16_previous[0],
-            omega_filt_16[1]-omega_filt_16_previous[1],
-            omega_filt_16[2]-omega_filt_16_previous[2]),
+            omega_filt_16[0],
+            omega_filt_16[1],
+            omega_filt_16[2])>>4,
             yaw_angle_8k , pitch_angle_8k , roll_angle_8k);
-    omega_filt_16_previous[0]=omega_filt_16[0];
-    omega_filt_16_previous[1]=omega_filt_16[1];
-    omega_filt_16_previous[2]=omega_filt_16[2];  
+    //omega_filt_16_previous[0]=omega_filt_16[0];
+    //omega_filt_16_previous[1]=omega_filt_16[1];
+    //omega_filt_16_previous[2]=omega_filt_16[2];  
 #else
             serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u,%i", 
             	((double)(aero_force[0]))/ACCEL_FACTOR ,
