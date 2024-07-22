@@ -1099,11 +1099,11 @@ void send_imu_data(void)
     omega_filt_16[2]=(int16_t)((omegagyro_filtered[2].WW)>>12); 
 
     compute_euler_8k();
-    serial_output("(W10),(L%i),(Y%.1f),(P%.1f),(R%.1f)\r\n", 
-            vector3_mag(
+    serial_output("(W10),(L%.1f),(Y%.1f),(P%.1f),(R%.1f)\r\n", 
+       ((float)    vector3_mag(
             omega_filt_16[0],
             omega_filt_16[1],
-            omega_filt_16[2])>>4,
+            omega_filt_16[2]))/16.0,
             yaw_angle_8k , pitch_angle_8k , roll_angle_8k);
     //omega_filt_16_previous[0]=omega_filt_16[0];
     //omega_filt_16_previous[1]=omega_filt_16[1];

@@ -81,10 +81,10 @@
 //#define LUGE7_SN084
 //#define LUGE7_SN085
 
-#define LUGE7_SN086
+//#define LUGE7_SN086
 //#define LUGE7_SN087
 //#define LUGE7_SN088
-//#define LUGE7_SN089
+#define LUGE7_SN089
 
 //#define LUGE7_SN101 // switched, used to be 108
 //#define LUGE7_SN102
