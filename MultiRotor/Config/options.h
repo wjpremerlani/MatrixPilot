@@ -84,7 +84,7 @@
 //#define LUGE7_SN086
 //#define LUGE7_SN087
 //#define LUGE7_SN088
-//#define LUGE7_SN089
+#define LUGE7_SN089
 
 //#define LUGE7_SN101 // switched, used to be 108
 //#define LUGE7_SN102
@@ -111,7 +111,7 @@
 //#define LUGE7_SN123
 //#define LUGE7_SN124
 //#define LUGE7_SN125
-#define LUGE7_SN126
+//#define LUGE7_SN126
 //#define LUGE7_SN127
 //#define LUGE7_SN128
 //#define LUGE7_SN129
@@ -2279,7 +2279,7 @@
 
 #define RMS_AND_LPF_GUI 0
 
-#define EULER_GUI 0
+#define EULER_GUI 1
 
 #if (RMS_AND_LPF_GUI==1)
 #undef LOG_IMU_WP2
