@@ -1,5 +1,8 @@
 // used to be 108, now belongs to 101
 
+#warning "this options file used to be 108, now belongs to 101."
+#warning "be very careful."
+
 #ifndef options_LUGE7_SN108_H
 #define	options_LUGE7_SN108_H
 

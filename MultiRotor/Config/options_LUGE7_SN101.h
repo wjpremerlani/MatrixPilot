@@ -1,5 +1,8 @@
 // used to define 101, it now belongs to 108
 
+#warning "this options file used to define 101, it now belongs to 108"
+#warning "be very careful."
+
 #ifndef options_LUGE7_SN101_H
 #define	options_LUGE7_SN101_H
 
