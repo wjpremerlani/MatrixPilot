@@ -1,6 +1,9 @@
 
 
-#define DATE "Wolf_pac_2 , firmware 5.5, 5/28/2024\r\n"
+//#define DATE "Wolf_pac_2 , firmware 5.5, 5/28/2024\r\n"
+// improved continuous gyro bias estimation
+#define DATE "Wolf_pac_2 , firmware 5.6, 8/8/2024\r\n" 
+// 5.6: no change in software, but improved "in situ" temperature compensation
 
 #define CONING_CORRECTION
 #define CONING_CORRECTION_IN_RMAT
