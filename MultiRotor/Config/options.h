@@ -1,9 +1,9 @@
 
 
-#define DATE "Wolf_pac_2 , firmware 5.2, 3/28/2024\r\n"
-//#define DATE "Wold_pac_1, rev 2.5, 3/6/2023\r\n"
-
-//#define SIMULATED_GYRO
+//#define DATE "Wolf_pac_2 , firmware 5.5, 5/28/2024\r\n"
+// improved continuous gyro bias estimation
+#define DATE "Wolf_pac_2 , firmware 5.6, 8/8/2024\r\n" 
+// 5.6: no change in software, but improved "in situ" temperature compensation
 
 #define CONING_CORRECTION
 #define CONING_CORRECTION_IN_RMAT
@@ -19,70 +19,40 @@
 #endif // CONING_CORRECTION
 
 // the following defines select what gets sent to the logger
-//#define LOG_IMU_WP1               // logs IMU data during a run for wolf_pac version 1
+// for a normal production run, define LOG_IMU_WP2, NORMAL_RUN, LOG_RESIDUALS AND RESIDUAL_LOG_PERIOD
 #define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
                                     // you will also need to turn on the following:
 #define NORMAL_RUN // this one must be turned on for normal operation 100 hz
-//#define START_TRACK_LOG         // logs 2 components of force and pitch
-//#define LOG_PITCH_RATE
 #define LOG_RESIDUALS         // logs residual offsets between runs
-//#define RESIDUAL_LOG_PERIOD 30  // 2 times per minute
-//#define RESIDUAL_LOG_PERIOD 15  // 4 times per minute
-//#define RESIDUAL_LOG_PERIOD 10  // 6 times per minute
-//#define RESIDUAL_LOG_PERIOD 5  // 12 times per minute
 #define RESIDUAL_LOG_PERIOD 2  // 30 times per minute
-//#define RESIDUAL_LOG_PERIOD 1  // 60 times per minute
+
+//#define LOG_PITCH_RATE // not commonly used
 
 // the following are used to measure offsets and gains for commissioning
-//#define RECORD_OFFSETS        // record raw accelerometer data
+//#define RECORD_OFFSETS        // record raw accelerometer data and verify residual gyro offsets
+// the following two options are presently used together
 //#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
-//#define DEBUG_TABLE_BUILD
-//#define GYRO_OFFSETS          // verifies gyro temperature compensation table
-//#define GYRO_CALIB            // used to compute gyro calibration
-//#define CROSS_COUPLING          // measure cross coupling
-//#define FILTERED_ACCELEROMETER
-//#define TILT_INIT
+//#define ACCEL_AND_GYRO_OFFSETS
 
-// the following are options used for development and debugging activities
-//#define TEST_LOGGER_HZ
-//#define LOG_VELOCITY
-//#define GYRO_DRIFT
-//#define ROAD_TEST
-//#define GYRO_LPF
+// the following are special logging options
 //#define SPECTRAL_ANALYSIS_BURST // 5 hz, start at 15, remember to also uncomment the following line
 //#define SAMPLES_PER_BURST 80 
-//#define SPECTRAL_ANALYSIS_CONTINUOUS
+//#define SPECTRAL_ANALYSIS_CONTINUOUS // also known as the fire hose
 //#define TEST_SLED // set logging Hz to 200 start at 15
 //#define KUFEN // set logging Hz to 200 and start angle to 30 degrees
 
-//#define ENABLE_ESP32
 
 // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
 // non-printable characters are written out, as header bytes for packets.
-//#define USE_PACKETIZED_TELEMERTY
+#define USE_PACKETIZED_TELEMERTY
 
-
-// Enable UDB7LUGE in a Board definition ifdef block below for new WolfPac1 wifi boards
-//#define UDB7LUGE
-
-
-
-// options to override the normal mission logic and always log and/or always remove gyro offsets
-//#define ALWAYS_LOG
-//#define ALWAYS_SYNC_GYROS
-//#define THETA_LOG
-
-// for IMU log, there are two options related to the gyros. pick one or the other
-// LOG_RATE reports the gyro rates, degrees/sec
-// LOG_EULER reports roll, pitch and yaw Euler angles in NED
-//#define LOG_RATE
 #define LOG_EULER
 //#define LOG_RATE_AND_EULER
 //#define LOG_PITCH_AND_TWO_FORCES
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	10
+#define LOGGER_HZ	100
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
@@ -96,7 +66,7 @@
 //#define LUGE7_SNnew // used to program a WP without a serial number
 
 //bill's research boards
-#define LUGE7_SNts1
+//#define LUGE7_SNts1
 //#define LUGE7_SNts2
 
 
@@ -116,7 +86,8 @@
 
 //#define LUGE7_SN086
 //#define LUGE7_SN087
-
+//#define LUGE7_SN088
+//#define LUGE7_SN089
 
 //#define LUGE7_SN101 // switched, used to be 108
 //#define LUGE7_SN102
@@ -184,7 +155,7 @@
 
 //#define LUGE7_SN164
 //#define LUGE7_SN165
-//#define LUGE7_SN166
+#define LUGE7_SN166
 //#define LUGE7_SN167
 
 //#define LUGE7_SN168
@@ -1630,7 +1601,7 @@
 #define SERIAL_NUMBERD1	0
 #define SERIAL_NUMBERD2	8
 #define SERIAL_NUMBERD3 1
-#define ACCEL_RANGE         2
+#define ACCEL_RANGE         4
 #define GYRO_RANGE	    1000
 #define LOG_EULER
 #include "options_LUGE7_SN081.h"
@@ -1643,7 +1614,8 @@
 #define SERIAL_NUMBERD1	0
 #define SERIAL_NUMBERD2	8
 #define SERIAL_NUMBERD3 2
-#define ACCEL_RANGE         8
+//#define ACCEL_RANGE         8
+#define ACCEL_RANGE         2
 #define GYRO_RANGE	    1000
 #define LOG_EULER
 #include "options_LUGE7_SN082.h"
@@ -1669,7 +1641,7 @@
 #define SERIAL_NUMBERD1	0
 #define SERIAL_NUMBERD2	8
 #define SERIAL_NUMBERD3 4
-#define ACCEL_RANGE         8
+#define ACCEL_RANGE         4
 #define GYRO_RANGE	    1000
 #define LOG_EULER
 #include "options_LUGE7_SN084.h"
@@ -1714,6 +1686,31 @@
 #include "options_LUGE7_SN087.h"
 #endif // LUGE7_SN087
 
+#ifdef LUGE7_SN088
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	0
+#define SERIAL_NUMBERD2	8
+#define SERIAL_NUMBERD3 8
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN088.h"
+#endif // LUGE7_SN088
+
+#ifdef LUGE7_SN089
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	0
+#define SERIAL_NUMBERD2	8
+#define SERIAL_NUMBERD3 9
+#define ACCEL_RANGE         8
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_LUGE7_SN089.h"
+#endif // LUGE7_SNnew
 
 #ifdef LUGE7_SN102
 #define CUSTOM_OFFSETS
@@ -2241,6 +2238,7 @@
 #define HILSIM			0
 
 #if (GYRO_RANGE==1000)
+//#define GYRO_OFFSET_MARGIN 1000
 #define GYRO_OFFSET_MARGIN 25
 #elif (GYRO_RANGE==500)
 #define GYRO_OFFSET_MARGIN 50
@@ -2248,7 +2246,7 @@
 #error "invalid GYRO_RANGE"
 #endif // GYRO_RANGE
 
-#define MATRIX_GYRO_OFFSET_MARGIN 300
+#define MATRIX_GYRO_OFFSET_MARGIN 100
 
 ////////////////////////////////////////////////////////////////////////////////
 // Use board orientation to change the mounting direction of the board.
@@ -2277,4 +2275,32 @@
 #define JOSTLE_CHECK_PERIOD 2 // check jostle every 2 seconds
 
 #define TEST_RUNTIME_TILT_ALIGN 0
+
+#ifdef START_TRACK_LOG
+#error "START_TRACK_LOG is probably not the option you are looking for"
+#endif // START_TRACK_LOG
+
+#define RMS_AND_LPF_GUI 0
+
+#define EULER_GUI 0
+
+#if (RMS_AND_LPF_GUI==1)
+#undef LOG_IMU_WP2
+#undef LOG_RESIDUALS
+#undef NORMAL_RUN
+#undef LOGGER_HZ
+#define LOGGER_HZ 10
+#endif // RMS_AND_LPF_GUI
+
+#if (EULER_GUI==1)
+#undef USE_PACKETIZED_TELEMERTY
+#undef LOGGER_HZ
+#undef LOG_IMU_WP2              
+#undef NORMAL_RUN
+#undef LOG_RESIDUALS
+#define LOG_IMU_WP2              
+#define NORMAL_RUN
+#define LOG_RESIDUALS
+#define LOGGER_HZ 10
+#endif // EULER_GUI_GUI
 

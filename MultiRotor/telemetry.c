@@ -60,6 +60,8 @@
 #error "invalid ACCEL_RANGE"
 #endif // ACCEL_RANGE 	
 
+int16_t rms_filt_16 = 0 ;
+
 
 char debug_buffer[1024] ;
 int db_index = 0 ;
@@ -110,6 +112,7 @@ extern int16_t x_bar ;
 extern int16_t y_bar[] ;
 extern int16_t gyro_offset[];
 extern uint16_t max_gyro ;
+extern int32_t yaw_rate ;
 
 extern int16_t gplane[];
 extern int16_t aero_force[];
@@ -171,10 +174,71 @@ extern int16_t misalignment[];
 
 extern int16_t is_level ;
 
+extern void update_offset_table_gyros_and_accelerometers(void);
+
+int16_t omega_filt_16_previous[] = {0,0,0};
+
+void send_euler_angles(void)
+{
+    int16_t omega_filt_16[3];
+    omega_filt_16[0]=(int16_t)((omegagyro_filtered[0].WW)>>12);
+    omega_filt_16[1]=(int16_t)((omegagyro_filtered[1].WW)>>12);
+    omega_filt_16[2]=(int16_t)((omegagyro_filtered[2].WW)>>12); 
+
+    compute_euler_8k();
+    serial_output("(W10),(L%i),(Y%.1f),(P%.1f),(R%.1f)\r\n", 
+            vector3_mag(
+            omega_filt_16[0]-omega_filt_16_previous[0],
+            omega_filt_16[1]-omega_filt_16_previous[1],
+            omega_filt_16[2]-omega_filt_16_previous[2]),
+            yaw_angle_8k , pitch_angle_8k , roll_angle_8k);
+    omega_filt_16_previous[0]=omega_filt_16[0];
+    omega_filt_16_previous[1]=omega_filt_16[1];
+    omega_filt_16_previous[2]=omega_filt_16[2];  
+    
+}
+
+ 
+void send_rms_and_lpf(void)
+{
+    int16_t omega_filt_16[3];
+    omega_filt_16[0]=(int16_t)((omegagyro_filtered[0].WW)>>12);
+    omega_filt_16[1]=(int16_t)((omegagyro_filtered[1].WW)>>12);
+    omega_filt_16[2]=(int16_t)((omegagyro_filtered[2].WW)>>12); 
+    rms_filt_16 += (((((int16_t)vector3_mag(omegagyro[0],omegagyro[1],omegagyro[2]))<<4)-rms_filt_16)>>4);
+    serial_output("(w10),(r%i),(x%i),(y%i),(z%i)\r\n",
+                rms_filt_16>>4,
+				omega_filt_16[0] , // 16x
+				omega_filt_16[1] ,
+                omega_filt_16[2] ); 
+}
 
 uint16_t warmup_count = 0 ;
 uint16_t run_count = 0 ;
 int16_t check_for_jostle = 0 ;
+#if ( EULER_GUI == 1)
+void send_residual_data(void)
+{
+    // no need to do anything, it is always in "run" mode
+/*    int16_t omega_filt_16[3];
+    omega_filt_16[0]=(int16_t)((omegagyro_filtered[0].WW)>>12);
+    omega_filt_16[1]=(int16_t)((omegagyro_filtered[1].WW)>>12);
+    omega_filt_16[2]=(int16_t)((omegagyro_filtered[2].WW)>>12); 
+
+    compute_euler_8k();
+    serial_output("(W10),(L%i),(Y%.1f),(P%.1f),(R%.1f)\r\n", 
+            vector3_mag(
+            omega_filt_16[0]-omega_filt_16_previous[0],
+            omega_filt_16[1]-omega_filt_16_previous[1],
+            omega_filt_16[2]-omega_filt_16_previous[2]),
+            yaw_angle_8k , pitch_angle_8k , roll_angle_8k);
+    omega_filt_16_previous[0]=omega_filt_16[0];
+    omega_filt_16_previous[1]=omega_filt_16[1];
+    omega_filt_16_previous[2]=omega_filt_16[2]; 
+ */ 
+   
+}
+#else
 void send_residual_data(void)
 {
 	if ( start_residuals == 1)
@@ -210,7 +274,11 @@ void send_residual_data(void)
 
 #ifndef  LOG_R_UPDATE 
 #ifndef TILT_INIT
-		serial_output("%i,%i,%.1f,%.1f,%.1f,%i,%i,%i,%i,%i,%i,%i",
+        int16_t omega_filt_16[3];
+        omega_filt_16[0]=(int16_t)((omegagyro_filtered[0].WW)>>12);
+        omega_filt_16[1]=(int16_t)((omegagyro_filtered[1].WW)>>12);
+        omega_filt_16[2]=(int16_t)((omegagyro_filtered[2].WW)>>12);  
+        serial_output("%i,%i,%.1f,%.1f,%.1f,%i,%i,%i,%i,%i,%i,%i",        
                 mpu_temp.value,
 				accelOn ,
                 ((double)(aero_force[0]))/ACCEL_FACTOR ,
@@ -220,9 +288,9 @@ void send_residual_data(void)
                 omegagyro[1],
                 omegagyro[2],
                 vector3_mag(omegagyro[0],omegagyro[1],omegagyro[2]),
-				(int16_t)((omegagyro_filtered[0].WW)>>12) , // 16x
-				(int16_t)((omegagyro_filtered[1].WW)>>12) ,
-				(int16_t)((omegagyro_filtered[2].WW)>>12) 
+				omega_filt_16[0] , // 16x
+				omega_filt_16[1] ,
+                omega_filt_16[2]
     				);
 #if (TEST_RUNTIME_TILT_ALIGN == 1 )
         compute_euler();
@@ -255,9 +323,11 @@ void send_residual_data(void)
 				(int16_t)((omegagyro_filtered[2].WW)>>10) ,
                 theta_32_filtered[0]._.L1 , theta_32_filtered[1]._.L1 ,theta_32_filtered[2]._.L1 
 					);
+
 #endif // LOG_R_UPDATE
 	}
 }
+#endif // EULER_GUI
 #ifdef TEST_SLED
 
 extern uint8_t accel_read_buffer_index ;
@@ -471,6 +541,10 @@ void send_spectral_data(void)
 #endif // SPECTRAL_ANALYSIS_BURST
 void send_imu_data(void)
 {
+#if ( RMS_AND_LPF_GUI == 1 )
+    return ;
+#endif // RMS_AND_LPF_GUI   
+    
 #ifndef ALWAYS_LOG
 	if (start_log == 1)
 	{
@@ -630,11 +704,13 @@ void send_imu_data(void)
 			break ;
 		case 18:
 			{
+#ifdef XACCEL_OFFSET
 				serial_output( "Accel offsets are x=%i, y=%i, z=%i.\r\n",
 					XACCEL_OFFSET ,
 					YACCEL_OFFSET , 
 					ZACCEL_OFFSET 
 					 );	
+#endif // XACCEL_OFFSET
 			}
 			break;
 		case 19:
@@ -662,9 +738,13 @@ void send_imu_data(void)
 				serial_output(FILTERING);
 #ifndef ALWAYS_LOG
 #ifndef USE_PACKETIZED_TELEMERTY
+#if (EULER_GUI==1)
+                hasWrittenHeader = 1 ;
+#else
 				stop_log = 1 ;
 				start_residuals = 1 ;
 				hasWrittenHeader = 1 ;
+#endif // EULER_GUI
 #endif
 #endif // ALWAYS_LOG
 				
@@ -733,7 +813,7 @@ void send_imu_data(void)
             serial_output("\r\nx_force,y_force,z_force,yaw_32,pitch_32,roll_32,max_gyro,cpu,seq_no,tmptur,yaw_16,pitch_16,roll_16,lpx,lpy,lpz,algn_x,algn_y,algn_z\r\n");              
               
 #else
-           serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx,tmptur_xx\r\n");              
+           serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,yaw_rate_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx,tmptur_xx\r\n");              
 #endif // LOG_PITCH_RATE , TEST_RUNTIME_TILT_ALIGN
 #endif // NORMAL_RUN
 
@@ -767,7 +847,7 @@ void send_imu_data(void)
 #endif //FILTERED_ACCELEROMETER
 				
 #ifdef RECORD_OFFSETS
-				serial_output("tmptur,ax,ay,az,gx_val,gy_val,gz_val,gyr_x,gyr_y,gyr_z\r\n");
+				serial_output("tmptur,ax,ay,az,gx_val,gy_val,gz_val,gyr_x,gyr_y,gyr_z,gyr_rms\r\n");
 #endif // RECORD_OFFSETS
 				
 #ifdef TEST_LOGGER_HZ
@@ -793,7 +873,11 @@ void send_imu_data(void)
 		serial_output("synch,gx,gy,gyz,ax,ay,az,r6,r7,r8\r\n");
 #endif // ROAD_TEST
 #ifdef BUILD_OFFSET_TABLE
+#ifdef ACCEL_AND_GYRO_OFFSETS
+        //serial_output ("\r\ntmptr,cpu,smpls,gyro_mag,gyro_off_x,gyro_off_y,gyro_off_z,gyro_raw_x,gyro_raw_y,gyro_raw_z,acc_x,acc_y,acc_z\r\n");
+#else
 		serial_output("\r\ntmptr,cpu,smpls,X_bar,Y_bar_x,Y_bar_y,Y_bar_z,XX_bar,XY_bar_x,XY_bar_y,XY_bar_z,denom,lft_o_x,lft_o_y,lft_o_z,rght_o_x,rght_o_y,rght_o_z,offx,offy,offz\r\n");
+#endif //
 #endif //BUILD_OFFSET_TABLE
 			}
 			break ;	
@@ -808,12 +892,15 @@ void send_imu_data(void)
 	else
 	{
 #ifdef RECORD_OFFSETS 
-		{	
-			serial_output( "%i,%i,%i,%i,%i,%i,%i,%i,%i,%i\r\n" ,
+		{
+			serial_output( "%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i\r\n" ,
 			mpu_temp.value,
-			udb_xaccel.value , udb_yaccel.value , udb_zaccel.value ,
+			udb_xaccel.value - udb_xaccel.offset , 
+            udb_yaccel.value - udb_yaccel.offset , 
+            udb_zaccel.value - udb_zaccel.offset ,
 			udb_xrate.value , udb_yrate.value , udb_zrate.value	,
-			omegagyro[0],omegagyro[1],omegagyro[2]
+			omegagyro[0],omegagyro[1],omegagyro[2] ,
+            vector3_mag(omegagyro[0],omegagyro[1],omegagyro[2])
 			 ) ;
 		}
 #endif // RECORD_OFFSETS
@@ -1004,8 +1091,25 @@ void send_imu_data(void)
 #ifndef LOG_R_UPDATE
 #ifndef TILT_INIT
 
-#ifdef  NORMAL_RUN
-            serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u,%i",
+#ifdef  NORMAL_RUN 
+#if (EULER_GUI==1)
+    int16_t omega_filt_16[3];
+    omega_filt_16[0]=(int16_t)((omegagyro_filtered[0].WW)>>12);
+    omega_filt_16[1]=(int16_t)((omegagyro_filtered[1].WW)>>12);
+    omega_filt_16[2]=(int16_t)((omegagyro_filtered[2].WW)>>12); 
+
+    compute_euler_8k();
+    serial_output("(W10),(L%.1f),(Y%.1f),(P%.1f),(R%.1f)\r\n", 
+       ((float)    vector3_mag(
+            omega_filt_16[0],
+            omega_filt_16[1],
+            omega_filt_16[2]))/16.0,
+            yaw_angle_8k , pitch_angle_8k , roll_angle_8k);
+    //omega_filt_16_previous[0]=omega_filt_16[0];
+    //omega_filt_16_previous[1]=omega_filt_16[1];
+    //omega_filt_16_previous[2]=omega_filt_16[2];  
+#else
+            serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u,%i", 
             	((double)(aero_force[0]))/ACCEL_FACTOR ,
 				((double)(aero_force[1]))/ACCEL_FACTOR ,
 				((double)(aero_force[2]))/ACCEL_FACTOR ,
@@ -1013,7 +1117,8 @@ void send_imu_data(void)
 				heading ,  pitch_angle , roll_angle ,
 #else
 				heading_8k ,  pitch_angle_8k , roll_angle_8k ,
-#endif                
+#endif 
+                ((double) (yaw_rate))/ ((double)93701.65) ,    
 				max_gyro/328  ,
                 udb_cpu_load(),
                 record_number ++ ,
@@ -1037,7 +1142,7 @@ void send_imu_data(void)
 #else
             serial_output("\r\n");
 #endif // TEST_RUNTIME_TILT_ALIGN
-
+#endif // EULER_GUI
 #endif // NORMAL_RUN
 
 #ifdef SPECTRAL_ANALYSIS_BURST
@@ -1182,10 +1287,12 @@ void send_imu_data(void)
 #endif // GYRO_DRIFT
 		
 #ifdef BUILD_OFFSET_TABLE
-		update_offset_table();
-	
-		
-#endif //
+#ifdef ACCEL_AND_GYRO_OFFSETS
+        update_offset_table_gyros_and_accelerometers();
+#else
+		update_offset_table();	
+#endif // ACCEL_AND_GYRO_OFFSETS
+#endif // BUILD_OFFSET_TABLE
 
 #ifdef ROAD_TEST
 		serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%i,%i\r\n",

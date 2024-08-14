@@ -3,10 +3,10 @@
 #ifndef options_LUGE7_SN112_H
 #define	options_LUGE7_SN112_H
 
-#define CUSTOM_OFFSETS
-#define XACCEL_OFFSET	( 8 )
-#define YACCEL_OFFSET	( -50 )
-#define ZACCEL_OFFSET	( -61 )
+//#define CUSTOM_OFFSETS
+//#define XACCEL_OFFSET	( 8 )
+//#define YACCEL_OFFSET	( -50 )
+//#define ZACCEL_OFFSET	( -61 )
 #define GYRO_OFFSET_TABLE "../libUDB/gyro_tables/table_luge7_sn112.h"
 #define CALIBRATIONX	1.0135
 #define CALIBRATIONY	1.0152
