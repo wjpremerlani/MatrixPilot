@@ -2246,6 +2246,8 @@
 #error "invalid GYRO_RANGE"
 #endif // GYRO_RANGE
 
+#define GYRO_VARIANCE_MARGIN 400
+
 #define MATRIX_GYRO_OFFSET_MARGIN 100
 
 ////////////////////////////////////////////////////////////////////////////////

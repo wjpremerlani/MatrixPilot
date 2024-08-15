@@ -23,6 +23,16 @@
 // This combination allows values of matrix elements between -2 and +2.
 // Multiplication produces results scaled by 1/2.
 
+extern boolean logging_on ;
+
+extern boolean gyro_locking_on ;
+extern boolean slide_in_progress ;
+extern void udb_blink_red(void);
+extern void udb_blink_green(void);
+
+extern boolean led_red_run ;
+extern boolean led_green_standby ;
+
 
 #define RMAX15 24576 //0b0110000000000000   // 1.5 in 2.14 format
 
@@ -255,7 +265,16 @@ static inline void read_gyros(void)
                 - ((int64_t)gyro_sum[0])*((int64_t)gyro_sum[0])
                 - ((int64_t)gyro_sum[1])*((int64_t)gyro_sum[1])
                 - ((int64_t)gyro_sum[2])*((int64_t)gyro_sum[2]) ;
-   
+        
+        if (stdev_sqr > GYRO_VARIANCE_MARGIN)
+        {
+            motion_detect = 1 ;         		
+        }
+        else
+        {   
+            motion_detect = 0 ;
+            
+        } 
         
         if ( motion_detect == 1 )
         {
@@ -607,15 +626,6 @@ int16_t omega_dot_rmat6 ;
 int16_t omega_scaled[3] ;
 int16_t omega_yaw_drift[3] ;
 uint16_t omega_magnitude ;
-extern boolean logging_on ;
-
-extern boolean gyro_locking_on ;
-extern boolean slide_in_progress ;
-extern void udb_blink_red(void);
-extern void udb_blink_green(void);
-
-extern boolean led_red_run ;
-extern boolean led_green_standby ;
 
 uint16_t accel_magnitude ;
 boolean matrix_jostle = 0 ;
@@ -632,7 +642,7 @@ static void roll_pitch_drift(void)
         matrix_jostle = 1 ;
     }
     
-    
+    /*
     if((omega_magnitude>GYRO_OFFSET_MARGIN )	|| (abs(accel_magnitude-CALIB_GRAVITY/2)>CALIB_GRAVITY/8))
 	{
 		motion_detect = 1 ;
@@ -664,7 +674,7 @@ static void roll_pitch_drift(void)
         {
             LED_GREEN = LED_OFF ;
         }
-    }
+    }*/
     if ((( logging_on == 0)||(CONTINUOUS_MATRIX_LOCKING==1))&&(matrix_jostle == 0 ))
     {
 		int16_t gplane_nomalized[3] ;
