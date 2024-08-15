@@ -176,9 +176,6 @@ extern int16_t is_level ;
 
 extern void update_offset_table_gyros_and_accelerometers(void);
 
-extern int32_t xrate_sum , yrate_sum , zrate_sum ;
-extern int64_t xrate_sqr , yrate_sqr, zrate_sqr , _xrate_sqr , _yrate_sqr , _zrate_sqr ;
-
 int16_t omega_filt_16_previous[] = {0,0,0};
 
 void send_euler_angles(void)
@@ -281,7 +278,7 @@ void send_residual_data(void)
         omega_filt_16[0]=(int16_t)((omegagyro_filtered[0].WW)>>12);
         omega_filt_16[1]=(int16_t)((omegagyro_filtered[1].WW)>>12);
         omega_filt_16[2]=(int16_t)((omegagyro_filtered[2].WW)>>12);  
-        serial_output("%i,%i,%.1f,%.1f,%.1f,%i,%i,%i,%i,%i,%i,%i,%li,%lli",        
+        serial_output("%i,%i,%.1f,%.1f,%.1f,%i,%i,%i,%i,%i,%i,%i",        
                 mpu_temp.value,
 				accelOn ,
                 ((double)(aero_force[0]))/ACCEL_FACTOR ,
@@ -293,9 +290,7 @@ void send_residual_data(void)
                 vector3_mag(omegagyro[0],omegagyro[1],omegagyro[2]),
 				omega_filt_16[0] , // 16x
 				omega_filt_16[1] ,
-                omega_filt_16[2] ,
-                xrate_sum ,
-                xrate_sqr 
+                omega_filt_16[2]
     				);
 #if (TEST_RUNTIME_TILT_ALIGN == 1 )
         compute_euler();

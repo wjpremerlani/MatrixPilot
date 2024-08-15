@@ -310,8 +310,6 @@ void reset_coning_adjustment(void)
 int16_t sample_counter = 0 ;
 
 int32_t xaccel32, yaccel32, zaccel32, temp32, xrate32, yrate32, zrate32 ;
-int32_t xrate_sum , yrate_sum , zrate_sum ;
-int64_t xrate_sqr , yrate_sqr, zrate_sqr , _xrate_sqr , _yrate_sqr , _zrate_sqr ;
 int32_t omegagyro32X[3] ;
 uint32_t max_gyro = 0 ;
 
@@ -438,11 +436,6 @@ static void process_MPU_data(void)
 	xrate32 += ((int32_t)((int16_t)mpu_data[xrate_MPU_channel].BB)) ;
 	yrate32 += ((int32_t)((int16_t)mpu_data[yrate_MPU_channel].BB)) ;
 	zrate32 += ((int32_t)((int16_t)mpu_data[zrate_MPU_channel].BB)) ;
-    
-    _xrate_sqr += (int64_t)(((int64_t)mpu_data[xrate_MPU_channel].BB)*((int64_t)mpu_data[xrate_MPU_channel].BB)) ;
-    _yrate_sqr += (int64_t)(((int64_t)mpu_data[yrate_MPU_channel].BB)*((int64_t)mpu_data[yrate_MPU_channel].BB)) ;
-    _zrate_sqr += (int64_t)(((int64_t)mpu_data[zrate_MPU_channel].BB)*((int64_t)mpu_data[zrate_MPU_channel].BB)) ;
-    
 #ifdef SPECTRAL_ANALYSIS_BURST
     if ( spectral_sample_number < SAMPLES_PER_BURST )
     {
@@ -523,21 +516,9 @@ static void process_MPU_data(void)
 		yaccel32 = 0 ;
 		zaccel32 = 0 ;
 		temp32 = 0 ;
-        xrate_sum = xrate32 ;
-        yrate_sum = yrate32 ;
-        zrate_sum = zrate32 ;
-        xrate_sqr = _xrate_sqr ;
-        yrate_sqr = _yrate_sqr ;
-        zrate_sqr = _zrate_sqr ;
-       
 		xrate32 = 0 ;
 		yrate32 = 0 ;
 		zrate32 = 0 ;
-        _xrate_sqr = 0 ;
-        _yrate_sqr = 0 ;
-        _zrate_sqr = 0 ;
-        
-        
 #ifdef 	CONING_CORRECTION
 		// theta values used to update the 32 bit direction cosine matrix
 		theta_32[0].WW = _theta_32[0].WW ;
