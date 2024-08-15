@@ -178,6 +178,11 @@ extern void update_offset_table_gyros_and_accelerometers(void);
 
 int16_t omega_filt_16_previous[] = {0,0,0};
 
+extern int64_t gyro_sum_of_squares ;
+extern int16_t total_samples ;
+extern int32_t gyro_sum[];
+extern int64_t stdev_sqr ;
+
 void send_euler_angles(void)
 {
     int16_t omega_filt_16[3];
@@ -246,11 +251,7 @@ void send_residual_data(void)
 		start_residuals = 0 ;
 #ifndef LOG_R_UPDATE
 #ifndef TILT_INIT
-#if ( TEST_RUNTIME_TILT_ALIGN == 1 )
-   		serial_output("\r\n\r\nimu_temp_yy,filter_en_yy,x_force_yy,y_force_yy,z_force_yy,x_rate_yy,y_rate_yy,z_rate_yy,rms_rate_yy,x_filt_16_yy,y_filt_16_yy,z_filt_16_yy,yaw_yy,pitch_yy,roll_yy\r\n") ;    
-#else
-		serial_output("\r\n\r\nimu_temp_yy,filter_en_yy,x_force_yy,y_force_yy,z_force_yy,x_rate_yy,y_rate_yy,z_rate_yy,rms_rate_yy,x_filt_16_yy,y_filt_16_yy,z_filt_16_yy\r\n") ;
-#endif // TEST_RUNTIME_TILT_ALIGN
+		serial_output("\r\n\r\nimu_temp_yy,filter_en_yy,x_force_yy,y_force_yy,z_force_yy,x_rate_yy,y_rate_yy,z_rate_yy,rms_rate_yy,x_filt_16_yy,y_filt_16_yy,z_filt_16_yy,stdev_sqr_yy\r\n") ;
 #else
         serial_output("\r\n\r\nStandbymode\r\naccOn,logOn,nx_force,y_force,z_force,yaw8,pitch8,roll8,yaw,pitch,roll\r\n");        
 #endif // TILT_INIT
@@ -278,7 +279,7 @@ void send_residual_data(void)
         omega_filt_16[0]=(int16_t)((omegagyro_filtered[0].WW)>>12);
         omega_filt_16[1]=(int16_t)((omegagyro_filtered[1].WW)>>12);
         omega_filt_16[2]=(int16_t)((omegagyro_filtered[2].WW)>>12);  
-        serial_output("%i,%i,%.1f,%.1f,%.1f,%i,%i,%i,%i,%i,%i,%i",        
+        serial_output("%i,%i,%.1f,%.1f,%.1f,%i,%i,%i,%i,%i,%i,%i,%lli",        
                 mpu_temp.value,
 				accelOn ,
                 ((double)(aero_force[0]))/ACCEL_FACTOR ,
@@ -290,7 +291,14 @@ void send_residual_data(void)
                 vector3_mag(omegagyro[0],omegagyro[1],omegagyro[2]),
 				omega_filt_16[0] , // 16x
 				omega_filt_16[1] ,
-                omega_filt_16[2]
+                omega_filt_16[2] ,
+//              total_samples ,
+//              gyro_sum_of_squares ,
+//              gyro_sum[0],
+//              gyro_sum[1],
+//              gyro_sum[2],
+                stdev_sqr
+                
     				);
 #if (TEST_RUNTIME_TILT_ALIGN == 1 )
         compute_euler();

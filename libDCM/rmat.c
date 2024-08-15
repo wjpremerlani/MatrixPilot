@@ -209,11 +209,27 @@ union longww accum32 ;
 extern int32_t omegagyro32X[] ;
 extern union longww theta_32[];
 
+int64_t _gyro_sum_of_squares = 0 ;
+int16_t _total_samples = 0 ;
+int32_t _gyro_sum[] = { 0 , 0 , 0 };
+int64_t gyro_sum_of_squares = 0 ;
+int16_t total_samples = 0 ;
+int32_t gyro_sum[] = { 0 , 0 , 0 };
+int64_t stdev_sqr = 0 ;
 
 extern int16_t check_for_jostle ;
 uint16_t jostle_counter = 0 ;
 static inline void read_gyros(void)
 {
+    _total_samples += 1 ;
+    _gyro_sum[0] += (int32_t) omegagyro[0];
+    _gyro_sum[1] += (int32_t) omegagyro[1];
+    _gyro_sum[2] += (int32_t) omegagyro[2];
+    
+    _gyro_sum_of_squares += (int64_t)__builtin_mulss( omegagyro[0],omegagyro[0])
+            + (int64_t)__builtin_mulss( omegagyro[1],omegagyro[1])
+            + (int64_t)__builtin_mulss( omegagyro[0],omegagyro[0]) ;
+    
 	// fetch the gyro signals and subtract the baseline offset, 
 	// and adjust for variations in supply voltage
     if ((udb_heartbeat_counter % HEARTBEAT_HZ )== 0) jostle_counter ++ ;
@@ -224,6 +240,23 @@ static inline void read_gyros(void)
 			}
 	if ( check_for_jostle == 1 )
     {
+        total_samples = _total_samples ;
+        _total_samples = 0 ;
+        gyro_sum_of_squares = _gyro_sum_of_squares / ((int64_t)total_samples);
+        _gyro_sum_of_squares = 0 ;
+        gyro_sum[0] = _gyro_sum[0]/((int32_t)total_samples) ;
+        gyro_sum[1] = _gyro_sum[1]/((int32_t)total_samples) ;
+        gyro_sum[2] = _gyro_sum[2]/((int32_t)total_samples) ;
+        _gyro_sum[0] = 0 ;
+        _gyro_sum[1] = 0 ;
+        _gyro_sum[2] = 0 ;
+        
+        stdev_sqr = gyro_sum_of_squares 
+                - ((int64_t)gyro_sum[0])*((int64_t)gyro_sum[0])
+                - ((int64_t)gyro_sum[1])*((int64_t)gyro_sum[1])
+                - ((int64_t)gyro_sum[2])*((int64_t)gyro_sum[2]) ;
+   
+        
         if ( motion_detect == 1 )
         {
             omegagyro_filtered[0].WW = omegagyro_filtered_temporary[0].WW = omegagyro_filtered_backup[0].WW ;
