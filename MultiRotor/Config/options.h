@@ -44,7 +44,7 @@
 
 // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
 // non-printable characters are written out, as header bytes for packets.
-#define USE_PACKETIZED_TELEMERTY
+//#define USE_PACKETIZED_TELEMERTY
 
 #define LOG_EULER
 //#define LOG_RATE_AND_EULER
@@ -52,7 +52,7 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	100
+#define LOGGER_HZ	1
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
@@ -115,7 +115,7 @@
 //#define LUGE7_SN124
 //#define LUGE7_SN125
 //#define LUGE7_SN126
-//#define LUGE7_SN127
+#define LUGE7_SN127
 //#define LUGE7_SN128
 //#define LUGE7_SN129
 //#define LUGE7_SN130
@@ -155,7 +155,7 @@
 
 //#define LUGE7_SN164
 //#define LUGE7_SN165
-#define LUGE7_SN166
+//#define LUGE7_SN166
 //#define LUGE7_SN167
 
 //#define LUGE7_SN168
