@@ -229,6 +229,10 @@ int64_t stdev_sqr = 0 ;
 
 extern int16_t check_for_jostle ;
 uint16_t jostle_counter = 0 ;
+
+boolean log_jostle = 0 ;
+boolean signal_jostle = 0 ; 
+
 static inline void read_gyros(void)
 {
     _total_samples += 1 ;
@@ -268,12 +272,14 @@ static inline void read_gyros(void)
         
         if (stdev_sqr > GYRO_VARIANCE_MARGIN)
         {
-            motion_detect = 1 ;         		
+            motion_detect = 1 ;
+            log_jostle = 0 ;
+            signal_jostle = 1 ;
         }
         else
         {   
             motion_detect = 0 ;
-            
+            signal_jostle = 0 ;           
         } 
         
         if ( motion_detect == 1 )

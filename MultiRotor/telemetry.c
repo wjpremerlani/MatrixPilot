@@ -244,6 +244,7 @@ void send_residual_data(void)
    
 }
 #else
+extern boolean log_jostle ;
 void send_residual_data(void)
 {
 	if ( start_residuals == 1)
@@ -281,7 +282,7 @@ void send_residual_data(void)
         omega_filt_16[2]=(int16_t)((omegagyro_filtered[2].WW)>>12);  
         serial_output("%i,%i,%.1f,%.1f,%.1f,%i,%i,%i,%i,%i,%i,%i,%lli",        
                 mpu_temp.value,
-				accelOn ,
+				log_jostle ,
                 ((double)(aero_force[0]))/ACCEL_FACTOR ,
 				((double)(aero_force[1]))/ACCEL_FACTOR ,
 				((double)(aero_force[2]))/ACCEL_FACTOR ,
@@ -306,6 +307,7 @@ void send_residual_data(void)
                 yaw_angle , pitch_angle , roll_angle );
 #else
         serial_output("\r\n") ;
+        log_jostle = 1 ;
 #endif // TEST_RUNTIME_TILT_ALIGN
 #else
         compute_euler();
