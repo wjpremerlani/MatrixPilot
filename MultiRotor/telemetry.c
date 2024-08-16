@@ -702,8 +702,8 @@ void send_imu_data(void)
 			break ;
         case 15:
             {
-                serial_output("Gyro jostle detection thresholds are %i, %i.\r\n",
-                        GYRO_OFFSET_MARGIN , MATRIX_GYRO_OFFSET_MARGIN 
+                serial_output("Jostle detection thresholds are %i variance for gyro filtering,\r\n %i rate for matrix alignment.\r\n",
+                        GYRO_VARIANCE_MARGIN , MATRIX_GYRO_OFFSET_MARGIN 
                         );
             }
             break ;

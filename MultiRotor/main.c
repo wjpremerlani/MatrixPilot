@@ -329,6 +329,7 @@ void dcm_heartbeat_callback(void)
         
         
 #ifdef LOG_RESIDUALS
+#ifndef RESIDUAL_HZ
 		if (log_residuals == 1)
 		{
 			if ((udb_heartbeat_counter % HEARTBEAT_HZ )== 0) residual_log_counter ++ ;
@@ -338,6 +339,15 @@ void dcm_heartbeat_callback(void)
 				send_residual_data();
 			}
 		}
+#else
+        if (log_residuals == 1)
+		{
+			if ((udb_heartbeat_counter % HEARTBEAT_HZ/RESIDUAL_HZ )== 0)
+			{
+				send_residual_data();
+			}
+		}      
+#endif // RESIDUAL_HZ
 #endif // LOG_RESIDUALS
 	}
 	return ;

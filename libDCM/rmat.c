@@ -242,7 +242,7 @@ static inline void read_gyros(void)
     
     _gyro_sum_of_squares += (int64_t)__builtin_mulss( omegagyro[0],omegagyro[0])
             + (int64_t)__builtin_mulss( omegagyro[1],omegagyro[1])
-            + (int64_t)__builtin_mulss( omegagyro[0],omegagyro[0]) ;
+            + (int64_t)__builtin_mulss( omegagyro[2],omegagyro[2]) ;
     
 	// fetch the gyro signals and subtract the baseline offset, 
 	// and adjust for variations in supply voltage
