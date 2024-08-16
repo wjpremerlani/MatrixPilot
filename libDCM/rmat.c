@@ -235,6 +235,8 @@ boolean signal_jostle = 0 ;
 
 static inline void read_gyros(void)
 {
+    // accumulate partial sums over the jostle checking window to compute variance
+    // partial sums include integral of gyro signals and integral of their squares
     _total_samples += 1 ;
     _gyro_sum[0] += (int32_t) omegagyro[0];
     _gyro_sum[1] += (int32_t) omegagyro[1];
@@ -244,8 +246,6 @@ static inline void read_gyros(void)
             + (int64_t)__builtin_mulss( omegagyro[1],omegagyro[1])
             + (int64_t)__builtin_mulss( omegagyro[2],omegagyro[2]) ;
     
-	// fetch the gyro signals and subtract the baseline offset, 
-	// and adjust for variations in supply voltage
     if ((udb_heartbeat_counter % HEARTBEAT_HZ )== 0) jostle_counter ++ ;
 			if ( jostle_counter == JOSTLE_CHECK_PERIOD ) 
 			{
@@ -256,14 +256,19 @@ static inline void read_gyros(void)
     {
         total_samples = _total_samples ;
         _total_samples = 0 ;
+        // compute the average of the sum of the squares of the gyro signals
         gyro_sum_of_squares = _gyro_sum_of_squares / ((int64_t)total_samples);
         _gyro_sum_of_squares = 0 ;
+        // compute the average of the gyro signals
         gyro_sum[0] = _gyro_sum[0]/((int32_t)total_samples) ;
         gyro_sum[1] = _gyro_sum[1]/((int32_t)total_samples) ;
         gyro_sum[2] = _gyro_sum[2]/((int32_t)total_samples) ;
         _gyro_sum[0] = 0 ;
         _gyro_sum[1] = 0 ;
         _gyro_sum[2] = 0 ;
+        
+        // compute the variance, which is the mean of the squares of the samples
+        // minus the products of the means of the samples, using the classic equation
         
         stdev_sqr = gyro_sum_of_squares 
                 - ((int64_t)gyro_sum[0])*((int64_t)gyro_sum[0])
