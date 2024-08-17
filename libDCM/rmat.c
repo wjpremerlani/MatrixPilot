@@ -641,16 +641,21 @@ uint16_t omega_magnitude ;
 uint16_t accel_magnitude ;
 boolean matrix_jostle = 0 ;
 
+boolean log_matrix_jostle = 1 ;
+
 static void roll_pitch_drift(void)
 {	
 	accel_magnitude = vector3_mag(gplane[0],gplane[1],gplane[2]);
-	omega_magnitude = vector3_mag(omegagyro[0],omegagyro[1],omegagyro[2]); 
+	omega_magnitude = vector3_mag(omegagyro[0]+omegagyro_filtered[0]._.W1,
+        omegagyro[1]+omegagyro_filtered[1]._.W1,
+        omegagyro[2]+omegagyro_filtered[2]._.W1); 
 #ifdef BUILD_OFFSET_TABLE // the following interferes with LED signals during table build
     return ;
 #endif // BUILD_OFFSET_TABLE
 	if((omega_magnitude>MATRIX_GYRO_OFFSET_MARGIN )	|| (abs(accel_magnitude-CALIB_GRAVITY/2)>CALIB_GRAVITY/8))
 	{
         matrix_jostle = 1 ;
+        log_matrix_jostle = 0 ;
     }
     
     /*

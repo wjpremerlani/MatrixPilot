@@ -246,6 +246,7 @@ void send_residual_data(void)
 #else
 int16_t net_gyro[] = { 0 , 0 , 0 };
 extern boolean log_jostle ;
+extern boolean log_matrix_jostle ;
 void send_residual_data(void)
 {
 	if ( start_residuals == 1)
@@ -253,7 +254,7 @@ void send_residual_data(void)
 		start_residuals = 0 ;
 #ifndef LOG_R_UPDATE
 #ifndef TILT_INIT
-		serial_output("\r\n\r\nimu_temp_yy,filter_en_yy,x_force_yy,y_force_yy,z_force_yy,x_rate_yy,y_rate_yy,z_rate_yy,rms_rate_yy,x_filt_16_yy,y_filt_16_yy,z_filt_16_yy,stdev_yy\r\n") ;
+		serial_output("\r\n\r\nimu_temp_yy,filtring_yy,aligning_yy,x_force_yy,y_force_yy,z_force_yy,x_rate_yy,y_rate_yy,z_rate_yy,rms_rate_yy,x_filt_16_yy,y_filt_16_yy,z_filt_16_yy,stdev_yy\r\n") ;
 #else
         serial_output("\r\n\r\nStandbymode\r\naccOn,logOn,nx_force,y_force,z_force,yaw8,pitch8,roll8,yaw,pitch,roll\r\n");        
 #endif // TILT_INIT
@@ -281,12 +282,13 @@ void send_residual_data(void)
         omega_filt_16[0]=(int16_t)((omegagyro_filtered[0].WW)>>12);
         omega_filt_16[1]=(int16_t)((omegagyro_filtered[1].WW)>>12);
         omega_filt_16[2]=(int16_t)((omegagyro_filtered[2].WW)>>12);  
-        net_gyro[0] = (int16_t)gyro_sum[0] + (omega_filt_16[0]>>4) ;
-        net_gyro[1] = (int16_t)gyro_sum[1] + (omega_filt_16[1]>>4) ;
-        net_gyro[2] = (int16_t)gyro_sum[2] + (omega_filt_16[2]>>4) ;
-        serial_output("%i,%i,%.1f,%.1f,%.1f,%i,%i,%i,%i,%i,%i,%i,%i",        
+        net_gyro[0] = (int16_t)gyro_sum[0] + omegagyro_filtered[0]._.W1 ;
+        net_gyro[1] = (int16_t)gyro_sum[1] + omegagyro_filtered[1]._.W1 ;
+        net_gyro[2] = (int16_t)gyro_sum[2] + omegagyro_filtered[2]._.W1 ;
+        serial_output("%i,%i,%i,%.1f,%.1f,%.1f,%i,%i,%i,%i,%i,%i,%i,%i",        
                 mpu_temp.value,
 				log_jostle ,
+                log_matrix_jostle ,
                 ((double)(aero_force[0]))/ACCEL_FACTOR ,
 				((double)(aero_force[1]))/ACCEL_FACTOR ,
 				((double)(aero_force[2]))/ACCEL_FACTOR ,
@@ -312,6 +314,7 @@ void send_residual_data(void)
 #else
         serial_output("\r\n") ;
         log_jostle = 1 ;
+        log_matrix_jostle = 1 ;
 #endif // TEST_RUNTIME_TILT_ALIGN
 #else
         compute_euler();

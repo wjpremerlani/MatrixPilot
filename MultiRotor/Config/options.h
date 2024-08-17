@@ -2252,7 +2252,7 @@
 
 #define GYRO_VARIANCE_MARGIN 150
 
-#define MATRIX_GYRO_OFFSET_MARGIN 100
+#define MATRIX_GYRO_OFFSET_MARGIN 25
 
 ////////////////////////////////////////////////////////////////////////////////
 // Use board orientation to change the mounting direction of the board.
