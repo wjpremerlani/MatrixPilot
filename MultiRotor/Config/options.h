@@ -2310,5 +2310,5 @@
 #define LOGGER_HZ 10
 #endif // EULER_GUI_GUI
 
-#define RESIDUAL_HZ 10
+//#define RESIDUAL_HZ 10
 

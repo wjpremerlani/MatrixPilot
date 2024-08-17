@@ -244,6 +244,7 @@ void send_residual_data(void)
    
 }
 #else
+int16_t net_gyro[] = { 0 , 0 , 0 };
 extern boolean log_jostle ;
 void send_residual_data(void)
 {
@@ -280,16 +281,19 @@ void send_residual_data(void)
         omega_filt_16[0]=(int16_t)((omegagyro_filtered[0].WW)>>12);
         omega_filt_16[1]=(int16_t)((omegagyro_filtered[1].WW)>>12);
         omega_filt_16[2]=(int16_t)((omegagyro_filtered[2].WW)>>12);  
+        net_gyro[0] = (int16_t)gyro_sum[0] + (omega_filt_16[0]>>4) ;
+        net_gyro[1] = (int16_t)gyro_sum[1] + (omega_filt_16[1]>>4) ;
+        net_gyro[2] = (int16_t)gyro_sum[2] + (omega_filt_16[2]>>4) ;
         serial_output("%i,%i,%.1f,%.1f,%.1f,%i,%i,%i,%i,%i,%i,%i,%i",        
                 mpu_temp.value,
 				log_jostle ,
                 ((double)(aero_force[0]))/ACCEL_FACTOR ,
 				((double)(aero_force[1]))/ACCEL_FACTOR ,
 				((double)(aero_force[2]))/ACCEL_FACTOR ,
-    			omegagyro[0],
-                omegagyro[1],
-                omegagyro[2],
-                vector3_mag(omegagyro[0],omegagyro[1],omegagyro[2]),
+    			net_gyro[0],
+                net_gyro[1],
+                net_gyro[2],
+                vector3_mag(net_gyro[0],net_gyro[1],net_gyro[2]),
 				omega_filt_16[0] , // 16x
 				omega_filt_16[1] ,
                 omega_filt_16[2] ,
