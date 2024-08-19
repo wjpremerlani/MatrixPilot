@@ -278,14 +278,14 @@ void send_residual_data(void)
 
 #ifndef  LOG_R_UPDATE 
 #ifndef TILT_INIT
-        int16_t omega_filt_16[3];
-        omega_filt_16[0]=(int16_t)((omegagyro_filtered[0].WW)>>12);
-        omega_filt_16[1]=(int16_t)((omegagyro_filtered[1].WW)>>12);
-        omega_filt_16[2]=(int16_t)((omegagyro_filtered[2].WW)>>12);  
+        //int16_t omega_filt_16[3];
+        //omega_filt_16[0]=(int16_t)((omegagyro_filtered[0].WW)>>12);
+        //omega_filt_16[1]=(int16_t)((omegagyro_filtered[1].WW)>>12);
+        //omega_filt_16[2]=(int16_t)((omegagyro_filtered[2].WW)>>12);  
         net_gyro[0] = (int16_t)gyro_sum[0] + omegagyro_filtered[0]._.W1 ;
         net_gyro[1] = (int16_t)gyro_sum[1] + omegagyro_filtered[1]._.W1 ;
         net_gyro[2] = (int16_t)gyro_sum[2] + omegagyro_filtered[2]._.W1 ;
-        serial_output("%i,%i,%i,%.1f,%.1f,%.1f,%i,%i,%i,%i,%i,%i,%i,%i",        
+        serial_output("%i,%i,%i,%.1f,%.1f,%.1f,%i,%i,%i,%i,%li,%li,%li,%i",  
                 mpu_temp.value,
 				log_jostle ,
                 log_matrix_jostle ,
@@ -296,9 +296,9 @@ void send_residual_data(void)
                 net_gyro[1],
                 net_gyro[2],
                 vector3_mag(net_gyro[0],net_gyro[1],net_gyro[2]),
-				omega_filt_16[0] , // 16x
-				omega_filt_16[1] ,
-                omega_filt_16[2] ,
+				(omegagyro_filtered[0].WW)>>12 , // 16x
+				(omegagyro_filtered[1].WW)>>12 ,
+                (omegagyro_filtered[2].WW)>>12 ,
 //              total_samples ,
 //              gyro_sum_of_squares ,
 //              gyro_sum[0],

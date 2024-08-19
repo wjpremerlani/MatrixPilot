@@ -275,7 +275,7 @@ static inline void read_gyros(void)
                 - ((int64_t)gyro_sum[1])*((int64_t)gyro_sum[1])
                 - ((int64_t)gyro_sum[2])*((int64_t)gyro_sum[2])) ;
         
-        if (stdev_sqr > GYRO_VARIANCE_MARGIN)
+        if ((stdev_sqr > GYRO_VARIANCE_MARGIN)&&(CENTRIFUGAL_TESTING == 0))
         {
             motion_detect = 1 ;
             log_jostle = 0 ;
