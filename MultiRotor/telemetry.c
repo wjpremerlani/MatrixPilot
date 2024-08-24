@@ -178,6 +178,11 @@ extern void update_offset_table_gyros_and_accelerometers(void);
 
 int16_t omega_filt_16_previous[] = {0,0,0};
 
+extern int64_t gyro_sum_of_squares ;
+extern int16_t total_samples ;
+extern int32_t gyro_sum[];
+extern uint64_t stdev_sqr ;
+
 void send_euler_angles(void)
 {
     int16_t omega_filt_16[3];
@@ -239,6 +244,9 @@ void send_residual_data(void)
    
 }
 #else
+int16_t net_gyro[] = { 0 , 0 , 0 };
+extern boolean log_jostle ;
+extern boolean log_matrix_jostle ;
 void send_residual_data(void)
 {
 	if ( start_residuals == 1)
@@ -246,11 +254,7 @@ void send_residual_data(void)
 		start_residuals = 0 ;
 #ifndef LOG_R_UPDATE
 #ifndef TILT_INIT
-#if ( TEST_RUNTIME_TILT_ALIGN == 1 )
-   		serial_output("\r\n\r\nimu_temp_yy,filter_en_yy,x_force_yy,y_force_yy,z_force_yy,x_rate_yy,y_rate_yy,z_rate_yy,rms_rate_yy,x_filt_16_yy,y_filt_16_yy,z_filt_16_yy,yaw_yy,pitch_yy,roll_yy\r\n") ;    
-#else
-		serial_output("\r\n\r\nimu_temp_yy,filter_en_yy,x_force_yy,y_force_yy,z_force_yy,x_rate_yy,y_rate_yy,z_rate_yy,rms_rate_yy,x_filt_16_yy,y_filt_16_yy,z_filt_16_yy\r\n") ;
-#endif // TEST_RUNTIME_TILT_ALIGN
+		serial_output("\r\n\r\nimu_temp_yy,filtring_yy,aligning_yy,x_force_yy,y_force_yy,z_force_yy,x_rate_yy,y_rate_yy,z_rate_yy,rms_rate_yy,x_filt_16_yy,y_filt_16_yy,z_filt_16_yy,stdev_yy\r\n") ;
 #else
         serial_output("\r\n\r\nStandbymode\r\naccOn,logOn,nx_force,y_force,z_force,yaw8,pitch8,roll8,yaw,pitch,roll\r\n");        
 #endif // TILT_INIT
@@ -274,23 +278,34 @@ void send_residual_data(void)
 
 #ifndef  LOG_R_UPDATE 
 #ifndef TILT_INIT
-        int16_t omega_filt_16[3];
-        omega_filt_16[0]=(int16_t)((omegagyro_filtered[0].WW)>>12);
-        omega_filt_16[1]=(int16_t)((omegagyro_filtered[1].WW)>>12);
-        omega_filt_16[2]=(int16_t)((omegagyro_filtered[2].WW)>>12);  
-        serial_output("%i,%i,%.1f,%.1f,%.1f,%i,%i,%i,%i,%i,%i,%i",        
+        //int16_t omega_filt_16[3];
+        //omega_filt_16[0]=(int16_t)((omegagyro_filtered[0].WW)>>12);
+        //omega_filt_16[1]=(int16_t)((omegagyro_filtered[1].WW)>>12);
+        //omega_filt_16[2]=(int16_t)((omegagyro_filtered[2].WW)>>12);  
+        net_gyro[0] = (int16_t)gyro_sum[0] + omegagyro_filtered[0]._.W1 ;
+        net_gyro[1] = (int16_t)gyro_sum[1] + omegagyro_filtered[1]._.W1 ;
+        net_gyro[2] = (int16_t)gyro_sum[2] + omegagyro_filtered[2]._.W1 ;
+        serial_output("%i,%i,%i,%.1f,%.1f,%.1f,%i,%i,%i,%i,%li,%li,%li,%i",  
                 mpu_temp.value,
-				accelOn ,
+				log_jostle ,
+                log_matrix_jostle ,
                 ((double)(aero_force[0]))/ACCEL_FACTOR ,
 				((double)(aero_force[1]))/ACCEL_FACTOR ,
 				((double)(aero_force[2]))/ACCEL_FACTOR ,
-    			omegagyro[0],
-                omegagyro[1],
-                omegagyro[2],
-                vector3_mag(omegagyro[0],omegagyro[1],omegagyro[2]),
-				omega_filt_16[0] , // 16x
-				omega_filt_16[1] ,
-                omega_filt_16[2]
+    			net_gyro[0],
+                net_gyro[1],
+                net_gyro[2],
+                vector3_mag(net_gyro[0],net_gyro[1],net_gyro[2]),
+				(omegagyro_filtered[0].WW)>>12 , // 16x
+				(omegagyro_filtered[1].WW)>>12 ,
+                (omegagyro_filtered[2].WW)>>12 ,
+//              total_samples ,
+//              gyro_sum_of_squares ,
+//              gyro_sum[0],
+//              gyro_sum[1],
+//              gyro_sum[2],
+                sqrt_long((uint32_t)stdev_sqr)
+                
     				);
 #if (TEST_RUNTIME_TILT_ALIGN == 1 )
         compute_euler();
@@ -298,6 +313,8 @@ void send_residual_data(void)
                 yaw_angle , pitch_angle , roll_angle );
 #else
         serial_output("\r\n") ;
+        log_jostle = 1 ;
+        log_matrix_jostle = 1 ;
 #endif // TEST_RUNTIME_TILT_ALIGN
 #else
         compute_euler();
@@ -692,8 +709,8 @@ void send_imu_data(void)
 			break ;
         case 15:
             {
-                serial_output("Gyro jostle detection thresholds are %i, %i.\r\n",
-                        GYRO_OFFSET_MARGIN , MATRIX_GYRO_OFFSET_MARGIN 
+                serial_output("Jostle detection thresholds are %i variance for gyro filtering,\r\n %i rate for matrix alignment.\r\n",
+                        GYRO_VARIANCE_MARGIN , MATRIX_GYRO_OFFSET_MARGIN 
                         );
             }
             break ;

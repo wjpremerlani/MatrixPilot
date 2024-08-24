@@ -3,13 +3,23 @@
 #ifndef TABLE_LUGE7_SN127_H
 #define	TABLE_LUGE7_SN127_H
 
+//#define TEST_OFFX 320
+//#define TEST_OFFY 120
+//#define TEST_OFFZ 150
+
+//#define TEST_OFFX 1000
+#define TEST_OFFX 0
+#define TEST_OFFY 0
+#define TEST_OFFZ 0
+
+
 // used in LUGE7_SN127 partition size 64
 
 #define STEP_SIZE 64
 
 #define TABLE_ORIGIN  ( -13941 )
 
-int16_t residual_offset[] = { 389 - 4*100 -4*15 , 690 -4*349 + 4*112, -677 +4*376 -4*157 } ;
+int16_t residual_offset[] = { 389 - 4*100 -4*15 + TEST_OFFX , 690 -4*349 + 4*112 + TEST_OFFY, -677 +4*376 -4*157 +TEST_OFFZ } ;
 
 
 const struct gyro_offset_table_entry gyro_offset_table[] = {

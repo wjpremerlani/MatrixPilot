@@ -56,26 +56,42 @@ int commanded_tilt_gain ;
 #define BLINK_ON_TIME 20 
 boolean led_red_run = 0 ;
 boolean led_green_standby = 0 ;
+extern boolean signal_jostle ;
 void udb_blink_red(void)
 {
-    if ((udb_heartbeat_counter % BLINK_PERIOD) <= BLINK_ON_TIME)
+    if (signal_jostle == 1)
     {
-        led_red_run = 1 ;
+        LED_RED = LED_ON ;
     }
     else
     {
-        led_red_run = 0 ;
+        if ((udb_heartbeat_counter % BLINK_PERIOD) <= BLINK_ON_TIME)
+        {
+            LED_RED = LED_ON ;
+        }
+        else
+        {
+            LED_RED = LED_OFF ;
+        }
     }
 }
+
 void udb_blink_green(void)
 {
-    if ((udb_heartbeat_counter % BLINK_PERIOD) <= BLINK_ON_TIME)
+    if (signal_jostle == 1)
     {
-        led_green_standby = 1 ;
+        LED_GREEN = LED_ON ;
     }
     else
     {
-        led_green_standby = 0 ;
+        if ((udb_heartbeat_counter % BLINK_PERIOD) <= BLINK_ON_TIME)
+        {
+            LED_GREEN = LED_ON ;
+        }
+        else
+        {
+            LED_GREEN = LED_OFF ;
+        }
     }
 }
 
@@ -227,7 +243,7 @@ void update_slide_detection(void)
 	else
 		{
 #ifndef SIMULATE_TILT
-		if ( tilt_angle_int < TILT_START )
+		if (( tilt_angle_int < TILT_START )&&(CENTRIFUGAL_TESTING==0))
 #else
             if (is_level == 1 )
 #endif // SIMULATE_TILT
@@ -313,6 +329,7 @@ void dcm_heartbeat_callback(void)
         
         
 #ifdef LOG_RESIDUALS
+#ifndef RESIDUAL_HZ
 		if (log_residuals == 1)
 		{
 			if ((udb_heartbeat_counter % HEARTBEAT_HZ )== 0) residual_log_counter ++ ;
@@ -322,6 +339,15 @@ void dcm_heartbeat_callback(void)
 				send_residual_data();
 			}
 		}
+#else
+        if (log_residuals == 1)
+		{
+			if ((udb_heartbeat_counter % HEARTBEAT_HZ/RESIDUAL_HZ )== 0)
+			{
+				send_residual_data();
+			}
+		}      
+#endif // RESIDUAL_HZ
 #endif // LOG_RESIDUALS
 	}
 	return ;

@@ -23,6 +23,16 @@
 // This combination allows values of matrix elements between -2 and +2.
 // Multiplication produces results scaled by 1/2.
 
+extern boolean logging_on ;
+
+extern boolean gyro_locking_on ;
+extern boolean slide_in_progress ;
+extern void udb_blink_red(void);
+extern void udb_blink_green(void);
+
+extern boolean led_red_run ;
+extern boolean led_green_standby ;
+
 
 #define RMAX15 24576 //0b0110000000000000   // 1.5 in 2.14 format
 
@@ -209,13 +219,33 @@ union longww accum32 ;
 extern int32_t omegagyro32X[] ;
 extern union longww theta_32[];
 
+uint64_t _gyro_sum_of_squares = 0 ;
+uint16_t _total_samples = 0 ;
+int32_t _gyro_sum[] = { 0 , 0 , 0 };
+uint64_t gyro_sum_of_squares = 0 ;
+uint16_t total_samples = 0 ;
+int32_t gyro_sum[] = { 0 , 0 , 0 };
+uint64_t stdev_sqr = 0 ;
 
 extern int16_t check_for_jostle ;
 uint16_t jostle_counter = 0 ;
+
+boolean log_jostle = 0 ;
+boolean signal_jostle = 0 ; 
+
 static inline void read_gyros(void)
 {
-	// fetch the gyro signals and subtract the baseline offset, 
-	// and adjust for variations in supply voltage
+    // accumulate partial sums over the jostle checking window to compute variance
+    // partial sums include integral of gyro signals and integral of their squares
+    _total_samples += 1 ;
+    _gyro_sum[0] += (int32_t) omegagyro[0];
+    _gyro_sum[1] += (int32_t) omegagyro[1];
+    _gyro_sum[2] += (int32_t) omegagyro[2];
+    
+    _gyro_sum_of_squares += (uint64_t)__builtin_mulss( omegagyro[0],omegagyro[0])
+            + (uint64_t)__builtin_mulss( omegagyro[1],omegagyro[1])
+            + (uint64_t)__builtin_mulss( omegagyro[2],omegagyro[2]) ;
+    
     if ((udb_heartbeat_counter % HEARTBEAT_HZ )== 0) jostle_counter ++ ;
 			if ( jostle_counter == JOSTLE_CHECK_PERIOD ) 
 			{
@@ -224,6 +254,39 @@ static inline void read_gyros(void)
 			}
 	if ( check_for_jostle == 1 )
     {
+        total_samples = _total_samples ;
+        _total_samples = 0 ;
+        // compute the average of the sum of the squares of the gyro signals
+        gyro_sum_of_squares = _gyro_sum_of_squares / ((uint64_t)total_samples);
+        _gyro_sum_of_squares = 0 ;
+        // compute the average of the gyro signals
+        gyro_sum[0] = _gyro_sum[0]/((int32_t)total_samples) ;
+        gyro_sum[1] = _gyro_sum[1]/((int32_t)total_samples) ;
+        gyro_sum[2] = _gyro_sum[2]/((int32_t)total_samples) ;
+        _gyro_sum[0] = 0 ;
+        _gyro_sum[1] = 0 ;
+        _gyro_sum[2] = 0 ;
+        
+        // compute the variance, which is the mean of the squares of the samples
+        // minus the products of the means of the samples, using the classic equation
+        
+        stdev_sqr = (uint64_t)(gyro_sum_of_squares 
+                - ((int64_t)gyro_sum[0])*((int64_t)gyro_sum[0])
+                - ((int64_t)gyro_sum[1])*((int64_t)gyro_sum[1])
+                - ((int64_t)gyro_sum[2])*((int64_t)gyro_sum[2])) ;
+        
+        if ((stdev_sqr > GYRO_VARIANCE_MARGIN)&&(CENTRIFUGAL_TESTING == 0))
+        {
+            motion_detect = 1 ;
+            log_jostle = 0 ;
+            signal_jostle = 1 ;
+        }
+        else
+        {   
+            motion_detect = 0 ;
+            signal_jostle = 0 ;           
+        } 
+        
         if ( motion_detect == 1 )
         {
             omegagyro_filtered[0].WW = omegagyro_filtered_temporary[0].WW = omegagyro_filtered_backup[0].WW ;
@@ -574,32 +637,28 @@ int16_t omega_dot_rmat6 ;
 int16_t omega_scaled[3] ;
 int16_t omega_yaw_drift[3] ;
 uint16_t omega_magnitude ;
-extern boolean logging_on ;
-
-extern boolean gyro_locking_on ;
-extern boolean slide_in_progress ;
-extern void udb_blink_red(void);
-extern void udb_blink_green(void);
-
-extern boolean led_red_run ;
-extern boolean led_green_standby ;
 
 uint16_t accel_magnitude ;
 boolean matrix_jostle = 0 ;
 
+boolean log_matrix_jostle = 1 ;
+
 static void roll_pitch_drift(void)
 {	
 	accel_magnitude = vector3_mag(gplane[0],gplane[1],gplane[2]);
-	omega_magnitude = vector3_mag(omegagyro[0],omegagyro[1],omegagyro[2]); 
+	omega_magnitude = vector3_mag(omegagyro[0]+omegagyro_filtered[0]._.W1,
+        omegagyro[1]+omegagyro_filtered[1]._.W1,
+        omegagyro[2]+omegagyro_filtered[2]._.W1); 
 #ifdef BUILD_OFFSET_TABLE // the following interferes with LED signals during table build
     return ;
 #endif // BUILD_OFFSET_TABLE
 	if((omega_magnitude>MATRIX_GYRO_OFFSET_MARGIN )	|| (abs(accel_magnitude-CALIB_GRAVITY/2)>CALIB_GRAVITY/8))
 	{
         matrix_jostle = 1 ;
+        log_matrix_jostle = 0 ;
     }
     
-    
+    /*
     if((omega_magnitude>GYRO_OFFSET_MARGIN )	|| (abs(accel_magnitude-CALIB_GRAVITY/2)>CALIB_GRAVITY/8))
 	{
 		motion_detect = 1 ;
@@ -631,7 +690,7 @@ static void roll_pitch_drift(void)
         {
             LED_GREEN = LED_OFF ;
         }
-    }
+    }*/
     if ((( logging_on == 0)||(CONTINUOUS_MATRIX_LOCKING==1))&&(matrix_jostle == 0 ))
     {
 		int16_t gplane_nomalized[3] ;

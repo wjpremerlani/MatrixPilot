@@ -2,8 +2,12 @@
 
 //#define DATE "Wolf_pac_2 , firmware 5.5, 5/28/2024\r\n"
 // improved continuous gyro bias estimation
-#define DATE "Wolf_pac_2 , firmware 5.6, 8/8/2024\r\n" 
+//#define DATE "Wolf_pac_2 , firmware 5.6, 8/8/2024\r\n" 
 // 5.6: no change in software, but improved "in situ" temperature compensation
+#define DATE "Wolf_pac_2 , firmware 5.7, 8/16/2024\r\n" 
+// 5.7: major improvement in jostle detection by using
+// the sum of the squares of the standard deviations of the three gyro channels
+// over a 2 second window
 
 #define CONING_CORRECTION
 #define CONING_CORRECTION_IN_RMAT
@@ -44,7 +48,7 @@
 
 // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
 // non-printable characters are written out, as header bytes for packets.
-#define USE_PACKETIZED_TELEMERTY
+//#define USE_PACKETIZED_TELEMERTY
 
 #define LOG_EULER
 //#define LOG_RATE_AND_EULER
@@ -52,7 +56,7 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	100
+#define LOGGER_HZ	10
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
@@ -115,7 +119,7 @@
 //#define LUGE7_SN124
 //#define LUGE7_SN125
 //#define LUGE7_SN126
-//#define LUGE7_SN127
+#define LUGE7_SN127
 //#define LUGE7_SN128
 //#define LUGE7_SN129
 //#define LUGE7_SN130
@@ -155,7 +159,7 @@
 
 //#define LUGE7_SN164
 //#define LUGE7_SN165
-#define LUGE7_SN166
+//#define LUGE7_SN166
 //#define LUGE7_SN167
 
 //#define LUGE7_SN168
@@ -2239,12 +2243,14 @@
 
 #if (GYRO_RANGE==1000)
 //#define GYRO_OFFSET_MARGIN 1000
-#define GYRO_OFFSET_MARGIN 25
+#define GYRO_OFFSET_MARGIN 100
 #elif (GYRO_RANGE==500)
 #define GYRO_OFFSET_MARGIN 50
 #else
 #error "invalid GYRO_RANGE"
 #endif // GYRO_RANGE
+
+#define GYRO_VARIANCE_MARGIN 150
 
 #define MATRIX_GYRO_OFFSET_MARGIN 100
 
@@ -2302,5 +2308,11 @@
 #define NORMAL_RUN
 #define LOG_RESIDUALS
 #define LOGGER_HZ 10
+#undef MATRIX_GYRO_OFFSET_MARGIN
+#define MATRIX_GYRO_OFFSET_MARGIN 100
 #endif // EULER_GUI_GUI
+
+//#define RESIDUAL_HZ 10
+
+#define CENTRIFUGAL_TESTING 0
 
