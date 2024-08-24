@@ -63,8 +63,8 @@
 #define TILT_STOP_DELAY 1      // delay in seconds to allow for a roll over
 //#define TILT_START	30          // tilt angle to start for Kufen
 #define TILT_START	15          // tilt angle threshold in degrees to start recording a run
-//#define TILT_STOP	60          // tilt angle threshold in degrees to stop recording a run
-#define TILT_STOP	135         // used for some types of ground testing
+#define TILT_STOP	60          // tilt angle threshold in degrees to stop recording a run
+//#define TILT_STOP	135         // used for some types of ground testing
 
 // select a wolf_pac by defining its internal label
 //#define LUGE7_SNnew // used to program a WP without a serial number
@@ -2314,5 +2314,5 @@
 
 //#define RESIDUAL_HZ 10
 
-#define CENTRIFUGAL_TESTING 1
+#define CENTRIFUGAL_TESTING 0
 

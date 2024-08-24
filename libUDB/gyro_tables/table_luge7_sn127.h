@@ -7,7 +7,8 @@
 //#define TEST_OFFY 120
 //#define TEST_OFFZ 150
 
-#define TEST_OFFX 1000
+//#define TEST_OFFX 1000
+#define TEST_OFFX 0
 #define TEST_OFFY 0
 #define TEST_OFFZ 0
 
