@@ -244,7 +244,7 @@ void send_residual_data(void)
    
 }
 #else
-int16_t net_gyro[] = { 0 , 0 , 0 };
+extern int32_t gyro_sum16x[];
 extern boolean log_jostle ;
 extern boolean log_matrix_jostle ;
 void send_residual_data(void)
@@ -254,7 +254,7 @@ void send_residual_data(void)
 		start_residuals = 0 ;
 #ifndef LOG_R_UPDATE
 #ifndef TILT_INIT
-		serial_output("\r\n\r\nimu_temp_yy,filtring_yy,aligning_yy,x_force_yy,y_force_yy,z_force_yy,x_rate_yy,y_rate_yy,z_rate_yy,rms_rate_yy,x_filt_16_yy,y_filt_16_yy,z_filt_16_yy,stdev_yy\r\n") ;
+		serial_output("\r\n\r\nimu_temp_yy,filtring_yy,aligning_yy,x_force_yy,y_force_yy,z_force_yy,x_rate16_yy,y_rate16_yy,z_rate16_yy,rms_rate16_yy,x_flt16_yy,y_flt16_yy,z_flt16_yy,stdev_yy\r\n") ;
 #else
         serial_output("\r\n\r\nStandbymode\r\naccOn,logOn,nx_force,y_force,z_force,yaw8,pitch8,roll8,yaw,pitch,roll\r\n");        
 #endif // TILT_INIT
@@ -282,20 +282,17 @@ void send_residual_data(void)
         //omega_filt_16[0]=(int16_t)((omegagyro_filtered[0].WW)>>12);
         //omega_filt_16[1]=(int16_t)((omegagyro_filtered[1].WW)>>12);
         //omega_filt_16[2]=(int16_t)((omegagyro_filtered[2].WW)>>12);  
-        net_gyro[0] = (int16_t)gyro_sum[0] + omegagyro_filtered[0]._.W1 ;
-        net_gyro[1] = (int16_t)gyro_sum[1] + omegagyro_filtered[1]._.W1 ;
-        net_gyro[2] = (int16_t)gyro_sum[2] + omegagyro_filtered[2]._.W1 ;
-        serial_output("%i,%i,%i,%.1f,%.1f,%.1f,%i,%i,%i,%i,%li,%li,%li,%i",  
+        serial_output("%i,%i,%i,%.1f,%.1f,%.1f,%li,%li,%li,%i,%li,%li,%li,%i",  
                 mpu_temp.value,
 				log_jostle ,
                 log_matrix_jostle ,
                 ((double)(aero_force[0]))/ACCEL_FACTOR ,
 				((double)(aero_force[1]))/ACCEL_FACTOR ,
 				((double)(aero_force[2]))/ACCEL_FACTOR ,
-    			net_gyro[0],
-                net_gyro[1],
-                net_gyro[2],
-                vector3_mag(net_gyro[0],net_gyro[1],net_gyro[2]),
+    			gyro_sum16x[0],
+                gyro_sum16x[1],
+                gyro_sum16x[2],
+                vector3_mag(((int16_t)gyro_sum16x[0]),((int16_t)gyro_sum16x[1]),((int16_t)gyro_sum16x[2])),
 				(omegagyro_filtered[0].WW)>>12 , // 16x
 				(omegagyro_filtered[1].WW)>>12 ,
                 (omegagyro_filtered[2].WW)>>12 ,

@@ -4,10 +4,15 @@
 // improved continuous gyro bias estimation
 //#define DATE "Wolf_pac_2 , firmware 5.6, 8/8/2024\r\n" 
 // 5.6: no change in software, but improved "in situ" temperature compensation
-#define DATE "Wolf_pac_2 , firmware 5.7, 8/16/2024\r\n" 
+//#define DATE "Wolf_pac_2 , firmware 5.7, 8/16/2024\r\n" 
 // 5.7: major improvement in jostle detection by using
 // the sum of the squares of the standard deviations of the three gyro channels
 // over a 2 second window
+#define DATE "Wolf_pac_2 , firmware 6.0, 8/25/2024\r\n" 
+// 6.0: Centrifuge testing has shown that cross coupling of Z force
+// due to centrifugal acceleration into gyro offset is linear up to 16gs.
+// A technique has been developed to accurately measure the cross coupling
+// coefficients and compensate for cross coupling.
 
 #define CONING_CORRECTION
 #define CONING_CORRECTION_IN_RMAT
@@ -2315,4 +2320,5 @@
 //#define RESIDUAL_HZ 10
 
 #define CENTRIFUGAL_TESTING 0
+#define TURTLE_TESTING 1
 

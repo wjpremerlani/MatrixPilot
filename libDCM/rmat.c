@@ -225,6 +225,7 @@ int32_t _gyro_sum[] = { 0 , 0 , 0 };
 uint64_t gyro_sum_of_squares = 0 ;
 uint16_t total_samples = 0 ;
 int32_t gyro_sum[] = { 0 , 0 , 0 };
+int32_t gyro_sum16x[] = { 0 , 0 , 0 };
 uint64_t stdev_sqr = 0 ;
 
 extern int16_t check_for_jostle ;
@@ -263,6 +264,10 @@ static inline void read_gyros(void)
         gyro_sum[0] = _gyro_sum[0]/((int32_t)total_samples) ;
         gyro_sum[1] = _gyro_sum[1]/((int32_t)total_samples) ;
         gyro_sum[2] = _gyro_sum[2]/((int32_t)total_samples) ;
+        gyro_sum16x[0] = ((_gyro_sum[0])<<4)/((int32_t)total_samples) ;
+        gyro_sum16x[1] = ((_gyro_sum[1])<<4)/((int32_t)total_samples) ;
+        gyro_sum16x[2] = ((_gyro_sum[2])<<4)/((int32_t)total_samples) ;
+        
         _gyro_sum[0] = 0 ;
         _gyro_sum[1] = 0 ;
         _gyro_sum[2] = 0 ;

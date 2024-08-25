@@ -243,7 +243,7 @@ void update_slide_detection(void)
 	else
 		{
 #ifndef SIMULATE_TILT
-		if (( tilt_angle_int < TILT_START )&&(CENTRIFUGAL_TESTING==0))
+		if (( tilt_angle_int < TILT_START )&&(CENTRIFUGAL_TESTING==0)&&(TURTLE_TESTING==0))
 #else
             if (is_level == 1 )
 #endif // SIMULATE_TILT
