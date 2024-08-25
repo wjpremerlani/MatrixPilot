@@ -281,8 +281,10 @@ void send_residual_data(void)
         //int16_t omega_filt_16[3];
         //omega_filt_16[0]=(int16_t)((omegagyro_filtered[0].WW)>>12);
         //omega_filt_16[1]=(int16_t)((omegagyro_filtered[1].WW)>>12);
-        //omega_filt_16[2]=(int16_t)((omegagyro_filtered[2].WW)>>12);  
-        serial_output("%i,%i,%i,%.1f,%.1f,%.1f,%li,%li,%li,%i,%li,%li,%li,%i",  
+        //omega_filt_16[2]=(int16_t)((omegagyro_filtered[2].WW)>>12); 
+        if((TURTLE_TESTING==0)||((log_jostle==1)&&(log_matrix_jostle==1)))
+        {
+        serial_output("%i,%i,%i,%.1f,%.1f,%.1f,%li,%li,%li,%i,%li,%li,%li,%i\r\n",  
                 mpu_temp.value,
 				log_jostle ,
                 log_matrix_jostle ,
@@ -304,15 +306,9 @@ void send_residual_data(void)
                 sqrt_long((uint32_t)stdev_sqr)
                 
     				);
-#if (TEST_RUNTIME_TILT_ALIGN == 1 )
-        compute_euler();
-        serial_output(",%.2f,%.2f,%.2f\r\n",
-                yaw_angle , pitch_angle , roll_angle );
-#else
-        serial_output("\r\n") ;
+        }
         log_jostle = 1 ;
         log_matrix_jostle = 1 ;
-#endif // TEST_RUNTIME_TILT_ALIGN
 #else
         compute_euler();
         compute_euler_8k();
