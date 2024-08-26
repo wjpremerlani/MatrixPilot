@@ -3,7 +3,7 @@
 #ifndef TABLE_LUGE7_SN114_H
 #define	TABLE_LUGE7_SN114_H
 
-// used in LUGE7_SN108 partition size 64
+// used in LUGE7_SN114 partition size 64
 
 #define STEP_SIZE 64
 

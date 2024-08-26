@@ -3,7 +3,12 @@
 #ifndef TABLE_LUGE7_SN112_H
 #define	TABLE_LUGE7_SN112_H
 
-// used in LUGE7_SN108 partition size 64
+// used in LUGE7_SN112 partition size 64
+
+#define X_CROSS_COUPLING 34
+#define Y_CROSS_COUPLING 0
+#define Z_CROSS_COUPLING 0
+
 
 #define STEP_SIZE 64
 

@@ -5,6 +5,10 @@
 
 // used in LUGE7_SN107
 
+#define X_CROSS_COUPLING 60
+#define Y_CROSS_COUPLING 0
+#define Z_CROSS_COUPLING 0
+
 int16_t residual_offset[] = { 1150 -1549 , -684 +186 , 422 -284 } ;
 
 #define STEP_SIZE 64

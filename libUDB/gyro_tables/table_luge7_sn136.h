@@ -5,6 +5,10 @@
 
 // used in LUGE7_SN136 partition size 64
 
+#define X_CROSS_COUPLING 10
+#define Y_CROSS_COUPLING 0
+#define Z_CROSS_COUPLING 0
+
 #define STEP_SIZE 64
 
 #define TABLE_ORIGIN  ( -15097 )
