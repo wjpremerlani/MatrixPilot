@@ -3,6 +3,11 @@
 #ifndef TABLE_LUGE7_SN166_H
 #define	TABLE_LUGE7_SN166_H
 
+#define X_CROSS_COUPLING 40
+#define Y_CROSS_COUPLING 0
+#define Z_CROSS_COUPLING 0
+
+
 // used in LUGE7_SN166 partition size 64
 
 #define STEP_SIZE 64
