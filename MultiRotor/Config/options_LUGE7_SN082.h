@@ -29,9 +29,6 @@
 #define CALIBRATIONY	1.0134
 #define CALIBRATIONZ	1.0134
 
-#define X_CROSS_COUPLING 0
-#define Y_CROSS_COUPLING 0
-#define Z_CROSS_COUPLING 0
 
 #endif	/* options_LUGE7_SN082_H */
 
