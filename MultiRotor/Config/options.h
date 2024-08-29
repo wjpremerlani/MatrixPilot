@@ -185,10 +185,10 @@
 //#define LUGE7_SN180
 //#define LUGE7_SN181
 
-#define LUGE7_SN182
+//#define LUGE7_SN182
 //#define LUGE7_SN183
 //#define LUGE7_SN184
-//#define LUGE7_SN185
+#define LUGE7_SN185
 
 //#define LUGE7_SN186
 //#define LUGE7_SN187

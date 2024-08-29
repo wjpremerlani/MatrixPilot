@@ -695,8 +695,8 @@ void send_imu_data(void)
 			break ;
 		case 14:
             {
-                serial_output("Gyro strain offsets are x=%i, y=%i, z=%i.\r\n",
-                        residual_offset[0] , residual_offset[1] , residual_offset[2]
+                serial_output("Gyro strain offsets are x=%i, y=%i, z=%i.\r\nZ->X cross coupling = %i.\r\n",
+                        residual_offset[0] , residual_offset[1] , residual_offset[2] , X_CROSS_COUPLING
                         );
             }
 			break ;
@@ -716,9 +716,9 @@ void send_imu_data(void)
 			{
 #ifdef XACCEL_OFFSET
 				serial_output( "Accel offsets are x=%i, y=%i, z=%i.\r\n",
-					residual_offset[0] ,
-					residual_offset[1] , 
-					residual_offset[2] 
+					accel_residual_offset[0] ,
+					accel_residual_offset[1] , 
+					accel_residual_offset[2] 
 					 );	
 #endif // XACCEL_OFFSET
 			}
