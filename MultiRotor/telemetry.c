@@ -170,6 +170,8 @@ extern union longww theta_sum[];
 extern union longww r_update_sum[];
 extern union longww rmat_sum[];
 extern int16_t residual_offset[];
+extern int16_t accel_residual_offset[];
+
 extern int16_t misalignment[];
 
 extern int16_t is_level ;
@@ -182,6 +184,7 @@ extern int64_t gyro_sum_of_squares ;
 extern int16_t total_samples ;
 extern int32_t gyro_sum[];
 extern uint64_t stdev_sqr ;
+extern int16_t cross_coupling ;
 
 void send_euler_angles(void)
 {
@@ -696,7 +699,7 @@ void send_imu_data(void)
 		case 14:
             {
                 serial_output("Gyro strain offsets are x=%i, y=%i, z=%i.\r\nZ->X cross coupling = %i.\r\n",
-                        residual_offset[0] , residual_offset[1] , residual_offset[2] , X_CROSS_COUPLING
+                        residual_offset[0] , residual_offset[1] , residual_offset[2] , cross_coupling
                         );
             }
 			break ;

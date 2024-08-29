@@ -42,6 +42,13 @@ int16_t temperature_index ;
 
 int16_t gyro_offset[3] ;
 
+
+#ifdef X_CROSS_COUPLING
+int16_t cross_coupling = X_CROSS_COUPLING ;
+#else
+int16_t cross_coupling = 0 ;
+#endif
+
 uint16_t index_msb = 0 ;
 uint16_t index_lsb = 0 ;
 int16_t left_entry[3];
