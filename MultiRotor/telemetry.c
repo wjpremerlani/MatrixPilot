@@ -716,9 +716,9 @@ void send_imu_data(void)
 			{
 #ifdef XACCEL_OFFSET
 				serial_output( "Accel offsets are x=%i, y=%i, z=%i.\r\n",
-					XACCEL_OFFSET ,
-					YACCEL_OFFSET , 
-					ZACCEL_OFFSET 
+					residual_offset[0] ,
+					residual_offset[1] , 
+					residual_offset[2] 
 					 );	
 #endif // XACCEL_OFFSET
 			}
