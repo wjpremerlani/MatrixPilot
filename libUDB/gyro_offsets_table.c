@@ -184,6 +184,7 @@ void lookup_accel_offsets(void)
 
 #else
 
+int16_t accel_residual_offset[] = { 0 , 0 , 0 } ; 
 void lookup_accel_offsets(void)
 {
     

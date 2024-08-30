@@ -5,7 +5,7 @@
 
 // used in LUGE7_SN188 partition size 64
 
-#define X_CROSS_COUPLING 0
+#define X_CROSS_COUPLING 44
 #define Y_CROSS_COUPLING 0
 #define Z_CROSS_COUPLING 0
 
