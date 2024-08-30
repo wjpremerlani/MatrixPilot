@@ -717,13 +717,11 @@ void send_imu_data(void)
 			break ;
 		case 18:
 			{
-#ifdef XACCEL_OFFSET
 				serial_output( "Accel offsets are x=%i, y=%i, z=%i.\r\n",
 					accel_residual_offset[0] ,
 					accel_residual_offset[1] , 
 					accel_residual_offset[2] 
 					 );	
-#endif // XACCEL_OFFSET
 			}
 			break;
 		case 19:

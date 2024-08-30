@@ -55,27 +55,31 @@ int16_t left_entry[3];
 int16_t right_minus_left[3];
 uint16_t number_entries ;
 int16_t accel_gyro_coupling_compensation[]= { 0 , 0 , 0 };
-#ifdef SIMULATED_GYRO
-void lookup_gyro_offsets(void)
-{
-    gyro_offset[0] = 1600 ;
-    gyro_offset[1] = -3200 ;
-    gyro_offset[2] = 4800 ;    
-}
-#else
+
+#if (ACCEL_RANGE == 2)
+#define CROSS_SHIFT 13
+#elif (ACCEL_RANGE == 4)
+#define CROSS_SHIFT 12
+#elif (ACCEL_RANGE == 8)
+#define CROSS_SHIFT 11
+#elif (ACCEL_RANGE == 16)
+#define CROSS_SHIFT 10
+#endif // ACCEL_RANGE
+
+
 void lookup_gyro_offsets(void)
 {
 #ifdef X_CROSS_COUPLING
     accel_gyro_coupling_compensation[0] = 
-            (int16_t)(__builtin_mulss(aero_force[2],X_CROSS_COUPLING)>>11 ) ;
+            (int16_t)(__builtin_mulss(aero_force[2],X_CROSS_COUPLING)>>CROSS_SHIFT ) ;
 #endif //
 #ifdef Y_CROSS_COUPLING
     accel_gyro_coupling_compensation[1] = 
-            (int16_t)(__builtin_mulss(aero_force[2],Y_CROSS_COUPLING)>>11 ) ;   
+            (int16_t)(__builtin_mulss(aero_force[2],Y_CROSS_COUPLING)>>CROSS_SHIFT ) ;   
 #endif //
 #ifdef Z_CROSS_COUPLING
         accel_gyro_coupling_compensation[2] = 
-            (int16_t)(__builtin_mulss(aero_force[2],Z_CROSS_COUPLING)>>11 ) ;
+            (int16_t)(__builtin_mulss(aero_force[2],Z_CROSS_COUPLING)>>CROSS_SHIFT ) ;
 #endif //    
 	temperature_index = mpu_temp.value - TABLE_ORIGIN ;
 	if (temperature_index < 0)
@@ -122,7 +126,6 @@ void lookup_gyro_offsets(void)
 		}
 	}
 }
-#endif // SIMULATED_GYRO
 
 #ifdef ACCEL_TABLE
 
