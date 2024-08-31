@@ -250,94 +250,69 @@ void send_residual_data(void)
 extern int32_t gyro_sum16x[];
 extern boolean log_jostle ;
 extern boolean log_matrix_jostle ;
+extern int32_t accel_sum[];
+extern uint64_t accel_stdev_sqr ;
+
 void send_residual_data(void)
 {
 	if ( start_residuals == 1)
 	{
 		start_residuals = 0 ;
-#ifndef LOG_R_UPDATE
-#ifndef TILT_INIT
-		serial_output("\r\n\r\nimu_temp_yy,filtring_yy,aligning_yy,x_force_yy,y_force_yy,z_force_yy,x_rate16_yy,y_rate16_yy,z_rate16_yy,rms_rate16_yy,x_flt16_yy,y_flt16_yy,z_flt16_yy,stdev_yy\r\n") ;
-#else
-        serial_output("\r\n\r\nStandbymode\r\naccOn,logOn,nx_force,y_force,z_force,yaw8,pitch8,roll8,yaw,pitch,roll\r\n");        
-#endif // TILT_INIT
-#else
-        serial_output("\r\n\r\nimu_temp,filter_en,ax,ay,az,x_filt_64,y,z,theta_filtx,y,z\r\n");
-#endif // LOG_R_UPDATE
+		serial_output("\r\n\r\nimu_temp_yy,filtring_yy,aligning_yy,x_force_yy,y_force_yy,z_force_yy,x_rate16_yy,y_rate16_yy,z_rate16_yy,rms_rate16_yy,x_flt16_yy,y_flt16_yy,z_flt16_yy,gyro_dev_yy,acc_dev_yy\r\n") ;
 	}
 	else
 	{
-#ifdef SIMULATE_TILT
-        if (warmup_count++ >= WARM_UP_TIME)
-        {
-            warmup_count = 0 ;
-            is_level = 1 ;
-        }
-#endif // SIMULATE_TILT
         union longww omgfilt_rounded[3];
         omgfilt_rounded[0].WW = omegagyro_filtered[0].WW+0x00008000 ;
         omgfilt_rounded[1].WW = omegagyro_filtered[1].WW+0x00008000 ;
         omgfilt_rounded[2].WW = omegagyro_filtered[2].WW+0x00008000 ;
 
-#ifndef  LOG_R_UPDATE 
-#ifndef TILT_INIT
-        //int16_t omega_filt_16[3];
-        //omega_filt_16[0]=(int16_t)((omegagyro_filtered[0].WW)>>12);
-        //omega_filt_16[1]=(int16_t)((omegagyro_filtered[1].WW)>>12);
-        //omega_filt_16[2]=(int16_t)((omegagyro_filtered[2].WW)>>12); 
         if((TURTLE_TESTING==0)||((log_jostle==1)&&(log_matrix_jostle==1)))
         {
-        serial_output("%i,%i,%i,%.1f,%.1f,%.1f,%li,%li,%li,%i,%li,%li,%li,%i\r\n",  
-                mpu_temp.value,
-				log_jostle ,
-                log_matrix_jostle ,
-                ((double)(aero_force[0]))/ACCEL_FACTOR ,
-				((double)(aero_force[1]))/ACCEL_FACTOR ,
-				((double)(aero_force[2]))/ACCEL_FACTOR ,
-    			gyro_sum16x[0],
-                gyro_sum16x[1],
-                gyro_sum16x[2],
-                vector3_mag(((int16_t)gyro_sum16x[0]),((int16_t)gyro_sum16x[1]),((int16_t)gyro_sum16x[2])),
-				(omegagyro_filtered[0].WW)>>12 , // 16x
-				(omegagyro_filtered[1].WW)>>12 ,
-                (omegagyro_filtered[2].WW)>>12 ,
-//              total_samples ,
-//              gyro_sum_of_squares ,
-//              gyro_sum[0],
-//              gyro_sum[1],
-//              gyro_sum[2],
-                sqrt_long((uint32_t)stdev_sqr)
-                
+            if (TURTLE_TESTING==1)
+            {
+                serial_output("%i,%i,%i,%li,%li,%li,%li,%li,%li,%i,%li,%li,%li,%i,%i\r\n",  
+                    mpu_temp.value,
+                    log_jostle ,
+                    log_matrix_jostle ,
+                    accel_sum[0],
+                    accel_sum[1],
+                    accel_sum[2],
+                    gyro_sum16x[0],
+                    gyro_sum16x[1],
+                    gyro_sum16x[2],
+                    vector3_mag(((int16_t)gyro_sum16x[0]),((int16_t)gyro_sum16x[1]),((int16_t)gyro_sum16x[2])),
+                    (omegagyro_filtered[0].WW)>>12 , // 16x
+                    (omegagyro_filtered[1].WW)>>12 ,
+                    (omegagyro_filtered[2].WW)>>12 ,
+                    sqrt_long((uint32_t)stdev_sqr),
+                    sqrt_long((uint32_t)accel_stdev_sqr)                
     				);
+            }
+            else
+            {
+                serial_output("%i,%i,%i,%.1f,%.1f,%.1f,%li,%li,%li,%i,%li,%li,%li,%i,%i\r\n",  
+                    mpu_temp.value,
+                    log_jostle ,
+                    log_matrix_jostle ,
+                    ((double)(aero_force[0]))/ACCEL_FACTOR ,
+                    ((double)(aero_force[1]))/ACCEL_FACTOR ,
+                    ((double)(aero_force[2]))/ACCEL_FACTOR ,
+                    gyro_sum16x[0],
+                    gyro_sum16x[1],
+                    gyro_sum16x[2],
+                    vector3_mag(((int16_t)gyro_sum16x[0]),((int16_t)gyro_sum16x[1]),((int16_t)gyro_sum16x[2])),
+                    (omegagyro_filtered[0].WW)>>12 , // 16x
+                    (omegagyro_filtered[1].WW)>>12 ,
+                    (omegagyro_filtered[2].WW)>>12 ,
+                    sqrt_long((uint32_t)stdev_sqr),
+                    sqrt_long((uint32_t)accel_stdev_sqr)                
+    				);   
+                
+            }
         }
         log_jostle = 1 ;
         log_matrix_jostle = 1 ;
-#else
-        compute_euler();
-        compute_euler_8k();
-                serial_output("%u,%u,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\r\n",
-                        accelOn , logging_on ,
-            	((double)(aero_force[0]))/ACCEL_FACTOR ,
-				((double)(aero_force[1]))/ACCEL_FACTOR ,
-				((double)(aero_force[2]))/ACCEL_FACTOR ,
-                yaw_angle_8k ,  pitch_angle_8k , roll_angle_8k ,     
-				yaw_angle ,  pitch_angle , roll_angle                  
-			);       
-#endif // TILT_DEF
-#else
-        serial_output("%i,%i,%i,%i,%i,%i,%i,%i,%li,%li,%li\r\n",
-				mpu_temp.value,
-				accelOn ,
-                aero_force[0],
-                aero_force[1],
-                aero_force[2],
-                (int16_t)((omegagyro_filtered[0].WW)>>10) , // 64x
-				(int16_t)((omegagyro_filtered[1].WW)>>10) ,
-				(int16_t)((omegagyro_filtered[2].WW)>>10) ,
-                theta_32_filtered[0]._.L1 , theta_32_filtered[1]._.L1 ,theta_32_filtered[2]._.L1 
-					);
-
-#endif // LOG_R_UPDATE
 	}
 }
 #endif // EULER_GUI

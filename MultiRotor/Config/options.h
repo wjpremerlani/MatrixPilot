@@ -138,7 +138,7 @@
 //#define LUGE7_SN138
 //#error #define LUGE7_SN139 //out of service too much drift
 //#define LUGE7_SN140
-//#define LUGE7_SN141
+#define LUGE7_SN141
 //#define LUGE7_SN142
 //#define LUGE7_SN143
 //#define LUGE7_SN144
@@ -152,7 +152,7 @@
 //#define LUGE7_SN152
 //#define LUGE7_SN153
 //#define LUGE7_SN154
-#define LUGE7_SN155
+//#define LUGE7_SN155
 //#define LUGE7_SN156
 //#define LUGE7_SN157
 //#define LUGE7_SN158

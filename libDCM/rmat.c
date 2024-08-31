@@ -228,6 +228,12 @@ int32_t gyro_sum[] = { 0 , 0 , 0 };
 int32_t gyro_sum16x[] = { 0 , 0 , 0 };
 uint64_t stdev_sqr = 0 ;
 
+uint64_t _accel_sum_of_squares = 0 ;
+int32_t _accel_sum[] = { 0 , 0 , 0 };
+uint64_t accel_sum_of_squares = 0 ;
+int32_t accel_sum[] = { 0 , 0 , 0 };
+uint64_t accel_stdev_sqr = 0 ;
+
 extern int16_t check_for_jostle ;
 uint16_t jostle_counter = 0 ;
 
@@ -236,6 +242,7 @@ boolean signal_jostle = 0 ;
 
 static inline void read_gyros(void)
 {
+    int16_t acc_net[3] ;
     // accumulate partial sums over the jostle checking window to compute variance
     // partial sums include integral of gyro signals and integral of their squares
     _total_samples += 1 ;
@@ -247,6 +254,19 @@ static inline void read_gyros(void)
             + (uint64_t)__builtin_mulss( omegagyro[1],omegagyro[1])
             + (uint64_t)__builtin_mulss( omegagyro[2],omegagyro[2]) ;
     
+    acc_net[0] = udb_xaccel.value - udb_xaccel.offset ;
+    acc_net[1] = udb_yaccel.value - udb_yaccel.offset ;
+    acc_net[2] = udb_zaccel.value - udb_zaccel.offset ;
+    
+    _accel_sum[0] += (int32_t) acc_net[0] ;
+    _accel_sum[1] += (int32_t) acc_net[1] ;
+    _accel_sum[2] += (int32_t) acc_net[2] ;
+    
+    _accel_sum_of_squares += (uint64_t)__builtin_mulss( acc_net[0],acc_net[0])
+            + (uint64_t)__builtin_mulss( acc_net[1],acc_net[1])
+            + (uint64_t)__builtin_mulss( acc_net[2],acc_net[2]) ;
+    
+    
     if ((udb_heartbeat_counter % HEARTBEAT_HZ )== 0) jostle_counter ++ ;
 			if ( jostle_counter == JOSTLE_CHECK_PERIOD ) 
 			{
@@ -257,9 +277,11 @@ static inline void read_gyros(void)
     {
         total_samples = _total_samples ;
         _total_samples = 0 ;
-        // compute the average of the sum of the squares of the gyro signals
+        // compute the average of the sum of the squares of the signals
         gyro_sum_of_squares = _gyro_sum_of_squares / ((uint64_t)total_samples);
         _gyro_sum_of_squares = 0 ;
+        accel_sum_of_squares = _accel_sum_of_squares / ((uint64_t)total_samples);
+        _accel_sum_of_squares = 0 ;
         // compute the average of the gyro signals
         gyro_sum[0] = _gyro_sum[0]/((int32_t)total_samples) ;
         gyro_sum[1] = _gyro_sum[1]/((int32_t)total_samples) ;
@@ -272,6 +294,14 @@ static inline void read_gyros(void)
         _gyro_sum[1] = 0 ;
         _gyro_sum[2] = 0 ;
         
+        accel_sum[0] = _accel_sum[0] /((int32_t)total_samples) ;
+        accel_sum[1] = _accel_sum[1] /((int32_t)total_samples) ;
+        accel_sum[2] = _accel_sum[2] /((int32_t)total_samples) ;
+        
+        _accel_sum[0] = 0 ;
+        _accel_sum[1] = 0 ;
+        _accel_sum[2] = 0 ;
+        
         // compute the variance, which is the mean of the squares of the samples
         // minus the products of the means of the samples, using the classic equation
         
@@ -279,6 +309,11 @@ static inline void read_gyros(void)
                 - ((int64_t)gyro_sum[0])*((int64_t)gyro_sum[0])
                 - ((int64_t)gyro_sum[1])*((int64_t)gyro_sum[1])
                 - ((int64_t)gyro_sum[2])*((int64_t)gyro_sum[2])) ;
+        
+        accel_stdev_sqr = (uint64_t)(accel_sum_of_squares 
+                - ((int64_t)accel_sum[0])*((int64_t)accel_sum[0])
+                - ((int64_t)accel_sum[1])*((int64_t)accel_sum[1])
+                - ((int64_t)accel_sum[2])*((int64_t)accel_sum[2])) ;
         
         if ((stdev_sqr > GYRO_VARIANCE_MARGIN)&&(CENTRIFUGAL_TESTING == 0))
         {
