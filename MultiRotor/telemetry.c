@@ -267,7 +267,7 @@ void send_residual_data(void)
         omgfilt_rounded[1].WW = omegagyro_filtered[1].WW+0x00008000 ;
         omgfilt_rounded[2].WW = omegagyro_filtered[2].WW+0x00008000 ;
 
-//        if((TURTLE_TESTING==0)||((log_jostle==1)&&(log_matrix_jostle==1)))
+        if((TURTLE_TESTING==0)||((log_jostle==1)&&(log_matrix_jostle==1)))
         {
             if (TURTLE_TESTING==1)
             {

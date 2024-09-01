@@ -276,10 +276,9 @@ static inline void read_gyros(void)
 	if ( check_for_jostle == 1 )
     {
         total_samples = _total_samples ;
-        _total_samples = 0 ;
+        
         // compute the average of the sum of the squares of the signals
         gyro_sum_of_squares = _gyro_sum_of_squares / ((uint64_t)total_samples);
-        _gyro_sum_of_squares = 0 ;
         accel_sum_of_squares = _accel_sum_of_squares / ((uint64_t)total_samples);
         
         // compute the average of the gyro signals
@@ -290,9 +289,6 @@ static inline void read_gyros(void)
         gyro_sum16x[1] = ((_gyro_sum[1])<<4)/((int32_t)total_samples) ;
         gyro_sum16x[2] = ((_gyro_sum[2])<<4)/((int32_t)total_samples) ;
         
-        _gyro_sum[0] = 0 ;
-        _gyro_sum[1] = 0 ;
-        _gyro_sum[2] = 0 ;
         
         accel_sum[0] = _accel_sum[0] /((int32_t)total_samples) ;
         accel_sum[1] = _accel_sum[1] /((int32_t)total_samples) ;
@@ -302,16 +298,24 @@ static inline void read_gyros(void)
         // compute the variance, which is the mean of the squares of the samples
         // minus the products of the means of the samples, using the classic equation
         
-        stdev_sqr = (uint64_t)(gyro_sum_of_squares 
-                - ((int64_t)gyro_sum[0])*((int64_t)gyro_sum[0])
-                - ((int64_t)gyro_sum[1])*((int64_t)gyro_sum[1])
-                - ((int64_t)gyro_sum[2])*((int64_t)gyro_sum[2])) ;
         
+        stdev_sqr = (uint64_t)(_gyro_sum_of_squares * ((uint64_t)total_samples)
+                - ((int64_t)_gyro_sum[0])*((int64_t)_gyro_sum[0])
+                - ((int64_t)_gyro_sum[1])*((int64_t)_gyro_sum[1])
+                - ((int64_t)_gyro_sum[2])*((int64_t)_gyro_sum[2]))/(((uint64_t)total_samples)*((uint64_t)total_samples)) ;
+           
         accel_stdev_sqr = (uint64_t)(_accel_sum_of_squares * ((uint64_t)total_samples)
                 - ((int64_t)_accel_sum[0])*((int64_t)_accel_sum[0])
                 - ((int64_t)_accel_sum[1])*((int64_t)_accel_sum[1])
                 - ((int64_t)_accel_sum[2])*((int64_t)_accel_sum[2]))/(((uint64_t)total_samples)*((uint64_t)total_samples)) ;
         
+        _total_samples = 0 ;
+        
+        _gyro_sum[0] = 0 ;
+        _gyro_sum[1] = 0 ;
+        _gyro_sum[2] = 0 ;
+        _gyro_sum_of_squares = 0 ;
+               
         _accel_sum[0] = 0 ;
         _accel_sum[1] = 0 ;
         _accel_sum[2] = 0 ;
