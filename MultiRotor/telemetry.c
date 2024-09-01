@@ -252,13 +252,14 @@ extern boolean log_jostle ;
 extern boolean log_matrix_jostle ;
 extern int32_t accel_sum[];
 extern uint64_t accel_stdev_sqr ;
+extern uint64_t net_dev_sqr ;
 
 void send_residual_data(void)
 {
 	if ( start_residuals == 1)
 	{
 		start_residuals = 0 ;
-		serial_output("\r\n\r\nimu_temp_yy,filtring_yy,aligning_yy,x_force_yy,y_force_yy,z_force_yy,x_rate16_yy,y_rate16_yy,z_rate16_yy,rms_rate16_yy,x_flt16_yy,y_flt16_yy,z_flt16_yy,gyro_dev_yy,acc_dev_yy\r\n") ;
+		serial_output("\r\n\r\nimu_temp_yy,filtring_yy,aligning_yy,x_force_yy,y_force_yy,z_force_yy,x_rate16_yy,y_rate16_yy,z_rate16_yy,rms_rate16_yy,x_flt16_yy,y_flt16_yy,z_flt16_yy,gyro_dev_yy,acc_dev_yy,net_dev_yy\r\n") ;
 	}
 	else
 	{
@@ -271,7 +272,7 @@ void send_residual_data(void)
         {
             if (TURTLE_TESTING==1)
             {
-                serial_output("%i,%i,%i,%li,%li,%li,%li,%li,%li,%i,%li,%li,%li,%i,%i\r\n",  
+                serial_output("%i,%i,%i,%li,%li,%li,%li,%li,%li,%i,%li,%li,%li,%i,%i,%i\r\n",  
                     mpu_temp.value,
                     log_jostle ,
                     log_matrix_jostle ,
@@ -286,7 +287,8 @@ void send_residual_data(void)
                     (omegagyro_filtered[1].WW)>>12 ,
                     (omegagyro_filtered[2].WW)>>12 ,
                     sqrt_long((uint32_t)stdev_sqr),
-                    sqrt_long((uint32_t)accel_stdev_sqr)                
+                    sqrt_long((uint32_t)accel_stdev_sqr) ,
+                    sqrt_long((uint32_t)net_dev_sqr)
     				);
             }
             else

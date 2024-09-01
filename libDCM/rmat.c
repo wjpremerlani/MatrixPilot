@@ -234,6 +234,8 @@ uint64_t accel_sum_of_squares = 0 ;
 int32_t accel_sum[] = { 0 , 0 , 0 };
 uint64_t accel_stdev_sqr = 0 ;
 
+uint64_t net_dev_sqr = 0 ;
+
 extern int16_t check_for_jostle ;
 uint16_t jostle_counter = 0 ;
 
@@ -308,6 +310,8 @@ static inline void read_gyros(void)
                 - ((int64_t)_accel_sum[0])*((int64_t)_accel_sum[0])
                 - ((int64_t)_accel_sum[1])*((int64_t)_accel_sum[1])
                 - ((int64_t)_accel_sum[2])*((int64_t)_accel_sum[2]))/(((uint64_t)total_samples)*((uint64_t)total_samples)) ;
+        
+        net_dev_sqr = stdev_sqr + accel_stdev_sqr ;
         
         _total_samples = 0 ;
         
