@@ -305,11 +305,29 @@ static inline void read_gyros(void)
                 - ((int64_t)_gyro_sum[0])*((int64_t)_gyro_sum[0])
                 - ((int64_t)_gyro_sum[1])*((int64_t)_gyro_sum[1])
                 - ((int64_t)_gyro_sum[2])*((int64_t)_gyro_sum[2]))/(((uint64_t)total_samples)*((uint64_t)total_samples)) ;
-           
-        accel_stdev_sqr = (uint64_t)(_accel_sum_of_squares * ((uint64_t)total_samples)
+
+#if (ACCEL_RANGE == 2)
+        accel_stdev_sqr = ((uint64_t)(_accel_sum_of_squares * ((uint64_t)total_samples)
                 - ((int64_t)_accel_sum[0])*((int64_t)_accel_sum[0])
                 - ((int64_t)_accel_sum[1])*((int64_t)_accel_sum[1])
-                - ((int64_t)_accel_sum[2])*((int64_t)_accel_sum[2]))/(((uint64_t)total_samples)*((uint64_t)total_samples)) ;
+                - ((int64_t)_accel_sum[2])*((int64_t)_accel_sum[2]))/(((uint64_t)total_samples)*((uint64_t)total_samples)))>>7 ;
+#elif (ACCEL_RANGE == 4)
+        accel_stdev_sqr = ((uint64_t)(_accel_sum_of_squares * ((uint64_t)total_samples)
+                - ((int64_t)_accel_sum[0])*((int64_t)_accel_sum[0])
+                - ((int64_t)_accel_sum[1])*((int64_t)_accel_sum[1])
+                - ((int64_t)_accel_sum[2])*((int64_t)_accel_sum[2]))/(((uint64_t)total_samples)*((uint64_t)total_samples)))>>5 ;        
+#elif (ACCEL_RANGE == 8)          
+        accel_stdev_sqr = ((uint64_t)(_accel_sum_of_squares * ((uint64_t)total_samples)
+                - ((int64_t)_accel_sum[0])*((int64_t)_accel_sum[0])
+                - ((int64_t)_accel_sum[1])*((int64_t)_accel_sum[1])
+                - ((int64_t)_accel_sum[2])*((int64_t)_accel_sum[2]))/(((uint64_t)total_samples)*((uint64_t)total_samples)))>>3 ;
+#elif (ACCEL_RANGE == 16)
+        accel_stdev_sqr = ((uint64_t)(_accel_sum_of_squares * ((uint64_t)total_samples)
+                - ((int64_t)_accel_sum[0])*((int64_t)_accel_sum[0])
+                - ((int64_t)_accel_sum[1])*((int64_t)_accel_sum[1])
+                - ((int64_t)_accel_sum[2])*((int64_t)_accel_sum[2]))/(((uint64_t)total_samples)*((uint64_t)total_samples)))>>1 ;
+
+#endif // 
         
         net_dev_sqr = stdev_sqr + accel_stdev_sqr ;
         
