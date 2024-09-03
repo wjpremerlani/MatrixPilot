@@ -12,8 +12,10 @@
 #define CALIBRATIONZ	1.0134
 #define CALIB_GRAVITY	4096
 #define CAL_GRAV_X	4103
-#define CAL_GRAV_Y	4107
-#define CAL_GRAV_Z	4093
+#define CAL_GRAV_Y	4108
+#define CAL_GRAV_Z	4075
+
+//4103. 4108. 4075
 
 
 #endif	/* options_LUGE7_SN185_H */

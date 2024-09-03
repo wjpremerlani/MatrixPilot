@@ -16,10 +16,14 @@
 
 #if (ACCEL_RANGE == 4)
 #define CALIB_GRAVITY	8192
-#define CAL_GRAV_X	8203
-#define CAL_GRAV_Y	8219
-#define CAL_GRAV_Z	8159
-#endif // (ACCEL_RANGE == 4)    
+#define CAL_GRAV_X	8207
+#define CAL_GRAV_Y	8212
+#define CAL_GRAV_Z	8150
+#endif // (ACCEL_RANGE == 4) 
+
+//8207. 8212. 8150.
+
+
     
 #define GYRO_OFFSET_TABLE "../libUDB/gyro_tables/table_luge7_sn084.h"
 #define CALIBRATIONX	1.0134

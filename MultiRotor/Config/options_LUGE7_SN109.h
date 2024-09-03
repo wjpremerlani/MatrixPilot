@@ -14,7 +14,9 @@
 #define CALIB_GRAVITY	4096
 #define CAL_GRAV_X	4101
 #define CAL_GRAV_Y	4106
-#define CAL_GRAV_Z	4080
+#define CAL_GRAV_Z	4078
+
+//4101. 4106. 4078.
 
 
 #endif	/* options_LUGE7_SN109_H */
