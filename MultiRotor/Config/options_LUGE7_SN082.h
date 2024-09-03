@@ -18,10 +18,12 @@
 #if (ACCEL_RANGE == 2 )
 
 #define CALIB_GRAVITY	16384
-#define CAL_GRAV_X	16417
-#define CAL_GRAV_Y	16440
-#define CAL_GRAV_Z	16412
+#define CAL_GRAV_X	16425
+#define CAL_GRAV_Y	16420
+#define CAL_GRAV_Z	16294
 #endif // (ACCEL_RANGE == 2 )
+
+//16425. 16420. 16294.
 
 
 #define GYRO_OFFSET_TABLE "../libUDB/gyro_tables/table_luge7_sn082.h"
