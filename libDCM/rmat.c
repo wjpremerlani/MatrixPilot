@@ -344,7 +344,7 @@ static inline void read_gyros(void)
         _accel_sum_of_squares = 0 ;
         
         
-        if ((stdev_sqr > GYRO_VARIANCE_MARGIN)&&(CENTRIFUGAL_TESTING == 0))
+        if ((net_dev_sqr > TOTAL_VARIANCE_MARGIN)&&(CENTRIFUGAL_TESTING == 0))
         {
             motion_detect = 1 ;
             log_jostle = 0 ;
@@ -721,45 +721,12 @@ static void roll_pitch_drift(void)
 #ifdef BUILD_OFFSET_TABLE // the following interferes with LED signals during table build
     return ;
 #endif // BUILD_OFFSET_TABLE
-	if((omega_magnitude>MATRIX_GYRO_OFFSET_MARGIN )	|| (abs(accel_magnitude-CALIB_GRAVITY/2)>CALIB_GRAVITY/8))
+	if(net_dev_sqr>TOTAL_VARIANCE_MARGIN)
 	{
         matrix_jostle = 1 ;
         log_matrix_jostle = 0 ;
     }
     
-    /*
-    if((omega_magnitude>GYRO_OFFSET_MARGIN )	|| (abs(accel_magnitude-CALIB_GRAVITY/2)>CALIB_GRAVITY/8))
-	{
-		motion_detect = 1 ;
-        if (slide_in_progress == 1 )
-        {
-            LED_RED = LED_ON ;
-        }
-        else
-        {
-            LED_GREEN = LED_ON ;
-        }
-    }
-    else
-    {
-        if ( led_red_run == 1)
-        {
-            LED_RED = LED_ON ;
-        }
-        else
-        {
-            LED_RED = LED_OFF ;
-        }
-    
-        if ( led_green_standby == 1)
-        {
-            LED_GREEN = LED_ON ;
-        }
-        else
-        {
-            LED_GREEN = LED_OFF ;
-        }
-    }*/
     if ((( logging_on == 0)||(CONTINUOUS_MATRIX_LOCKING==1))&&(matrix_jostle == 0 ))
     {
 		int16_t gplane_nomalized[3] ;
