@@ -16,5 +16,7 @@
 #define CAL_GRAV_Y	4102
 #define CAL_GRAV_Z	4072
 
+//4102. 4102. 4072
+
 #endif	/* options_LUGE7_SN117_H */
 

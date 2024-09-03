@@ -422,7 +422,9 @@ const struct gyro_offset_table_entry gyro_offset_table[] = {
 
 #define ACCEL_TABLE_ORIGIN ( -11780)
 
-int16_t accel_residual_offset[] = { -17,-18,-63 } ; 
+int16_t accel_residual_offset[] = { -17-2,-18-4,-63 } ; 
+
+//-2,-4,0
 
 const struct gyro_offset_table_entry accel_offset_table[] = {
 {-4,-1,0},
