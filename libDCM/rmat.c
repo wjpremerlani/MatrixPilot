@@ -234,6 +234,9 @@ uint64_t accel_sum_of_squares = 0 ;
 int32_t accel_sum[] = { 0 , 0 , 0 };
 uint64_t accel_stdev_sqr = 0 ;
 
+int32_t _roll_pitch_error_sum[] = { 0 , 0 , 0 };
+int32_t roll_pitch_error_sum[] = { 0 , 0 , 0 };
+
 uint64_t net_dev_sqr = 0 ;
 
 extern int16_t check_for_jostle ;
@@ -241,10 +244,20 @@ uint16_t jostle_counter = 0 ;
 
 boolean log_jostle = 0 ;
 boolean signal_jostle = 0 ; 
+extern int16_t rmat_16[] ;
 
 static inline void read_gyros(void)
 {
     int16_t acc_net[3] ;
+    int16_t roll_pitch_error[3];
+    int16_t roll_pitch_reference[3];
+    // accumulate information needed to align matrix
+    vector3_normalize(roll_pitch_reference,gplane);
+    VectorCross(roll_pitch_error,roll_pitch_reference,&rmat_16[6]);
+    _roll_pitch_error_sum[0] += (int32_t) roll_pitch_error[0];
+    _roll_pitch_error_sum[1] += (int32_t) roll_pitch_error[1];
+    _roll_pitch_error_sum[2] += (int32_t) roll_pitch_error[2];
+       
     // accumulate partial sums over the jostle checking window to compute variance
     // partial sums include integral of gyro signals and integral of their squares
     _total_samples += 1 ;
@@ -331,7 +344,24 @@ static inline void read_gyros(void)
         
         net_dev_sqr = stdev_sqr + accel_stdev_sqr ;
         
+        if (net_dev_sqr < TOTAL_VARIANCE_MARGIN )
+        {
+            roll_pitch_error_sum[0] = _roll_pitch_error_sum[0]/((int32_t)total_samples) ;
+            roll_pitch_error_sum[1] = _roll_pitch_error_sum[1]/((int32_t)total_samples) ;
+            roll_pitch_error_sum[2] = _roll_pitch_error_sum[2]/((int32_t)total_samples) ;         
+        }
+        else
+        {
+            roll_pitch_error_sum[0] = 0 ;
+            roll_pitch_error_sum[1] = 0 ;
+            roll_pitch_error_sum[2] = 0 ;          
+        }
+        
         _total_samples = 0 ;
+        
+        _roll_pitch_error_sum[0] = 0 ;
+        _roll_pitch_error_sum[1] = 0 ;
+        _roll_pitch_error_sum[2] = 0 ;
         
         _gyro_sum[0] = 0 ;
         _gyro_sum[1] = 0 ;

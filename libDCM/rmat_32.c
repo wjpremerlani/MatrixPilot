@@ -41,6 +41,8 @@ int16_t misalignment[3];
 
 int32_t yaw_rate ;
 
+extern int32_t roll_pitch_error_sum[];
+
 void rmat_32_update(void)
 {
 #if ( CONTINUOUS_MATRIX_LOCKING == 1 )
@@ -102,15 +104,13 @@ void rmat_32_update(void)
         // copy the tilt row of rmat_32
         tilt_rmat_32[0] = rmat_32[6]._.W1 ;
         tilt_rmat_32[1] = rmat_32[7]._.W1 ;
-        tilt_rmat_32[2] = rmat_32[8]._.W1 ;
-        
-        VectorCross(misalignment,tilt_rmat,tilt_rmat_32);   
+        tilt_rmat_32[2] = rmat_32[8]._.W1 ; 
         
         if ( matrix_jostle == 0 )
         {
-            theta_32_adjusted[0].WW = theta_32_adjusted[0].WW + (((int32_t)misalignment[0])<< 5);
-            theta_32_adjusted[1].WW = theta_32_adjusted[1].WW + (((int32_t)misalignment[1])<< 5);
-            theta_32_adjusted[2].WW = theta_32_adjusted[2].WW + (((int32_t)misalignment[2])<< 5);       
+            theta_32_adjusted[0].WW = theta_32_adjusted[0].WW + ((roll_pitch_error_sum[0])<< 5);
+            theta_32_adjusted[1].WW = theta_32_adjusted[1].WW + ((roll_pitch_error_sum[1])<< 5);
+            theta_32_adjusted[2].WW = theta_32_adjusted[2].WW + ((roll_pitch_error_sum[2])<< 5);      
         }
                 
 		theta_square = ((VectorPower_32(3,theta_32_adjusted))<<2);
