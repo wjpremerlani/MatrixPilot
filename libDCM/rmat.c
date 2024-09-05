@@ -844,13 +844,13 @@ static void PI_feedback(void)
 void dcm_run_imu_step(void)
 {
     roll_pitch_drift();         // local
-	rupdate();                  // local
+	//rupdate();                  // local
 #ifdef CONING_CORRECTION
 	rmat_32_update();
 #endif // CONING_CORRECTION
-	normalize();                // local
+	//normalize();                // local
 
-	PI_feedback();              // local
+	//PI_feedback();              // local
 #ifdef LOG_VELOCITY
 	estimate_velocity();
 #endif // LOG_VELOCITY
