@@ -2,17 +2,24 @@
 
 //#define DATE "Wolf_pac_2 , firmware 5.5, 5/28/2024\r\n"
 // improved continuous gyro bias estimation
+
 //#define DATE "Wolf_pac_2 , firmware 5.6, 8/8/2024\r\n" 
 // 5.6: no change in software, but improved "in situ" temperature compensation
+
 //#define DATE "Wolf_pac_2 , firmware 5.7, 8/16/2024\r\n" 
 // 5.7: major improvement in jostle detection by using
 // the sum of the squares of the standard deviations of the three gyro channels
 // over a 2 second window
-#define DATE "Wolf_pac_2 , firmware 6.0, 8/25/2024\r\n" 
+
+//#define DATE "Wolf_pac_2 , firmware 6.0, 8/25/2024\r\n" 
 // 6.0: Centrifuge testing has shown that cross coupling of Z force
 // due to centrifugal acceleration into gyro offset is linear up to 16gs.
 // A technique has been developed to accurately measure the cross coupling
 // coefficients and compensate for cross coupling.
+
+#define DATE "Wolf_pac_2 , firmware 6.1, 9/4/2024\r\n" 
+// 6.1: An improved matrix alignment implementation that
+// will be especially effective during QLP testing
 
 #define CONING_CORRECTION
 #define CONING_CORRECTION_IN_RMAT
@@ -2255,7 +2262,8 @@
 #error "invalid GYRO_RANGE"
 #endif // GYRO_RANGE
 
-#define GYRO_VARIANCE_MARGIN 150
+#define TOTAL_STANDARD_DEVIATION 20
+#define TOTAL_VARIANCE_MARGIN (TOTAL_STANDARD_DEVIATION*TOTAL_STANDARD_DEVIATION)
 
 #define MATRIX_GYRO_OFFSET_MARGIN 100
 

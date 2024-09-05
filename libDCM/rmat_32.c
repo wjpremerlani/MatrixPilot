@@ -41,77 +41,39 @@ int16_t misalignment[3];
 
 int32_t yaw_rate ;
 
+extern int32_t roll_pitch_error_sum[];
+
+int16_t rmat_32_initialized = 0 ;
+
 void rmat_32_update(void)
 {
-#if ( CONTINUOUS_MATRIX_LOCKING == 1 )
-    if ((udb_heartbeat_counter % HEARTBEAT_HZ )== 0) matrix_jostle_counter ++ ;
-	if ( matrix_jostle_counter == JOSTLE_CHECK_PERIOD ) 
-	{
-		matrix_jostle_counter = 0 ;
-        if (matrix_jostle == 1)
-        {
-            matrix_jostle = 0 ;
-        }
-        else
-        {
-//            convert_16_bit_to_32_bit(9,rmat_32,rmat) ;
-//            convert_32_bit_to_16_bit(9,rmat_16,rmat_32) ;
-            return ;
-        }		
-    }   
-#endif
-    
-    if (logging_on == 0 )
+    if (rmat_32_initialized == 0 )
     {
-        convert_16_bit_to_32_bit(9,rmat_32,rmat) ;
-        convert_32_bit_to_16_bit(9,rmat_16,rmat_32) ;
+        align_roll_pitch(rmat_16);
+        convert_16_bit_to_32_bit(9,rmat_32,rmat_16) ;
+        rmat_32_initialized = 1 ;
     }
-	if (accelOn == 1 )
 	{
-        theta_sum[0].WW = 0 ;
-        theta_sum[1].WW = 0 ;
-        theta_sum[2].WW = 0 ;
-        r_update_sum[0].WW = 0 ;
-        r_update_sum[1].WW = 0 ;
-        r_update_sum[2].WW = 0 ;
-        rmat_sum[0].WW = 0 ;
-        rmat_sum[1].WW = 0 ;
-        rmat_sum[2].WW = 0 ;         
-	}
-	else
-	{
-#ifdef ADJUST_THETA
         theta_32_adjusted[0].WW = theta_32[0].WW - theta_32_filtered[0]._.L1 ;
         theta_32_adjusted[1].WW = theta_32[1].WW - theta_32_filtered[1]._.L1 ;
         theta_32_adjusted[2].WW = theta_32[2].WW - theta_32_filtered[2]._.L1 ; 
         yaw_rate = theta_32_adjusted[2].WW ;
-#else
-        theta_32_adjusted[0].WW = theta_32[0].WW ;
-        theta_32_adjusted[1].WW = theta_32[1].WW ;
-        theta_32_adjusted[2].WW = theta_32[2].WW ; 
-#endif // ADJUST_THETA
+
     
-        theta_sum[0].WW += theta_32_adjusted[0].WW ;
-        theta_sum[1].WW += theta_32_adjusted[1].WW ;
-        theta_sum[2].WW += theta_32_adjusted[2].WW ;
+//        theta_sum[0].WW += theta_32_adjusted[0].WW ;  // probably not needed
+//        theta_sum[1].WW += theta_32_adjusted[1].WW ;
+//        theta_sum[2].WW += theta_32_adjusted[2].WW ;
         
-        // copy the tilt row of rmat
-        tilt_rmat[0] = rmat[6];
-        tilt_rmat[1] = rmat[7];
-        tilt_rmat[2] = rmat[8];
         // copy the tilt row of rmat_32
-        tilt_rmat_32[0] = rmat_32[6]._.W1 ;
+        tilt_rmat_32[0] = rmat_32[6]._.W1 ; // probably not needed
         tilt_rmat_32[1] = rmat_32[7]._.W1 ;
-        tilt_rmat_32[2] = rmat_32[8]._.W1 ;
+        tilt_rmat_32[2] = rmat_32[8]._.W1 ; 
         
-        VectorCross(misalignment,tilt_rmat,tilt_rmat_32);   
         
-        if ( matrix_jostle == 0 )
-        {
-            theta_32_adjusted[0].WW = theta_32_adjusted[0].WW + (((int32_t)misalignment[0])<< 5);
-            theta_32_adjusted[1].WW = theta_32_adjusted[1].WW + (((int32_t)misalignment[1])<< 5);
-            theta_32_adjusted[2].WW = theta_32_adjusted[2].WW + (((int32_t)misalignment[2])<< 5);       
-        }
+        theta_32_adjusted[0].WW = theta_32_adjusted[0].WW + ((roll_pitch_error_sum[0])<< 5);
+        theta_32_adjusted[1].WW = theta_32_adjusted[1].WW + ((roll_pitch_error_sum[1])<< 5);
+        theta_32_adjusted[2].WW = theta_32_adjusted[2].WW + ((roll_pitch_error_sum[2])<< 5);      
+        
                 
 		theta_square = ((VectorPower_32(3,theta_32_adjusted))<<2);
 		f1 = (fract_32_mpy(theta_square,(0x40000000/120))<<2) ;
@@ -156,14 +118,9 @@ void rmat_32_update(void)
 	
 		rupdate_32[0].WW += 0x40000000 ;
 		rupdate_32[4].WW += 0x40000000 ;
-		rupdate_32[8].WW += 0x40000000 ;
-        
-        r_update_sum[0].WW += rupdate_32[7].WW ;
-        r_update_sum[1].WW += rupdate_32[2].WW ;
-        r_update_sum[2].WW += rupdate_32[3].WW ;
-        
+		rupdate_32[8].WW += 0x40000000 ; 
 		
-		convert_32_bit_to_16_bit(9 , rupdate_16 , rupdate_32) ;
+		convert_32_bit_to_16_bit(9 , rupdate_16 , rupdate_32) ;  // probably not needed
 		
 		MatrixMultiply_32(rmat_32_buffer,rmat_32,rupdate_32);
         
@@ -172,10 +129,6 @@ void rmat_32_update(void)
 		normalize_32();
 		
 		convert_32_bit_to_16_bit(9,rmat_16,rmat_32) ;
-        
-        rmat_sum[0].WW = rmat_32[7].WW ;
-        rmat_sum[1].WW = - rmat_32[6].WW ;
-        rmat_sum[2].WW = rmat_32[3].WW ;
         
 	}
 }

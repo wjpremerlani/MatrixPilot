@@ -253,13 +253,14 @@ extern boolean log_matrix_jostle ;
 extern int32_t accel_sum[];
 extern uint64_t accel_stdev_sqr ;
 extern uint64_t net_dev_sqr ;
+extern int32_t roll_pitch_error_sum[];
 
 void send_residual_data(void)
 {
 	if ( start_residuals == 1)
 	{
 		start_residuals = 0 ;
-		serial_output("\r\n\r\nimu_temp_yy,filtring_yy,aligning_yy,x_force_yy,y_force_yy,z_force_yy,x_rate16_yy,y_rate16_yy,z_rate16_yy,rms_rate16_yy,x_flt16_yy,y_flt16_yy,z_flt16_yy,gyro_dev_yy,acc_dev_yy,net_dev_yy\r\n") ;
+		serial_output("\r\n\r\nimu_temp_yy,calibrating_yy,x_force_yy,y_force_yy,z_force_yy,x_rate16_yy,y_rate16_yy,z_rate16_yy,rms_rate16_yy,x_flt16_yy,y_flt16_yy,z_flt16_yy,net_dev_yy,tilt_adj(degs)_yy\r\n") ;
 	}
 	else
 	{
@@ -268,14 +269,13 @@ void send_residual_data(void)
         omgfilt_rounded[1].WW = omegagyro_filtered[1].WW+0x00008000 ;
         omgfilt_rounded[2].WW = omegagyro_filtered[2].WW+0x00008000 ;
 
-        if((TURTLE_TESTING==0)||((log_jostle==1)&&(log_matrix_jostle==1)))
+        if((TURTLE_TESTING==0)||(log_jostle==1))
         {
             if (TURTLE_TESTING==1)
             {
-                serial_output("%i,%i,%i,%li,%li,%li,%li,%li,%li,%i,%li,%li,%li,%i,%i,%i\r\n",  
+                serial_output("%i,%i,%li,%li,%li,%li,%li,%li,%i,%li,%li,%li,%i,%.3f\r\n",  
                     mpu_temp.value,
                     log_jostle ,
-                    log_matrix_jostle ,
                     accel_sum[0],
                     accel_sum[1],
                     accel_sum[2],
@@ -286,17 +286,15 @@ void send_residual_data(void)
                     (omegagyro_filtered[0].WW)>>12 , // 16x
                     (omegagyro_filtered[1].WW)>>12 ,
                     (omegagyro_filtered[2].WW)>>12 ,
-                    sqrt_long((uint32_t)stdev_sqr),
-                    sqrt_long((uint32_t)accel_stdev_sqr) ,
-                    sqrt_long((uint32_t)net_dev_sqr)
+                    sqrt_long((uint32_t)net_dev_sqr),
+                  (double)vector3_mag(((int16_t)roll_pitch_error_sum[0]),((int16_t)roll_pitch_error_sum[1]),(roll_pitch_error_sum[2]))*0.0035
     				);
             }
             else
             {
-                serial_output("%i,%i,%i,%.1f,%.1f,%.1f,%li,%li,%li,%i,%li,%li,%li,%i,%i\r\n",  
+                serial_output("%i,%i,%.1f,%.1f,%.1f,%li,%li,%li,%i,%li,%li,%li,%i,%.3f\r\n",  
                     mpu_temp.value,
                     log_jostle ,
-                    log_matrix_jostle ,
                     ((double)(aero_force[0]))/ACCEL_FACTOR ,
                     ((double)(aero_force[1]))/ACCEL_FACTOR ,
                     ((double)(aero_force[2]))/ACCEL_FACTOR ,
@@ -307,8 +305,8 @@ void send_residual_data(void)
                     (omegagyro_filtered[0].WW)>>12 , // 16x
                     (omegagyro_filtered[1].WW)>>12 ,
                     (omegagyro_filtered[2].WW)>>12 ,
-                    sqrt_long((uint32_t)stdev_sqr),
-                    sqrt_long((uint32_t)accel_stdev_sqr)                
+                    sqrt_long((uint32_t)net_dev_sqr),
+                    (double)vector3_mag(((int16_t)roll_pitch_error_sum[0]),((int16_t)roll_pitch_error_sum[1]),(roll_pitch_error_sum[2]))*0.0035
     				);   
                 
             }
@@ -682,9 +680,8 @@ void send_imu_data(void)
 			break ;
         case 15:
             {
-                serial_output("Jostle detection thresholds are %i variance for gyro filtering,\r\n %i rate for matrix alignment.\r\n",
-                        GYRO_VARIANCE_MARGIN , MATRIX_GYRO_OFFSET_MARGIN 
-                        );
+                serial_output("Jostling is detected when total noise standard deviation is larger than %i.\r\n",
+                        TOTAL_STANDARD_DEVIATION );
             }
             break ;
 		case 16:

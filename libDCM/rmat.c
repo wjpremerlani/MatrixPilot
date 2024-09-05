@@ -234,6 +234,9 @@ uint64_t accel_sum_of_squares = 0 ;
 int32_t accel_sum[] = { 0 , 0 , 0 };
 uint64_t accel_stdev_sqr = 0 ;
 
+int32_t _roll_pitch_error_sum[] = { 0 , 0 , 0 };
+int32_t roll_pitch_error_sum[] = { 0 , 0 , 0 };
+
 uint64_t net_dev_sqr = 0 ;
 
 extern int16_t check_for_jostle ;
@@ -241,10 +244,20 @@ uint16_t jostle_counter = 0 ;
 
 boolean log_jostle = 0 ;
 boolean signal_jostle = 0 ; 
+extern int16_t rmat_16[] ;
 
 static inline void read_gyros(void)
 {
     int16_t acc_net[3] ;
+    int16_t roll_pitch_error[3];
+    int16_t roll_pitch_reference[3];
+    // accumulate information needed to align matrix
+    vector3_normalize(roll_pitch_reference,gplane);
+    VectorCross(roll_pitch_error,roll_pitch_reference,&rmat_16[6]);
+    _roll_pitch_error_sum[0] += (int32_t) roll_pitch_error[0];
+    _roll_pitch_error_sum[1] += (int32_t) roll_pitch_error[1];
+    _roll_pitch_error_sum[2] += (int32_t) roll_pitch_error[2];
+       
     // accumulate partial sums over the jostle checking window to compute variance
     // partial sums include integral of gyro signals and integral of their squares
     _total_samples += 1 ;
@@ -331,7 +344,24 @@ static inline void read_gyros(void)
         
         net_dev_sqr = stdev_sqr + accel_stdev_sqr ;
         
+        if (net_dev_sqr < TOTAL_VARIANCE_MARGIN )
+        {
+            roll_pitch_error_sum[0] = _roll_pitch_error_sum[0]/((int32_t)total_samples) ;
+            roll_pitch_error_sum[1] = _roll_pitch_error_sum[1]/((int32_t)total_samples) ;
+            roll_pitch_error_sum[2] = _roll_pitch_error_sum[2]/((int32_t)total_samples) ;         
+        }
+        else
+        {
+            roll_pitch_error_sum[0] = 0 ;
+            roll_pitch_error_sum[1] = 0 ;
+            roll_pitch_error_sum[2] = 0 ;          
+        }
+        
         _total_samples = 0 ;
+        
+        _roll_pitch_error_sum[0] = 0 ;
+        _roll_pitch_error_sum[1] = 0 ;
+        _roll_pitch_error_sum[2] = 0 ;
         
         _gyro_sum[0] = 0 ;
         _gyro_sum[1] = 0 ;
@@ -344,7 +374,7 @@ static inline void read_gyros(void)
         _accel_sum_of_squares = 0 ;
         
         
-        if ((stdev_sqr > GYRO_VARIANCE_MARGIN)&&(CENTRIFUGAL_TESTING == 0))
+        if ((net_dev_sqr > TOTAL_VARIANCE_MARGIN)&&(CENTRIFUGAL_TESTING == 0))
         {
             motion_detect = 1 ;
             log_jostle = 0 ;
@@ -721,45 +751,12 @@ static void roll_pitch_drift(void)
 #ifdef BUILD_OFFSET_TABLE // the following interferes with LED signals during table build
     return ;
 #endif // BUILD_OFFSET_TABLE
-	if((omega_magnitude>MATRIX_GYRO_OFFSET_MARGIN )	|| (abs(accel_magnitude-CALIB_GRAVITY/2)>CALIB_GRAVITY/8))
+	if(net_dev_sqr>TOTAL_VARIANCE_MARGIN)
 	{
         matrix_jostle = 1 ;
         log_matrix_jostle = 0 ;
     }
     
-    /*
-    if((omega_magnitude>GYRO_OFFSET_MARGIN )	|| (abs(accel_magnitude-CALIB_GRAVITY/2)>CALIB_GRAVITY/8))
-	{
-		motion_detect = 1 ;
-        if (slide_in_progress == 1 )
-        {
-            LED_RED = LED_ON ;
-        }
-        else
-        {
-            LED_GREEN = LED_ON ;
-        }
-    }
-    else
-    {
-        if ( led_red_run == 1)
-        {
-            LED_RED = LED_ON ;
-        }
-        else
-        {
-            LED_RED = LED_OFF ;
-        }
-    
-        if ( led_green_standby == 1)
-        {
-            LED_GREEN = LED_ON ;
-        }
-        else
-        {
-            LED_GREEN = LED_OFF ;
-        }
-    }*/
     if ((( logging_on == 0)||(CONTINUOUS_MATRIX_LOCKING==1))&&(matrix_jostle == 0 ))
     {
 		int16_t gplane_nomalized[3] ;
@@ -847,13 +844,13 @@ static void PI_feedback(void)
 void dcm_run_imu_step(void)
 {
     roll_pitch_drift();         // local
-	rupdate();                  // local
+	//rupdate();                  // local
 #ifdef CONING_CORRECTION
 	rmat_32_update();
 #endif // CONING_CORRECTION
-	normalize();                // local
+	//normalize();                // local
 
-	PI_feedback();              // local
+	//PI_feedback();              // local
 #ifdef LOG_VELOCITY
 	estimate_velocity();
 #endif // LOG_VELOCITY
