@@ -94,7 +94,7 @@ fractional omegagyro[] = { 0, 0, 0 };
 fractional omega[] = { 0, 0, 0 };
 
 // gyro correction vectors:
-static fractional omegacorrP[] = { 0, 0, 0 };
+//static fractional omegacorrP[] = { 0, 0, 0 };
 fractional omegacorrI[] = { 0, 0, 0 };
 
 // acceleration, as measured in GPS earth coordinate system
@@ -133,7 +133,7 @@ fractional errorYawground[] = { 0, 0, 0 };
 fractional errorYawplane[]  = { 0, 0, 0 };
 
 // measure of error in orthogonality, used for debugging purposes:
-static fractional error = 0;
+//static fractional error = 0;
 
 #if (MAG_YAW_DRIFT == 1)
 static fractional declinationVector[2];
@@ -558,7 +558,7 @@ fractional theta[3];
 extern int16_t theta_16[];
 fractional rup_copy[9];
 // The update algorithm!!
-static void rupdate(void)
+/*static void rupdate(void)
 {
 	// This is the key routine. It performs a small rotation
 	// on the direction cosine matrix, based on the gyro vector and correction.
@@ -725,6 +725,7 @@ static void normalize(void)
 	VectorScale(3, &rbuff[6], &rbuff[6], renorm);
 	VectorAdd(3, &rmat[6], &rbuff[6], &rbuff[6]);
 }
+*/
 
 int16_t accelOn ;
 int16_t launched ;
@@ -811,7 +812,7 @@ static void roll_pitch_drift(void)
 
 #define MAXIMUM_SPIN_DCM_INTEGRAL 20.0 // degrees per second
 
-static void PI_feedback(void)
+/*static void PI_feedback(void)
 {
 	fractional errorRPScaled[3];
 	int16_t kpyaw;
@@ -840,6 +841,7 @@ static void PI_feedback(void)
 	omegacorrI[1] = gyroCorrectionIntegral[1]._.W1;
 	omegacorrI[2] = gyroCorrectionIntegral[2]._.W1;
 }
+*/
 
 void dcm_run_imu_step(void)
 {

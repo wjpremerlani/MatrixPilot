@@ -45,6 +45,8 @@ extern int32_t roll_pitch_error_sum[];
 
 int16_t rmat_32_initialized = 0 ;
 
+extern void align_roll_pitch(fractional tilt_mat[]);
+
 void rmat_32_update(void)
 {
     if (rmat_32_initialized == 0 )
