@@ -4,7 +4,7 @@ from math import sin, cos, atan2, sqrt, radians
 
 MIN_NUM_COLS  = 14
 MAX_NUM_COLS = 17
-FIRST_COL = 3
+FIRST_COL = 2
 
 
 
