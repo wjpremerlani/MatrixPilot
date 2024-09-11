@@ -1,7 +1,4 @@
-// used to be 108, now belongs to 101
 
-#warning "this gyro table used to be 108, it now belongs to 101"
-#warning "be very careful."
 
 #ifndef TABLE_LUGE7_SN108_H
 #define	TABLE_LUGE7_SN108_H

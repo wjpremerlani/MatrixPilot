@@ -24,24 +24,32 @@ def record_initial_temperature():
     return None
 
 def gyro_table_start():
-    gyro_file.write("\n#define TABLE_ORIGIN ( "+initial_temperature+")\n\n")
-    gyro_file.write("int16_t residual_offset[] = { 0 , 0 , 0 } ; \n\n")
-    gyro_file.write("const struct gyro_offset_table_entry gyro_offset_table[] = {\n")
+    gyro_accel_file.write("\n\n#ifndef TABLE_LUGE7_SN"+file_base_name+"_H\n")
+    gyro_accel_file.write("#define TABLE_LUGE7_SN"+file_base_name+"_H\n")
+    gyro_accel_file.write("\n// used in LUGE7_SN"+file_base_name+" partition size 64\n")
+    gyro_accel_file.write("\n//#define X_CROSS_COUPLING 0\n")
+    gyro_accel_file.write("#define Y_CROSS_COUPLING 0\n")
+    gyro_accel_file.write("#define Z_CROSS_COUPLING 0\n")
+    gyro_accel_file.write("\n\n#define STEP_SIZE 64\n\n\n")   
+    gyro_accel_file.write("\n#define TABLE_ORIGIN ( "+initial_temperature+")\n\n")
+    gyro_accel_file.write("int16_t residual_offset[] = { 0 , 0 , 0 } ; \n\n")
+    gyro_accel_file.write("const struct gyro_offset_table_entry gyro_offset_table[] = {\n")
     return None
 
 def gyro_table_end():
-    gyro_file.write("};\n\n")
+    gyro_accel_file.write("};\n\n")
     return None
 
 def acc_table_start():
-    accel_file.write("\n#define ACCEL_TABLE\n\n")
-    accel_file.write("\n#define ACCEL_TABLE_ORIGIN ( "+initial_temperature+")\n\n")
-    accel_file.write("int16_t accel_residual_offset[] = { 0 , 0 , 0 } ; \n\n")
-    accel_file.write("const struct gyro_offset_table_entry accel_offset_table[] = {\n")    
+    gyro_accel_file.write("\n#define ACCEL_TABLE\n\n")
+    gyro_accel_file.write("\n#define ACCEL_TABLE_ORIGIN ( "+initial_temperature+")\n\n")
+    gyro_accel_file.write("int16_t accel_residual_offset[] = { 0 , 0 , 0 } ; \n\n")
+    gyro_accel_file.write("const struct gyro_offset_table_entry accel_offset_table[] = {\n")    
     return None
 
 def acc_table_end():
-    accel_file.write("};\n\n")
+    gyro_accel_file.write("};\n\n")
+    gyro_accel_file.write("#endif /* TABLE_LUGE7_SN"+file_base_name+"_H */\n\n")
     return None
 
 def read_raw_data_from_txt(path):
@@ -82,9 +90,8 @@ if __name__ == "__main__":
     parser.add_argument('-f','--filename', help="base name of files")
     args = parser.parse_args()
     file_base_name = args.filename
-    gyro_file = open(file_base_name+"_gyro_table.txt", "w")
-    accel_file = open(file_base_name+"_accel_table.txt", "w")
-    rows = read_raw_data_from_txt(file_base_name+".txt")
+    gyro_accel_file = open("table_luge7_sn"+file_base_name+".h", "w")
+    rows = read_raw_data_from_txt("sn"+file_base_name+"_t_comp_data.txt")
     print("rows = "+str(number_rows)+"\nlines = "+str(number_lines))
     record_initial_temperature()
     print("initial temperature = " , initial_temperature )
@@ -115,12 +122,12 @@ if __name__ == "__main__":
     def process_gyro_table(row):
         global row_number
         if row_number < number_rows :
-            gyro_file.write("{"+str(int(row[7]))+","+str(int(row[8]))+","+str(int(row[9]))+"},\n")
+            gyro_accel_file.write("{"+str(int(row[7]))+","+str(int(row[8]))+","+str(int(row[9]))+"},\n")
             row_number += 1
     def process_acc_table(row):
         global row_number
         if row_number < number_rows :
-            accel_file.write("{"+str(int(row[10]))+","+str(int(row[11]))+","+str(int(row[12]))+"},\n")
+            gyro_accel_file.write("{"+str(int(row[10]))+","+str(int(row[11]))+","+str(int(row[12]))+"},\n")
             row_number += 1
     # applies the above functions to each row
     row_number = 0
@@ -156,7 +163,5 @@ if __name__ == "__main__":
     acc_table_start()
     np.apply_along_axis(process_acc_table, axis=0, arr=rows)
     acc_table_end()
-    gyro_file.flush()
-    accel_file.flush()
-    gyro_file.close()
-    accel_file.close()
+    gyro_accel_file.flush()
+    gyro_accel_file.close()

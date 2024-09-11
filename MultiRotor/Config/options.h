@@ -60,7 +60,7 @@
 
 // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
 // non-printable characters are written out, as header bytes for packets.
-//#define USE_PACKETIZED_TELEMERTY
+#define USE_PACKETIZED_TELEMERTY
 
 #define LOG_EULER
 //#define LOG_RATE_AND_EULER
@@ -68,7 +68,7 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	1
+#define LOGGER_HZ	100
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
@@ -105,7 +105,7 @@
 //#define LUGE7_SN088
 //#define LUGE7_SN089
 
-//#define LUGE7_SN101 // switched, used to be 108
+//#define LUGE7_SN101
 //#define LUGE7_SN102
 //#define LUGE7_SN103
 //#define LUGE7_SN104
@@ -189,7 +189,7 @@
 
 //#define LUGE7_SN178
 //#define LUGE7_SN179
-#define LUGE7_SN180
+//#define LUGE7_SN180
 //#define LUGE7_SN181
 
 //#define LUGE7_SN182
@@ -200,7 +200,7 @@
 //#define LUGE7_SN186
 //#define LUGE7_SN187
 //#define LUGE7_SN188
-//#define LUGE7_SN189
+#define LUGE7_SN189
 
 //#define LUGE7_SN190
 //#define LUGE7_SN191
@@ -278,8 +278,7 @@
 #define ACCEL_RANGE         8
 #define GYRO_RANGE	    1000
 #define LOG_EULER
-// used to be 108
-#include "options_LUGE7_SN108.h"
+#include "options_LUGE7_SN101.h"
 #endif // LUGE7_SN101
 
 #ifdef LUGE7_SN102
@@ -369,8 +368,7 @@
 #define ACCEL_RANGE         8
 #define GYRO_RANGE	    1000
 #define LOG_EULER
-// used to be 101
-#include "options_LUGE7_SN101.h"
+#include "options_LUGE7_SN108.h"
 #endif // 
 
 #ifdef LUGE7_SN109
@@ -2328,5 +2326,5 @@
 //#define RESIDUAL_HZ 10
 
 #define CENTRIFUGAL_TESTING 0
-#define TURTLE_TESTING 1
+#define TURTLE_TESTING 0
 
