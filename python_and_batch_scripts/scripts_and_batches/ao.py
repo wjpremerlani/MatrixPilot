@@ -92,11 +92,13 @@ def read_magnetometer_data(file):
         offsets[0,0]=adjustment*offsets[0,0]
         offsets[0,1]=adjustment*offsets[0,1]
         offsets[0,2]=adjustment*offsets[0,2]
-        output_file.write("adjusted calibrations\r\n")
+        output_file.write("adjusted calibrations\n")
         #output_file.write(str(calibrations)+"\r")
-        output_file.write(str(int(calibrations[0,0]))+","+str(int(calibrations[0,1]))+","+str(int(calibrations[0,2]))+"\r\n")   
+        output_file.write("#define CAL_GRAV_X "+str(int(calibrations[0,0]))+"\n")
+        output_file.write("#define CAL_GRAV_Y "+str(int(calibrations[0,1]))+"\n")
+        output_file.write("#define CAL_GRAV_Z "+str(int(calibrations[0,2]))+"\n\n")   
         output_file.write("adjusted offsets\r\n")
-        output_file.write(str(int(offsets[0,0]))+","+str(int(offsets[0,1]))+","+str(int(offsets[0,2]))+"\r\n")
+        output_file.write(str(int(offsets[0,0]))+","+str(int(offsets[0,1]))+","+str(int(offsets[0,2]))+"\n")
                
     return None
 
@@ -111,6 +113,6 @@ if __name__ == "__main__":
     file_base_name = args.filename
     input_file = open(file_base_name+".csv")
     output_file = open(file_base_name+"_output.txt", "w")
-    output_file.write("input file : "+file_base_name+".txt\r")
+    output_file.write("input file : "+file_base_name+".txt\r\n")
     read_magnetometer_data(input_file)
 
