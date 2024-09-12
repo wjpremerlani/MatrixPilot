@@ -11,9 +11,9 @@
 #define CALIBRATIONY	1.0134
 #define CALIBRATIONZ	1.0134
 #define CALIB_GRAVITY	4096
-#define CAL_GRAV_X	4108
-#define CAL_GRAV_Y	4104
-#define CAL_GRAV_Z	4087
+#define CAL_GRAV_X 4108
+#define CAL_GRAV_Y 4104
+#define CAL_GRAV_Z 4084
 
 // cross coupling was measured but results were not consistent
 
