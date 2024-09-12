@@ -38,7 +38,7 @@
 // for a normal production run, define LOG_IMU_WP2, NORMAL_RUN, LOG_RESIDUALS AND RESIDUAL_LOG_PERIOD
 #define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
                                     // you will also need to turn on the following:
-#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
+//#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
 #define LOG_RESIDUALS         // logs residual offsets between runs
 #define RESIDUAL_LOG_PERIOD 2  // 30 times per minute
 
@@ -60,7 +60,7 @@
 
 // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
 // non-printable characters are written out, as header bytes for packets.
-#define USE_PACKETIZED_TELEMERTY
+//#define USE_PACKETIZED_TELEMERTY
 
 #define LOG_EULER
 //#define LOG_RATE_AND_EULER
@@ -68,7 +68,7 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	100
+#define LOGGER_HZ	1
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
@@ -185,7 +185,7 @@
 //#define LUGE7_SN175
 
 //#define LUGE7_SN176
-//#define LUGE7_SN177
+#define LUGE7_SN177
 
 //#define LUGE7_SN178
 //#define LUGE7_SN179
@@ -200,7 +200,7 @@
 //#define LUGE7_SN186
 //#define LUGE7_SN187
 //#define LUGE7_SN188
-#define LUGE7_SN189
+//#define LUGE7_SN189
 
 //#define LUGE7_SN190
 //#define LUGE7_SN191
@@ -2260,7 +2260,7 @@
 #error "invalid GYRO_RANGE"
 #endif // GYRO_RANGE
 
-#define TOTAL_STANDARD_DEVIATION 30
+#define TOTAL_STANDARD_DEVIATION 20
 #define TOTAL_VARIANCE_MARGIN (TOTAL_STANDARD_DEVIATION*TOTAL_STANDARD_DEVIATION)
 
 #define MATRIX_GYRO_OFFSET_MARGIN 100
@@ -2326,5 +2326,5 @@
 //#define RESIDUAL_HZ 10
 
 #define CENTRIFUGAL_TESTING 0
-#define TURTLE_TESTING 0
+#define TURTLE_TESTING 1
 
