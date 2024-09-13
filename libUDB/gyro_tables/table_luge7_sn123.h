@@ -7,6 +7,11 @@
 
 #define STEP_SIZE 64
 
+#define X_CROSS_COUPLING 10
+#define Y_CROSS_COUPLING 0
+#define Z_CROSS_COUPLING 0
+
+
 #define TABLE_ORIGIN  ( -14421 )
 
 int16_t residual_offset[] = { 280 - 222 - 4*23 -4*24, 188+ 693-4*152-4*43 , -218 - 542+4*76+4*20} ;
@@ -403,7 +408,7 @@ const struct gyro_offset_table_entry gyro_offset_table[] = {
 
 #define ACCEL_TABLE_ORIGIN ( -10564)
 
-int16_t accel_residual_offset[] = { -27 , -54 , -104 } ; 
+int16_t accel_residual_offset[] = { -27 , -54 +4 , -104 -13 } ; 
 
 const struct gyro_offset_table_entry accel_offset_table[] = {
 {1,2,-1},

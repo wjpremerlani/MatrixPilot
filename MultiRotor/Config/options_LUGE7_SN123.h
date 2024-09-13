@@ -11,9 +11,9 @@
 #define CALIBRATIONY	1.0134
 #define CALIBRATIONZ	1.0134
 #define CALIB_GRAVITY	4096
-#define CAL_GRAV_X	4106
-#define CAL_GRAV_Y	4104
-#define CAL_GRAV_Z	4076
+#define CAL_GRAV_X 4105
+#define CAL_GRAV_Y 4104
+#define CAL_GRAV_Z 4074
 
 // it was not possible to determine cross coupling factors, data was chaotic
 
