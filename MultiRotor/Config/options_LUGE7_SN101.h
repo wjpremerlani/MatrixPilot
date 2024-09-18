@@ -12,10 +12,5 @@
 #define CAL_GRAV_Y	4105
 #define CAL_GRAV_Z	4074
 
-// cross coupling not measured yet
-#define X_CROSS_COUPLING 0
-#define Y_CROSS_COUPLING 0
-#define Z_CROSS_COUPLING 0
-
 #endif	/* options_LUGE7_SN101_H */
 

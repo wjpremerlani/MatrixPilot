@@ -17,9 +17,6 @@
 
 // cross coupling was measured but results were not consistent
 
-#define X_CROSS_COUPLING 0
-#define Y_CROSS_COUPLING 0
-#define Z_CROSS_COUPLING 0
 
 #endif	/* options_LUGE7_SN144_H */
 
