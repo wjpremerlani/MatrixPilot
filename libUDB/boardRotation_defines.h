@@ -141,7 +141,7 @@ extern int16_t subtract_saturate(int16_t x , int16_t y , int16_t margin ) ;
 #define XRATE_VALUE	 (XRATE_SIGN_ORIENTED (((udb_xrate.value)>>1) - (udb_xrate.offset>>1)))
 #define YRATE_VALUE	 (YRATE_SIGN_ORIENTED (((udb_yrate.value)>>1) - (udb_yrate.offset>>1)))
 #define ZRATE_VALUE	 (ZRATE_SIGN_ORIENTED (((udb_zrate.value)>>1) - (udb_zrate.offset>>1)))
-#elif (GYRO_RANGE == 1000)
+#elif ((GYRO_RANGE == 1000)||(GYRO_RANGE == 2000))
 #define XRATE_VALUE	 XRATE_SIGN_ORIENTED subtract_saturate(udb_xrate.value, udb_xrate.offset,GYRO_OFFSET_MARGIN)
 #define YRATE_VALUE	 YRATE_SIGN_ORIENTED subtract_saturate(udb_yrate.value, udb_yrate.offset,GYRO_OFFSET_MARGIN)
 #define ZRATE_VALUE	 ZRATE_SIGN_ORIENTED subtract_saturate(udb_zrate.value, udb_zrate.offset,GYRO_OFFSET_MARGIN)
@@ -149,7 +149,7 @@ extern int16_t subtract_saturate(int16_t x , int16_t y , int16_t margin ) ;
 //#define YRATE_VALUE	 (YRATE_SIGN_ORIENTED (((udb_yrate.value)>>1) - (udb_yrate.offset>>1)))
 //#define ZRATE_VALUE	 (ZRATE_SIGN_ORIENTED (((udb_zrate.value)>>1) - (udb_zrate.offset>>1)))
 #else
-#error "GYRO_RANGE must be either 500 or 1000"
+#error "GYRO_RANGE must be either 500, 1000 or 2000"
 #endif
 #define XACCEL_VALUE (XACCEL_SIGN_ORIENTED ((udb_xaccel.value>>1) - (udb_xaccel.offset>>1)))
 #define YACCEL_VALUE (YACCEL_SIGN_ORIENTED ((udb_yaccel.value>>1) - (udb_yaccel.offset>>1)))

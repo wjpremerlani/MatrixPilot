@@ -38,7 +38,7 @@
 // for a normal production run, define LOG_IMU_WP2, NORMAL_RUN, LOG_RESIDUALS AND RESIDUAL_LOG_PERIOD
 #define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
                                     // you will also need to turn on the following:
-#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
+//#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
 #define LOG_RESIDUALS         // logs residual offsets between runs
 #define RESIDUAL_LOG_PERIOD 2  // 30 times per minute
 
@@ -54,13 +54,15 @@
 //#define SPECTRAL_ANALYSIS_BURST // 5 hz, start at 15, remember to also uncomment the following line
 //#define SAMPLES_PER_BURST 80 
 //#define SPECTRAL_ANALYSIS_CONTINUOUS // also known as the fire hose
-//#define TEST_SLED // set logging Hz to 200 start at 15
+#define TEST_SLED // set logging Hz to 200 start at 15
+#define HELMET_IMU // option for using 16g and 2000dps ranges and recording raw sensor signals at 1000 Hz
+                    // TEST_SLED option must also be turned on
 //#define KUFEN // set logging Hz to 200 and start angle to 30 degrees
 
 
 // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
 // non-printable characters are written out, as header bytes for packets.
-#define USE_PACKETIZED_TELEMERTY
+//#define USE_PACKETIZED_TELEMERTY
 
 #define LOG_EULER
 //#define LOG_RATE_AND_EULER
@@ -68,7 +70,7 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	100
+#define LOGGER_HZ	200
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
@@ -105,7 +107,7 @@
 //#define LUGE7_SN088
 //#define LUGE7_SN089
 
-#define LUGE7_SN101
+//#define LUGE7_SN101
 //#define LUGE7_SN102
 //#define LUGE7_SN103
 //#define LUGE7_SN104
@@ -152,7 +154,7 @@
 //#error #define LUGE7_SN145 out of service
 //#define LUGE7_SN146
 //#define LUGE7_SN147
-//#define LUGE7_SN148
+#define LUGE7_SN148
 //#define LUGE7_SN149
 //#define LUGE7_SN150
 //#define LUGE7_SN151
@@ -1668,8 +1670,13 @@
 #define SERIAL_NUMBERD1	0
 #define SERIAL_NUMBERD2	8
 #define SERIAL_NUMBERD3 5
+#ifdef HELMET_IMU
+#define ACCEL_RANGE         16
+#define GYRO_RANGE	    2000
+#else
 #define ACCEL_RANGE         8
 #define GYRO_RANGE	    1000
+#endif // HELMET_IMU
 #define LOG_EULER
 #include "options_LUGE7_SN085.h"
 #endif // LUGE7_SN085
@@ -2255,6 +2262,8 @@
 //#define GYRO_OFFSET_MARGIN 1000
 #define GYRO_OFFSET_MARGIN 100
 #elif (GYRO_RANGE==500)
+#define GYRO_OFFSET_MARGIN 50
+#elif (GYRO_RANGE==2000)
 #define GYRO_OFFSET_MARGIN 50
 #else
 #error "invalid GYRO_RANGE"
