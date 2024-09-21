@@ -186,6 +186,24 @@ extern int32_t gyro_sum[];
 extern uint64_t stdev_sqr ;
 extern int16_t cross_coupling ;
 
+int16_t convert_to_dps ( int32_t raw_omega)
+{
+    union longww rate ;
+    int32_t full_scale = (int32_t) GYRO_RANGE ;
+  
+    rate.WW = ( raw_omega /( (int32_t)16384) )*full_scale ;
+    return rate._.W1 ;   
+}
+
+int16_t convert_to_gs ( int16_t calib ,int16_t raw_accel)
+{
+    int32_t gs ;
+    gs = ( (int32_t)raw_accel*((int32_t)100) )/( (int32_t)calib) ;
+    return (int16_t)gs ;   
+}
+
+
+
 void send_euler_angles(void)
 {
     int16_t omega_filt_16[3];
@@ -327,9 +345,9 @@ extern union longww x_theta_32[] ;
 extern union longww y_theta_32[] ;
 extern union longww z_theta_32[] ;
 
-extern union longww x_omega_dt_32[];
-extern union longww y_omega_dt_32[];
-extern union longww z_omega_dt_32[];
+extern union longww x_omega_32[];
+extern union longww y_omega_32[];
+extern union longww z_omega_32[];
 
 
 union longww bottom_row[3] ;
@@ -345,36 +363,35 @@ union longww interpolated_tilt4[3];
 
 void log_all_accel_data(void)
 {
-    serial_output("%i,%i,%i,%li,%li,%li\r\n%i,%i,%i,%li,%li,%li\r\n%i,%i,%i,%li,%li,%li\r\n%i,%i,%i,%li,%li,%li\r\n",
-            -x_accel[5*accel_read_buffer_index+1],
-            -y_accel[5*accel_read_buffer_index+1],
-            -z_accel[5*accel_read_buffer_index+1],
-            x_omega_dt_32[5*accel_read_buffer_index+1],
-            y_omega_dt_32[5*accel_read_buffer_index+1],
-            z_omega_dt_32[5*accel_read_buffer_index+1],
- 
-            -x_accel[5*accel_read_buffer_index+2],
-            -y_accel[5*accel_read_buffer_index+2],
-            -z_accel[5*accel_read_buffer_index+2],
-            x_omega_dt_32[5*accel_read_buffer_index+2],
-            y_omega_dt_32[5*accel_read_buffer_index+2],
-            z_omega_dt_32[5*accel_read_buffer_index+2],
-            
-            -x_accel[5*accel_read_buffer_index+3],
-            -y_accel[5*accel_read_buffer_index+3],
-            -z_accel[5*accel_read_buffer_index+3],
-            x_omega_dt_32[5*accel_read_buffer_index+3],
-            y_omega_dt_32[5*accel_read_buffer_index+3],
-            z_omega_dt_32[5*accel_read_buffer_index+3],
-            
-            -x_accel[5*accel_read_buffer_index+4],
-            -y_accel[5*accel_read_buffer_index+4],
-            -z_accel[5*accel_read_buffer_index+4],
-            x_omega_dt_32[5*accel_read_buffer_index+4],
-            y_omega_dt_32[5*accel_read_buffer_index+4],
-            z_omega_dt_32[5*accel_read_buffer_index+4]
-
-            
+    serial_output("%i,%i,%i,%i,%i,%i\r\n%i,%i,%i,%i,%i,%i\r\n%i,%i,%i,%i,%i,%i\r\n%i,%i,%i,%i,%i,%i\r\n",
+            convert_to_gs(CAL_GRAV_X,(   -x_accel[5*accel_read_buffer_index+1])),
+            convert_to_gs(CAL_GRAV_Y,(   -y_accel[5*accel_read_buffer_index+1])),
+            convert_to_gs(CAL_GRAV_Z,(   -z_accel[5*accel_read_buffer_index+1])),
+            convert_to_dps(x_omega_32[5*accel_read_buffer_index+1].WW ),
+            convert_to_dps(y_omega_32[5*accel_read_buffer_index+1].WW ),
+            convert_to_dps(z_omega_32[5*accel_read_buffer_index+1].WW ),
+          
+            convert_to_gs(CAL_GRAV_X,(   -x_accel[5*accel_read_buffer_index+2])),
+            convert_to_gs(CAL_GRAV_Y,(   -y_accel[5*accel_read_buffer_index+2])),
+            convert_to_gs(CAL_GRAV_Z,(   -z_accel[5*accel_read_buffer_index+2])),
+            convert_to_dps(x_omega_32[5*accel_read_buffer_index+2].WW ),
+            convert_to_dps(y_omega_32[5*accel_read_buffer_index+2].WW ),
+            convert_to_dps(z_omega_32[5*accel_read_buffer_index+2].WW ),
+          
+            convert_to_gs(CAL_GRAV_X,(   -x_accel[5*accel_read_buffer_index+3])),
+            convert_to_gs(CAL_GRAV_Y,(   -y_accel[5*accel_read_buffer_index+3])),
+            convert_to_gs(CAL_GRAV_Z,(   -z_accel[5*accel_read_buffer_index+3])),
+            convert_to_dps(x_omega_32[5*accel_read_buffer_index+3].WW ),
+            convert_to_dps(y_omega_32[5*accel_read_buffer_index+3].WW ),
+            convert_to_dps(z_omega_32[5*accel_read_buffer_index+3].WW ),
+          
+            convert_to_gs(CAL_GRAV_X,(   -x_accel[5*accel_read_buffer_index+4])),
+            convert_to_gs(CAL_GRAV_Y,(   -y_accel[5*accel_read_buffer_index+4])),
+            convert_to_gs(CAL_GRAV_Z,(   -z_accel[5*accel_read_buffer_index+4])),
+            convert_to_dps(x_omega_32[5*accel_read_buffer_index+4].WW ),
+            convert_to_dps(y_omega_32[5*accel_read_buffer_index+4].WW ),
+            convert_to_dps(z_omega_32[5*accel_read_buffer_index+4].WW )
+                      
             );
     
 }
@@ -1200,15 +1217,15 @@ void send_imu_data(void)
 			);
             udb_background_trigger(&log_x_accel_data); 
 #else
-            serial_output("%i,%i,%i,%li,%li,%li,%u,%u\r\n",
-                -x_accel[5*accel_read_buffer_index],
-                -y_accel[5*accel_read_buffer_index],
-                -z_accel[5*accel_read_buffer_index],
-                 x_omega_dt_32[5*accel_read_buffer_index],
-                 y_omega_dt_32[5*accel_read_buffer_index],
-                 z_omega_dt_32[5*accel_read_buffer_index],   
-                 udb_cpu_load(),record_number ++                  
-			);
+            serial_output("%i,%i,%i,%i,%i,%i,%u,%u\r\n",
+            convert_to_gs(CAL_GRAV_X,(   -x_accel[5*accel_read_buffer_index ])),
+            convert_to_gs(CAL_GRAV_Y,(   -y_accel[5*accel_read_buffer_index ])),
+            convert_to_gs(CAL_GRAV_Z,(   -z_accel[5*accel_read_buffer_index ])),
+            convert_to_dps(x_omega_32[5*accel_read_buffer_index ].WW ),
+            convert_to_dps(y_omega_32[5*accel_read_buffer_index ].WW ),
+            convert_to_dps(z_omega_32[5*accel_read_buffer_index ].WW ),
+                 
+                 udb_cpu_load(),record_number ++  ) ;               
             udb_background_trigger(&log_all_accel_data);
             
                     
