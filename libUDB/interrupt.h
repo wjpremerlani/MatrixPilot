@@ -23,6 +23,10 @@
 // Optionally enable the new power saving idle mode of the MCU during mainloop
 #define USE_MCU_IDLE    1
 
+#ifdef HELMET_IMU
+#define HIGH_LOGGING_RATE
+#endif // HELMET_IMU
+
 
 #define INT_PRI_T1      6   // background.c : high priority HEARTBEAT of libUDB
 #define INT_PRI_T2	4   // used for 200 Hz processing
@@ -33,9 +37,15 @@
 #define INT_PRI_T6      3   // background.c : trigger HEARTBEAT processing at a lower priority - NOTE: timer 6 is not actually being used
 #define INT_PRI_T7      1   // background.c : trigger navigation processing after new data is received from the GPS
 
+#ifdef HIGH_LOGGING_RATE
+#define INT_PRI_MPUSPI  6   // mpu6000.c : SPI1 (UDB4 or AUAV3) or SPI2 (UDB4 or UDB5)
+#define INT_PRI_INT1    6   // mpu6000.c : mpu on SPI1 uses external interrupt 1
+#define INT_PRI_INT3    6   // mpu6000.c : mpu on SPI3 uses external interrupt 3
+#else
 #define INT_PRI_MPUSPI  7   // mpu6000.c : SPI1 (UDB4 or AUAV3) or SPI2 (UDB4 or UDB5)
 #define INT_PRI_INT1    7   // mpu6000.c : mpu on SPI1 uses external interrupt 1
 #define INT_PRI_INT3    7   // mpu6000.c : mpu on SPI3 uses external interrupt 3
+#endif // HIGH_LOGGING_RATE
 
 #define INT_PRI_IC      6   // radioIn.c : input capture interrupt
 
@@ -47,10 +57,17 @@
 #define INT_PRI_DMA1    2   // AT45D_DMA.c
 #define INT_PRI_DMA2    2   // AT45D_DMA.c
 
+#ifdef HIGH_LOGGING_RATE
+#define INT_PRI_U1TX    7  
+#define INT_PRI_U1RX    5   
+#define INT_PRI_U2TX    7   
+#define INT_PRI_U2RX    5   
+#else
 #define INT_PRI_U1TX    5  
 #define INT_PRI_U1RX    5   
 #define INT_PRI_U2TX    5   
 #define INT_PRI_U2RX    5   
+#endif // HIGH_LOGGING_RATE
 
 #define INT_PRI_USB1    4   // USB available only on AUAV3
 

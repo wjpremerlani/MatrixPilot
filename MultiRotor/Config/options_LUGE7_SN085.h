@@ -20,9 +20,9 @@
 #define CAL_GRAV_Z	4072
 #elif (ACCEL_RANGE == 16 )
 #define CALIB_GRAVITY	2048
-#define CAL_GRAV_X	2048
-#define CAL_GRAV_Y	2048
-#define CAL_GRAV_Z	2048
+#define CAL_GRAV_X	2052
+#define CAL_GRAV_Y	2053
+#define CAL_GRAV_Z	2036
 #endif // ACCEL_RANGE
 
 #endif	/* options_LUGE7_SN085_H */

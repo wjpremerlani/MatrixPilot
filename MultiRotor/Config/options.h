@@ -102,7 +102,7 @@
 //#define LUGE7_SN083
 
 //#define LUGE7_SN084
-//#define LUGE7_SN085
+#define LUGE7_SN085
 
 //#define LUGE7_SN086
 //#define LUGE7_SN087
@@ -156,7 +156,7 @@
 //#error #define LUGE7_SN145 out of service
 //#define LUGE7_SN146
 //#define LUGE7_SN147
-#define LUGE7_SN148
+//#define LUGE7_SN148
 //#define LUGE7_SN149
 //#define LUGE7_SN150
 //#define LUGE7_SN151
