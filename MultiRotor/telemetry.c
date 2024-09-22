@@ -674,7 +674,12 @@ void send_imu_data(void)
 		case 2:
 			{
 #ifndef NAME
+#ifdef HELMET_IMU
+                serial_output("SN%i%i%i ", SERIAL_NUMBERD1 , SERIAL_NUMBERD2 , SERIAL_NUMBERD3 ) ;
+
+#else
 				serial_output("WOLF-PAC SN%i%i%i IMU ", SERIAL_NUMBERD1 , SERIAL_NUMBERD2 , SERIAL_NUMBERD3 ) ;
+#endif // HELMET_IMU
 #else
 				serial_output("WOLF-PAC SN%i%i%i IMU, assigned to %s, ", SERIAL_NUMBERD1 , SERIAL_NUMBERD2 , SERIAL_NUMBERD3, NAME ) ;
 #endif
@@ -691,7 +696,9 @@ void send_imu_data(void)
                 serial_output("*--> force data at 1 kHz and euler angles at 200 Hz <--*\r\n");
 #endif //  SPECTRAL_ANALYSIS_CONTINUOUS
 #ifdef  TEST_SLED
+#ifndef HELMET_IMU
                 serial_output("*--> test sled, x_force and pitch logged at 1kHz <--*\r\n");
+#endif // HELMET_IMU
 #endif //  TEST_SLED
 #ifdef  KUFEN
                 serial_output("*--> Kufen logging <--*\r\n");
@@ -710,7 +717,11 @@ void send_imu_data(void)
 #endif // LOG_RATE
 				
 #ifdef LOG_EULER
+#ifdef HELMET_IMU
+                serial_output("Raw accelerometer and gyro data logged 1000 times per second.\r\n");
+#else
 				serial_output("Euler angle version.\r\n");
+#endif //
 #endif // LOG_EULER
 #ifdef LOG_RATE_AND_EULER
 			serial_output("gyro rates and euler angles version\r\n");	
@@ -722,12 +733,16 @@ void send_imu_data(void)
 			break ;
 		case 6:
 			{
+#ifndef HELMET_IMU
 				serial_output("Specific forces in ft/s^2.\r\n") ;
+#else
+                serial_output("Accelerometer data is reported in milliGs, 1G is 100 counts.\r\n");
+#endif // HELMET_IMU
 			}
 			break ;	
 		case 7:
 			{
-				serial_output("CCW rotation rates in d/s.\r\n");
+				serial_output("Gyro data is reported in degrees per second.\r\n");
 			}
 			break ;	
 		case 8:
@@ -747,21 +762,29 @@ void send_imu_data(void)
 			break ;
 		case 12:
 			{
+#ifndef HELMET_IMU
 				serial_output("Gyro calibrations are x=%6.4f, y=%6.4f, z=%6.4f.\r\n", 
-						CALIBRATIONX ,CALIBRATIONY,CALIBRATIONZ );		
+						CALIBRATIONX ,CALIBRATIONY,CALIBRATIONZ );	
+#endif // HELMET_IMU
 			}
 			break ;
 		case 14:
             {
+#ifndef HELMET_IMU
+                
                 serial_output("Gyro strain offsets are x=%i, y=%i, z=%i.\r\nZ->X cross coupling = %i.\r\n",
                         residual_offset[0] , residual_offset[1] , residual_offset[2] , cross_coupling
                         );
+#endif // HELMET_IMU                
             }
 			break ;
         case 15:
             {
+#ifndef HELMET_IMU
+               
                 serial_output("Jostling is detected when total noise standard deviation is larger than %i.\r\n",
                         TOTAL_STANDARD_DEVIATION );
+#endif // HELMET_IMU
             }
             break ;
 		case 16:
@@ -793,8 +816,12 @@ void send_imu_data(void)
 				serial_output("Run data rate is %i records/s.\r\nBetween runs residuals are logged every %i seconds.\r\n", 
                         LOGGER_HZ/2 , RESIDUAL_LOG_PERIOD  );   
 #else
+#ifdef HELMET_IMU
+                serial_output("Logging rate is 1000 records per second.\r\n");
+#else
 				serial_output("Run data rate is %i records/s.\r\nBetween runs residuals are logged every %i seconds.\r\n", 
                         LOGGER_HZ , RESIDUAL_LOG_PERIOD  );
+#endif // HELMET_IMU
 #endif // KUFEN
 			}
 			break;
@@ -1245,7 +1272,7 @@ void send_imu_data(void)
 			);
             udb_background_trigger(&log_x_accel_data); 
 #else
-//#define USE_TEST_DATA
+#define USE_TEST_DATA
 #ifdef USE_TEST_DATA
             log_test_data();
 #else
