@@ -1245,7 +1245,7 @@ void send_imu_data(void)
 			);
             udb_background_trigger(&log_x_accel_data); 
 #else
-//#define USE_TEST_DATA
+#define USE_TEST_DATA
 #ifdef USE_TEST_DATA
             log_test_data();
 #else
