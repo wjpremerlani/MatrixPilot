@@ -818,10 +818,10 @@ void send_imu_data(void)
 #else
 #ifdef HELMET_IMU
                 serial_output("Logging rate is 1000 records per second.\r\n");
-#else
+#endif // HELMET_IMU
+
 				serial_output("Run data rate is %i records/s.\r\nBetween runs residuals are logged every %i seconds.\r\n", 
                         LOGGER_HZ , RESIDUAL_LOG_PERIOD  );
-#endif // HELMET_IMU
 #endif // KUFEN
 			}
 			break;

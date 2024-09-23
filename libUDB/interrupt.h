@@ -24,7 +24,7 @@
 #define USE_MCU_IDLE    1
 
 #ifdef HELMET_IMU
-#define HIGH_LOGGING_RATE
+//#define HIGH_LOGGING_RATE
 #endif // HELMET_IMU
 
 

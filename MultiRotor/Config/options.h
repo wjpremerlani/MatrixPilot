@@ -1,4 +1,4 @@
-#define HELMET_IMU // option for using 16g and 2000dps ranges and recording raw sensor signals at 1000 Hz
+//#define HELMET_IMU // option for using 16g and 2000dps ranges and recording raw sensor signals at 1000 Hz
                     // TEST_SLED option must also be turned on
 
 
@@ -43,7 +43,7 @@
 // for a normal production run, define LOG_IMU_WP2, NORMAL_RUN, LOG_RESIDUALS AND RESIDUAL_LOG_PERIOD
 #define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
                                     // you will also need to turn on the following:
-//#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
+#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
 #define LOG_RESIDUALS         // logs residual offsets between runs
 #define RESIDUAL_LOG_PERIOD 2  // 30 times per minute
 
@@ -59,7 +59,7 @@
 //#define SPECTRAL_ANALYSIS_BURST // 5 hz, start at 15, remember to also uncomment the following line
 //#define SAMPLES_PER_BURST 80 
 //#define SPECTRAL_ANALYSIS_CONTINUOUS // also known as the fire hose
-#define TEST_SLED // set logging Hz to 200 start at 15
+//#define TEST_SLED // set logging Hz to 200 start at 15
 //#define KUFEN // set logging Hz to 200 and start angle to 30 degrees
 
 
@@ -73,16 +73,16 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	200
+#define LOGGER_HZ	100
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
 #define TILT_STOP_DELAY 1      // delay in seconds to allow for a roll over
 //#define TILT_START	30          // tilt angle to start for Kufen
-//#define TILT_START	15          // tilt angle threshold in degrees to start recording a run
-//#define TILT_STOP	60          // tilt angle threshold in degrees to stop recording a run
-#define TILT_STOP 165           // used for helmet_imu
-#define TILT_START 150
+#define TILT_START	15          // tilt angle threshold in degrees to start recording a run
+#define TILT_STOP	60          // tilt angle threshold in degrees to stop recording a run
+//#define TILT_STOP 165           // used for helmet_imu
+//#define TILT_START 150
 //#define TILT_STOP	135         // used for some types of ground testing
 
 // select a wolf_pac by defining its internal label
