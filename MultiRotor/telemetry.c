@@ -278,12 +278,8 @@ void send_residual_data(void)
 	if ( start_residuals == 1)
 	{
 		start_residuals = 0 ;
-#ifndef HELMET_IMU
 		serial_output("\r\n\r\nimu_temp_yy,calibrating_yy,x_force_yy,y_force_yy,z_force_yy,x_rate16_yy,y_rate16_yy,z_rate16_yy,rms_rate16_yy,x_flt16_yy,y_flt16_yy,z_flt16_yy,net_dev_yy,tilt_adj(degs)_yy\r\n") ;
-#else
-        serial_output("\r\n\r\ntemperature,jstl_flag,x_acc,y_acc,z_acc,x_rate16,y_rate16,z_rate16,rms_rate16,x_flt16,y_flt16,z_flt16,net_dev,tilt_adjst\r\n") ;
-#endif // HELMET_IMU
-    }
+	}
 	else
 	{
         union longww omgfilt_rounded[3];
@@ -309,12 +305,8 @@ void send_residual_data(void)
                     (omegagyro_filtered[1].WW)>>12 ,
                     (omegagyro_filtered[2].WW)>>12 ,
                     sqrt_long((uint32_t)net_dev_sqr),
-#ifndef HELMET_IMU
                   (double)vector3_mag(((int16_t)roll_pitch_error_sum[0]),((int16_t)roll_pitch_error_sum[1]),(roll_pitch_error_sum[2]))*0.0035
-#else
-                     0.0
-#endif // HELMET_IMU
-                        );
+    				);
             }
             else
             {
@@ -332,11 +324,7 @@ void send_residual_data(void)
                     (omegagyro_filtered[1].WW)>>12 ,
                     (omegagyro_filtered[2].WW)>>12 ,
                     sqrt_long((uint32_t)net_dev_sqr),
-#ifndef HELMET_IMU
-                  (double)vector3_mag(((int16_t)roll_pitch_error_sum[0]),((int16_t)roll_pitch_error_sum[1]),(roll_pitch_error_sum[2]))*0.0035
-#else
-                     0.0
-#endif // HELMET_IMU
+                    (double)vector3_mag(((int16_t)roll_pitch_error_sum[0]),((int16_t)roll_pitch_error_sum[1]),(roll_pitch_error_sum[2]))*0.0035
     				);   
                 
             }
@@ -372,18 +360,6 @@ union longww interpolated_tilt1[3];
 union longww interpolated_tilt2[3];
 union longww interpolated_tilt3[3];
 union longww interpolated_tilt4[3];
-
-void log_test_data(void)
-{
-    serial_output("%i,%i,%i,%i,%i,%i\r\n%i,%i,%i,%i,%i,%i\r\n%i,%i,%i,%i,%i,%i\r\n%i,%i,%i,%i,%i,%i\r\n%i,%i,%i,%i,%i,%i\r\n",
-    -1234,-5678,-9012,-3456,-7890,-1234,
-    -5678,-9012,-3456,-7890,-1234,-5678,
-    -9012,-3456,-7890,-1234,-5678,-9012,
-    -3456,-7890,-1234,-5678,-9012,-3456,
-    -7890,-1234,-5678,-9012,-3456,-7890        
-            );
-    
-}
 
 void log_all_accel_data(void)
 {
@@ -1245,10 +1221,6 @@ void send_imu_data(void)
 			);
             udb_background_trigger(&log_x_accel_data); 
 #else
-//#define USE_TEST_DATA
-#ifdef USE_TEST_DATA
-            log_test_data();
-#else
             serial_output("%i,%i,%i,%i,%i,%i\r\n",
             convert_to_gs(CAL_GRAV_X,(   -x_accel[5*accel_read_buffer_index ])),
             convert_to_gs(CAL_GRAV_Y,(   -y_accel[5*accel_read_buffer_index ])),
@@ -1259,9 +1231,9 @@ void send_imu_data(void)
                  
             //     udb_cpu_load(),record_number ++  ) ;               
             udb_background_trigger(&log_all_accel_data);
-#endif   //USE_TEST_DATA          
+            
                     
-#endif // HELMET_IMU
+#endif
 
 #endif // TEST_SLED 
                 
