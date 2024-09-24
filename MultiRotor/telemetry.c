@@ -905,6 +905,15 @@ void send_imu_data(void)
 #endif // 
 
 #ifdef TEST_LOGGER_HZ
+        
+        {
+            int16_t test_index ;
+            serial_output("12345678901234567890123456789,%i,%i\r\n",udb_cpu_load(),record_number ++);
+            for (test_index = 0 ; test_index < 4 ; test_index++)
+            {
+                serial_output("12345678901234567890123456789\r\n");
+            }
+        }
 #ifdef PARTIAL_RECORD		
 		{
 			serial_output("22 chars test string\r\n") ;
