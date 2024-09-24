@@ -864,11 +864,7 @@ void send_imu_data(void)
 #endif //  SPECTRAL_ANALYSIS_BURST              
 
 #ifdef TEST_SLED
-#ifdef HELMET_IMU
-                serial_output("\r\nx_acc,y_acc,z_acc,x_gyro,y_gyro,z_gyro\r\n");
-#else
                 serial_output("\r\nx_force_xx,pitch_xx,cpu_xx,seq_no_xx\r\n");
-#endif // HELMET_IMU
 #endif // TEST_SLED 
                 
 #ifdef KUFEN
@@ -1221,15 +1217,15 @@ void send_imu_data(void)
 			);
             udb_background_trigger(&log_x_accel_data); 
 #else
-            serial_output("%i,%i,%i,%i,%i,%i\r\n",
+            serial_output("%i,%i,%i,%i,%i,%i,%u,%u\r\n",
             convert_to_gs(CAL_GRAV_X,(   -x_accel[5*accel_read_buffer_index ])),
             convert_to_gs(CAL_GRAV_Y,(   -y_accel[5*accel_read_buffer_index ])),
             convert_to_gs(CAL_GRAV_Z,(   -z_accel[5*accel_read_buffer_index ])),
             convert_to_dps(x_omega_32[5*accel_read_buffer_index ].WW ),
             convert_to_dps(y_omega_32[5*accel_read_buffer_index ].WW ),
-            convert_to_dps(z_omega_32[5*accel_read_buffer_index ].WW ));
+            convert_to_dps(z_omega_32[5*accel_read_buffer_index ].WW ),
                  
-            //     udb_cpu_load(),record_number ++  ) ;               
+                 udb_cpu_load(),record_number ++  ) ;               
             udb_background_trigger(&log_all_accel_data);
             
                     
