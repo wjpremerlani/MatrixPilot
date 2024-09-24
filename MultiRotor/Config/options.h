@@ -1,5 +1,3 @@
-#define HELMET_IMU // option for using 16g and 2000dps ranges and recording raw sensor signals at 1000 Hz
-                    // TEST_SLED option must also be turned on
 
 
 //#define DATE "Wolf_pac_2 , firmware 5.5, 5/28/2024\r\n"
@@ -18,13 +16,10 @@
 // due to centrifugal acceleration into gyro offset is linear up to 16gs.
 // A technique has been developed to accurately measure the cross coupling
 // coefficients and compensate for cross coupling.
-#ifdef HELMET_IMU
-#define DATE "Helmet IMU version 1.0, Sept. 22, 2024.\r\n"
-#else
+
 #define DATE "Wolf_pac_2 , firmware 6.1, 9/4/2024\r\n" 
 // 6.1: An improved matrix alignment implementation that
 // will be especially effective during QLP testing
-#endif //
 
 #define CONING_CORRECTION
 #define CONING_CORRECTION_IN_RMAT
@@ -32,7 +27,7 @@
 #ifdef CONING_CORRECTION
 #define MINI5 "UDBmini5 hardware, 8000 Hz sampling.\r\n"
 #define MINI6 "UDBmini6 hardware, 8000 Hz sampling.\r\n"
-#define LUGE7 "UDBmini7 hardware, 8000 Hz sampling.\r\n"
+#define LUGE7 "UDBluge7 hardware, 8000 Hz sampling.\r\n"
 #else
 #define MINI5 "UDBmini5 hardware, 200 Hz sampling.\r\n"
 #define MINI6 "UDBmini6 hardware, 200 Hz sampling.\r\n"
@@ -60,12 +55,14 @@
 //#define SAMPLES_PER_BURST 80 
 //#define SPECTRAL_ANALYSIS_CONTINUOUS // also known as the fire hose
 #define TEST_SLED // set logging Hz to 200 start at 15
+#define HELMET_IMU // option for using 16g and 2000dps ranges and recording raw sensor signals at 1000 Hz
+                    // TEST_SLED option must also be turned on
 //#define KUFEN // set logging Hz to 200 and start angle to 30 degrees
 
 
 // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
 // non-printable characters are written out, as header bytes for packets.
-#define USE_PACKETIZED_TELEMERTY
+//#define USE_PACKETIZED_TELEMERTY
 
 #define LOG_EULER
 //#define LOG_RATE_AND_EULER
@@ -2243,11 +2240,7 @@
 #endif // 
 
 #ifdef CONING_CORRECTION
-#ifdef HELMET_IMU
-#define FILTERING "All data is unfiltered.\r\n"
-#else
 #define FILTERING "Force data reported at 100 or 200 Hz is a 5 sample average of 1000 Hz sampling.\r\n"
-#endif //HELMET_IMU
 #else
 #define FILTERING "Force data is filtered by averaging pairs of 200 Hz samples.\r\n"
 #endif // CONING_CORRECTION
