@@ -76,10 +76,8 @@
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
 #define TILT_STOP_DELAY 1      // delay in seconds to allow for a roll over
 //#define TILT_START	30          // tilt angle to start for Kufen
-//#define TILT_START	15          // tilt angle threshold in degrees to start recording a run
-//#define TILT_STOP	60          // tilt angle threshold in degrees to stop recording a run
-#define TILT_STOP 165           // used for helmet_imu
-#define TILT_START 150
+#define TILT_START	15          // tilt angle threshold in degrees to start recording a run
+#define TILT_STOP	60          // tilt angle threshold in degrees to stop recording a run
 //#define TILT_STOP	135         // used for some types of ground testing
 
 // select a wolf_pac by defining its internal label

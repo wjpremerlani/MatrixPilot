@@ -147,7 +147,7 @@ void MPU6000_init16(callback_fptr_t fptr)
 	#elif (ACCEL_RANGE == 8)
 		writeMPUSPIreg16(MPUREG_ACCEL_CONFIG, 2<<3); // Accel scele 8g, g = 2048
 	#elif (ACCEL_RANGE == 16) 
-		writeMPUSPIreg16(MPUREG_ACCEL_CONFIG, 3<<3); // Accel scale 16g , g = 1024	
+		writeMPUSPIreg16(MPUREG_ACCEL_CONFIG, BITS_FS_8G); // Accel scale 16g , g = 1024	
     #else
 		#error "Invalid ACCEL_RANGE"
 	#endif
@@ -160,7 +160,7 @@ void MPU6000_init16(callback_fptr_t fptr)
 	#elif (ACCEL_RANGE == 8)
 		writeMPUSPIreg16(MPUREG_ACCEL_CONFIG, BITS_FS_8G); // Accel scale 8g ,g = 2048
     #elif (ACCEL_RANGE == 16) 
-		writeMPUSPIreg16(MPUREG_ACCEL_CONFIG, BITS_FS_16G); // Accel scale 16g , g = 1024
+		writeMPUSPIreg16(MPUREG_ACCEL_CONFIG, BITS_FS_8G); // Accel scale 16g , g = 1024
 	#else
 		#error "Invalid ACCEL_RANGE"
 	#endif
@@ -250,9 +250,6 @@ int16_t divide_by_40_and_round(int32_t total)
 // compute just the coning correction term
 void compute_one_half_angle_cross_omega(void)
 {
-#ifdef HELMET_IMU
-    return ;
-#endif
 	// Take the integer cross product
 	VectorCross_32(delta_coning_angle32,_theta_32,omega_dt );
 	// The math requires a divide by 2 for this term.
@@ -407,9 +404,9 @@ int16_t z_accel[10] ;
 union longww x_theta_32[10] ;
 union longww y_theta_32[10] ;
 union longww z_theta_32[10] ;
-union longww x_omega_32[10] ;
-union longww y_omega_32[10] ;
-union longww z_omega_32[10] ;
+union longww x_omega_dt_32[10] ;
+union longww y_omega_dt_32[10] ;
+union longww z_omega_dt_32[10] ;
 #endif // TEST_SLED
 
 #ifdef KUFEN
@@ -466,13 +463,13 @@ static void process_MPU_data(void)
         y_theta_32[5*accel_write_buffer_index+accel_sample_number].WW = _theta_32[1].WW ;
         z_theta_32[5*accel_write_buffer_index+accel_sample_number].WW = _theta_32[2].WW ;
 #ifdef HELMET_IMU
-        x_omega_32[5*accel_write_buffer_index+accel_sample_number].WW = omega32[0].WW ;
-        y_omega_32[5*accel_write_buffer_index+accel_sample_number].WW = omega32[1].WW ;
-        z_omega_32[5*accel_write_buffer_index+accel_sample_number].WW = omega32[2].WW ;
+        x_omega_dt_32[5*accel_write_buffer_index+accel_sample_number].WW = omega_dt[0].WW ;
+        y_omega_dt_32[5*accel_write_buffer_index+accel_sample_number].WW = omega_dt[1].WW ;
+        z_omega_dt_32[5*accel_write_buffer_index+accel_sample_number].WW = omega_dt[2].WW ;
         y_accel[5*accel_write_buffer_index+accel_sample_number] = 
-               YACCEL_SIGN_ORIENTED (mpu_data[yaccel_MPU_channel].BB-udb_yaccel.offset) ;
+               YACCEL_SIGN_ORIENTED (mpu_data[yaccel_MPU_channel].BB-YACCEL_OFFSET) ;
         z_accel[5*accel_write_buffer_index+accel_sample_number] = 
-               ZACCEL_SIGN_ORIENTED (mpu_data[zaccel_MPU_channel].BB-udb_zaccel.offset) ;
+               ZACCEL_SIGN_ORIENTED (mpu_data[zaccel_MPU_channel].BB-ZACCEL_OFFSET) ;
 #endif // HELMET_IMU
     }
 #endif // TEST_SLED

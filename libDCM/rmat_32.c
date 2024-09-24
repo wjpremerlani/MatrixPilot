@@ -49,9 +49,6 @@ extern void align_roll_pitch(fractional tilt_mat[]);
 
 void rmat_32_update(void)
 {
-#ifdef HELMET_IMU
-    return ;
-#endif
     if (rmat_32_initialized == 0 )
     {
         align_roll_pitch(rmat_16);
