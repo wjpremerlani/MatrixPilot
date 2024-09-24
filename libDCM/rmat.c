@@ -41,9 +41,9 @@ extern boolean led_green_standby ;
 #define GGAINZ CALIBRATIONZ*SCALEGYRO*6*(RMAX*(1.0/HEARTBEAT_HZ)) // integration multiplier for gyros
 fractional ggain[] =  { GGAINX, GGAINY, GGAINZ };
 
-//#if (GYRO_RANGE != 1000)
-//#error "only GYRO_RANGE 1000 is presently supported"
-//#endif // GYRO_RANGE
+#if (GYRO_RANGE != 1000)
+#error "only GYRO_RANGE 1000 is presently supported"
+#endif // GYRO_RANGE
 
 uint16_t spin_rate = 0;
 
