@@ -186,6 +186,50 @@ extern int32_t gyro_sum[];
 extern uint64_t stdev_sqr ;
 extern int16_t cross_coupling ;
 
+#define HMU_SCALE 20000
+
+int16_t hmu_scale(int16_t raw_data)
+{
+    union longww scaled_32 ;
+    int16_t scaled_data ;
+    scaled_32.WW = __builtin_mulss(raw_data, HMU_SCALE);
+    scaled_data = scaled_32._.W1 ;
+    scaled_data += 5000 ;
+    if (scaled_data < 0) 
+    {
+        return 0 ;
+    }
+    if (scaled_data >9999)
+    {
+        return 9999 ;
+    }
+    return scaled_data ;
+}
+
+void hmu_log_line1(int16_t ax , int16_t ay ,int16_t az ,int16_t gx ,int16_t gy ,int16_t gz  )
+{
+    serial_output("%i,%i,%i,%i,%i,%i,%i,%i\r\n",
+            hmu_scale(-ax),
+            hmu_scale(-ay),
+            hmu_scale(-az),
+            hmu_scale(gx),
+            hmu_scale(gy),
+            hmu_scale(gz),                      
+            udb_cpu_load(),record_number ++);    
+}
+
+void hmu_log_line(int16_t ax , int16_t ay ,int16_t az ,int16_t gx ,int16_t gy ,int16_t gz  )
+{
+    serial_output("%i,%i,%i,%i,%i,%i\r\n",
+            hmu_scale(-ax),
+            hmu_scale(-ay),
+            hmu_scale(-az),
+            hmu_scale(gx),
+            hmu_scale(gy),
+            hmu_scale(gz));    
+}
+
+
 void send_euler_angles(void)
 {
     int16_t omega_filt_16[3];
@@ -834,7 +878,11 @@ void send_imu_data(void)
 #ifdef RECORD_OFFSETS
 				serial_output("tmptur,ax,ay,az,gx_val,gy_val,gz_val,gyr_x,gyr_y,gyr_z,gyr_rms\r\n");
 #endif // RECORD_OFFSETS
-				
+                
+#ifdef HELMET_IMU
+      serial_output("helmet imu data.\r\n");          
+#endif // HELMET_IMU
+                
 #ifdef TEST_LOGGER_HZ
 				serial_output("logger bandwidth test\r\n");
 #endif // TEST_LOGGER_HZ
@@ -902,6 +950,18 @@ void send_imu_data(void)
 				omegagyro[0] , omegagyro[1], omegagyro[2]
 			 ) ;
 		}
+#endif // 
+        
+#ifdef HELMET_IMU
+        {
+            int16_t test_index ;
+            hmu_log_line1(HMU_AX,HMU_AY,HMU_AZ,HMU_GX,HMU_GY,HMU_GZ);
+            for (test_index = 0 ; test_index < 4 ; test_index++)
+            {
+                hmu_log_line(HMU_AX,HMU_AY,HMU_AZ,HMU_GX,HMU_GY,HMU_GZ);
+            }
+        }
+        
 #endif // 
 
 #ifdef TEST_LOGGER_HZ

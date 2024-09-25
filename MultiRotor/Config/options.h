@@ -1,5 +1,5 @@
 #define HELMET_IMU
-#define TEST_LOGGER_HZ
+//#define TEST_LOGGER_HZ
 
 //#define DATE "Wolf_pac_2 , firmware 5.5, 5/28/2024\r\n"
 // improved continuous gyro bias estimation
@@ -1669,8 +1669,8 @@
 #define SERIAL_NUMBERD1	0
 #define SERIAL_NUMBERD2	8
 #define SERIAL_NUMBERD3 5
-#define ACCEL_RANGE         8
-#define GYRO_RANGE	    1000
+#define ACCEL_RANGE         16
+#define GYRO_RANGE	    2000
 #define LOG_EULER
 #include "options_LUGE7_SN085.h"
 #endif // LUGE7_SN085
@@ -2257,6 +2257,8 @@
 #define GYRO_OFFSET_MARGIN 100
 #elif (GYRO_RANGE==500)
 #define GYRO_OFFSET_MARGIN 50
+#elif (GYRO_RANGE==2000)
+#define GYRO_OFFSET_MARGIN 25
 #else
 #error "invalid GYRO_RANGE"
 #endif // GYRO_RANGE

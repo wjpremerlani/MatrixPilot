@@ -146,6 +146,8 @@ void MPU6000_init16(callback_fptr_t fptr)
 		writeMPUSPIreg16(MPUREG_ACCEL_CONFIG, 1<<3); // Accel scele 4g, g = 4096
 	#elif (ACCEL_RANGE == 8)
 		writeMPUSPIreg16(MPUREG_ACCEL_CONFIG, 2<<3); // Accel scele 8g, g = 2048
+	#elif (ACCEL_RANGE == 16)
+		writeMPUSPIreg16(MPUREG_ACCEL_CONFIG, 3<<3); // Accel scele 8g, g = 2048
 	#else
 		#error "Invalid ACCEL_RANGE"
 	#endif
@@ -157,6 +159,8 @@ void MPU6000_init16(callback_fptr_t fptr)
 		writeMPUSPIreg16(MPUREG_ACCEL_CONFIG, BITS_FS_4G); // Accel scale 4g = 4096
 	#elif (ACCEL_RANGE == 8)
 		writeMPUSPIreg16(MPUREG_ACCEL_CONFIG, BITS_FS_8G); // Accel scale 8g = 2048
+	#elif (ACCEL_RANGE == 16)
+		writeMPUSPIreg16(MPUREG_ACCEL_CONFIG, BITS_FS_16G); // Accel scale 8g = 2048
 	#else
 		#error "Invalid ACCEL_RANGE"
 	#endif
