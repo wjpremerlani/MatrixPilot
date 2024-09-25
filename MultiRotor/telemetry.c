@@ -186,6 +186,18 @@ extern int32_t gyro_sum[];
 extern uint64_t stdev_sqr ;
 extern int16_t cross_coupling ;
 
+#ifdef HELMET_IMU
+extern uint8_t hmu_read_buffer_index ;
+extern uint8_t hmu_write_buffer_index ;
+extern int16_t hmu_sample_number ;
+extern int16_t hmu_ax[] ;
+extern int16_t hmu_ay[] ;
+extern int16_t hmu_az[] ;
+extern int16_t hmu_gx[] ;
+extern int16_t hmu_gy[] ;
+extern int16_t hmu_gz[] ;
+#endif // HELMET_IMU
+
 #define HMU_SCALE 20000
 
 int16_t hmu_scale(int16_t raw_data)
@@ -954,11 +966,25 @@ void send_imu_data(void)
         
 #ifdef HELMET_IMU
         {
-            int16_t test_index ;
-            hmu_log_line1(HMU_AX,HMU_AY,HMU_AZ,HMU_GX,HMU_GY,HMU_GZ);
-            for (test_index = 0 ; test_index < 4 ; test_index++)
+            int16_t hmu_index ;
+            hmu_log_line1(
+                    hmu_ax[5*hmu_read_buffer_index],
+                    hmu_ay[5*hmu_read_buffer_index],
+                    hmu_az[5*hmu_read_buffer_index],
+                    hmu_gx[5*hmu_read_buffer_index],
+                    hmu_gy[5*hmu_read_buffer_index],
+                    hmu_gz[5*hmu_read_buffer_index]);
+                    
+            for (hmu_index = 1 ; hmu_index < 5 ; hmu_index++)
             {
-                hmu_log_line(HMU_AX,HMU_AY,HMU_AZ,HMU_GX,HMU_GY,HMU_GZ);
+               hmu_log_line(
+                    hmu_ax[5*hmu_read_buffer_index+hmu_index],
+                    hmu_ay[5*hmu_read_buffer_index+hmu_index],
+                    hmu_az[5*hmu_read_buffer_index+hmu_index],
+                    hmu_gx[5*hmu_read_buffer_index+hmu_index],
+                    hmu_gy[5*hmu_read_buffer_index+hmu_index],
+                    hmu_gz[5*hmu_read_buffer_index+hmu_index]);
+              
             }
         }
         

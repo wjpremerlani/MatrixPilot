@@ -238,12 +238,13 @@ extern int16_t subtract_saturate(int16_t x , int16_t y , int16_t margin ) ;
 
 #endif
 
-#define HMU_GX (XRATE_SIGN_ORIENTED (((udb_xrate.value)>>1) - (udb_xrate.offset>>1)))
-#define HMU_GY (XRATE_SIGN_ORIENTED (((udb_yrate.value)>>1) - (udb_yrate.offset>>1)))
-#define HMU_GZ (XRATE_SIGN_ORIENTED (((udb_zrate.value)>>1) - (udb_zrate.offset>>1)))
 
-#define HMU_AX (XACCEL_SIGN_ORIENTED (((udb_xaccel.value)>>1) - (udb_xaccel.offset>>1)))
-#define HMU_AY (YACCEL_SIGN_ORIENTED (((udb_yaccel.value)>>1) - (udb_yaccel.offset>>1)))
-#define HMU_AZ (ZACCEL_SIGN_ORIENTED (((udb_zaccel.value)>>1) - (udb_zaccel.offset>>1)))
+#define HMU_GX (XRATE_SIGN_ORIENTED (((mpu_data[xrate_MPU_channel].BB)>>1) - (udb_xrate.offset>>1)))
+#define HMU_GY (YRATE_SIGN_ORIENTED (((mpu_data[yrate_MPU_channel].BB)>>1) - (udb_yrate.offset>>1)))
+#define HMU_GZ (ZRATE_SIGN_ORIENTED (((mpu_data[zrate_MPU_channel].BB)>>1) - (udb_zrate.offset>>1)))
+
+#define HMU_AX (XACCEL_SIGN_ORIENTED (((mpu_data[xaccel_MPU_channel].BB)>>1) - (udb_xaccel.offset>>1)))
+#define HMU_AY (YACCEL_SIGN_ORIENTED (((mpu_data[yaccel_MPU_channel].BB)>>1) - (udb_yaccel.offset>>1)))
+#define HMU_AZ (ZACCEL_SIGN_ORIENTED (((mpu_data[zaccel_MPU_channel].BB)>>1) - (udb_zaccel.offset>>1)))
 
 

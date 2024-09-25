@@ -406,6 +406,18 @@ union longww y_theta_32[10] ;
 union longww z_theta_32[10] ;
 #endif // TEST_SLED
 
+#ifdef HELMET_IMU
+uint8_t hmu_read_buffer_index = 0 ;
+uint8_t hmu_write_buffer_index = 0 ;
+int16_t hmu_sample_number = 0 ;
+int16_t hmu_ax[10] ;
+int16_t hmu_ay[10] ;
+int16_t hmu_az[10] ;
+int16_t hmu_gx[10] ;
+int16_t hmu_gy[10] ;
+int16_t hmu_gz[10] ;
+#endif // 
+
 #ifdef KUFEN
 
 uint8_t accel_read_buffer_index = 0 ;
@@ -449,6 +461,19 @@ static void process_MPU_data(void)
         spectral_sample_number ++ ;       
     }
 #endif // SPECTRAL_ANALYSIS_BURST
+    
+#ifdef HELMET_IMU
+    if ( sample_counter%8== 0 )
+    {
+        hmu_sample_number = sample_counter/8 ;
+        hmu_ax[5*hmu_write_buffer_index+hmu_sample_number]=HMU_AX ;
+        hmu_ay[5*hmu_write_buffer_index+hmu_sample_number]=HMU_AY ;
+        hmu_az[5*hmu_write_buffer_index+hmu_sample_number]=HMU_AZ ;
+        hmu_gx[5*hmu_write_buffer_index+hmu_sample_number]=HMU_GX ;
+        hmu_gy[5*hmu_write_buffer_index+hmu_sample_number]=HMU_GY ;
+        hmu_gz[5*hmu_write_buffer_index+hmu_sample_number]=HMU_GZ ;        
+    }
+#endif // HELMET_IMU
     
 #ifdef TEST_SLED
     if ( sample_counter%8== 0 )
@@ -553,6 +578,11 @@ static void process_MPU_data(void)
         accel_read_buffer_index = accel_write_buffer_index ;
         accel_write_buffer_index = ! accel_write_buffer_index ;
 #endif // SPECTRAL_ANALYSIS_CONTINUOUS
+        
+#ifdef HELMET_IMU
+        hmu_read_buffer_index = hmu_write_buffer_index ;
+        hmu_write_buffer_index = ! hmu_write_buffer_index ;
+#endif // HELMET_IMU
         
 #ifdef TEST_SLED
         accel_read_buffer_index = accel_write_buffer_index ;
