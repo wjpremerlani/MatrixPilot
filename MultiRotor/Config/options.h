@@ -17,10 +17,13 @@
 // due to centrifugal acceleration into gyro offset is linear up to 16gs.
 // A technique has been developed to accurately measure the cross coupling
 // coefficients and compensate for cross coupling.
-
+#ifdef HELMET_IMU
+#define DATE "Helmet-IMU, version 1.0, 9/25/2024\r\n"
+#else
 #define DATE "Wolf_pac_2 , firmware 6.1, 9/4/2024\r\n" 
 // 6.1: An improved matrix alignment implementation that
 // will be especially effective during QLP testing
+#endif // HELMET_IMU
 
 #define CONING_CORRECTION
 #define CONING_CORRECTION_IN_RMAT
@@ -28,7 +31,11 @@
 #ifdef CONING_CORRECTION
 #define MINI5 "UDBmini5 hardware, 8000 Hz sampling.\r\n"
 #define MINI6 "UDBmini6 hardware, 8000 Hz sampling.\r\n"
+#ifdef HELMET_IMU
+#define LUGE7 "UDBmini7 hardware, 8000 Hz sampling.\r\n"
+#else
 #define LUGE7 "UDBluge7 hardware, 8000 Hz sampling.\r\n"
+#endif // HELMET_IMU
 #else
 #define MINI5 "UDBmini5 hardware, 200 Hz sampling.\r\n"
 #define MINI6 "UDBmini6 hardware, 200 Hz sampling.\r\n"
@@ -2231,11 +2238,15 @@
 #define BUILD_OFFSET_HZ 200
 #endif // 
 
+#ifdef HELMET_IMU
+#define FILTERING "Data is not filtered.\r\n"
+#else
 #ifdef CONING_CORRECTION
 #define FILTERING "Force data reported at 100 or 200 Hz is a 5 sample average of 1000 Hz sampling.\r\n"
 #else
 #define FILTERING "Force data is filtered by averaging pairs of 200 Hz samples.\r\n"
 #endif // CONING_CORRECTION
+#endif // HELMET_IMU
 
 #define TEST_LIDAR 0
 

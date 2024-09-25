@@ -208,7 +208,7 @@ int16_t hmu_scale(int16_t raw_data)
     scaled_data = scaled_32._.W1 ;
     scaled_data += 5000 ;
     if (scaled_data < 0) 
-    {
+{
         return 0 ;
     }
     if (scaled_data >9999)
@@ -217,7 +217,7 @@ int16_t hmu_scale(int16_t raw_data)
     }
     return scaled_data ;
 }
-
+  
 void hmu_log_line1(int16_t ax , int16_t ay ,int16_t az ,int16_t gx ,int16_t gy ,int16_t gz  )
 {
     serial_output("%i,%i,%i,%i,%i,%i,%i,%i\r\n",
@@ -317,7 +317,7 @@ void send_residual_data(void)
 	{
 		start_residuals = 0 ;
 		serial_output("\r\n\r\nimu_temp_yy,calibrating_yy,x_force_yy,y_force_yy,z_force_yy,x_rate16_yy,y_rate16_yy,z_rate16_yy,rms_rate16_yy,x_flt16_yy,y_flt16_yy,z_flt16_yy,net_dev_yy,tilt_adj(degs)_yy\r\n") ;
-	}
+    }
 	else
 	{
         union longww omgfilt_rounded[3];
@@ -344,7 +344,7 @@ void send_residual_data(void)
                     (omegagyro_filtered[2].WW)>>12 ,
                     sqrt_long((uint32_t)net_dev_sqr),
                   (double)vector3_mag(((int16_t)roll_pitch_error_sum[0]),((int16_t)roll_pitch_error_sum[1]),(roll_pitch_error_sum[2]))*0.0035
-    				);
+                        );
             }
             else
             {
@@ -362,7 +362,7 @@ void send_residual_data(void)
                     (omegagyro_filtered[1].WW)>>12 ,
                     (omegagyro_filtered[2].WW)>>12 ,
                     sqrt_long((uint32_t)net_dev_sqr),
-                    (double)vector3_mag(((int16_t)roll_pitch_error_sum[0]),((int16_t)roll_pitch_error_sum[1]),(roll_pitch_error_sum[2]))*0.0035
+                  (double)vector3_mag(((int16_t)roll_pitch_error_sum[0]),((int16_t)roll_pitch_error_sum[1]),(roll_pitch_error_sum[2]))*0.0035
     				);   
                 
             }
@@ -394,7 +394,7 @@ union longww interpolated_tilt2[3];
 union longww interpolated_tilt3[3];
 union longww interpolated_tilt4[3];
 
-
+          
 
 void log_x_accel_data(void)
 {
@@ -650,7 +650,12 @@ void send_imu_data(void)
 		case 2:
 			{
 #ifndef NAME
+#ifdef HELMET_IMU
+                serial_output("SN%i%i%i ", SERIAL_NUMBERD1 , SERIAL_NUMBERD2 , SERIAL_NUMBERD3 ) ;
+
+#else
 				serial_output("WOLF-PAC SN%i%i%i IMU ", SERIAL_NUMBERD1 , SERIAL_NUMBERD2 , SERIAL_NUMBERD3 ) ;
+#endif // HELMET_IMU
 #else
 				serial_output("WOLF-PAC SN%i%i%i IMU, assigned to %s, ", SERIAL_NUMBERD1 , SERIAL_NUMBERD2 , SERIAL_NUMBERD3, NAME ) ;
 #endif
@@ -686,7 +691,11 @@ void send_imu_data(void)
 #endif // LOG_RATE
 				
 #ifdef LOG_EULER
+#ifdef HELMET_IMU
+                serial_output("Raw accelerometer and gyro data logged 1000 times per second.\r\n");
+#else
 				serial_output("Euler angle version.\r\n");
+#endif //
 #endif // LOG_EULER
 #ifdef LOG_RATE_AND_EULER
 			serial_output("gyro rates and euler angles version\r\n");	
@@ -698,12 +707,20 @@ void send_imu_data(void)
 			break ;
 		case 6:
 			{
+#ifndef HELMET_IMU
 				serial_output("Specific forces in ft/s^2.\r\n") ;
+#else
+                serial_output("All data is divided by full scale, multiplied by 5000,\r\n");
+#endif // HELMET_IMU
 			}
 			break ;	
 		case 7:
 			{
-				serial_output("CCW rotation rates in d/s.\r\n");
+#ifndef HELMET_IMU
+				serial_output("Gyro data is reported in degrees per second.\r\n");
+#else
+                serial_output("and then 5000 is added.\r\n");
+#endif
 			}
 			break ;	
 		case 8:
@@ -723,21 +740,29 @@ void send_imu_data(void)
 			break ;
 		case 12:
 			{
+#ifndef HELMET_IMU
 				serial_output("Gyro calibrations are x=%6.4f, y=%6.4f, z=%6.4f.\r\n", 
-						CALIBRATIONX ,CALIBRATIONY,CALIBRATIONZ );		
+						CALIBRATIONX ,CALIBRATIONY,CALIBRATIONZ );	
+#endif // HELMET_IMU
 			}
 			break ;
 		case 14:
             {
+#ifndef HELMET_IMU
+                
                 serial_output("Gyro strain offsets are x=%i, y=%i, z=%i.\r\nZ->X cross coupling = %i.\r\n",
                         residual_offset[0] , residual_offset[1] , residual_offset[2] , cross_coupling
                         );
+#endif // HELMET_IMU                
             }
 			break ;
         case 15:
             {
+#ifndef HELMET_IMU
+               
                 serial_output("Jostling is detected when total noise standard deviation is larger than %i.\r\n",
                         TOTAL_STANDARD_DEVIATION );
+#endif // HELMET_IMU
             }
             break ;
 		case 16:
@@ -747,20 +772,24 @@ void send_imu_data(void)
 			break ;
 		case 18:
 			{
+#ifndef HELMET_IMU
 				serial_output( "Accel offsets are x=%i, y=%i, z=%i.\r\n",
 					accel_residual_offset[0] ,
 					accel_residual_offset[1] , 
 					accel_residual_offset[2] 
 					 );	
+#endif // HELMET_IMU
 			}
 			break;
 		case 19:
 			{
+#ifndef HELMET_IMU
 				serial_output( "Accel calibrations are x=%i, y=%i, z=%i.\r\n",
 					CAL_GRAV_X ,
 					CAL_GRAV_Y , 
 					CAL_GRAV_Z 
 					 );
+#endif // HELMET_IMU
 			}
 			break;
 		case 20:
@@ -769,8 +798,10 @@ void send_imu_data(void)
 				serial_output("Run data rate is %i records/s.\r\nBetween runs residuals are logged every %i seconds.\r\n", 
                         LOGGER_HZ/2 , RESIDUAL_LOG_PERIOD  );   
 #else
+#ifndef HELMET_IMU
 				serial_output("Run data rate is %i records/s.\r\nBetween runs residuals are logged every %i seconds.\r\n", 
                         LOGGER_HZ , RESIDUAL_LOG_PERIOD  );
+#endif //HELMET_IMU
 #endif // KUFEN
 			}
 			break;
@@ -890,9 +921,9 @@ void send_imu_data(void)
 #ifdef RECORD_OFFSETS
 				serial_output("tmptur,ax,ay,az,gx_val,gy_val,gz_val,gyr_x,gyr_y,gyr_z,gyr_rms\r\n");
 #endif // RECORD_OFFSETS
-                
+				
 #ifdef HELMET_IMU
-      serial_output("helmet imu data.\r\n");          
+      serial_output("Helmet-Imu data:\r\naccx,accy,accz,gyrox,gyroy,gyroz,cpu,seq#\r\n");          
 #endif // HELMET_IMU
                 
 #ifdef TEST_LOGGER_HZ
@@ -963,7 +994,7 @@ void send_imu_data(void)
 			 ) ;
 		}
 #endif // 
-        
+
 #ifdef HELMET_IMU
         {
             int16_t hmu_index ;
@@ -1253,7 +1284,7 @@ void send_imu_data(void)
                         
                 udb_cpu_load(),record_number ++                  
 			);
-            udb_background_trigger(&log_x_accel_data);            
+            udb_background_trigger(&log_x_accel_data); 
 
 #endif // TEST_SLED 
                 
