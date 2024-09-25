@@ -1,4 +1,5 @@
-
+//#define HELMET_IMU
+//#define TEST_LOGGER_HZ
 
 //#define DATE "Wolf_pac_2 , firmware 5.5, 5/28/2024\r\n"
 // improved continuous gyro bias estimation
@@ -16,10 +17,13 @@
 // due to centrifugal acceleration into gyro offset is linear up to 16gs.
 // A technique has been developed to accurately measure the cross coupling
 // coefficients and compensate for cross coupling.
-
+#ifdef HELMET_IMU
+#define DATE "Helmet-IMU, version 1.0, 9/25/2024\r\n"
+#else
 #define DATE "Wolf_pac_2 , firmware 6.1, 9/4/2024\r\n" 
 // 6.1: An improved matrix alignment implementation that
 // will be especially effective during QLP testing
+#endif // HELMET_IMU
 
 #define CONING_CORRECTION
 #define CONING_CORRECTION_IN_RMAT
@@ -27,7 +31,11 @@
 #ifdef CONING_CORRECTION
 #define MINI5 "UDBmini5 hardware, 8000 Hz sampling.\r\n"
 #define MINI6 "UDBmini6 hardware, 8000 Hz sampling.\r\n"
+#ifdef HELMET_IMU
+#define LUGE7 "UDBmini7 hardware, 8000 Hz sampling.\r\n"
+#else
 #define LUGE7 "UDBluge7 hardware, 8000 Hz sampling.\r\n"
+#endif // HELMET_IMU
 #else
 #define MINI5 "UDBmini5 hardware, 200 Hz sampling.\r\n"
 #define MINI6 "UDBmini6 hardware, 200 Hz sampling.\r\n"
@@ -60,7 +68,7 @@
 
 // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
 // non-printable characters are written out, as header bytes for packets.
-#define USE_PACKETIZED_TELEMERTY
+//#define USE_PACKETIZED_TELEMERTY
 
 #define LOG_EULER
 //#define LOG_RATE_AND_EULER
@@ -73,10 +81,10 @@
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
 #define TILT_STOP_DELAY 1      // delay in seconds to allow for a roll over
-//#define TILT_START	30          // tilt angle to start for Kufen
-#define TILT_START	15          // tilt angle threshold in degrees to start recording a run
-#define TILT_STOP	60          // tilt angle threshold in degrees to stop recording a run
-//#define TILT_STOP	135         // used for some types of ground testing
+#define TILT_START	15          // normal start 
+//#define TILT_START	30          // tilt angle to start for Kufen or HelmetImu
+#define TILT_STOP	60          // normal tilt angle threshold in degrees to stop recording a run
+//#define TILT_STOP	165         // tilt stop for HelmetImu
 
 // select a wolf_pac by defining its internal label
 //#define LUGE7_SNnew // used to program a WP without a serial number
@@ -105,7 +113,7 @@
 //#define LUGE7_SN088
 //#define LUGE7_SN089
 
-#define LUGE7_SN101
+//#define LUGE7_SN101
 //#define LUGE7_SN102
 //#define LUGE7_SN103
 //#define LUGE7_SN104
@@ -152,7 +160,7 @@
 //#error #define LUGE7_SN145 out of service
 //#define LUGE7_SN146
 //#define LUGE7_SN147
-//#define LUGE7_SN148
+#define LUGE7_SN148
 //#define LUGE7_SN149
 //#define LUGE7_SN150
 //#define LUGE7_SN151
@@ -1668,8 +1676,8 @@
 #define SERIAL_NUMBERD1	0
 #define SERIAL_NUMBERD2	8
 #define SERIAL_NUMBERD3 5
-#define ACCEL_RANGE         8
-#define GYRO_RANGE	    1000
+#define ACCEL_RANGE         16
+#define GYRO_RANGE	    2000
 #define LOG_EULER
 #include "options_LUGE7_SN085.h"
 #endif // LUGE7_SN085
@@ -2230,11 +2238,15 @@
 #define BUILD_OFFSET_HZ 200
 #endif // 
 
+#ifdef HELMET_IMU
+#define FILTERING "Data is not filtered.\r\n"
+#else
 #ifdef CONING_CORRECTION
 #define FILTERING "Force data reported at 100 or 200 Hz is a 5 sample average of 1000 Hz sampling.\r\n"
 #else
 #define FILTERING "Force data is filtered by averaging pairs of 200 Hz samples.\r\n"
 #endif // CONING_CORRECTION
+#endif // HELMET_IMU
 
 #define TEST_LIDAR 0
 
@@ -2256,6 +2268,8 @@
 #define GYRO_OFFSET_MARGIN 100
 #elif (GYRO_RANGE==500)
 #define GYRO_OFFSET_MARGIN 50
+#elif (GYRO_RANGE==2000)
+#define GYRO_OFFSET_MARGIN 25
 #else
 #error "invalid GYRO_RANGE"
 #endif // GYRO_RANGE

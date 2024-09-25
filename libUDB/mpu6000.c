@@ -146,6 +146,8 @@ void MPU6000_init16(callback_fptr_t fptr)
 		writeMPUSPIreg16(MPUREG_ACCEL_CONFIG, 1<<3); // Accel scele 4g, g = 4096
 	#elif (ACCEL_RANGE == 8)
 		writeMPUSPIreg16(MPUREG_ACCEL_CONFIG, 2<<3); // Accel scele 8g, g = 2048
+	#elif (ACCEL_RANGE == 16)
+		writeMPUSPIreg16(MPUREG_ACCEL_CONFIG, 3<<3); // Accel scele 8g, g = 2048
 	#else
 		#error "Invalid ACCEL_RANGE"
 	#endif
@@ -157,6 +159,8 @@ void MPU6000_init16(callback_fptr_t fptr)
 		writeMPUSPIreg16(MPUREG_ACCEL_CONFIG, BITS_FS_4G); // Accel scale 4g = 4096
 	#elif (ACCEL_RANGE == 8)
 		writeMPUSPIreg16(MPUREG_ACCEL_CONFIG, BITS_FS_8G); // Accel scale 8g = 2048
+	#elif (ACCEL_RANGE == 16)
+		writeMPUSPIreg16(MPUREG_ACCEL_CONFIG, BITS_FS_16G); // Accel scale 8g = 2048
 	#else
 		#error "Invalid ACCEL_RANGE"
 	#endif
@@ -402,6 +406,18 @@ union longww y_theta_32[10] ;
 union longww z_theta_32[10] ;
 #endif // TEST_SLED
 
+#ifdef HELMET_IMU
+uint8_t hmu_read_buffer_index = 0 ;
+uint8_t hmu_write_buffer_index = 0 ;
+int16_t hmu_sample_number = 0 ;
+int16_t hmu_ax[10] ;
+int16_t hmu_ay[10] ;
+int16_t hmu_az[10] ;
+int16_t hmu_gx[10] ;
+int16_t hmu_gy[10] ;
+int16_t hmu_gz[10] ;
+#endif // 
+
 #ifdef KUFEN
 
 uint8_t accel_read_buffer_index = 0 ;
@@ -445,6 +461,19 @@ static void process_MPU_data(void)
         spectral_sample_number ++ ;       
     }
 #endif // SPECTRAL_ANALYSIS_BURST
+    
+#ifdef HELMET_IMU
+    if ( sample_counter%8== 0 )
+    {
+        hmu_sample_number = sample_counter/8 ;
+        hmu_ax[5*hmu_write_buffer_index+hmu_sample_number]=HMU_AX ;
+        hmu_ay[5*hmu_write_buffer_index+hmu_sample_number]=HMU_AY ;
+        hmu_az[5*hmu_write_buffer_index+hmu_sample_number]=HMU_AZ ;
+        hmu_gx[5*hmu_write_buffer_index+hmu_sample_number]=HMU_GX ;
+        hmu_gy[5*hmu_write_buffer_index+hmu_sample_number]=HMU_GY ;
+        hmu_gz[5*hmu_write_buffer_index+hmu_sample_number]=HMU_GZ ;        
+    }
+#endif // HELMET_IMU
     
 #ifdef TEST_SLED
     if ( sample_counter%8== 0 )
@@ -490,7 +519,7 @@ static void process_MPU_data(void)
 #endif // SPECTRAL_ANALYSIS_CONTINUOUS
 
 #ifdef CONING_CORRECTION
-	compute_coning_adjustment();   
+	compute_coning_adjustment(); 
 #endif // CONING_CORRECTION
 	//  trigger synchronous processing of sensor data
 	sample_counter = sample_counter+1 ;
@@ -549,6 +578,11 @@ static void process_MPU_data(void)
         accel_read_buffer_index = accel_write_buffer_index ;
         accel_write_buffer_index = ! accel_write_buffer_index ;
 #endif // SPECTRAL_ANALYSIS_CONTINUOUS
+        
+#ifdef HELMET_IMU
+        hmu_read_buffer_index = hmu_write_buffer_index ;
+        hmu_write_buffer_index = ! hmu_write_buffer_index ;
+#endif // HELMET_IMU
         
 #ifdef TEST_SLED
         accel_read_buffer_index = accel_write_buffer_index ;
