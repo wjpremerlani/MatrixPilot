@@ -1,4 +1,4 @@
-#define HELMET_IMU
+//#define HELMET_IMU
 //#define TEST_LOGGER_HZ
 
 //#define DATE "Wolf_pac_2 , firmware 5.5, 5/28/2024\r\n"
@@ -46,7 +46,7 @@
 // for a normal production run, define LOG_IMU_WP2, NORMAL_RUN, LOG_RESIDUALS AND RESIDUAL_LOG_PERIOD
 #define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
                                     // you will also need to turn on the following:
-//#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
+#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
 #define LOG_RESIDUALS         // logs residual offsets between runs
 #define RESIDUAL_LOG_PERIOD 2  // 30 times per minute
 
@@ -68,7 +68,7 @@
 
 // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
 // non-printable characters are written out, as header bytes for packets.
-#define USE_PACKETIZED_TELEMERTY
+//#define USE_PACKETIZED_TELEMERTY
 
 #define LOG_EULER
 //#define LOG_RATE_AND_EULER
@@ -76,15 +76,15 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	200
+#define LOGGER_HZ	100
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
 #define TILT_STOP_DELAY 1      // delay in seconds to allow for a roll over
-//#define TILT_START	15          // normal start 
-#define TILT_START	30          // tilt angle to start for Kufen or HelmetImu
-//#define TILT_STOP	60          // normal tilt angle threshold in degrees to stop recording a run
-#define TILT_STOP	165         // tilt stop for HelmetImu
+#define TILT_START	15          // normal start 
+//#define TILT_START	30          // tilt angle to start for Kufen or HelmetImu
+#define TILT_STOP	60          // normal tilt angle threshold in degrees to stop recording a run
+//#define TILT_STOP	165         // tilt stop for HelmetImu
 
 // select a wolf_pac by defining its internal label
 //#define LUGE7_SNnew // used to program a WP without a serial number
@@ -106,7 +106,7 @@
 //#define LUGE7_SN083
 
 //#define LUGE7_SN084
-#define LUGE7_SN085
+//#define LUGE7_SN085
 
 //#define LUGE7_SN086
 //#define LUGE7_SN087
@@ -160,7 +160,7 @@
 //#error #define LUGE7_SN145 out of service
 //#define LUGE7_SN146
 //#define LUGE7_SN147
-//#define LUGE7_SN148
+#define LUGE7_SN148
 //#define LUGE7_SN149
 //#define LUGE7_SN150
 //#define LUGE7_SN151
