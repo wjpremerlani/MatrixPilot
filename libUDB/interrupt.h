@@ -66,7 +66,7 @@ uint16_t SP_start(void);
 uint16_t SP_limit(void);
 uint16_t SP_current(void);
 
-#define TEST_INTERRUPT_PRIORITY_TIMINGS    1
+#define TEST_INTERRUPT_PRIORITY_TIMINGS    0
 #if (TEST_INTERRUPT_PRIORITY_TIMINGS == 1)
 // Set Interrupt Priority on associated Output Pin for timing analysis with Logic Analyzer
 // Servos should be disconnected from OUTPUT pins when using this feature
