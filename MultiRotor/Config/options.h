@@ -1,5 +1,4 @@
-//#define HELMET_IMU
-//#define TEST_LOGGER_HZ
+#define HELMET_IMU
 
 //#define DATE "Wolf_pac_2 , firmware 5.5, 5/28/2024\r\n"
 // improved continuous gyro bias estimation
@@ -46,7 +45,7 @@
 // for a normal production run, define LOG_IMU_WP2, NORMAL_RUN, LOG_RESIDUALS AND RESIDUAL_LOG_PERIOD
 #define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
                                     // you will also need to turn on the following:
-#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
+//#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
 #define LOG_RESIDUALS         // logs residual offsets between runs
 #define RESIDUAL_LOG_PERIOD 2  // 30 times per minute
 
@@ -68,7 +67,7 @@
 
 // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
 // non-printable characters are written out, as header bytes for packets.
-//#define USE_PACKETIZED_TELEMERTY
+#define USE_PACKETIZED_TELEMERTY
 
 #define LOG_EULER
 //#define LOG_RATE_AND_EULER
@@ -76,15 +75,15 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	100
+#define LOGGER_HZ	200
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
 #define TILT_STOP_DELAY 1      // delay in seconds to allow for a roll over
 #define TILT_START	15          // normal start 
 //#define TILT_START	30          // tilt angle to start for Kufen or HelmetImu
-#define TILT_STOP	60          // normal tilt angle threshold in degrees to stop recording a run
-//#define TILT_STOP	165         // tilt stop for HelmetImu
+//#define TILT_STOP	60          // normal tilt angle threshold in degrees to stop recording a run
+#define TILT_STOP	165         // tilt stop for HelmetImu
 
 // select a wolf_pac by defining its internal label
 //#define LUGE7_SNnew // used to program a WP without a serial number
@@ -101,7 +100,7 @@
 //#define LUGE7_SN054
 
 //#define LUGE7_SN080
-//#define LUGE7_SN081
+#define LUGE7_SN081
 //#define LUGE7_SN082
 //#define LUGE7_SN083
 
@@ -160,7 +159,7 @@
 //#error #define LUGE7_SN145 out of service
 //#define LUGE7_SN146
 //#define LUGE7_SN147
-#define LUGE7_SN148
+//#define LUGE7_SN148
 //#define LUGE7_SN149
 //#define LUGE7_SN150
 //#define LUGE7_SN151
@@ -1604,27 +1603,31 @@
 #endif // LUGE7_SN054
 
 #ifdef LUGE7_SN080
+// note : originally commissioned 2/1000 ranges
+// temporarily set to 8/1000 for helmet imu testing
 #define ENABLE_ESP32
 #define UDB7LUGE
 #define BOARD LUGE7
 #define SERIAL_NUMBERD1	0
 #define SERIAL_NUMBERD2	8
 #define SERIAL_NUMBERD3 0
-#define ACCEL_RANGE         2
+#define ACCEL_RANGE         8
 #define GYRO_RANGE	    1000
 #define LOG_EULER
 #include "options_LUGE7_SN080.h"
 #endif // LUGE7_SN080
 
 #ifdef LUGE7_SN081
+// was originally set to 4/1000
+// temporarily set to 16/2000 for helmet IMU
 #define ENABLE_ESP32
 #define UDB7LUGE
 #define BOARD LUGE7
 #define SERIAL_NUMBERD1	0
 #define SERIAL_NUMBERD2	8
 #define SERIAL_NUMBERD3 1
-#define ACCEL_RANGE         4
-#define GYRO_RANGE	    1000
+#define ACCEL_RANGE         16
+#define GYRO_RANGE	    2000
 #define LOG_EULER
 #include "options_LUGE7_SN081.h"
 #endif // LUGE7_SN081

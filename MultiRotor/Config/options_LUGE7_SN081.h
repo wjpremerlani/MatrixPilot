@@ -7,6 +7,15 @@
 #define CALIBRATIONX	1.0134
 #define CALIBRATIONY	1.0134
 #define CALIBRATIONZ	1.0134
+#if (ACCEL_RANGE == 16)
+#define CALIB_GRAVITY	2048
+#define CAL_GRAV_X	2051
+#define CAL_GRAV_Y	2051
+#define CAL_GRAV_Z	2054
+#define XACCEL_OFFSET	( 0 )
+#define YACCEL_OFFSET	( 0 )
+#define ZACCEL_OFFSET	( 0 )
+#endif // ACCEL_RANGE == 8
 #if (ACCEL_RANGE == 8)
 #define CALIB_GRAVITY	4096
 #define CAL_GRAV_X	4102

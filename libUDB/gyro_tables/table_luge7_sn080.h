@@ -5,6 +5,8 @@
 
 // used in LUGE7_SN080 partition size 64
 
+// !!!!!!!!!!!! reminder, temperature compensation tables need to be re-recorded
+
 #define STEP_SIZE 64
 
 #define TABLE_ORIGIN  (  -14554 )
