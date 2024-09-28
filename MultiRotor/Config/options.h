@@ -1,5 +1,3 @@
-#define HELMET_IMU
-
 //#define DATE "Wolf_pac_2 , firmware 5.5, 5/28/2024\r\n"
 // improved continuous gyro bias estimation
 
@@ -16,13 +14,12 @@
 // due to centrifugal acceleration into gyro offset is linear up to 16gs.
 // A technique has been developed to accurately measure the cross coupling
 // coefficients and compensate for cross coupling.
-#ifdef HELMET_IMU
-#define DATE "Helmet-IMU, version 1.0, 9/25/2024\r\n"
-#else
-#define DATE "Wolf_pac_2 , firmware 6.1, 9/4/2024\r\n" 
+//#define DATE "Wolf_pac_2 , firmware 6.1, 9/4/2024\r\n" 
 // 6.1: An improved matrix alignment implementation that
 // will be especially effective during QLP testing
-#endif // HELMET_IMU
+#define DATE "Wolf_pac_2 , firmware 6.2, 9/28/2024\r\n"
+// 6.2 option to set the serial port priority level to the highest level
+// so that logging can take full advantage of the baud setting
 
 #define CONING_CORRECTION
 #define CONING_CORRECTION_IN_RMAT
@@ -30,11 +27,7 @@
 #ifdef CONING_CORRECTION
 #define MINI5 "UDBmini5 hardware, 8000 Hz sampling.\r\n"
 #define MINI6 "UDBmini6 hardware, 8000 Hz sampling.\r\n"
-#ifdef HELMET_IMU
-#define LUGE7 "UDBmini7 hardware, 8000 Hz sampling.\r\n"
-#else
 #define LUGE7 "UDBluge7 hardware, 8000 Hz sampling.\r\n"
-#endif // HELMET_IMU
 #else
 #define MINI5 "UDBmini5 hardware, 200 Hz sampling.\r\n"
 #define MINI6 "UDBmini6 hardware, 200 Hz sampling.\r\n"
@@ -44,8 +37,9 @@
 // the following defines select what gets sent to the logger
 // for a normal production run, define LOG_IMU_WP2, NORMAL_RUN, LOG_RESIDUALS AND RESIDUAL_LOG_PERIOD
 #define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
-                                    // you will also need to turn on the following:
-//#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
+                                    // you will also need to select a logging format
+                                  // such as TEST_SLED or HELMET_IMU, for example
+#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
 #define LOG_RESIDUALS         // logs residual offsets between runs
 #define RESIDUAL_LOG_PERIOD 2  // 30 times per minute
 
@@ -63,7 +57,16 @@
 //#define SPECTRAL_ANALYSIS_CONTINUOUS // also known as the fire hose
 //#define TEST_SLED // set logging Hz to 200 start at 15
 //#define KUFEN // set logging Hz to 200 and start angle to 30 degrees
+//#define HELMET_IMU // set logging Hz to 200, start to 15 and stop to 165
 
+
+#ifdef HELMET_IMU
+#undef DATE
+#define DATE "Helmet-IMU, version 1.0, 9/25/2024\r\n"
+#undef LUGE7
+#define LUGE7 "UDBmini7 hardware, 8000 Hz sampling.\r\n"
+#define SERIAL_PRIORITY
+#endif // HELMET_IMU
 
 // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
 // non-printable characters are written out, as header bytes for packets.
@@ -75,15 +78,15 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	200
+#define LOGGER_HZ	100
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
 #define TILT_STOP_DELAY 1      // delay in seconds to allow for a roll over
 #define TILT_START	15          // normal start 
 //#define TILT_START	30          // tilt angle to start for Kufen or HelmetImu
-//#define TILT_STOP	60          // normal tilt angle threshold in degrees to stop recording a run
-#define TILT_STOP	165         // tilt stop for HelmetImu
+#define TILT_STOP	60          // normal tilt angle threshold in degrees to stop recording a run
+//#define TILT_STOP	165         // tilt stop for HelmetImu
 
 // select a wolf_pac by defining its internal label
 //#define LUGE7_SNnew // used to program a WP without a serial number
@@ -100,7 +103,7 @@
 //#define LUGE7_SN054
 
 //#define LUGE7_SN080
-#define LUGE7_SN081
+//#define LUGE7_SN081
 //#define LUGE7_SN082
 //#define LUGE7_SN083
 
@@ -112,7 +115,7 @@
 //#define LUGE7_SN088
 //#define LUGE7_SN089
 
-//#define LUGE7_SN101
+#define LUGE7_SN101
 //#define LUGE7_SN102
 //#define LUGE7_SN103
 //#define LUGE7_SN104

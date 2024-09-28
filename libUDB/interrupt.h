@@ -33,9 +33,15 @@
 #define INT_PRI_T6      3   // background.c : trigger HEARTBEAT processing at a lower priority - NOTE: timer 6 is not actually being used
 #define INT_PRI_T7      1   // background.c : trigger navigation processing after new data is received from the GPS
 
+#ifdef SERIAL_PRIORITY
+#define INT_PRI_MPUSPI  6   // mpu6000.c : SPI1 (UDB4 or AUAV3) or SPI2 (UDB4 or UDB5)
+#define INT_PRI_INT1    6   // mpu6000.c : mpu on SPI1 uses external interrupt 1
+#define INT_PRI_INT3    6   // mpu6000.c : mpu on SPI3 uses external interrupt 3
+#else
 #define INT_PRI_MPUSPI  7   // mpu6000.c : SPI1 (UDB4 or AUAV3) or SPI2 (UDB4 or UDB5)
 #define INT_PRI_INT1    7   // mpu6000.c : mpu on SPI1 uses external interrupt 1
 #define INT_PRI_INT3    7   // mpu6000.c : mpu on SPI3 uses external interrupt 3
+#endif
 
 #define INT_PRI_IC      6   // radioIn.c : input capture interrupt
 
@@ -47,10 +53,17 @@
 #define INT_PRI_DMA1    2   // AT45D_DMA.c
 #define INT_PRI_DMA2    2   // AT45D_DMA.c
 
+#ifdef SERIAL_PRIORITY
+#define INT_PRI_U1TX    7  
+#define INT_PRI_U1RX    5   
+#define INT_PRI_U2TX    7   
+#define INT_PRI_U2RX    5 
+#else
 #define INT_PRI_U1TX    5  
 #define INT_PRI_U1RX    5   
 #define INT_PRI_U2TX    5   
-#define INT_PRI_U2RX    5   
+#define INT_PRI_U2RX    5 
+#endif //
 
 #define INT_PRI_USB1    4   // USB available only on AUAV3
 
