@@ -5,7 +5,7 @@
 
 // used in LUGE7_SN135 partition size 64
 
-//#define X_CROSS_COUPLING 0
+#define X_CROSS_COUPLING 10
 #define Y_CROSS_COUPLING 0
 #define Z_CROSS_COUPLING 0
 
@@ -281,7 +281,7 @@ const struct gyro_offset_table_entry gyro_offset_table[] = {
 
 #define ACCEL_TABLE_ORIGIN ( -12016)
 
-int16_t accel_residual_offset[] = { 0 , 0 , 0 } ; 
+int16_t accel_residual_offset[] = { 35,21,-65 } ; 
 
 const struct gyro_offset_table_entry accel_offset_table[] = {
 {5,0,-1},

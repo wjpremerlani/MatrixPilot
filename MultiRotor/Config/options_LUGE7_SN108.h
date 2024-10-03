@@ -7,13 +7,9 @@
 #define CALIBRATIONY	1.0134
 #define CALIBRATIONZ	1.0134
 #define CALIB_GRAVITY	4096
-#define CAL_GRAV_X	4109
-#define CAL_GRAV_Y	4085
-#define CAL_GRAV_Z	4086
-
-//#define X_CROSS_COUPLING 25
-#define Y_CROSS_COUPLING 0
-#define Z_CROSS_COUPLING 0
+#define CAL_GRAV_X 4105
+#define CAL_GRAV_Y 4102
+#define CAL_GRAV_Z 4073
 
 
 #endif	/* options_LUGE7_SN108_H */

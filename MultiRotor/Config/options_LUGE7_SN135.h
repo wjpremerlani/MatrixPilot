@@ -7,15 +7,11 @@
 #define CALIBRATIONY	1.0134
 #define CALIBRATIONZ	1.0134
 #define CALIB_GRAVITY	4096
-#define CAL_GRAV_X	4106
-#define CAL_GRAV_Y	4098
-#define CAL_GRAV_Z	4071
+#define CAL_GRAV_X 4106
+#define CAL_GRAV_Y 4098
+#define CAL_GRAV_Z 4066
 
-// cross coupling is diminimus
 
-#define X_CROSS_COUPLING 0
-#define Y_CROSS_COUPLING 0
-#define Z_CROSS_COUPLING 0
 
 #endif	/* options_LUGE7_SN135_H */
 

@@ -40,17 +40,17 @@
                                     // you will also need to select a logging format
                                   // such as TEST_SLED or HELMET_IMU, for example
 //#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
-//#define LOG_RESIDUALS         // logs residual offsets between runs
+#define LOG_RESIDUALS         // logs residual offsets between runs
 #define RESIDUAL_LOG_PERIOD 2  // 30 times per minute
 
 //#define LOG_PITCH_RATE // not commonly used
 
 // the following are used to measure offsets and gains for commissioning
-#define TURTLE_TESTING 0 // now used instead of RECORD_OFFSETS for gathering of 6 point data
+#define TURTLE_TESTING 1 // now used instead of RECORD_OFFSETS for gathering of 6 point data
 //#define RECORD_OFFSETS        // record raw accelerometer data and verify residual gyro offsets
 // the following two options are presently used together
-#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
-#define ACCEL_AND_GYRO_OFFSETS
+//#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
+//#define ACCEL_AND_GYRO_OFFSETS
 
 // the following are special logging options
 //#define SPECTRAL_ANALYSIS_BURST // 5 hz, start at 15, remember to also uncomment the following line
