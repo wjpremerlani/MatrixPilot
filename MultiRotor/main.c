@@ -95,6 +95,8 @@ void udb_blink_green(void)
     }
 }
 
+int16_t initialized = 0 ;
+
 int main (void)
 {
 //	offsets_init();
@@ -138,6 +140,7 @@ int main (void)
 #endif
     
 	// Start it up!
+    initialized = 1 ;
 	while(1)
 	{
 		udb_run() ; 
@@ -195,6 +198,7 @@ boolean start_log = 1 , stop_log = 0 , slide_in_progress = 0 ;
 #endif // EULER_GUI
 uint16_t stop_count = 0 ;
 int16_t is_level = 0 ;
+int16_t tilt_angle_int ;
 void update_slide_detection(void)
 {
 #ifdef BUILD_OFFSET_TABLE
@@ -207,9 +211,8 @@ void update_slide_detection(void)
     udb_blink_green();
     return ;
 #endif // EULER_GUI
-	int16_t tilt_angle_int ;
 	tilt_angle = DEG_PER_RAD*atan2f(sqrtf(((float)aero_force_filtered[0]._.W1)*((float)aero_force_filtered[0]._.W1)+((float)aero_force_filtered[1]._.W1)*((float)aero_force_filtered[1]._.W1)),-(float)aero_force_filtered[2]._.W1);
-	tilt_angle_int = (int16_t)tilt_angle ;
+    tilt_angle_int = abs((int16_t)tilt_angle) ;
 	if ( slide_in_progress == 1)
 		{
 #ifndef SIMULATE_TILT
@@ -274,12 +277,25 @@ extern float yaw_previous , yaw_angle , heading_previous ;
 extern void compute_euler(void);
 extern void send_euler_angles(void);
 uint16_t residual_log_counter = 0 ;
+#define INIT_PAUSE_COUNT 2000
+int16_t init_delay_count = INIT_PAUSE_COUNT ;
+extern void send_tilt_angle(void);
 void dcm_heartbeat_callback(void)
 {
-	if ( didCalibrate )
+	if ( didCalibrate && (initialized == 1 )  )
+    {
+        if (init_delay_count>0)
+        {
+            init_delay_count = init_delay_count - 1;
+            return ;
+        }
+    }
 	{
 #ifndef BUILD_OFFSET_TABLE
+        
 		update_slide_detection();
+        //send_tilt_angle();
+        
 #endif // BUILD_OFFSET_TABLE
 		if (!hasWrittenHeader)
 		{

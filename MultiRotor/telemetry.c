@@ -583,6 +583,12 @@ void send_spectral_data(void)
     }
 }
 #endif // SPECTRAL_ANALYSIS_BURST
+extern int16_t tilt_angle_int ;
+void send_tilt_angle(void)
+{
+    serial_output("%i\r\n",tilt_angle_int);
+}
+
 void send_imu_data(void)
 {
 #if ( RMS_AND_LPF_GUI == 1 )

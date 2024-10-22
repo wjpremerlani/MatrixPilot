@@ -549,10 +549,10 @@ inline void read_accel(void)
 }
 
 void udb_callback_read_sensors(void)
-{
+    {
 	read_gyros(); // record the average values for both DCM and for offset measurements
 	read_accel();
-}
+    }
 
 fractional theta[3];
 extern int16_t theta_16[];
