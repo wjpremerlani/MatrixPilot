@@ -71,7 +71,7 @@
 
 // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
 // non-printable characters are written out, as header bytes for packets.
-#define USE_PACKETIZED_TELEMERTY
+//#define USE_PACKETIZED_TELEMERTY
 
 #define LOG_EULER
 //#define LOG_RATE_AND_EULER
@@ -86,9 +86,9 @@
 #define TILT_STOP_DELAY 1      // delay in seconds to allow for a roll over
 #define TILT_START	15          // normal start 
 //#define TILT_START	30          // tilt angle to start for Kufen or HelmetImu
-#define TILT_STOP	60          // normal tilt angle threshold in degrees to stop recording a run
+//#define TILT_STOP	60          // normal tilt angle threshold in degrees to stop recording a run
 //#define TILT_STOP	165         // tilt stop for HelmetImu
-
+#define TILT_STOP 135 // centrifuge testing
 // select a wolf_pac by defining its internal label
 //#define LUGE7_SNnew // used to program a WP without a serial number
 
@@ -150,7 +150,7 @@
 //#define LUGE7_SN132
 //#define LUGE7_SN133
 //#define LUGE7_SN134
-//#define LUGE7_SN135
+#define LUGE7_SN135
 //#define LUGE7_SN136
 //#define LUGE7_SN137
 //#define LUGE7_SN138
@@ -221,7 +221,7 @@
 //#define LUGE7_SN194
 //#define LUGE7_SN195
 //#define LUGE7_SN196
-#define LUGE7_SN197
+//#define LUGE7_SN197
 
 
 //#define MINI6_SN4 // SN1, Tucker West
