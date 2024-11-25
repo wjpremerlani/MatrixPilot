@@ -5,6 +5,10 @@ z_x_cc = 0.0
 
 global minimum_speed
 
+global jostle_window, corner_variance 
+jostle_window = 30
+corner_variance = 0.5
+
 minimum_speed = 20.0
 skip_lines = 100
 
@@ -26,8 +30,20 @@ ROLL_COL = 5
 
 global args
 
+global line_numbers , gxs, gys, gzs, yaws, pitches, rolls
+line_numbers = []
+gxs = []
+gys = []
+gzs = []
+yaws = []
+pitches = []
+rolls = []
+
+
 global line_nums
 line_nums = []
+global weights
+weights = []
 global wx_list , wy_list , wz_list , fx_list, fy_list , fz_list
 wx_list = []
 wy_list = []
@@ -160,25 +176,53 @@ omega = np.zeros((3,1))
 s_force = np.zeros((3,1))
 g_force = np.zeros((3,1))
 
-def mav_filter(raw_list,filtered_list,filt_size) :
-    index = 0
-    list_len = len(raw_list)
-    while index < filt_size :
-        filtered_list.append(raw_list[index])
-        index = index + 1   
-    while index < list_len - 1 - filt_size :
-        total = 0
-        sum_index = index - filt_size
-        while sum_index <= index + filt_size :
-            total = total + raw_list[sum_index]
-            sum_index = sum_index + 1
-        filtered_list.append(total/(1+2*filt_size))
-        index = index + 1
-    while index < list_len :
-        filtered_list.append(raw_list[index])
-        index = index + 1
-    
+def indices (size) :
+    table = []
+    tab_index = 0
+    offset = - size
+    num_offsets = int(1+2*size)
+    while tab_index < num_offsets :
+        table.append(offset)
+        offset = offset + 1
+        tab_index = tab_index + 1
+    return table
 
+def windowed_variance(input_list,mean,index_table) :
+    variance_table = []
+    line = 0
+    for dummy in input_list :
+        N = 0
+        total = 0
+        for index in index_table :
+            try :
+                total = total + (input_list[line+index]-mean)**2
+                N = N + 1
+            except :
+                pass
+        if N > 0 :
+            variance_table.append(total/N)
+        else :
+            variance_table.append(0)
+        line = line + 1
+    return variance_table
+
+def mav_filter(raw_list,filtered_list,index_table) :
+    line = 0
+    for dummy in raw_list :
+        N = 0
+        total = 0
+        for index in index_table :
+            try :
+                total = total + raw_list[line+index]
+                N = N + 1
+            except :
+                pass
+        if N > 0 :
+            filtered_list.append(total/N)
+        else :
+            filtered_list.append(0)
+        line = line + 1
+    
 def cross_t(a,b) :
     return np.transpose(np.cross(np.transpose(a),np.transpose(b)))
 
@@ -243,6 +287,7 @@ def k_error(w,v,f,gain) :
     return((-f/w)-v)*gain
 
 def read_data(file):
+    global line_numbers , gxs, gys, gzs, yaws, pitches, rolls
     global xa_in, ya_in, za_in , xa_out, ya_out, za_out
     global yaw_in, pitch_in, roll_in, yaw_out, pitch_out, roll_out
     global matrix_out, matrix_in , matrix_out_prev , matrix_in_prev , deter
@@ -277,6 +322,8 @@ def read_data(file):
     global line_nums
     global errors_in, errors_out
     global max_err
+    global weights
+    global jostle_window , corner_variance , corner_w
     gravity = np.zeros((3,1))
     gravity_sum = np.zeros((3,1))
     g_sqr_sum = 0
@@ -299,14 +346,89 @@ def read_data(file):
 
     pitch_gravity = 0
     roll_gravity = 0
-    
-    
-    N = 0
 
     dataStr = file.read()
+        
     lines = dataStr.splitlines(keepends=False)
     first_line = 1
     line_number = 0 
+    if dataStr:
+        for line in lines:
+            columns = line.split(',')
+            if len(columns) == NUM_COLS :
+                try:
+                    if line_number < int(100*start):
+                        gravity[0,0] = - float(columns[XA_COL])
+                        gravity[1,0] = - float(columns[YA_COL])
+                        gravity[2,0] = - float(columns[ZA_COL])
+                        yaw_in = float(columns[YAW_COL])
+                        pitch_in = float(columns[PITCH_COL])
+                        roll_in = float(columns[ROLL_COL])
+                        line_numbers.append(line_number)
+                        gxs.append(gravity[0,0])
+                        gys.append(gravity[1,0])
+                        gzs.append(gravity[2,0])
+                        yaws.append(yaw_in)
+                        pitches.append(pitch_in)
+                        rolls.append(roll_in)
+                        line_number = line_number+1              
+                except ValueError:
+                    pass    
+            else:
+                pass  
+    N = 0
+    gx_sum = 0
+    gy_sum = 0
+    gx_sqr_sum = 0
+    gy_sqr_sum = 0
+
+    for line_number in line_numbers :
+        if line_number < int(100*start) :
+            gx_sum = gx_sum + gxs[line_number]
+            gy_sum = gy_sum + gys[line_number]
+            gx_sqr_sum = gx_sqr_sum + gxs[line_number]**2
+            gy_sqr_sum = gy_sqr_sum + gys[line_number]**2
+            N = N + 1
+    if N > 10 :
+        gx_bar = gx_sum/N
+        gy_bar = gy_sum/N
+        gx_sqr_bar = gx_sqr_sum/N
+        gy_sqr_bar = gy_sqr_sum/N
+        gx_var = gx_sqr_bar - gx_bar**2
+        gy_var = gy_sqr_bar - gy_bar**2
+        
+
+    variance_indices = indices(jostle_window)
+    gx_variance = windowed_variance(gxs,gx_bar,variance_indices)
+    gy_variance = windowed_variance(gys,gy_bar,variance_indices)
+    gx_gy_variance = gx_variance + gy_variance
+
+    variance_file.write(f"gx,gxwvar,gy,gywvar,total_var,weight,") 
+    variance_file.write(f"gx_bar ={round(gx_bar,2)},")
+    variance_file.write(f"gy_bar ={round(gy_bar,2)},")
+    variance_file.write(f"gx_var ={round(gx_var,2)},")
+    variance_file.write(f"gy_var ={round(gy_var,2)},")
+    
+    
+    for line_number in line_numbers :
+        total_variance = gx_gy_variance[line_number]
+        if args.no_weights :
+            weight = 1.0
+        else :
+            weight = corner_variance / (corner_variance + total_variance)
+        weights.append(weight)
+        variance_file.write(f"{round(gxs[line_number],2)},")
+        variance_file.write(f"{round(gx_variance[line_number],2)},")
+        variance_file.write(f"{round(gys[line_number],2)},")
+        variance_file.write(f"{round(gy_variance[line_number],2)},")   
+        variance_file.write(f"{round(gx_gy_variance[line_number],2)},{round(weight,2)}\r")
+        
+    N = 0
+    weight_sum = 0
+    lines = dataStr.splitlines(keepends=False)
+    first_line = 1
+    line_number = 0
+    gravity_sum = np.zeros((3,1))
     if dataStr:
         for line in lines:
             columns = line.split(',')
@@ -318,27 +440,29 @@ def read_data(file):
                     yaw_in = float(columns[YAW_COL])
                     pitch_in = float(columns[PITCH_COL])
                     roll_in = float(columns[ROLL_COL])
-                    if skip_lines < line_number < int(100*start):
+                    if  line_number < int(100*start):
                         pitch_gravity = round(degrees(atan2(-gravity[0,0] , sqrt((gravity[1,0])**2+(gravity[2,0])**2))),2)
                         roll_gravity = round(degrees(atan2(gravity[1,0],gravity[2,0])),2)
                         #debug_file.write(f"{pitch_in},{pitch_gravity},{roll_in},{roll_gravity}\r")
+                        weight = weights[line_number]
+                        weight_sum = weight_sum + weight
                         N = N + 1
-                        gravity_sum = gravity_sum + gravity
-                        g_sqr_sum = g_sqr_sum + np.vdot(gravity,gravity)
+                        gravity_sum = gravity_sum + weight*gravity
+                        g_sqr_sum = g_sqr_sum + np.vdot(gravity,gravity)*weight
                         xTx[0,0] = N*N
                         xTx[1,1] = 1.0
                         xTx[0,1] = N
                         xTx[1,0] = N
-                        xTx_sum = xTx_sum + xTx
-                        x_yaw[0,0] = x_yaw[0,0] + N*yaw_in
-                        x_yaw[1,0] = x_yaw[1,0] + yaw_in
-                        x_pitch[0,0] = x_pitch[0,0] + N*(pitch_in-pitch_gravity)
-                        x_pitch[1,0] = x_pitch[1,0] + (pitch_in-pitch_gravity)
-                        x_roll[0,0] = x_roll[0,0] + N*(roll_in-roll_gravity)
-                        x_roll[1,0] = x_roll[1,0] + (roll_in-roll_gravity)
-                        yaw_sqr_sum = yaw_sqr_sum + yaw_in**2
-                        pitch_sqr_sum = pitch_sqr_sum + (pitch_in-pitch_gravity)**2
-                        roll_sqr_sum = roll_sqr_sum + (roll_in-roll_gravity)**2
+                        xTx_sum = xTx_sum + weight*xTx
+                        x_yaw[0,0] = x_yaw[0,0] + N*yaw_in*weight
+                        x_yaw[1,0] = x_yaw[1,0] + yaw_in*weight
+                        x_pitch[0,0] = x_pitch[0,0] + N*(pitch_in-pitch_gravity)*weight
+                        x_pitch[1,0] = x_pitch[1,0] + (pitch_in-pitch_gravity)*weight
+                        x_roll[0,0] = x_roll[0,0] + N*(roll_in-roll_gravity)*weight
+                        x_roll[1,0] = x_roll[1,0] + (roll_in-roll_gravity)*weight
+                        yaw_sqr_sum = yaw_sqr_sum + (yaw_in**2)*weight
+                        pitch_sqr_sum = pitch_sqr_sum + ((pitch_in-pitch_gravity)**2)*weight
+                        roll_sqr_sum = roll_sqr_sum + ((roll_in-roll_gravity)**2)*weight
                         
                     line_number = line_number + 1
                 
@@ -347,9 +471,12 @@ def read_data(file):
             else:
                 pass                             
 
-        g_var = N*g_sqr_sum - np.vdot(gravity_sum , gravity_sum)
+        g_bar = gravity_sum/weight_sum
+        g_bar_sqr = np.vdot(g_bar,g_bar)
+        g_sqr_bar = g_sqr_sum/weight_sum
+        g_var = g_sqr_bar - g_bar_sqr
         if g_var > 0 :
-            g_std = sqrt(g_var)/N
+            g_std = sqrt(g_var)
         else:
             g_std = 0
 
@@ -363,25 +490,37 @@ def read_data(file):
             pitch_var = pitch_sqr_sum - np.vdot(x_pitch, beta_pitch )
             roll_var = roll_sqr_sum - np.vdot(x_roll, beta_roll )
             
-            print("beta yaw = " , beta_yaw , " standard deviation yaw = " , round(sqrt(yaw_var/N),2) , "drift = " , round(6000.0*beta_yaw[0,0],2) )
-            print("beta pitch = " , beta_pitch , " standard deviation pitch = " , round(sqrt(pitch_var/N),2), "drift = " , round(6000.0*beta_pitch[0,0],2) )
-            print("beta roll = " , beta_roll , " standard deviation roll = " , round(sqrt(roll_var/N),2), "drift = " , round(6000.0*beta_roll[0,0],2) )
+            print("beta yaw = " , beta_yaw , " standard deviation yaw = " , round(sqrt(yaw_var/weight_sum),2) , "drift = " , round(6000.0*beta_yaw[0,0],2) )
+            print("beta pitch = " , beta_pitch , " standard deviation pitch = " , round(sqrt(pitch_var/weight_sum),2), "drift = " , round(6000.0*beta_pitch[0,0],2) )
+            print("beta roll = " , beta_roll , " standard deviation roll = " , round(sqrt(roll_var/weight_sum),2), "drift = " , round(6000.0*beta_roll[0,0],2) )
 
+            log_file.write(f"statistical processing tuning parameters:\r")
+            log_file.write(f"\rjostle detection weighting parameters, window size = {2*jostle_window+1} samples , corner variance = { corner_variance } ft/sec/sec squared.\r")
+            log_file.write(f"\rspeed estimation kalman filter corner rotation rate = {corner_w} radians per second .\r\r")
+      
             log_file.write(f"gyro drift analysis:\r\r")
-            log_file.write(f"yaw: slope and offset = {beta_yaw} , stdev = {round(sqrt(yaw_var/N),2)} degrees , drift = {round(6000.0*beta_yaw[0,0],2)} deg/min\r\r")
-            log_file.write(f"pitch: slope and offset = {beta_pitch} , stdev = {round(sqrt(pitch_var/N),2)} degrees , drift = {round(6000.0*beta_pitch[0,0],2)} deg/min\r\r")
-            log_file.write(f"roll: slope and offset = {beta_roll} , stdev = {round(sqrt(roll_var/N),2)} degrees , drift = {round(6000.0*beta_roll[0,0],2)} deg/min\r\r")
+            log_file.write(f"yaw: slope and offset = {beta_yaw} , stdev = {round(sqrt(yaw_var/weight_sum),2)} degrees , drift = {round(6000.0*beta_yaw[0,0],2)} deg/min\r\r")
+            log_file.write(f"pitch: slope and offset = {beta_pitch} , stdev = {round(sqrt(pitch_var/weight_sum),2)} degrees , drift = {round(6000.0*beta_pitch[0,0],2)} deg/min\r\r")
+            log_file.write(f"roll: slope and offset = {beta_roll} , stdev = {round(sqrt(roll_var/weight_sum),2)} degrees , drift = {round(6000.0*beta_roll[0,0],2)} deg/min\r\r")
             log_file.write(f"note: standard deviations refer to how well the data fits a straight line.\r\r")
+            log_file.write(f"g_bar = {g_bar}\r")
+            log_file.write(f"g_bar_sqr = { g_bar_sqr }\r")
+            log_file.write(f"g_sqr_bar = { g_sqr_bar }\r")
+            log_file.write(f"g_var = { g_sqr_bar - g_bar_sqr}\r")
         else:
-            log_file.write("gyro drift not analzed, not enough data.\r\r")
+            log_file.write("gyro drift not analyzed, not enough data.\r\r")
         
         gx = gravity_sum[0,0]
         gy = gravity_sum[1,0]
         gz = gravity_sum[2,0]
 
-        log_file.write("analysis of specific force data:\r\r")
-        log_file.write(f"x, y and z average force vector = {round(gravity_sum[0,0]/N,2)} , {round(gravity_sum[1,0]/N,2)} , {round(gravity_sum[2,0]/N,2)} feet per second per second.\r")
-        log_file.write(f"square root of the sum of the squares of x, y and z standard deviations = {round(g_std,2)} feet per second per second.\r\r")
+        
+        log_file.write("\ranalysis of specific force data:\r\r")
+        log_file.write(f"x, y and z weighted average force vector = {round(gravity_sum[0,0]/weight_sum,2)} , {round(gravity_sum[1,0]/weight_sum,2)} , {round(gravity_sum[2,0]/weight_sum,2)} feet per second per second.\r")
+        log_file.write(f"square root of the sum of the squares of x, y and z standard deviations = {round(g_std,2)} feet per second per second.\r")
+
+        log_file.write(f"\r>>>>> note: this version of map.py is using statistical weighting of the data points to reduce the standard deviation of the estimate of the parameters. <<<<<<\r\r")
+        log_file.write(f"There were {N} data points used, with a sum of weights equal to {round(weight_sum,2)}\r\r")
         
         if not args.yaw_offset :
             log_file.write(f"default yaw alignment offset of {yaw_offset} degrees was used.\r")              
@@ -637,6 +776,8 @@ if __name__ == "__main__":
     parser.add_argument('-ct','--centrifuge_testing',action = 'store_true',help="centrifuge testing option")
     parser.add_argument('-nk','--no_kalman',action = 'store_true',help="turn off kalman filter")
     parser.add_argument('-kg','--kalman_gain', help="kalman corner gain, default is 1.4")
+    parser.add_argument('-nw','--no_weights', action = 'store_true', help="no weights : option to use equal weighting to estimate alignment and drift")
+    
     
     
     args = parser.parse_args()
@@ -673,17 +814,21 @@ if __name__ == "__main__":
     output_file = open(file_base_name+"_adjusted.txt", "w")
     map_file = open(file_base_name+"_map.csv", "w")
     compare_file = open(file_base_name+"_compare.csv", "w")
-    log_file = open(file_base_name+"_log.txt" , "w")
+    if args.no_weights :
+        log_file = open(file_base_name+"_log_no_weights.txt" , "w")
+    else :
+        log_file = open(file_base_name+"_log.txt" , "w")
     debug_file = open(file_base_name+"_debug.csv" , "w")
+    variance_file = open(file_base_name+"_variance.csv" , "w") 
         
     read_data(input_file)
 
-    mav_filter(fx_list,fx_filt,filter_size)
-    mav_filter(fy_list,fy_filt,filter_size)
-    mav_filter(fz_list,fz_filt,filter_size)
-    mav_filter(wx_list,wx_filt,filter_size)
-    mav_filter(wy_list,wy_filt,filter_size)
-    mav_filter(wz_list,wz_filt,filter_size)
+    mav_filter(fx_list,fx_filt,indices(filter_size))
+    mav_filter(fy_list,fy_filt,indices(filter_size))
+    mav_filter(fz_list,fz_filt,indices(filter_size))
+    mav_filter(wx_list,wx_filt,indices(filter_size))
+    mav_filter(wy_list,wy_filt,indices(filter_size))
+    mav_filter(wz_list,wz_filt,indices(filter_size))
     
     debug_file.write(f"line,fx_raw,fx_filt,fy_raw,fy_filt,fz_raw,fz_filt,wx_raw,wx_filt,wy_raw,wy_filt,wz_raw,wz_filt,")
     debug_file.write(f"gx,gy,gz,heading,pitch\r")
@@ -814,7 +959,7 @@ if __name__ == "__main__":
 
         errors_in.append(v_error)                                                        
 
-    mav_filter(errors_in,errors_out,20)
+    mav_filter(errors_in,errors_out,indices(20))
 
     first_heading_recorded = 0
     speed = 0
