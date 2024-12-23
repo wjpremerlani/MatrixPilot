@@ -1,3 +1,4 @@
+
 import argparse
 import sys
 import numpy as np
@@ -12,18 +13,21 @@ global shift_range , margin , minimum_curve_duration
 #margin is the extra number of elements included when slicing a portion of a run into a plotlet
 shift_range = 50 #time shift range of +- 1/2 of a second
 margin = 50 # .2 seconds worth of data
+#margin = 0 # 
 minimum_curve_duration = 50 # minimum time steps for valid curve marks
 
 global STATE_COLUMN, ROLL_COLUMN ,TIME_COLUMN
 TIME_COLUMN = 0
 STATE_COLUMN = 2
 ROLL_COLUMN = 6
+YAW_COLUMN = 8
 
 global CURVE_START_COLUMN , CURVE_END_COLUMN
 CURVE_START_COLUMN = 2
 CURVE_END_COLUMN = 3
 
-global only_curve_number
+global only_curve_number , first_curve_number
+first_curve_number = 1
 
 global plotlet_offsets , plotlet_size
 
@@ -34,13 +38,13 @@ global column_numbers
 global number_of_runs , run_numbers
 run_numbers = []
 
-global states , rolls , times
 global rows , row_numbers , number_of_rows , labels
 
 
-global states , rolls , times
+global states , rolls , times , yaws
 states = []
 rolls = []
+yaws = []
 times = []
 
 
@@ -126,12 +130,12 @@ def create_cross_indices(size) :
         cross_indices.append(cross_index)
         cross_index = cross_index + 1
 
-global rows , row_numbers , number_of_rows , labels
+global rows , row_numbers , number_of_rows , labels , label_names
 
 def open_file() :
-    global states , rolls , times
+    global states , rolls , yaws ,times
     global number_of_runs , run_numbers
-    global rows , row_numbers , number_of_rows , labels
+    global rows , row_numbers , number_of_rows , labels , label_names
     global columns_per_run
     global columns_per_line
     global column_numbers
@@ -169,14 +173,17 @@ def open_file() :
             state_row = []
             roll_row = []
             time_row = []
+            yaw_row = []
             for run_number in run_numbers :
                 state_row.append(int(float((row[int(run_number + STATE_COLUMN*(number_of_runs+1))]))))
                 roll_row.append(float(row[int(run_number + ROLL_COLUMN*(number_of_runs+1))]))
-                time_row.append(float(row[int(run_number + TIME_COLUMN*(number_of_runs+1))]))             
+                time_row.append(float(row[int(run_number + TIME_COLUMN*(number_of_runs+1))]))
+                yaw_row.append(float(row[int(run_number + YAW_COLUMN*(number_of_runs+1))]))            
             row_number = row_number + 1
             states.append(state_row)
             rolls.append(roll_row)
             times.append(time_row)
+            yaws.append(yaw_row)
     number_of_rows = row_number
 
 global ct_mark_tables
@@ -276,35 +283,49 @@ def fetch_row_col(output_line,plotlet_number,column_number) :
 
 def block_of_zeros() :
     for line in numbers(number_of_zeros) :
-        first_line = True
-        for column_number in column_numbers :
-            if  first_line == True :
-                output_file.write(f" 0 ")
-                first_linne = False
-            else:
-                output_file.write(f" , 0 ")
-        output_file.write(f"\r")
+        #first_line = True
+        #for column_number in column_numbers :
+            #if  first_line == True :
+                #output_file.write(f" 0.0 ")
+                #first_line = False
+            #else:
+                #output_file.write(f" , 0.0 ")
+        #output_file.write(f" , 0.0 , 0.0 " )
+        #for run_number in run_numbers :
+            #output_file.write(f" , 0.0 ")
+        output_file.write(f"\n")
         
 
 def write_plotlets() :
+    global reference_times , all_reference_times , label_names
     global plotlet_numbers , column_numbers , plotlet_sizes , column_offsets , rows , labels , plotlet_size
     global plotlet_offset_table , column_offset_table
-    global only_curve_number
-    output_file.write(f"{labels}\r")
+    global only_curve_number , first_curve_number
+    output_file.write(f" , curve_number ,")
+    for run_number in run_numbers :
+        output_file.write(f" , delta_{label_names[run_number]} ")
+    output_file.write(f" , , ")
+    output_file.write(f"{labels}\n")
     for plotlet_number in plotlet_numbers :
-        if args.curve_number :
-            if plotlet_number == only_curve_number - 1 :
-                for line_number in numbers(plotlet_sizes[plotlet_number]) :
-                    first_column = True
-                    for column_number in column_numbers :
-                        if first_column == True :
-                            output_file.write(f"{fetch_row_col(line_number, plotlet_number , column_number)}")
-                            first_column = False
-                        else :
-                            output_file.write(f",{fetch_row_col(line_number, plotlet_number , column_number)}")
-                    output_file.write(f"\r")
-        else :
+        if ( not args.curve_number ) or  ( plotlet_number + first_curve_number == only_curve_number ) :
             for line_number in numbers(plotlet_sizes[plotlet_number]) :
+                output_file.write(f" , {plotlet_number+first_curve_number} , ")
+                is_first_column = True
+                for run_number in run_numbers :
+                    plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
+                    time_value = times[line_number + plotlet_offset][run_number]
+                    #print("plotlet number" , plotlet_number )
+                    #print("line number " , line_number )
+                    reference_time = all_reference_times[plotlet_number][line_number]
+                    #print("reference time " , reference_time )                
+                    if is_first_column == True :
+                        output_file.write(f" ,  " )
+                        output_file.write(f"{(round(time_value-reference_time,2))}")
+                        is_first_column = False
+                    else :
+                        output_file.write(f",{(round(time_value-reference_time,2))}")
+                output_file.write(f" , , ")
+                
                 first_column = True
                 for column_number in column_numbers :
                     if first_column == True :
@@ -312,7 +333,7 @@ def write_plotlets() :
                         first_column = False
                     else :
                         output_file.write(f",{fetch_row_col(line_number, plotlet_number , column_number)}")
-                output_file.write(f"\r")
+                output_file.write(f"\n")
             if number_of_zeros > 0 :
                 block_of_zeros()
 
@@ -351,37 +372,54 @@ def log_fine_adjustments():
     for plotlet_number in plotlet_numbers :
         log_file.write(f"{fine_adjustments[plotlet_number]}\r")
 
+global all_reference_times
+all_reference_times = []
+
 def compute_fine_adjustments() :
-    global run_numbers , rolls , times , number_of_runs , plotlet_offsets , fine_adjustments 
+    global first_curve_number
+    global label_names
+    global reference_times
+    global run_numbers , rolls , yaws , times , number_of_runs , plotlet_offsets , fine_adjustments 
     global plotlet_offset_table
     global plotlet_number, plotlet_numbers
+    timing_file.write(f"curve_number , ,")
     is_first_run = True
     for run_number in run_numbers :
         if is_first_run == True :
-            timing_file.write(f"delta_time1")
+            timing_file.write(f"delta_{label_names[0]}")
             is_first_run = False
         else :
-            timing_file.write(f",delta_time{(run_number+1)}")
+            timing_file.write(f",delta_{label_names[run_number]}")
     timing_file.write(f"\r")
     for plotlet_number in plotlet_numbers :
         log_file.write(f"computing fine adjustments for plotlet number : {plotlet_number} \r")
         print("computing fine adjustments for plotlet number " , plotlet_number )
         reference_rolls = []
         reference_times = []
+        all_reference_times.append(reference_times)
+        reference_yaws = []
         for line_number in numbers(plotlet_sizes[plotlet_number]) :
+            timing_file.write(f"{plotlet_number+first_curve_number} ,  , ")
+            total_yaw = 0
             total_roll = 0
             total_time = 0
             for run_number in run_numbers :
                 plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
                 roll_value = rolls[line_number + plotlet_offset][run_number]
                 time_value = times[line_number + plotlet_offset][run_number]
+                yaw_value = yaws[line_number + plotlet_offset][run_number]
                 total_roll = total_roll + roll_value
                 total_time = total_time + time_value
+                total_yaw = total_yaw + yaw_value
             reference_roll_value = total_roll / number_of_runs
-            reference_time_value =  total_time / number_of_runs 
+            reference_time_value =  total_time / number_of_runs
+            reference_yaw_value = total_yaw / number_of_runs
             reference_rolls.append(round(reference_roll_value,2))
             reference_times.append(round(reference_time_value,2))
+            reference_yaws.append(round(reference_yaw_value,2))
+            
         for line_number in numbers(plotlet_sizes[plotlet_number]) :
+            
             is_first_ref_time = True
             for run_number in run_numbers :
                 plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
@@ -399,14 +437,14 @@ def compute_fine_adjustments() :
             input_column = []
             for line_number in numbers(plotlet_sizes[plotlet_number]) :
                 plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
-                roll_value = rolls[line_number + plotlet_offset][run_number]
-                input_column.append(roll_value)
+                yaw_value = yaws[line_number + plotlet_offset][run_number]
+                input_column.append(yaw_value)
             input_data.append(input_column)
         #log_file.write(f"reference rolls = {reference_rolls} \r " )
         #log_file.write(f"input data = {input_data} \r  ")
         adjustment_list = []
         for run_number in run_numbers :
-            similarity_index = compute_similarity ( reference_rolls , input_data[run_number] )
+            similarity_index = compute_similarity ( reference_yaws , input_data[run_number] )
             adjustment_list.append(similarity_index)
             #print("similarity index = " , similarity_index , "for run " , run_number , " plotlet " , plotlet_number )
         fine_adjustments.append(adjustment_list)
@@ -468,8 +506,13 @@ if __name__ == "__main__":
     parser.add_argument('-f','--filename', help="name of the file with plotlets")
     parser.add_argument('-zeros','--nz', help="optional number of zeros between plotlets")
     parser.add_argument('-curve','--curve_number', help="plot data for exactly one curve")
+    parser.add_argument('-fcn','--fcn', help="first curve number")
     
     args = parser.parse_args()
+
+    if args.fcn :
+        first_curve_number = int(args.fcn)
+        print("first curve number = " , first_curve_number )
 
     if args.nz :
         number_of_zeros = int(args.nz)
@@ -482,6 +525,7 @@ if __name__ == "__main__":
 
     if args.filename :
         run_file_name = args.filename
+        base_name = run_file_name.split('.')[0]
         print("name of file : ",run_file_name)
         try :
             input_file = open(run_file_name)
@@ -489,15 +533,15 @@ if __name__ == "__main__":
             print("unable to open merged run file, check spelling.")
             exit()
         if args.curve_number :
-            output_file = open("plotlets_for_"+run_file_name+"curve"+str(only_curve_number)+".csv" , "w" )
-            log_file = open("slicing_log_for_"+run_file_name+"curve"+str(only_curve_number)+".txt" , "w" )
-            marks_file = open("timing_marks_for_"+run_file_name+"curve"+str(only_curve_number)+".txt" , "w" )
-            timing_file = open("timing_plot_for_"+run_file_name+"curve"+str(only_curve_number)+".csv" , "w" )
+            output_file = open(base_name+"_curve_"+str(only_curve_number)+"_plotlets.csv" , "w" )
+            log_file = open(base_name+"_curve_"+str(only_curve_number)+"_log.txt" , "w" )
+            marks_file = open(base_name+"_curve_"+str(only_curve_number)+"_marks.txt" , "w" )
+            timing_file = open(base_name+"_curve_"+str(only_curve_number)+"_timing.csv" , "w" )
         else :
-            output_file = open("plotlets_for_"+run_file_name+".csv" , "w" )
-            log_file = open("slicing_log_for_"+run_file_name+".txt" , "w" )
-            marks_file = open("timing_marks_for_"+run_file_name+".txt" , "w" )
-            timing_file = open("timing_plot_for_"+run_file_name+".csv" , "w" )
+            output_file = open(base_name+"_plotlets.csv" , "w" )
+            log_file = open(base_name+"_log.txt" , "w" )
+            marks_file = open(base_name+"_marks.txt" , "w" )
+            timing_file = open(base_name+"_timing.csv" , "w" )
         create_cross_indices(shift_range)
         open_file()
         print("number of zeros inserted between plotlets as curve separaters = " , number_of_zeros )
