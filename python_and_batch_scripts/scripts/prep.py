@@ -43,7 +43,7 @@ if __name__ == "__main__":
                     bat_file.write(f"map.py -bill -f {data_file_name} -s {data_file_start} -e 60.0\n")
                     merge_file.write(f"{data_file_base_name}_time_map_100_HZ.csv\n")
             bat_file.write(f"merge.py -f {base_name}_merge_list.txt\n")
-            bat_file.write(f"slice.py -f {base_name}_merge_list_plots.csv -zeros 200 -fcn 4\n")
+            bat_file.write(f"slice.py -f {base_name}_merge_list_plots.csv -zeros 100 -fcn 4\n")
     else :
         print(" You must provide a file with a list of the names of files to be processed")
 

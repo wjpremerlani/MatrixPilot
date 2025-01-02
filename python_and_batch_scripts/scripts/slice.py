@@ -1,4 +1,15 @@
 
+
+global shift_range , margin , start_margin , end_margin , minimum_curve_duration , minimum_roll
+#shift_range determines the minimum and maximum shit in the range of elements
+#used to scan cross variance as a function of element number shift
+#start_margin and end_margin define the extra number of elements included when slicing a portion of a run into a plotlet
+#minimum_roll defines the data window in which variance weights are non-zero
+shift_range = 50 #time shift range of +- 1/2 of a second
+start_margin = 20 # .2 seconds worth of data
+end_margin = 5
+minimum_roll = 15.0
+
 import argparse
 import sys
 import numpy as np
@@ -7,19 +18,13 @@ from math import sin, cos, atan2, sqrt, radians, degrees
 global number_of_zeros
 number_of_zeros = 0
 
-global shift_range , margin , minimum_curve_duration
-#shift_range determines the minimum and maximum shit in the range of elements
-#used to scan cross variance as a function of element number shift
-#margin is the extra number of elements included when slicing a portion of a run into a plotlet
-shift_range = 50 #time shift range of +- 1/2 of a second
-margin = 50 # .2 seconds worth of data
-#margin = 0 # 
 minimum_curve_duration = 50 # minimum time steps for valid curve marks
 
 global STATE_COLUMN, ROLL_COLUMN ,TIME_COLUMN
 TIME_COLUMN = 0
 STATE_COLUMN = 2
 ROLL_COLUMN = 6
+PITCH_COLUMN = 7 
 YAW_COLUMN = 8
 
 global CURVE_START_COLUMN , CURVE_END_COLUMN
@@ -41,15 +46,77 @@ run_numbers = []
 global rows , row_numbers , number_of_rows , labels
 
 
-global states , rolls , times , yaws
+global states , rolls , pitches, times , yaws , matrices
 states = []
 rolls = []
+pitches = []
 yaws = []
 times = []
+matrices = []
 
-
-global alignment_offsets
+global alignment_offsets , alignment_variances , alignment_variance
 alignment_offsets = []
+alignment_variances = []
+alignment_variance = 0
+
+def create_yaw_matrix(angle) :
+    y_mat = np.zeros((3,3))
+    y_mat[0,0] = cos(radians(angle))
+    y_mat[0,1] = -sin(radians(angle))
+    y_mat[0,2] = 0.0
+    y_mat[1,0] = sin(radians(angle))
+    y_mat[1,1] = cos(radians(angle))
+    y_mat[1,2] = 0.0
+    y_mat[2,0] = 0.0
+    y_mat[2,1] = 0.0
+    y_mat[2,2] = 1.0
+    return y_mat
+
+def create_pitch_matrix(angle) :
+    p_mat = np.zeros((3,3))
+    p_mat[0,0] = cos(radians(angle))
+    p_mat[0,1] = 0.0
+    p_mat[0,2] = sin(radians(angle))
+    p_mat[1,0] = 0.0
+    p_mat[1,1] = 1.0
+    p_mat[1,2] = 0.0
+    p_mat[2,0] = -sin(radians(angle))
+    p_mat[2,1] = 0.0
+    p_mat[2,2] = cos(radians(angle))
+    return p_mat
+   
+
+def create_roll_matrix(angle) :
+    r_mat = np.zeros((3,3))
+    r_mat[0,0] = 1.0
+    r_mat[0,1] = 0.0
+    r_mat[0,2] = 0.0
+    r_mat[1,0] = 0.0
+    r_mat[1,1] = cos(radians(angle))
+    r_mat[1,2] = -sin(radians(angle))
+    r_mat[2,0] = 0.0
+    r_mat[2,1] = sin(radians(angle))
+    r_mat[2,2] = cos(radians(angle))
+    return r_mat
+
+def create_ypr_matrix(yaw,pitch,roll) :
+    y_mat = create_yaw_matrix(yaw)
+    p_mat = create_pitch_matrix(pitch)
+    r_mat = create_roll_matrix(roll)
+    yp_mat = np.matmul(y_mat,p_mat)
+    ypr_mat = np.matmul(yp_mat,r_mat)
+    return ypr_mat
+
+
+def matrix_to_angle_axis(input_matrix) :
+    angles = []
+    roll = degrees (( input_matrix[2,1] - input_matrix[1,2] ) / 2.0 )
+    pitch = degrees (( input_matrix[0,2] - input_matrix[2,0] ) / 2.0 )
+    yaw = degrees (( input_matrix[1,0] - input_matrix[0,1] ) / 2.0 )
+    angles.append(roll)
+    angles.append(pitch)
+    angles.append(yaw)
+    return angles
 
 #perform a protected extraction of a value from a list
 #that allows the index to fall outside of the list
@@ -80,17 +147,22 @@ def fetch( list_of_values, index ) :
 #compute the cross variance of list2 with respect to list1
 #with list2 in effect shifted by offset elements
 def cross_variance(list1, list2, offset) :
+    global minimum_roll , reference_rolls 
     variance_sum = 0.0
+    weight_sum = 0.0 
     N = 0
     list2_index = offset
     for value1 in list1 :
         value2 = fetch ( list2 , list2_index )
-        variance_term = (value1-value2)*(value1-value2)
+        reference_roll = abs(fetch ( reference_rolls , list2_index ))
+        if reference_roll > minimum_roll :
+            variance_term = (value1-value2)*(value1-value2)*reference_roll
+            weight_sum = weight_sum + reference_roll
+            variance_sum = variance_sum + variance_term
+            N = N + 1
         list2_index = int(list2_index + 1)
-        variance_sum = variance_sum + variance_term
-        N = N + 1
-    if N > 0 :
-        return variance_sum/N
+    if ( N > 0 ) and ( weight_sum > 0 ):
+        return variance_sum/weight_sum
     else :
         return 0
 
@@ -98,6 +170,7 @@ def cross_variance(list1, list2, offset) :
 #determine the similarity of two plots as a function of a relative time shift between them
 #this is done by computing the cross variance, the sum of the squares of the differences between plots
 def compute_similarity (reference_list,input_list) :
+    global alignment_variance
     first_index = True
     best_index = 0
     for index in cross_indices  :
@@ -109,6 +182,7 @@ def compute_similarity (reference_list,input_list) :
             if variance < minimum_variance :
                 best_index = index
                 minimum_variance = variance
+    alignment_variance = sqrt(minimum_variance)
     return best_index
 
 
@@ -133,7 +207,7 @@ def create_cross_indices(size) :
 global rows , row_numbers , number_of_rows , labels , label_names
 
 def open_file() :
-    global states , rolls , yaws ,times
+    global states , rolls , pitches, yaws , times , matrices
     global number_of_runs , run_numbers
     global rows , row_numbers , number_of_rows , labels , label_names
     global columns_per_run
@@ -172,19 +246,30 @@ def open_file() :
             row_numbers.append(row_number)
             state_row = []
             roll_row = []
+            pitch_row = []
+            matrix_row = []
             time_row = []
             yaw_row = []
             for run_number in run_numbers :
                 state_row.append(int(float((row[int(run_number + STATE_COLUMN*(number_of_runs+1))]))))
                 roll_row.append(float(row[int(run_number + ROLL_COLUMN*(number_of_runs+1))]))
                 time_row.append(float(row[int(run_number + TIME_COLUMN*(number_of_runs+1))]))
-                yaw_row.append(float(row[int(run_number + YAW_COLUMN*(number_of_runs+1))]))            
+                yaw_row.append(float(row[int(run_number + YAW_COLUMN*(number_of_runs+1))]))
+                pitch_row.append(float(row[int(run_number + PITCH_COLUMN*(number_of_runs+1))]))
+                euler_yaw = (float(row[int(run_number + YAW_COLUMN*(number_of_runs+1))]))
+                euler_pitch = (float(row[int(run_number + PITCH_COLUMN*(number_of_runs+1))]))
+                euler_roll = (float(row[int(run_number + ROLL_COLUMN*(number_of_runs+1))]))
+                matrix_value = create_ypr_matrix(euler_yaw,euler_pitch,euler_roll)
+                matrix_row.append(matrix_value)
             row_number = row_number + 1
             states.append(state_row)
             rolls.append(roll_row)
             times.append(time_row)
             yaws.append(yaw_row)
+            pitches.append(pitch_row)
+            matrices.append(matrix_row)
     number_of_rows = row_number
+
 
 global ct_mark_tables
 ct_mark_tables = []
@@ -225,7 +310,7 @@ def write_timing_marks() :
             log_file.write(f"{ct_mark_tables[run_number][plotlet_number]}\r")
 
 def generate_curve_table(run_number) :
-    global shift_range , margin , minimum_curve_duration
+    global shift_range , margin , start_margin , end_margin , minimum_curve_duration
     global rows , row_numbers , number_of_rows , labels
     previous_state = 0
     start_curve_row = 0
@@ -294,46 +379,141 @@ def block_of_zeros() :
         #for run_number in run_numbers :
             #output_file.write(f" , 0.0 ")
         output_file.write(f"\n")
-        
+
+global file_names
+
+def extract_file_names() :
+    global file_names , label_names , run_numbers
+    file_names = []
+    for run_number in run_numbers :
+        base_name = label_names[run_number]
+        file_name = base_name.split('_')[1]
+        file_names.append(file_name)
+
+def write_column_names( column_name) :
+    global file_names, run_numbers
+    for run_number in run_numbers :
+        output_file.write(f"{column_name}{file_names[run_number]} , ")
+    output_file.write(f" , " )
+
+def write_column_names_commas_first( column_name) :
+    global file_names, run_numbers
+    output_file.write(f" , ")
+    for run_number in run_numbers :
+        output_file.write(f" , {column_name}{file_names[run_number]}")
+
 
 def write_plotlets() :
-    global reference_times , all_reference_times , label_names
+    global file_names
+    global matrices
+    global alignment_variances
+    global reference_times , all_reference_times , label_names , reference_time
     global plotlet_numbers , column_numbers , plotlet_sizes , column_offsets , rows , labels , plotlet_size
     global plotlet_offset_table , column_offset_table
     global only_curve_number , first_curve_number
-    output_file.write(f" , curve_number ,")
-    for run_number in run_numbers :
-        output_file.write(f" , delta_{label_names[run_number]} ")
-    output_file.write(f" , , ")
-    output_file.write(f"{labels}\n")
+
+    extract_file_names()
+
+    output_file.write(f" , curve_number , , ")
+
+    write_column_names("delta_time_")
+    write_column_names("degs_align_stdev_")
+    write_column_names("degs_pivot_stdev_")
+    write_column_names("degs_pivot_")
+    
+    
+    output_file.write(f"{labels}")
+
+    write_column_names_commas_first("gauss_map_degs_x_")
+    write_column_names_commas_first("gauss_map_degs_y_")
+    output_file.write(f"\n")
+    
+
     for plotlet_number in plotlet_numbers :
         if ( not args.curve_number ) or  ( plotlet_number + first_curve_number == only_curve_number ) :
+            pivot_var_sums = []
+            pivot_samples = []
+            pivot_stdev = []
+            for run_number in run_numbers :
+                pivot_var_sums.append(0.0)
+                pivot_samples.append(0)
+                pivot_stdev.append(0)
+                
+            
             for line_number in numbers(plotlet_sizes[plotlet_number]) :
-                output_file.write(f" , {plotlet_number+first_curve_number} , ")
-                is_first_column = True
+                is_first_run = True
+                for run_number in run_numbers :
+                    plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
+                    if is_first_run == True :
+                        rabbit_matrix = matrices[line_number+plotlet_offset][run_number]
+                        is_first_run = False 
+                    run_matrix = matrices[line_number+plotlet_offset][run_number]
+                    pivot_matrix = np.matmul(np.transpose(rabbit_matrix),run_matrix)
+                    pivot_angles = matrix_to_angle_axis(pivot_matrix)
+                    pivot_var_sums[run_number] = pivot_var_sums[run_number] + (pivot_angles[2])**2
+                    pivot_samples[run_number] = pivot_samples[run_number] + 1
+
+            for run_number in run_numbers :
+                pivot_stdev[run_number] = sqrt( pivot_var_sums[run_number] / pivot_samples[run_number] )
+                #print (pivot_stdev[run_number])
+                
+            for line_number in numbers(plotlet_sizes[plotlet_number]) :
+                output_file.write(f" , {plotlet_number+first_curve_number} , , ")
+                is_first_run = True
                 for run_number in run_numbers :
                     plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
                     time_value = times[line_number + plotlet_offset][run_number]
-                    #print("plotlet number" , plotlet_number )
-                    #print("line number " , line_number )
-                    reference_time = all_reference_times[plotlet_number][line_number]
-                    #print("reference time " , reference_time )                
+                    if is_first_run == True :
+                        reference_time = time_value
+                        is_first_run = False              
+                    output_file.write(f"{(round(time_value-reference_time,2))} , ")
+                output_file.write(f" ,  ")
+
+                for run_number in run_numbers :
+                    standard_dev = alignment_variances[plotlet_number][run_number]
+                    output_file.write(f"{round(standard_dev,2)} , ")
+
+                output_file.write(f" , ")
+                
+                is_first_run = True
+                lists_of_angles = []
+                for run_number in run_numbers :
+                    plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
+                    if is_first_run == True :
+                        rabbit_matrix = matrices[line_number+plotlet_offset][run_number]
+                        is_first_run = False 
+                    run_matrix = matrices[line_number+plotlet_offset][run_number]
+                    pivot_matrix = np.matmul(np.transpose(rabbit_matrix),run_matrix)
+                    pivot_angles = matrix_to_angle_axis(pivot_matrix)
+                    lists_of_angles.append(pivot_angles)
+
+                for run_number in run_numbers :
+                    output_file.write(f"{round(pivot_stdev[run_number],2)} , ")
+                output_file.write(f" , ")    
+
+                for run_number in run_numbers :
+                    output_file.write(f"{round(lists_of_angles[run_number][2],2)} , ")    
+                output_file.write(f" , ")
+
+            
+                
+                is_first_column = True
+                for column_number in column_numbers :
                     if is_first_column == True :
-                        output_file.write(f" ,  " )
-                        output_file.write(f"{(round(time_value-reference_time,2))}")
+                        output_file.write(f"{fetch_row_col(line_number, plotlet_number , column_number)}")
                         is_first_column = False
                     else :
-                        output_file.write(f",{(round(time_value-reference_time,2))}")
-                output_file.write(f" , , ")
-                
-                first_column = True
-                for column_number in column_numbers :
-                    if first_column == True :
-                        output_file.write(f"{fetch_row_col(line_number, plotlet_number , column_number)}")
-                        first_column = False
-                    else :
                         output_file.write(f",{fetch_row_col(line_number, plotlet_number , column_number)}")
+
+                output_file.write(f" , ")
+                for run_number in run_numbers :
+                    output_file.write(f" , {round(lists_of_angles[run_number][1],2)} ")    
+                output_file.write(f" , ")
+
+                for run_number in run_numbers :
+                    output_file.write(f" , {round(lists_of_angles[run_number][0],2)} ")
                 output_file.write(f"\n")
+                
             if number_of_zeros > 0 :
                 block_of_zeros()
 
@@ -376,9 +556,10 @@ global all_reference_times
 all_reference_times = []
 
 def compute_fine_adjustments() :
+    global alignment_variance , alignment_variances
     global first_curve_number
     global label_names
-    global reference_times
+    global reference_times , reference_time , reference_rolls
     global run_numbers , rolls , yaws , times , number_of_runs , plotlet_offsets , fine_adjustments 
     global plotlet_offset_table
     global plotlet_number, plotlet_numbers
@@ -399,10 +580,10 @@ def compute_fine_adjustments() :
         all_reference_times.append(reference_times)
         reference_yaws = []
         for line_number in numbers(plotlet_sizes[plotlet_number]) :
-            timing_file.write(f"{plotlet_number+first_curve_number} ,  , ")
             total_yaw = 0
             total_roll = 0
             total_time = 0
+            is_first_run = True
             for run_number in run_numbers :
                 plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
                 roll_value = rolls[line_number + plotlet_offset][run_number]
@@ -411,15 +592,17 @@ def compute_fine_adjustments() :
                 total_roll = total_roll + roll_value
                 total_time = total_time + time_value
                 total_yaw = total_yaw + yaw_value
+                if is_first_run == True :
+                    reference_time_value = time_value
+                    is_first_run = False       
             reference_roll_value = total_roll / number_of_runs
-            reference_time_value =  total_time / number_of_runs
             reference_yaw_value = total_yaw / number_of_runs
             reference_rolls.append(round(reference_roll_value,2))
             reference_times.append(round(reference_time_value,2))
             reference_yaws.append(round(reference_yaw_value,2))
             
         for line_number in numbers(plotlet_sizes[plotlet_number]) :
-            
+            timing_file.write(f"{plotlet_number+first_curve_number} ,  , ")
             is_first_ref_time = True
             for run_number in run_numbers :
                 plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
@@ -443,11 +626,14 @@ def compute_fine_adjustments() :
         #log_file.write(f"reference rolls = {reference_rolls} \r " )
         #log_file.write(f"input data = {input_data} \r  ")
         adjustment_list = []
+        variance_list = []
         for run_number in run_numbers :
             similarity_index = compute_similarity ( reference_yaws , input_data[run_number] )
             adjustment_list.append(similarity_index)
+            variance_list.append(alignment_variance)
             #print("similarity index = " , similarity_index , "for run " , run_number , " plotlet " , plotlet_number )
         fine_adjustments.append(adjustment_list)
+        alignment_variances.append(variance_list)
 
 global fine_offset_columns
 
@@ -476,15 +662,16 @@ def prepare_plotlet(plot_number) :
     global plotlet_offsets , plotlet_size , column_offsets
     global ct_mark_tables
     global CURVE_START_COLUMN , CURVE_END_COLUMN
-    global margin
+    global margin , start_margin , end_margin 
     plotlet_offsets = []
     column_offsets = []
-    max_size = 2*margin
+    total_margin = start_margin + end_margin
+    max_size = total_margin
     for run_number in run_numbers :
         curve_start = ct_mark_tables[run_number][plot_number][CURVE_START_COLUMN]
         curve_end = ct_mark_tables[run_number][plot_number][CURVE_END_COLUMN]
-        plotlet_offsets.append(curve_start - margin)
-        max_size = max(max_size, (2*margin + curve_end - curve_start))
+        plotlet_offsets.append(curve_start - start_margin)
+        max_size = max(max_size, (total_margin + curve_end - curve_start))
     plotlet_size = max_size
     plotlet_sizes.append(max_size)
     is_first_column = True

@@ -1475,6 +1475,11 @@ if __name__ == "__main__":
         time_map_100_file.write(f"roll_rate_{file_base_name},")
         time_map_100_file.write(f"pitch_rate_{file_base_name},")
         time_map_100_file.write(f"yaw_rate_{file_base_name},")
+
+        time_map_100_file.write(f"total_w_rate_{file_base_name},")
+        
+        time_map_100_file.write(f"yaw_rate_earth_frame_{file_base_name},")
+        
     
         time_map_100_file.write(f"velocity_{file_base_name},")
         time_map_100_file.write(f"kalman_input_{file_base_name},")
@@ -1544,6 +1549,8 @@ if __name__ == "__main__":
 
                 try :
 
+                    w_mag = sqrt( (wx_filt[line_number])**2 + (wy_filt[line_number])**2 + (wz_filt[line_number])**2 )
+
                     time_map_100_file.write(f"{round(( local_time   ), 2)},")
                     time_map_100_file.write(f"{mark_number},{mark_state},")
 
@@ -1558,6 +1565,10 @@ if __name__ == "__main__":
                     time_map_100_file.write(f" {round(degrees(wx_filt[line_number]),2 )}," )
                     time_map_100_file.write(f" {round(degrees(wy_filt[line_number]),2 )}," )
                     time_map_100_file.write(f" {round(degrees(wz_filt[line_number]),2 )}," )
+                    
+                    time_map_100_file.write(f" {round(degrees(w_mag),2 )}," )
+
+                    time_map_100_file.write(f" {round(degrees(omegas_e_f_z[line_number]),2 )}," )   
                 
                     time_map_100_file.write(f"{round(( velocity[0,0]   ), 2)},")
                     time_map_100_file.write(f"{round(( v_error   ), 2)},")
