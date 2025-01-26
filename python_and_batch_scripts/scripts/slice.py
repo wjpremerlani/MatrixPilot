@@ -402,6 +402,7 @@ def write_column_names_commas_first( column_name) :
     for run_number in run_numbers :
         output_file.write(f" , {column_name}{file_names[run_number]}")
 
+global curve_number
 
 def write_plotlets() :
     global file_names
@@ -411,6 +412,7 @@ def write_plotlets() :
     global plotlet_numbers , column_numbers , plotlet_sizes , column_offsets , rows , labels , plotlet_size
     global plotlet_offset_table , column_offset_table
     global only_curve_number , first_curve_number
+    global curve_number
 
     extract_file_names()
 
@@ -427,10 +429,21 @@ def write_plotlets() :
     write_column_names_commas_first("gauss_map_degs_x_")
     write_column_names_commas_first("gauss_map_degs_y_")
     output_file.write(f"\n")
+
+    curve_numbers = []
+
+    curve_number = first_curve_number
+
+    for plotlet_number in plotlet_numbers :
+        while curve_number in skip_list_numbers :
+            curve_number = curve_number + 1
+        curve_numbers.append(curve_number)
+        curve_number = curve_number + 1
+    print("curve numbers " , curve_numbers )
     
 
     for plotlet_number in plotlet_numbers :
-        if ( not args.curve_number ) or  ( plotlet_number + first_curve_number == only_curve_number ) :
+        if ( not args.curve_number ) or  ( curve_numbers[plotlet_number] == only_curve_number ) :
             pivot_var_sums = []
             pivot_samples = []
             pivot_stdev = []
@@ -458,7 +471,7 @@ def write_plotlets() :
                 #print (pivot_stdev[run_number])
                 
             for line_number in numbers(plotlet_sizes[plotlet_number]) :
-                output_file.write(f" , {plotlet_number+first_curve_number} , , ")
+                output_file.write(f" , {curve_numbers[plotlet_number]} , , ")
                 is_first_run = True
                 for run_number in run_numbers :
                     plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
@@ -694,8 +707,18 @@ if __name__ == "__main__":
     parser.add_argument('-zeros','--nz', help="optional number of zeros between plotlets")
     parser.add_argument('-curve','--curve_number', help="plot data for exactly one curve")
     parser.add_argument('-fcn','--fcn', help="first curve number")
-    
+    parser.add_argument('-skip','--skip_list', help = "Skip list in quotes with commas, such as -skip \" 9 , 10 \" .")
+
+     
     args = parser.parse_args()
+
+    skip_list_numbers = []
+    
+    if args.skip_list :
+        skip_list = args.skip_list.split(',')
+        for item in skip_list :
+            skip_list_numbers.append(int(item))
+    print(skip_list_numbers)
 
     if args.fcn :
         first_curve_number = int(args.fcn)

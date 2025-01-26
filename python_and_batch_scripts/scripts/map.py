@@ -57,6 +57,13 @@ max_err = 20
 import numpy as np
 import argparse
 from math import sin, cos, atan2, sqrt, radians, degrees
+from datetime import datetime
+
+global current_date , current_time , current_date_time
+current_date_time = datetime.now()
+current_time = current_date_time.time()
+current_date = current_date_time.date()
+
 
 NUM_COLS  = 11
 
@@ -221,6 +228,29 @@ velocity_dot = np.zeros((3,1))
 omega = np.zeros((3,1))
 s_force = np.zeros((3,1))
 g_force = np.zeros((3,1))
+
+def pad_14(instring) :
+    outstring = instring
+    lenstring = len(instring)
+    if lenstring < 14 :
+        pads = int(14-lenstring)
+        for index in range(pads) :
+            outstring = " "+outstring
+    return outstring
+            
+
+def round_and_pad(adjustment) :
+    adj_string = str(round(adjustment,2))
+    return pad_14(adj_string)
+
+def summary_log_write_adjustements(po,ro,pd,rd) :
+    global start
+    summary_log_file.write(f"{round_and_pad(start)},")
+    summary_log_file.write(f"{round_and_pad(po)},")
+    summary_log_file.write(f"{round_and_pad(ro)},")
+    summary_log_file.write(f"{round_and_pad(pd)},")
+    summary_log_file.write(f"{round_and_pad(rd)}\n")
+    
 
 def saturate(input_value,size) :
     if abs(input_value) <= size :
@@ -394,9 +424,13 @@ global run_end_distance , run_end_time , table_end_distance , table_end_time
 run_end_distance = 0 
 run_end_time = 0 
 table_end_distance = 100000 
-table_end_time = 0 
+table_end_time = 0
+
+global run_time
 
 def write_new_mark() :
+    global run_time
+    run_time = int (line_number - line_origin )
     try:
         marks_file.write(f"{mark_number},")
         marks_file.write(f"{mark_state},")
@@ -780,13 +814,13 @@ def read_data(file):
             else:
                 log_file.write(f"pitch alignment offset of {pitch_offset} degrees was specified.\r")
 
+
             if not args.roll_offset :
                 roll_offset = round(degrees(atan2(gy,gz)),2)
                 log_file.write(f"roll alignment offset of {roll_offset} degrees was computed.\r\r")
             else:
                 log_file.write(f"roll alignment offset of {roll_offset} degrees was specified.\r\r")
 
-        
             if args.yaw_drift :
                 log_file.write(f"yaw drift of {yaw_drift} degrees per minute was specified.\r")
             else :
@@ -809,6 +843,11 @@ def read_data(file):
                     log_file.write(f"roll drift of {roll_drift} degrees/minute was computed.\r")
                 else:
                     log_file.write(f"default roll drift of {roll_drift} degrees/minute was used.\r")
+            if N < 11 :
+                summary_lot_file.write(f">>>>>> warning <<<<<<< there were only {N} samples used in drift computations.\n")
+
+            summary_log_write_adjustements(pitch_offset,roll_offset,pitch_drift,roll_drift)
+        
         except:
             pass
                 
@@ -898,19 +937,31 @@ def read_data(file):
     print("")
     print("")
     print("")
+    no_warnings = True
     if gyro_stdev > gyro_stdev_max :
+        no_warnings = False 
+        summary_log_file.write(f">>>*****************************************************<<<\n")
+        summary_log_file.write(f"warning: the value of the gyro analysis standard deviation is {round(gyro_stdev,2)} degrees, which is greater than the allowed threshold of {gyro_stdev_max}\n")
         print(">>>*****************************************************<<<")
         print("warning: the value of the gyro analysis standard deviation is ",round(gyro_stdev,2)," degrees, which is greater than the allowed threshold of ",gyro_stdev_max)
     if gyro_drift > gyro_drift_max :
+        no_warnings = False
+        summary_log_file.write(f">>>*****************************************************<<<\n")
+        summary_log_file.write(f"warning: the value of the total gyro rms drift is {round(gyro_drift,2)} degrees per minute, which is greater than the allowed threshold of {gyro_drift_max}\n")
         print(">>>*****************************************************<<<")
         print("warning: the value of the total gyro rms drift is ",round(gyro_drift,2)," degrees per minute, which is greater than the allowed threshold of ",gyro_drift_max)
     if force_stdev > force_stdev_max :
+        no_warnings = False
+        summary_log_file.write(f">>>*****************************************************<<<\n")
+        summary_log_file.write(f"warning: the value of the force analysis standard deviation is {round(force_stdev,2)} ft/sec/sec, which is greater than the allowed threshold of {force_stdev_max}\n")
         print(">>>*****************************************************<<<")
         print("warning: the value of the force analysis standard deviation is ",round(force_stdev,2)," ft/sec/sec, which is greater than the allowed threshold of ",force_stdev_max)
     if weight_sum < weights_min :
+        no_warnings = False
+        summary_log_file.write(f">>>*****************************************************<<<\n")
+        summary_log_file.write(f"warning: the sum of the analysis weights is {round(weight_sum,2)} , which is less than the allowed threshold of {weights_min}\n")
         print(">>>*****************************************************<<<")
         print("warning: the sum of the analysis weights is ",round(weight_sum,2),", which is less than the allowed threshold of ",weights_min)
-  
     try :
         compare_file.write("x_force_in , x_force_out , y_force_in, y_force_out , z_force_in , z_force_out , yaw_in , yaw_out , pitch_in , pitch_out, roll_in , roll_out\r")
     except :
@@ -1050,6 +1101,14 @@ def read_data(file):
                                                                               
     return None
 
+def write_summary_header() :
+    summary_log_file.write(f"     file_name,")
+    summary_log_file.write(f"            ts,")
+    summary_log_file.write(f"            po,")
+    summary_log_file.write(f"            ro,")
+    summary_log_file.write(f"            pd,")
+    summary_log_file.write(f"            rd\n")
+
 
 if __name__ == "__main__":
     global args
@@ -1112,8 +1171,26 @@ if __name__ == "__main__":
         max_err = 100.0
     if args.kalman_gain :
         corner_w = float(args.kalman_gain)
+
+    try :
+        summary_log_file = open("summary_log.txt" , "r" )
+        summary_log_file.close()
+        summary_log_file = open("summary_log.txt" , "a" )
+    except :
+        summary_log_file = open("summary_log.txt" , "a" )
+        write_summary_header()
         
-    input_file = open(file_name)
+    try :     
+        input_file = open(file_name)
+        summary_log_file.write(f"{pad_14(file_base_name)},")
+        if start < 30.0 :
+            summary_log_file.write(f">>>> start time = {start} is too short <<<<< \n")
+    except :
+        summary_log_file.write(f"unable to open file {file_name} , file was skipped.\n")
+        exit()
+
+    rabbit_log_file = open("rabbit_log.txt" , "a")
+    rabbit_log_file.write(f"{file_base_name},")
 
     if args.all_files :
         variance_file = open(file_base_name+"_variance.csv" , "w")
@@ -1260,12 +1337,12 @@ if __name__ == "__main__":
                 v_error = -max_err
 
             
-            velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0] + feedback_gain*v_error + z_x_cc*velocity_dot[2,0] )/100.0
+            velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0] + feedback_gain*v_error + (z_x_cc/gravity_value)*(velocity_dot[2,0]**2) )/100.0
 
             error_sum = error_sum + v_error
-            acc_sum = acc_sum + velocity_dot[2,0]
+            acc_sum = acc_sum + (velocity_dot[2,0]**2)
 
-    z_x_cc = error_sum/acc_sum
+    z_x_cc = gravity_value*(error_sum/acc_sum)
 
     try :
         log_file.write(f"z to x residual specific cross coupling = {round(z_x_cc,4)}\r")
@@ -1318,9 +1395,9 @@ if __name__ == "__main__":
                 v_error = -max_err
 
             if args.no_kalman :
-                velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0] + z_x_cc*velocity_dot[2,0] )/100.0
+                velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0] + (z_x_cc/gravity_value)*(velocity_dot[2,0]**2) )/100.0
             else:
-                velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0] + feedback_gain*v_error + z_x_cc*velocity_dot[2,0] )/100.0
+                velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0] + feedback_gain*v_error + (z_x_cc/gravity_value)*(velocity_dot[2,0]**2) )/100.0
 
             new_distance = new_distance + velocity[0,0]/100.0
 
@@ -1386,9 +1463,9 @@ if __name__ == "__main__":
                 v_error = -max_err
 
             if args.no_kalman :
-                velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0]  + z_x_cc*velocity_dot[2,0] )/100.0
+                velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0]  + (z_x_cc/gravity_value)*(velocity_dot[2,0]**2) )/100.0
             else:
-                velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0] + feedback_gain*v_error + z_x_cc*velocity_dot[2,0] )/100.0
+                velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0] + feedback_gain*v_error + (z_x_cc/gravity_value)*(velocity_dot[2,0]**2) )/100.0
 
             
             new_distance = new_distance + velocity[0,0]/100.0
@@ -1536,9 +1613,9 @@ if __name__ == "__main__":
             #note : in the code below, alignment_accel is used to reconcile the run time marks with the track model time marks
 
             if args.no_kalman :
-                velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0]  + z_x_cc*velocity_dot[2,0] + alignment_accel )/100.0
+                velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0]  + (z_x_cc/gravity_value)*(velocity_dot[2,0]**2) + alignment_accel )/100.0
             else:
-                velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0] + feedback_gain*v_error + z_x_cc*velocity_dot[2,0] + alignment_accel )/100.0
+                velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0] + feedback_gain*v_error + (z_x_cc/gravity_value)*(velocity_dot[2,0]**2) + alignment_accel )/100.0
 
             
             new_distance = new_distance + velocity[0,0]/100.0
@@ -1929,6 +2006,7 @@ if __name__ == "__main__":
             map_x_sum = 0
             map_y_sum = 0
             N = 0
+    rabbit_log_file.write(f" {run_time}\n")
     
             
     
