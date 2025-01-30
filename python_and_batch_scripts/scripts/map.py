@@ -12,9 +12,11 @@ weights_min = 1000
 #
 #thresholds for detetecting plotlets
 #in order to provide hysteris, start must be significantly larger than end
-global start_threshold , end_threshold
+global start_threshold , end_threshold , yaw_rate_start , yaw_rate_end
 start_threshold = 15
 end_threshold = 3
+yaw_rate_start = 10.0
+yaw_rate_end = 3.0
 #
 #
 # don't edit anything below this line.
@@ -102,7 +104,7 @@ global gx_list , gy_list , gz_list
 gx_list = []
 gy_list = []
 gz_list = []
-global heading_list , pitch_list , roll_list
+global heading_list , pitch_list , roll_list , heading_filt , pitch_filt , roll_filt , heading_hf , pitch_hf , roll_hf
 heading_list = []
 pitch_list = []
 roll_list = []
@@ -427,6 +429,7 @@ table_end_distance = 100000
 table_end_time = 0
 
 global run_time
+run_time = 0 
 
 def write_new_mark() :
     global run_time
@@ -440,26 +443,50 @@ def write_new_mark() :
     except :
         pass
 
-def update_timing_mark() :
-    global mark_state, mark_number, new_distance , distance_origin , line_origin , velocity , line_number , roll_out 
+def update_timing_mark(yaw_rate) :
+    global mark_state, mark_number, new_distance , distance_origin , line_origin , velocity , line_number , roll_out , yaw_rate_start , yaw_rate_end , number_of_marks
+    if ( args.curves ) :
+        if mark_number == number_of_marks :
+            return
+    if args.yrs == True :
+        signal = degrees(yaw_rate)
+        start = yaw_rate_start
+        end = yaw_rate_end
+    else:
+        signal = roll_out
+        start = start_threshold
+        end = end_threshold
+        
     if mark_state == 0 :
-        if abs(roll_out) > start_threshold :
-            mark_state = np.sign(roll_out)
+        if abs(signal) > start :
+            mark_state = np.sign(signal)
             mark_number = mark_number + 1                                   
     else :
-        if abs(roll_out) < end_threshold :
+        if abs(signal) < end :
             mark_state = 0
             mark_number = mark_number + 1
                            
-def update_mark_state_no_tr_mdl() :
-    global mark_state, mark_number, new_distance , distance_origin , line_origin , velocity , line_number , roll_out 
+def update_mark_state_no_tr_mdl(yaw_rate) :
+    global mark_state, mark_number, new_distance , distance_origin , line_origin , velocity , line_number , roll_out , yaw_rate_start , yaw_rate_end , number_of_marks
+    if ( args.curves ) :
+        if mark_number == number_of_marks :
+            return
+    if args.yrs == True :
+        signal = degrees(yaw_rate)
+        start = yaw_rate_start
+        end = yaw_rate_end
+    else:
+        signal = roll_out
+        start = start_threshold
+        end = end_threshold  
+    
     if mark_state == 0 :
-        if abs(roll_out) > start_threshold :
-            mark_state = np.sign(roll_out)
+        if abs(signal) > start :
+            mark_state = np.sign(signal)
             write_new_mark()
             mark_number = mark_number + 1                                   
     else :
-        if abs(roll_out) < end_threshold :
+        if abs(signal) < end:
             mark_state = 0
             write_new_mark()
             mark_number = mark_number + 1
@@ -500,15 +527,26 @@ def write_both_marks ():
     except:
         pass
 
-def update_mark_state_with_tr_mdl() :
-    global mark_state, mark_number, new_distance , distance_origin , line_origin , velocity , line_number , previous_line_number , previous_distance  
+def update_mark_state_with_tr_mdl(yaw_rate) :
+    global mark_state, mark_number, new_distance , distance_origin , line_origin , velocity , line_number , previous_line_number , previous_distance  , yaw_rate_start , yaw_rate_end , number_of_marks
+    if ( args.curves ) :
+        if mark_number == number_of_marks :
+            return
+    if args.yrs == True :
+        signal = degrees(yaw_rate)
+        start = yaw_rate_start
+        end = yaw_rate_end
+    else:
+        signal = roll_out
+        start = start_threshold
+        end = end_threshold  
     if mark_state == 0 :
-        if abs(roll_out) > start_threshold :
-            mark_state = np.sign(roll_out) 
+        if abs(signal) > start :
+            mark_state = np.sign(signal) 
             write_both_marks()
             mark_number = mark_number + 1                                   
     else :
-        if abs(roll_out) < end_threshold :
+        if abs(signal) < end :
             mark_state = 0
             write_both_marks()
             mark_number = mark_number + 1
@@ -571,7 +609,7 @@ def read_data(file):
     global wx_list , wy_list , wz_list , fx_list, fy_list , fz_list
     global wx_filt , wy_filt , wz_filt , fx_filt, fy_filt , fz_filt
     global gx_list , gy_list , gz_list
-    global heading_list , pitch_list , roll_list
+    global heading_list , pitch_list , roll_list , heading_filt , pitch_filt , roll_filt , heading_hf , pitch_hf , roll_hf 
     global omega_e , omegas_e_x, omegas_e_y , omegas_e_z , omegas_e_f_x , omegas_e_f_y , omegas_e_f_z
     global line_nums
     global errors_in, errors_out
@@ -1134,8 +1172,8 @@ if __name__ == "__main__":
     parser.add_argument('-mf','--track_marks_file_name', help="name of file with marks model of the track")
     parser.add_argument('-all','--all_files', action = 'store_true', help="generate all files types")
     parser.add_argument('-bill','--bill', action = 'store_true', help="bills preferred selection")
-    
-    
+    parser.add_argument('-yrs','--yrs',action='store_true',help="use yaw rate for slicing into plotlets.")
+    parser.add_argument('-curves','--curves',help="expected number of curves.")
     
     args = parser.parse_args()
     if args.filename :
@@ -1171,7 +1209,8 @@ if __name__ == "__main__":
         max_err = 100.0
     if args.kalman_gain :
         corner_w = float(args.kalman_gain)
-
+    if args.curves :
+        number_of_marks = int(2*int(args.curves))
     try :
         summary_log_file = open("summary_log.txt" , "r" )
         summary_log_file.close()
@@ -1255,12 +1294,45 @@ if __name__ == "__main__":
     fx_filt = mav_filter(fx_list,indices(filter_size))
     fy_filt = mav_filter(fy_list,indices(filter_size))
     fz_filt = mav_filter(fz_list,indices(filter_size))
+    
     wx_filt = mav_filter(wx_list,indices(filter_size))
     wy_filt = mav_filter(wy_list,indices(filter_size))
     wz_filt = mav_filter(wz_list,indices(filter_size))
+    
+    heading_filt = mav_filter(heading_list,indices(filter_size))
+    pitch_filt = mav_filter(pitch_list,indices(filter_size))
+    roll_filt = mav_filter(roll_list,indices(filter_size))
+
+    heading_hf = []
+    pitch_hf = []
+    roll_hf = []
+
+    fz_hf = []
+
+    scull = []
+
+    for list_index in range(len(heading_filt)) :
+        heading_hf.append(heading_list[list_index] - heading_filt[list_index])
+
+    for list_index in range(len(pitch_filt)) :
+        pitch_hf.append(pitch_list[list_index] - pitch_filt[list_index])
+
+    for list_index in range(len(roll_filt)) :
+        roll_hf.append(roll_list[list_index] - roll_filt[list_index])
+
+    for list_index in range(len(fz_filt)) :
+        fz_hf.append(fz_list[list_index] - fz_filt[list_index])
+        scull.append(radians(fz_hf[list_index]*pitch_hf[list_index]))
+
+    for list_index in range(len(fx_filt)) :
+        fx_list[list_index] = fx_list[list_index] - scull[list_index]
+        fx_filt[list_index] = fx_filt[list_index] - scull[list_index]
+
+  
     omegas_e_f_x = mav_filter(omegas_e_x,indices(filter_size))
     omegas_e_f_y = mav_filter(omegas_e_y,indices(filter_size))
     omegas_e_f_z = mav_filter(omegas_e_z,indices(filter_size))
+    
     roll_edges = mav_filter(roll_list,indices(roll_edge_filter_size))
     yaw_rate_edges = edge_filter(omegas_e_f_z,indices(filter_size))
 
@@ -1471,9 +1543,9 @@ if __name__ == "__main__":
             new_distance = new_distance + velocity[0,0]/100.0
 
             if args.track_marks_file_name :
-               update_mark_state_with_tr_mdl( )
+               update_mark_state_with_tr_mdl(omega[2,0] )
             else :
-               update_mark_state_no_tr_mdl()
+               update_mark_state_no_tr_mdl(omega[2,0])
 
     if args.track_marks_file_name :
         if run_end_time > 0.0 :
@@ -1537,32 +1609,44 @@ if __name__ == "__main__":
 
     try :
 
-        time_map_100_file.write(f"time_{file_base_name},")
-        time_map_100_file.write(f"mark_number_{file_base_name},")
-        time_map_100_file.write(f"mark_state_{file_base_name},")
+        time_map_100_file.write(f"time_{file_base_name}")
+        time_map_100_file.write(f",mark_number_{file_base_name}")
+        time_map_100_file.write(f",mark_state_{file_base_name}")
     
-        time_map_100_file.write(f"x_force_{file_base_name},")
-        time_map_100_file.write(f"y_force_{file_base_name},")
-        time_map_100_file.write(f"z_force_{file_base_name},")
+        time_map_100_file.write(f",x_force_{file_base_name}")
+        time_map_100_file.write(f",y_force_{file_base_name}")
+        time_map_100_file.write(f",z_force_{file_base_name}")
     
-        time_map_100_file.write(f"roll_{file_base_name},")
-        time_map_100_file.write(f"pitch_{file_base_name},")
-        time_map_100_file.write(f" -yaw_{file_base_name},")
+        time_map_100_file.write(f",roll_{file_base_name}")
+        time_map_100_file.write(f",pitch_{file_base_name}")
+        time_map_100_file.write(f", -yaw_{file_base_name}")
 
-        time_map_100_file.write(f"roll_rate_{file_base_name},")
-        time_map_100_file.write(f"pitch_rate_{file_base_name},")
-        time_map_100_file.write(f"yaw_rate_{file_base_name},")
+        time_map_100_file.write(f",roll_rate_{file_base_name}")
+        time_map_100_file.write(f",pitch_rate_{file_base_name}")
+        time_map_100_file.write(f",yaw_rate_{file_base_name}")
 
-        time_map_100_file.write(f"total_w_rate_{file_base_name},")
+        #if extra_omegas == True :
+
+        #    time_map_100_file.write(f",total_w_rate_{file_base_name}")
+        #   time_map_100_file.write(f",yaw_rate_earth_frame_{file_base_name}")
+          
+        time_map_100_file.write(f",velocity_{file_base_name}")
+        time_map_100_file.write(f",kalman_input_{file_base_name}")
+        time_map_100_file.write(f",distance_{file_base_name}")
+        time_map_100_file.write(f",x_{file_base_name}")
+        time_map_100_file.write(f",y_{file_base_name}")
+
+        #if sculling_debug == True :
+
+         #   time_map_100_file.write(f",roll_hf_{file_base_name}")
+         #   time_map_100_file.write(f",pitch_hf_{file_base_name}")
+         #   time_map_100_file.write(f",yaw_hf_{file_base_name}")
+
+         #   time_map_100_file.write(f",sculling_{file_base_name}")
+
+        time_map_100_file.write(f"\n")
         
-        time_map_100_file.write(f"yaw_rate_earth_frame_{file_base_name},")
         
-    
-        time_map_100_file.write(f"velocity_{file_base_name},")
-        time_map_100_file.write(f"kalman_input_{file_base_name},")
-        time_map_100_file.write(f"distance_{file_base_name},")
-        time_map_100_file.write(f"x_{file_base_name},")
-        time_map_100_file.write(f"y\r")
 
     except :
         pass
@@ -1586,7 +1670,7 @@ if __name__ == "__main__":
             omega_e[1,0] = omegas_e_f_y[line_number]
             omega_e[2,0] = omegas_e_f_z[line_number]
 
-            update_timing_mark()
+            update_timing_mark(omega[2,0])
 
             map_marks.append(mark_number)
             map_states.append(mark_state)
@@ -1628,30 +1712,45 @@ if __name__ == "__main__":
 
                     w_mag = sqrt( (wx_filt[line_number])**2 + (wy_filt[line_number])**2 + (wz_filt[line_number])**2 )
 
-                    time_map_100_file.write(f"{round(( local_time   ), 2)},")
-                    time_map_100_file.write(f"{mark_number},{mark_state},")
+                    time_map_100_file.write(f"{round(( local_time   ), 2)}")
+                    time_map_100_file.write(f",{mark_number},{mark_state}")
 
-                    time_map_100_file.write(f" {round(( fx_filt[line_number] ),2)}," )
-                    time_map_100_file.write(f" {round(( fy_filt[line_number] ),2)}," )
-                    time_map_100_file.write(f" {round(( fz_filt[line_number] ),2)}," )
+                    time_map_100_file.write(f" ,{round(( fx_filt[line_number] ),2)}" )
+                    time_map_100_file.write(f" ,{round(( fy_filt[line_number] ),2)}" )
+                    time_map_100_file.write(f" ,{round(( fz_filt[line_number] ),2)}" )
 
-                    time_map_100_file.write(f"{round(( roll_out   ), 2)},")
-                    time_map_100_file.write(f"{round(( pitch_out   ), 2)},")
-                    time_map_100_file.write(f"{round(( -heading   ), 2)},")
+                    time_map_100_file.write(f",{round(( roll_out   ), 2)}")
+                    time_map_100_file.write(f",{round(( pitch_out   ), 2)}")
+                    time_map_100_file.write(f",{round(( -heading   ), 2)}")
 
-                    time_map_100_file.write(f" {round(degrees(wx_filt[line_number]),2 )}," )
-                    time_map_100_file.write(f" {round(degrees(wy_filt[line_number]),2 )}," )
-                    time_map_100_file.write(f" {round(degrees(wz_filt[line_number]),2 )}," )
+                    time_map_100_file.write(f" ,{round(degrees(wx_filt[line_number]),2 )}" )
+                    time_map_100_file.write(f" ,{round(degrees(wy_filt[line_number]),2 )}" )
+                    time_map_100_file.write(f" ,{round(degrees(wz_filt[line_number]),2 )}" )
+
+                    #if extra_omegas == True :
                     
-                    time_map_100_file.write(f" {round(degrees(w_mag),2 )}," )
+                    #    time_map_100_file.write(f" ,{round(degrees(w_mag),2 )}" )
 
-                    time_map_100_file.write(f" {round(degrees(omegas_e_f_z[line_number]),2 )}," )   
+                    #    time_map_100_file.write(f" ,{round(degrees(omegas_e_f_z[line_number]),2 )}" )   
                 
-                    time_map_100_file.write(f"{round(( velocity[0,0]   ), 2)},")
-                    time_map_100_file.write(f"{round(( v_error   ), 2)},")
-                    time_map_100_file.write(f"{round((  new_distance  ), 2)},")
-                    time_map_100_file.write(f"{round(( x_ef   ), 2)},")
-                    time_map_100_file.write(f"{round(( y_ef   ), 2)}\r")
+                    time_map_100_file.write(f",{round(( velocity[0,0]   ), 2)}")
+                    time_map_100_file.write(f",{round(( v_error   ), 2)}")
+                    time_map_100_file.write(f",{round((  new_distance  ), 2)}")
+                    time_map_100_file.write(f",{round(( x_ef   ), 2)}")
+                    time_map_100_file.write(f",{round(( y_ef   ), 2)}")
+
+                    #if sculling_debug == True :
+
+                    #    time_map_100_file.write(f" ,{round(( roll_hf[line_number] ),2)}" )
+                    #    time_map_100_file.write(f" ,{round(( pitch_hf[line_number] ),2)}" )
+                    #    time_map_100_file.write(f" ,{round(( heading_hf[line_number] ),2)}" )
+
+                    #    time_map_100_file.write(f" ,{round(( scull[line_number] ),2)}" )
+
+                    time_map_100_file.write(f"\n")
+
+                      
+                    
                 except :
                     pass
                 

@@ -20,6 +20,8 @@ file_data = []
 column_numbers = []
 number_of_columns = 0
 
+MARK_COLUMN_NUMBER = 1 
+
 def process():
     global file_name_list
     global file_numbers
@@ -114,6 +116,53 @@ def preprocess():
     #print("row_numbers")
     #print(row_numbers)
 
+def validate_curves() :
+    global valid_file_names
+    opened_file_names = []
+    valid_file_names = []
+    max_mark_numbers = []
+    dataStr = input_file.read()
+    file_names = dataStr.splitlines(keepends=False)
+    if dataStr:
+        for file_name in file_names:         
+            try :
+                plot_file = open(file_name)
+                data = plot_file.read()
+                rows = data.splitlines(keepends=False)
+                opened_file_names.append(file_name)
+                mark_numbers = []
+                for row in rows :
+                    columns = row.split(',')
+                    try :
+                        mark_number = int(columns[MARK_COLUMN_NUMBER])
+                        mark_numbers.append(mark_number)
+                    except :
+                        pass
+                max_mark_number = max(mark_numbers)
+                max_mark_numbers.append(max_mark_number)
+                log_file.write(f"max mark = {max_mark_number} for file {file_name}\n")
+                plot_file.close()
+            except:
+                pass
+    input_file.close()
+    #print("max mark numbers " , max_mark_numbers )
+    if args.curves :
+        min_mark = number_of_marks
+    else :
+        min_mark = min(max_mark_numbers)
+    log_file.write(f"valid number of marks = {min_mark}.\n")
+    for index in range(len(opened_file_names)) :
+        if max_mark_numbers[index] == min_mark :
+            valid_file_names.append(opened_file_names[index] )
+        else :
+            print("---->>>>> warning <<<<<<<<<<--------")
+            print(opened_file_names[index] , "has too many timing marks.")
+            log_file.write(f"warning-->>> {opened_file_names[index]} has wrong number of timing marks.\n")
+    log_file.write(f"valid runs : \n")
+    for file_name in valid_file_names :
+        log_file.write(f"{file_name}\n")
+    
+
 def open_files() :
     global file_name_list
     global file_numbers
@@ -123,13 +172,14 @@ def open_files() :
     global file_data
     global column_numbers
     global number_of_columns
+    global valid_file_names
     number_of_files = 0 
     log_file.write(f"reading list of files from {list_of_files_file_name} \r")
     print("reading list of files from " , list_of_files_file_name )
     dataStr = input_file.read()
     file_names = dataStr.splitlines(keepends=False)
     if dataStr:
-        for file_name in file_names:         
+        for file_name in valid_file_names:         
             try :
                 plot_file = open(file_name)
                 print(file_name,"was opened")
@@ -157,8 +207,12 @@ if __name__ == "__main__":
         prog='merge_plots.py',
         description='combines multiple plots into a single plot')
     parser.add_argument('-f','--filename', help="name of the file with list of plot files to be processed")
+    parser.add_argument('-curves','--curves', help="expected number of curves.")
     
     args = parser.parse_args()
+
+    if args.curves :
+        number_of_marks = int(2*int(args.curves))
 
     if args.filename :
         list_of_files_file_name = args.filename
@@ -171,6 +225,8 @@ if __name__ == "__main__":
             exit()
         output_file = open(base_name+"_plots.csv" , "w" )
         log_file = open(base_name+"_log.txt" , "w" )
+        validate_curves()
+        input_file = open(list_of_files_file_name)
         open_files()
         preprocess()
         process()

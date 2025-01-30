@@ -80,7 +80,7 @@ def compute_start(file_name) :
 
     start_time = float(peak)/float(log_rate)
 
-    log_file.write(f"start time for file {file_name} is {round(start_time,2)}\n")
+    log_file.write(f"computed start time for file {file_name} is {round(start_time,2)}\n")
 
     return round(float(peak)/float(log_rate),2)
             
@@ -94,6 +94,8 @@ if __name__ == "__main__":
     parser.add_argument('-s','--sort',action='store_true',help="Sort files by run time.")
     parser.add_argument('-fcn','--first_curve_number', help="First curve number.")
     parser.add_argument('-skip','--skip_list', help = "Skip list in quotes with commas, such as -skip \" 9 , 10 \" .")
+    parser.add_argument('-yrs','--yrs',action='store_true',help="use yaw rate for slicing into plotlets.")
+    parser.add_argument('-curves','--curves',help="expected number of curves.")
     
     args = parser.parse_args()
 
@@ -124,19 +126,34 @@ if __name__ == "__main__":
                 name_and_start = line.split(',')
                 data_file_name = name_and_start[0]
                 data_file_base_name = data_file_name.split('.')[0]
-                data_file_start = compute_start(data_file_name )
+                if len(name_and_start) > 1 :
+                    data_file_start = round(float(name_and_start[1]),2)
+                    log_file.write(f"start time for {data_file_name} = {data_file_start} was read from {list_of_files_file_name}\n")
+                else :
+                    data_file_start = compute_start(data_file_name )
                 if data_file_start > 0 :
                     log_file.write(f"name = {data_file_base_name} , start = {data_file_start} \r")            
-                    bat_file.write(f"map.py -bill -f {data_file_name} -s {data_file_start} -e 60.0\n")
+                    bat_file.write(f"map.py -bill -f {data_file_name} -s {data_file_start} -e 60.0")
+                    if args.yrs :
+                        bat_file.write(f" -yrs")
+                    if args.curves :
+                        bat_file.write(f" -curves {args.curves}")
+                    bat_file.write(f"\n")
                     merge_file.write(f"{data_file_base_name}_time_map_100_HZ.csv\n")
                 else :
                     log_file.write(f"unable to determine start time for {data_file_name}, file will be skipped.\n")        
             if args.sort :
                 bat_file.write(f"sort.py -f {base_name}_sorted_merge_list.txt\n")
-                bat_file.write(f"merge.py -f {base_name}_sorted_merge_list.txt\n")
+                bat_file.write(f"merge.py -f {base_name}_sorted_merge_list.txt")
+                if args.curves :
+                    bat_file.write(f" -curves {args.curves}")
+                bat_file.wriite(f"\n")
                 bat_file.write(f"slice.py -f {base_name}_sorted_merge_list_plots.csv -zeros 100")
             else :
-                bat_file.write(f"merge.py -f {base_name}_merge_list.txt\n")
+                bat_file.write(f"merge.py -f {base_name}_merge_list.txt")
+                if args.curves :
+                    bat_file.write(f" -curves {args.curves}")
+                bat_file.write(f"\n")
                 bat_file.write(f"slice.py -f {base_name}_merge_list_plots.csv -zeros 100")
             if args.first_curve_number :
                 bat_file.write(f" -fcn {args.first_curve_number}")
