@@ -156,8 +156,8 @@ def validate_curves() :
             valid_file_names.append(opened_file_names[index] )
         else :
             print("---->>>>> warning <<<<<<<<<<--------")
-            print(opened_file_names[index] , "has too many timing marks.")
-            log_file.write(f"warning-->>> {opened_file_names[index]} has wrong number of timing marks.\n")
+            print(opened_file_names[index] , "has wrong number of timing marks = " , max_mark_numbers[index])
+            log_file.write(f"warning-->>> {opened_file_names[index]} has wrong number of timing marks = {max_mark_numbers[index]}.\n")
     log_file.write(f"valid runs : \n")
     for file_name in valid_file_names :
         log_file.write(f"{file_name}\n")

@@ -13,14 +13,21 @@ weights_min = 1000
 #thresholds for detetecting plotlets
 #in order to provide hysteris, start must be significantly larger than end
 global start_threshold , end_threshold , yaw_rate_start , yaw_rate_end
-start_threshold = 15
-end_threshold = 3
+global roll_ratio , roll_max , peak_threshold , minimum_curve , curve_timer , yaw_threshold
+start_threshold = 15.0 # roll angle to detect the start of a curve
+peak_threshold = 20.0 # roll angle to confirm a curve
+yaw_threshold = 15.0 # minimum change in heading to start checking for the curve end
+roll_ratio = 0.1 # value of roll/roll_max needed to detect end of curve
 yaw_rate_start = 10.0
 yaw_rate_end = 3.0
 #
 #
 # don't edit anything below this line.
 ###########################################
+
+curve_timer = 0
+
+roll_max = start_threshold
 
 global alignment_accel
 alignment_accel = 0
@@ -125,7 +132,8 @@ global roll_edges ,yaw_rate_edges
 
 
 global filter_size
-filter_size = 20
+#filter_size = 20
+filter_size = 40
 #note : width of the window is 2*filter_size + 1
 
 
@@ -443,53 +451,79 @@ def write_new_mark() :
     except :
         pass
 
-def update_timing_mark(yaw_rate) :
+global number_of_marks , heading_start
+
+def two_phase_roll_update_timing_marks(write_requests, roll_rate) :
     global mark_state, mark_number, new_distance , distance_origin , line_origin , velocity , line_number , roll_out , yaw_rate_start , yaw_rate_end , number_of_marks
+    global roll_max , roll_ratio , peak_threshold , end_threshold
+    global minimum_curve , curve_timer , heading_start , yaw_threshold
     if ( args.curves ) :
         if mark_number == number_of_marks :
             return
-    if args.yrs == True :
-        signal = degrees(yaw_rate)
-        start = yaw_rate_start
-        end = yaw_rate_end
-    else:
-        signal = roll_out
-        start = start_threshold
-        end = end_threshold
-        
     if mark_state == 0 :
-        if abs(signal) > start :
-            mark_state = np.sign(signal)
-            mark_number = mark_number + 1                                   
-    else :
-        if abs(signal) < end :
-            mark_state = 0
+        if abs(roll_out) > start_threshold :
+            heading_start = heading
+            mark_state = np.sign(roll_out)
+            if ( write_requests ==1 ) :
+                write_new_mark()
+            if ( write_requests == 2 ) :
+                write_both_marks ()
             mark_number = mark_number + 1
-                           
-def update_mark_state_no_tr_mdl(yaw_rate) :
-    global mark_state, mark_number, new_distance , distance_origin , line_origin , velocity , line_number , roll_out , yaw_rate_start , yaw_rate_end , number_of_marks
-    if ( args.curves ) :
-        if mark_number == number_of_marks :
-            return
-    if args.yrs == True :
-        signal = degrees(yaw_rate)
-        start = yaw_rate_start
-        end = yaw_rate_end
-    else:
-        signal = roll_out
-        start = start_threshold
-        end = end_threshold  
+            roll_max = start_threshold
+    else :
+        roll_max = max(abs(roll_out),roll_max)
+        if (abs(roll_out) < roll_ratio*roll_max ) and ( np.sign(roll_out) != np.sign(roll_rate)) and ( roll_max > peak_threshold ) and (abs(heading - heading_start) > yaw_threshold ):
+            mark_state = 0
+            if ( write_requests ==1 ) :
+                write_new_mark()
+            if ( write_requests == 2 ) :
+                write_both_marks ()
+            mark_number = mark_number+1
+            roll_max = start_threshold 
     
-    if mark_state == 0 :
-        if abs(signal) > start :
-            mark_state = np.sign(signal)
-            write_new_mark()
-            mark_number = mark_number + 1                                   
+def update_timing_mark(yaw_rate,roll_rate) :
+    global mark_state, mark_number, new_distance , distance_origin , line_origin , velocity , line_number , roll_out , yaw_rate_start , yaw_rate_end , number_of_marks
+    if ( args.curves ) :
+        if mark_number == number_of_marks :
+            return
+    if args.yrs == True :
+        signal = degrees(yaw_rate)
+        start = yaw_rate_start
+        end = yaw_rate_end
+        
+        if mark_state == 0 :
+            if abs(signal) > start :
+                mark_state = np.sign(signal)
+                mark_number = mark_number + 1                                   
+        else :
+            if abs(signal) < end :
+                mark_state = 0
+                mark_number = mark_number + 1
     else :
-        if abs(signal) < end:
-            mark_state = 0
-            write_new_mark()
-            mark_number = mark_number + 1
+        two_phase_roll_update_timing_marks(0,roll_rate)
+                           
+def update_mark_state_no_tr_mdl(yaw_rate,roll_rate) :
+    global mark_state, mark_number, new_distance , distance_origin , line_origin , velocity , line_number , roll_out , yaw_rate_start , yaw_rate_end , number_of_marks
+    if ( args.curves ) :
+        if mark_number == number_of_marks :
+            return
+    if args.yrs == True :
+        signal = degrees(yaw_rate)
+        start = yaw_rate_start
+        end = yaw_rate_end
+    
+        if mark_state == 0 :
+            if abs(signal) > start :
+                mark_state = np.sign(signal)
+                write_new_mark()
+                mark_number = mark_number + 1                                   
+        else :
+            if abs(signal) < end:
+                mark_state = 0
+                write_new_mark()
+                mark_number = mark_number + 1
+    else :
+        two_phase_roll_update_timing_marks(1,roll_rate)
 
 def write_both_marks ():
     global run_end_distance , run_end_time , table_end_distance , table_end_time
@@ -527,7 +561,7 @@ def write_both_marks ():
     except:
         pass
 
-def update_mark_state_with_tr_mdl(yaw_rate) :
+def update_mark_state_with_tr_mdl(yaw_rate,roll_rate) :
     global mark_state, mark_number, new_distance , distance_origin , line_origin , velocity , line_number , previous_line_number , previous_distance  , yaw_rate_start , yaw_rate_end , number_of_marks
     if ( args.curves ) :
         if mark_number == number_of_marks :
@@ -536,20 +570,19 @@ def update_mark_state_with_tr_mdl(yaw_rate) :
         signal = degrees(yaw_rate)
         start = yaw_rate_start
         end = yaw_rate_end
-    else:
-        signal = roll_out
-        start = start_threshold
-        end = end_threshold  
-    if mark_state == 0 :
-        if abs(signal) > start :
-            mark_state = np.sign(signal) 
-            write_both_marks()
-            mark_number = mark_number + 1                                   
+    
+        if mark_state == 0 :
+            if abs(signal) > start :
+                mark_state = np.sign(signal) 
+                write_both_marks()
+                mark_number = mark_number + 1                                   
+        else :
+            if abs(signal) < end :
+                mark_state = 0
+                write_both_marks()
+                mark_number = mark_number + 1
     else :
-        if abs(signal) < end :
-            mark_state = 0
-            write_both_marks()
-            mark_number = mark_number + 1
+        two_phase_roll_update_timing_marks(2,roll_rate)
     
 def read_markers(marker_file) :
     marker_data = marker_file.read()
@@ -1543,9 +1576,9 @@ if __name__ == "__main__":
             new_distance = new_distance + velocity[0,0]/100.0
 
             if args.track_marks_file_name :
-               update_mark_state_with_tr_mdl(omega[2,0] )
+               update_mark_state_with_tr_mdl(omega[2,0],omega[0,0] )
             else :
-               update_mark_state_no_tr_mdl(omega[2,0])
+               update_mark_state_no_tr_mdl(omega[2,0],omega[0,0])
 
     if args.track_marks_file_name :
         if run_end_time > 0.0 :
@@ -1670,7 +1703,7 @@ if __name__ == "__main__":
             omega_e[1,0] = omegas_e_f_y[line_number]
             omega_e[2,0] = omegas_e_f_z[line_number]
 
-            update_timing_mark(omega[2,0])
+            update_timing_mark(omega[2,0],omega[0,0])
 
             map_marks.append(mark_number)
             map_states.append(mark_state)

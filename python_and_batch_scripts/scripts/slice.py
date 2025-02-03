@@ -5,7 +5,8 @@ global shift_range , margin , start_margin , end_margin , minimum_curve_duration
 #used to scan cross variance as a function of element number shift
 #start_margin and end_margin define the extra number of elements included when slicing a portion of a run into a plotlet
 #minimum_roll defines the data window in which variance weights are non-zero
-shift_range = 50 #time shift range of +- 1/2 of a second
+#shift_range = 50 #time shift range of +- 1/2 of a second
+shift_range = 300 #time shift range of +- 1/2 of a second
 start_margin = 20 # .2 seconds worth of data
 end_margin = 5
 minimum_roll = 15.0
