@@ -47,6 +47,8 @@
 
 // the following are used to measure offsets and gains for commissioning
 #define TURTLE_TESTING 0 // now used instead of RECORD_OFFSETS for gathering of 6 point data
+//note: TURTLE_TESTING must be defined to set the option to 0 to not use it, or 1 to use it
+//      TURTLE_TESTING can be combined with other options to suppress logging during jostling
 //#define RECORD_OFFSETS        // record raw accelerometer data and verify residual gyro offsets
 // the following two options are presently used together
 //#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
@@ -71,7 +73,7 @@
 
 // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
 // non-printable characters are written out, as header bytes for packets.
-//#define USE_PACKETIZED_TELEMERTY
+#define USE_PACKETIZED_TELEMERTY
 
 #define LOG_EULER
 //#define LOG_RATE_AND_EULER
@@ -86,9 +88,9 @@
 #define TILT_STOP_DELAY 1      // delay in seconds to allow for a roll over
 #define TILT_START	15          // normal start 
 //#define TILT_START	30          // tilt angle to start for Kufen or HelmetImu
-//#define TILT_STOP	60          // normal tilt angle threshold in degrees to stop recording a run
+#define TILT_STOP	60          // normal tilt angle threshold in degrees to stop recording a run
 //#define TILT_STOP	165         // tilt stop for HelmetImu
-#define TILT_STOP 135 // centrifuge testing
+//#define TILT_STOP 135 // centrifuge testing
 // select a wolf_pac by defining its internal label
 //#define LUGE7_SNnew // used to program a WP without a serial number
 
@@ -150,7 +152,7 @@
 //#define LUGE7_SN132
 //#define LUGE7_SN133
 //#define LUGE7_SN134
-#define LUGE7_SN135
+//#define LUGE7_SN135
 //#define LUGE7_SN136
 //#define LUGE7_SN137
 //#define LUGE7_SN138
@@ -213,7 +215,7 @@
 //#define LUGE7_SN188
 //#define LUGE7_SN189
 
-//#define LUGE7_SN190
+#define LUGE7_SN190
 //#define LUGE7_SN191
 //#define LUGE7_SN192
 //#define LUGE7_SN193
