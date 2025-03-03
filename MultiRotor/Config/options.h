@@ -40,7 +40,7 @@
                                     // you will also need to select a logging format
                                   // such as TEST_SLED or HELMET_IMU, for example
 #define NORMAL_RUN // this one must be turned on for normal operation 100 hz
-#define LOG_RESIDUALS         // logs residual offsets between runs
+#define LOG_RESIDUALS         // logs residual offsets between runs and during "turtle testing"
 #define RESIDUAL_LOG_PERIOD 2  // 30 times per minute
 
 //#define LOG_PITCH_RATE // not commonly used
@@ -48,7 +48,7 @@
 // the following are used to measure offsets and gains for commissioning
 #define TURTLE_TESTING 0 // now used instead of RECORD_OFFSETS for gathering of 6 point data
 //note: TURTLE_TESTING must be defined to set the option to 0 to not use it, or 1 to use it
-//      TURTLE_TESTING can be combined with other options to suppress logging during jostling
+//      TURTLE_TESTING will report average force via residual logging
 //#define RECORD_OFFSETS        // record raw accelerometer data and verify residual gyro offsets
 // the following two options are presently used together
 //#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
@@ -57,7 +57,8 @@
 // the following are special logging options
 //#define SPECTRAL_ANALYSIS_BURST // 5 hz, start at 15, remember to also uncomment the following line
 //#define SAMPLES_PER_BURST 80 
-//#define SPECTRAL_ANALYSIS_CONTINUOUS // also known as the fire hose
+//#define SPECTRAL_ANALYSIS_CONTINUOUS // also known as the fire hose, define SERIAL_PRIORITY
+//#define SERIAL_PRIORITY
 //#define TEST_SLED // set logging Hz to 200 start at 15
 //#define KUFEN // set logging Hz to 200 and start angle to 30 degrees
 //#define HELMET_IMU // set logging Hz to 200, start to 15 and stop to 165
@@ -73,7 +74,7 @@
 
 // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
 // non-printable characters are written out, as header bytes for packets.
-#define USE_PACKETIZED_TELEMERTY
+//#define USE_PACKETIZED_TELEMERTY
 
 #define LOG_EULER
 //#define LOG_RATE_AND_EULER
@@ -118,7 +119,7 @@
 //#define LUGE7_SN088
 //#define LUGE7_SN089
 
-//#define LUGE7_SN101
+#define LUGE7_SN101
 //#define LUGE7_SN102
 //#define LUGE7_SN103
 //#define LUGE7_SN104
@@ -215,7 +216,7 @@
 //#define LUGE7_SN188
 //#define LUGE7_SN189
 
-#define LUGE7_SN190
+//#define LUGE7_SN190
 //#define LUGE7_SN191
 //#define LUGE7_SN192
 //#define LUGE7_SN193
@@ -2244,6 +2245,8 @@
 #ifdef BUILD_OFFSET_TABLE
 #define ALWAYS_LOG
 #undef LOG_IMU_WP2
+#undef LOG_RESIDUALS
+#undef NORMAL_RUN
 #define BUILD_OFFSET_HZ 200
 #endif // 
 
