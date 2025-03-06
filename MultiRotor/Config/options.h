@@ -41,12 +41,14 @@
                                   // such as TEST_SLED or HELMET_IMU, for example
 #define NORMAL_RUN // this one must be turned on for normal operation 100 hz
 #define LOG_RESIDUALS         // logs residual offsets between runs and during "turtle testing"
+                                // also used for align gauge
 #define RESIDUAL_LOG_PERIOD 2  // 30 times per minute
 
 //#define LOG_PITCH_RATE // not commonly used
 
 // the following are used to measure offsets and gains for commissioning
 #define TURTLE_TESTING 0 // now used instead of RECORD_OFFSETS for gathering of 6 point data
+                        // usually LOG_RESIDUALS should be selected when TT is 1
 //note: TURTLE_TESTING must be defined to set the option to 0 to not use it, or 1 to use it
 //      TURTLE_TESTING will report average force via residual logging
 //#define RECORD_OFFSETS        // record raw accelerometer data and verify residual gyro offsets
@@ -106,7 +108,7 @@
 //#define LUGE7_SN053
 //#define LUGE7_SN054
 
-//#define LUGE7_SN080
+#define LUGE7_SN080
 //#define LUGE7_SN081
 //#define LUGE7_SN082
 //#define LUGE7_SN083
@@ -119,7 +121,7 @@
 //#define LUGE7_SN088
 //#define LUGE7_SN089
 
-#define LUGE7_SN101
+//#define LUGE7_SN101
 //#define LUGE7_SN102
 //#define LUGE7_SN103
 //#define LUGE7_SN104
@@ -2325,6 +2327,7 @@
 
 #define RMS_AND_LPF_GUI 0
 
+// set EULER_GUI to 1 for align gauge
 #define EULER_GUI 0
 
 #if (RMS_AND_LPF_GUI==1)
