@@ -885,7 +885,12 @@ void send_imu_data(void)
             serial_output("\r\nx_force,y_force,z_force,yaw_32,pitch_32,roll_32,max_gyro,cpu,seq_no,tmptur,yaw_16,pitch_16,roll_16,lpx,lpy,lpz,algn_x,algn_y,algn_z\r\n");              
               
 #else
+            
+#ifdef DRIFT_RESEARCH
+           serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,yaw_rate_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx,tmptur_xx,rpe_x,rpe_y,rpe_z\r\n");                         
+#else
            serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,yaw_rate_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx,tmptur_xx\r\n");              
+#endif // DRIFT_RESEARCH
 #endif // LOG_PITCH_RATE , TEST_RUNTIME_TILT_ALIGN
 #endif // NORMAL_RUN
 
@@ -1220,7 +1225,12 @@ void send_imu_data(void)
     //omega_filt_16_previous[1]=omega_filt_16[1];
     //omega_filt_16_previous[2]=omega_filt_16[2];  
 #else
+    
+#ifdef DRIFT_RESEARCH
+            serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u,%i,%i,%i,%i",
+#else
             serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u,%i", 
+#endif // DRIFT_RESEARCH
             	((double)(aero_force[0]))/ACCEL_FACTOR ,
 				((double)(aero_force[1]))/ACCEL_FACTOR ,
 				((double)(aero_force[2]))/ACCEL_FACTOR ,
@@ -1233,10 +1243,21 @@ void send_imu_data(void)
 				max_gyro/328  ,
                 udb_cpu_load(),
                 record_number ++ ,
+
 #ifdef LOG_PITCH_RATE
                 omegagyro[1]
 #else
+                    
+#ifdef DRIFT_RESEARCH
+                roll_pitch_error_sum[0],
+                roll_pitch_error_sum[1],
+                roll_pitch_error_sum[2],
+                mpu_temp.value
+                    
+#else
                 mpu_temp.value 
+#endif // DRIFT_RESEARCH
+                    
 #endif // LOG_PITCH_RATE
 			);
 #if ( TEST_RUNTIME_TILT_ALIGN == 1 )

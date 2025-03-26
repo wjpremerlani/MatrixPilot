@@ -64,7 +64,7 @@
 //#define TEST_SLED // set logging Hz to 200 start at 15
 //#define KUFEN // set logging Hz to 200 and start angle to 30 degrees
 //#define HELMET_IMU // set logging Hz to 200, start to 15 and stop to 165
-
+//#define DRIFT_RESEARCH
 
 #ifdef HELMET_IMU
 #undef DATE
@@ -108,7 +108,7 @@
 //#define LUGE7_SN053
 //#define LUGE7_SN054
 
-#define LUGE7_SN080
+//#define LUGE7_SN080
 //#define LUGE7_SN081
 //#define LUGE7_SN082
 //#define LUGE7_SN083
@@ -226,7 +226,7 @@
 //#define LUGE7_SN194
 //#define LUGE7_SN195
 //#define LUGE7_SN196
-//#define LUGE7_SN197
+#define LUGE7_SN197
 
 
 //#define MINI6_SN4 // SN1, Tucker West
