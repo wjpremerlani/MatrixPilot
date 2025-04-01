@@ -113,12 +113,40 @@ void udb_init(void)
 	udb_init_irq(); // turn on all interrupt priorities
 }
 
+extern void gyro_sleep() ;
+extern uint16_t no_jostle_count ;
+
+// for testing purposes, equivalent to a delay of 2*10 = 20 seconds
+//#define MAX_NO_JOSTLE 10 
+// for production purposes, equivalent to a delay of 2*1800 = 3600 seconds
+#define MAX_NO_JOSTLE 1800
+
+// udb_run either goes into idle mode or all power down mode,
+// depending on how long there has not been any jostling.
+// when there has not been any jostling for a time period equal to
+// 2*MAX_NO_JOSTLE seconds, the wolf_pac shuts off all power loads.
+// after that it will require the power to be turned off and back on.
 void udb_run(void)
 {
-#if (USE_MCU_IDLE == 1)
-	Idle();
+#ifdef NORMAL_RUN
+    if ( no_jostle_count > MAX_NO_JOSTLE ) {
+        gyro_sleep(); // turn off the gyros
+        delay_us(320); // wait
+        SRbits.IPL = 7 ; // turn off the interrupts
+        LED_RED = LED_OFF ; // turn off the LEDS
+        LED_GREEN = LED_OFF ;
+        _LATD15 = 0; // turn off the ESP32
+        Sleep(); // turn off the dsPIC
+    }
+    else
+    {
+        // pause cpu counting timer while not in an ISR
+        indicate_loading_main;
+        Idle();
+    }
 #else
-	// pause cpu counting timer while not in an ISR
-	indicate_loading_main;
+    // pause cpu counting timer while not in an ISR
+    indicate_loading_main;
+    Idle();
 #endif
 }

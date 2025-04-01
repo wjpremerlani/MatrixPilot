@@ -17,9 +17,13 @@
 //#define DATE "Wolf_pac_2 , firmware 6.1, 9/4/2024\r\n" 
 // 6.1: An improved matrix alignment implementation that
 // will be especially effective during QLP testing
-#define DATE "Wolf_pac_2 , firmware 6.2, 9/28/2024\r\n"
+//#define DATE "Wolf_pac_2 , firmware 6.2, 9/28/2024\r\n"
 // 6.2 option to set the serial port priority level to the highest level
 // so that logging can take full advantage of the baud setting
+#define DATE "Wolf_pac_2 , firmware 6.3, 4/01/2025\r\n"
+// 6.3 to prevent dead batteries, the wolf-pac will completely power down
+// if there is not any jostling for 1 hour
+// after that power must be turned off and then back on
 
 #define CONING_CORRECTION
 #define CONING_CORRECTION_IN_RMAT

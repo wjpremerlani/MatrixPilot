@@ -246,6 +246,8 @@ boolean log_jostle = 0 ;
 boolean signal_jostle = 0 ; 
 extern int16_t rmat_16[] ;
 
+uint16_t no_jostle_count = 0 ;
+
 static inline void read_gyros(void)
 {
     int16_t acc_net[3] ;
@@ -379,11 +381,13 @@ static inline void read_gyros(void)
             motion_detect = 1 ;
             log_jostle = 0 ;
             signal_jostle = 1 ;
+            no_jostle_count = 0 ;
         }
         else
         {   
             motion_detect = 0 ;
-            signal_jostle = 0 ;           
+            signal_jostle = 0 ; 
+            no_jostle_count = no_jostle_count + 1 ;
         } 
         
         if ( motion_detect == 1 )

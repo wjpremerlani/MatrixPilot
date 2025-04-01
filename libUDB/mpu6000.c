@@ -51,6 +51,14 @@ int16_t vref_adj;
 
 // MPU6000 Initialization and configuration
 
+void gyro_sleep(void)
+{
+    writeMPUSPIreg16(MPUREG_PWR_MGMT_2, 0x3F); // shut off gyros and accelerometers
+    delay_ms(60);
+    writeMPUSPIreg16(MPUREG_PWR_MGMT_1, 0x43); // set the sleep bit and the clock mode
+    delay_ms(60); 
+}
+
 static callback_fptr_t callback = NULL;
 
 void MPU6000_init16(callback_fptr_t fptr)
