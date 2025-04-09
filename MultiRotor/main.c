@@ -61,7 +61,15 @@ void udb_blink_red(void)
 {
     if (signal_jostle == 1)
     {
-        LED_RED = LED_ON ;
+        
+        if ((udb_heartbeat_counter % (2*BLINK_PERIOD)) <= BLINK_ON_TIME)
+        {
+            LED_RED = LED_ON ;
+        }
+        else
+        {
+            LED_RED = LED_OFF ;
+        }
     }
     else
     {
@@ -80,7 +88,15 @@ void udb_blink_green(void)
 {
     if (signal_jostle == 1)
     {
-        LED_GREEN = LED_ON ;
+        
+        if ((udb_heartbeat_counter % (2*BLINK_PERIOD)) <= BLINK_ON_TIME)
+        {
+            LED_GREEN = LED_ON ;
+        }
+        else
+        {
+            LED_GREEN = LED_OFF ;
+        }
     }
     else
     {
