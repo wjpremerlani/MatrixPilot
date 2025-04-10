@@ -223,11 +223,11 @@ int16_t udb_serial_callback_get_byte_to_send(void)
 }
 #endif
 
-
+uint8_t pending_uploads = 0 ;
 // Don't respond to serial input
 void udb_serial_callback_received_byte(uint8_t rxchar)
 {
-	// Do nothing
+	pending_uploads = rxchar ;
 	return ;
 }
 

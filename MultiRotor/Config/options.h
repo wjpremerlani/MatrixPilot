@@ -23,7 +23,8 @@
 #define DATE "Wolf_pac_2 , firmware 6.3, 4/01/2025\r\n"
 // 6.3 to prevent dead batteries, the wolf-pac will completely power down
 // if there is not any jostling for 1 hour
-// after that power must be turned off and then back on
+// after that power must be turned off and then back on.
+// also, the number of pending uploads is reported and pending status is signaled via LEDs
 
 #define CONING_CORRECTION
 #define CONING_CORRECTION_IN_RMAT
@@ -80,7 +81,7 @@
 
 // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
 // non-printable characters are written out, as header bytes for packets.
-//#define USE_PACKETIZED_TELEMERTY
+#define USE_PACKETIZED_TELEMERTY
 
 #define LOG_EULER
 //#define LOG_RATE_AND_EULER

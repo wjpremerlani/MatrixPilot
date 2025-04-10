@@ -310,13 +310,14 @@ extern int32_t accel_sum[];
 extern uint64_t accel_stdev_sqr ;
 extern uint64_t net_dev_sqr ;
 extern int32_t roll_pitch_error_sum[];
+extern uint8_t pending_uploads ;
 
 void send_residual_data(void)
 {
 	if ( start_residuals == 1)
 	{
 		start_residuals = 0 ;
-		serial_output("\r\n\r\nimu_temp_yy,calibrating_yy,x_force_yy,y_force_yy,z_force_yy,x_rate16_yy,y_rate16_yy,z_rate16_yy,rms_rate16_yy,x_flt16_yy,y_flt16_yy,z_flt16_yy,net_dev_yy,tilt_adj(degs)_yy\r\n") ;
+		serial_output("\r\n\r\npending_uploads_yy,imu_temp_yy,calibrating_yy,x_force_yy,y_force_yy,z_force_yy,x_rate16_yy,y_rate16_yy,z_rate16_yy,rms_rate16_yy,x_flt16_yy,y_flt16_yy,z_flt16_yy,net_dev_yy,tilt_adj(degs)_yy\r\n") ;
     }
 	else
 	{
@@ -329,8 +330,9 @@ void send_residual_data(void)
         {
             if (TURTLE_TESTING==1)
             {
-                serial_output("%i,%i,%li,%li,%li,%li,%li,%li,%i,%li,%li,%li,%i,%.3f\r\n",  
-                    mpu_temp.value,
+                serial_output("%i,%i,%i,%li,%li,%li,%li,%li,%li,%i,%li,%li,%li,%i,%.3f\r\n",  
+                        pending_uploads ,
+                        mpu_temp.value,
                     log_jostle ,
                     accel_sum[0],
                     accel_sum[1],
@@ -348,7 +350,8 @@ void send_residual_data(void)
             }
             else
             {
-                serial_output("%i,%i,%.1f,%.1f,%.1f,%li,%li,%li,%i,%li,%li,%li,%i,%.3f\r\n",  
+                serial_output("%i,%i,%i,%.1f,%.1f,%.1f,%li,%li,%li,%i,%li,%li,%li,%i,%.3f\r\n",  
+                    pending_uploads ,
                     mpu_temp.value,
                     log_jostle ,
                     ((double)(aero_force[0]))/ACCEL_FACTOR ,

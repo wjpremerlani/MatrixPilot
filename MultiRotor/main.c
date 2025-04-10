@@ -57,9 +57,10 @@ int commanded_tilt_gain ;
 boolean led_red_run = 0 ;
 boolean led_green_standby = 0 ;
 extern boolean signal_jostle ;
+extern uint8_t pending_uploads ;
 void udb_blink_red(void)
 {
-    if (signal_jostle == 1)
+    if (pending_uploads > 0)
     {
         
         if ((udb_heartbeat_counter % (2*BLINK_PERIOD)) <= BLINK_ON_TIME)
@@ -86,7 +87,7 @@ void udb_blink_red(void)
 
 void udb_blink_green(void)
 {
-    if (signal_jostle == 1)
+    if (pending_uploads > 0 )
     {
         
         if ((udb_heartbeat_counter % (2*BLINK_PERIOD)) <= BLINK_ON_TIME)
