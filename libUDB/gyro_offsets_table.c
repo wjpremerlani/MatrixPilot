@@ -44,8 +44,12 @@ int16_t gyro_offset[3] ;
 
 
 #ifdef X_CROSS_COUPLING
+#if ( X_CROSS_COUPLING == 0 )
+#warning "X_CROSS_COUPLING is 0"
+#endif 
 int16_t cross_coupling = X_CROSS_COUPLING ;
 #else
+#warning "X_CROSS_COUPLING is not defined"
 int16_t cross_coupling = 0 ;
 #endif
 
