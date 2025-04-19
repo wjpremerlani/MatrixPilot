@@ -108,6 +108,7 @@ void MatrixRotate( int16_t matrix[] , int16_t angle[] )
 extern int16_t rmat[];
 int16_t yaw_rmat[9];
 void initialize_yaw_rmat(void)
+// caution : this version does not work for inverted orientation
 {
 	int16_t sine , cosine ;
 	cosine = __builtin_divsd(__builtin_mulsu(rmat[0]/2 + rmat[4]/2, RMAX),RMAX/2+rmat[8]/2);

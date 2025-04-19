@@ -646,9 +646,7 @@ void send_imu_data(void)
 	{
 		header_line ++ ;
 		switch ( header_line ) {
-		case 1:
-			initialize_yaw_rmat();
-			break ;
+		
 		case 2:
 			{
 #ifndef NAME

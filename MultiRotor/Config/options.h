@@ -20,11 +20,13 @@
 //#define DATE "Wolf_pac_2 , firmware 6.2, 9/28/2024\r\n"
 // 6.2 option to set the serial port priority level to the highest level
 // so that logging can take full advantage of the baud setting
-#define DATE "Wolf_pac_2 , firmware 6.3, 4/01/2025\r\n"
+//#define DATE "Wolf_pac_2 , firmware 6.3, 4/01/2025\r\n"
 // 6.3 to prevent dead batteries, the wolf-pac will completely power down
 // if there is not any jostling for 1 hour
 // after that power must be turned off and then back on.
 // also, the number of pending uploads is reported and pending status is signaled via LEDs
+#define DATE "Wolf_pac_2 , firmware 6.4, 4/19/2025\r\n"
+// 6.4 fixes the "upside down" bug which was found to be a rebooting during initialization
 
 #define CONING_CORRECTION
 #define CONING_CORRECTION_IN_RMAT
@@ -44,7 +46,7 @@
 #define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
                                     // you will also need to select a logging format
                                   // such as TEST_SLED or HELMET_IMU, for example
-//#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
+#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
 #define LOG_RESIDUALS         // logs residual offsets between runs and during "turtle testing"
                                 // also used for align gauge
 #define RESIDUAL_LOG_PERIOD 2  // 30 times per minute
@@ -52,7 +54,7 @@
 //#define LOG_PITCH_RATE // not commonly used
 
 // the following are used to measure offsets and gains for commissioning
-#define TURTLE_TESTING 1 // now used instead of RECORD_OFFSETS for gathering of 6 point data
+#define TURTLE_TESTING 0 // now used instead of RECORD_OFFSETS for gathering of 6 point data
                         // usually LOG_RESIDUALS should be selected when TT is 1
 //note: TURTLE_TESTING must be defined to set the option to 0 to not use it, or 1 to use it
 //      TURTLE_TESTING will report average force via residual logging
@@ -81,7 +83,7 @@
 
 // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
 // non-printable characters are written out, as header bytes for packets.
-//#define USE_PACKETIZED_TELEMERTY
+#define USE_PACKETIZED_TELEMERTY
 
 #define LOG_EULER
 //#define LOG_RATE_AND_EULER
@@ -152,7 +154,7 @@
 //#define LUGE7_SN124
 //#define LUGE7_SN125
 //#define LUGE7_SN126
-#define LUGE7_SN127
+//#define LUGE7_SN127
 //#define LUGE7_SN128
 //#define LUGE7_SN129
 //#define LUGE7_SN130
@@ -231,7 +233,7 @@
 //#define LUGE7_SN194
 //#define LUGE7_SN195
 //#define LUGE7_SN196
-//#define LUGE7_SN197
+#define LUGE7_SN197
 
 
 //#define MINI6_SN4 // SN1, Tucker West
