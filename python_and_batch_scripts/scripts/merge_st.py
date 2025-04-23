@@ -1,6 +1,7 @@
 
 import argparse
 import sys
+from datetime import datetime
 
 global file_name_list
 global file_numbers
@@ -78,7 +79,7 @@ def process():
                     else :
                         output_file.write(f" , {str(value)}")
                 value_number = value_number + 1
-            if ( column_number < number_of_columns - 1 ) and ( not args.no_gaps ) :
+            if ( column_number < number_of_columns - 1 ) and ( not args.strmlt ) :
                 output_file.write(f" ,  ")
         output_file.write(f" \n")
 
@@ -208,9 +209,19 @@ if __name__ == "__main__":
         description='combines multiple plots into a single plot')
     parser.add_argument('-f','--filename', help="name of the file with list of plot files to be processed")
     parser.add_argument('-curves','--curves', help="expected number of curves.")
-    parser.add_argument('-no_gaps','--no_gaps',action='store_true',help="option to remove gaps for streamlit plotting")
+    parser.add_argument('-strmlt','--strmlt',action='store_true',help="option to remove gaps for streamlit plotting")
+    parser.add_argument('-log_time','--log_time',action='store_true',help="option to record processing times.")
+    parser.add_argument('-cr','--cr',help="not used but must be allowed.")
+    parser.add_argument('-fcn','--fcn',help="not used but must be allowed.")
+    parser.add_argument('-skip', '--skip',help="not used but must be allowed.")
     
     args = parser.parse_args()
+
+    if args.log_time :
+        time_log = open("time_log.txt","a")
+        now = datetime.now()
+        time = now.time()
+        time_log.write(f"in merge.py, starting to process, time = {time}.\n")
 
     if args.curves :
         number_of_marks = int(2*int(args.curves))

@@ -4,11 +4,12 @@
 # the following are the thresholds for detecting problems with computing alignment and drift
 # feel free to change them
 #
-global gyro_stdev_max , gyro_drift_max, force_stdev_max, weights_min
+global gyro_stdev_max , gyro_drift_max, force_stdev_max, weights_min , MINIMUM_VALID_SAMPLES
 gyro_stdev_max = 3.0
 gyro_drift_max = 3.0
 force_stdev_max = 3.0
 weights_min = 1000
+MINIMUM_VALID_SAMPLES = 30
 #
 #thresholds for detetecting plotlets
 #in order to provide hysteris, start must be significantly larger than end
@@ -16,10 +17,20 @@ global start_threshold , end_threshold , yaw_rate_start , yaw_rate_end
 global roll_ratio , roll_max , peak_threshold , minimum_curve , curve_timer , yaw_threshold
 start_threshold = 15.0 # roll angle to detect the start of a curve
 peak_threshold = 20.0 # roll angle to confirm a curve
-yaw_threshold = 15.0 # minimum change in heading to start checking for the curve end
+#yaw_threshold = 15.0 # minimum change in heading to start checking for the curve end
+yaw_threshold = 7.5
 roll_ratio = 0.1 # value of roll/roll_max needed to detect end of curve
 yaw_rate_start = 10.0
 yaw_rate_end = 3.0
+#
+#
+#
+global z_force_plot_limit
+# z_force_plot_limit is used to clip the reported z force
+# the purpose is to make it easier to examine z force
+# in the straighaways during development of gaplet analysis
+#
+z_force_plot_limit = - 600.0
 #
 #
 # don't edit anything below this line.
@@ -132,8 +143,8 @@ global roll_edges ,yaw_rate_edges
 
 
 global filter_size
-#filter_size = 20
-filter_size = 40
+filter_size = 20
+#filter_size = 40
 #note : width of the window is 2*filter_size + 1
 
 
@@ -472,6 +483,28 @@ def two_phase_roll_update_timing_marks(write_requests, roll_rate) :
             roll_max = start_threshold
     else :
         roll_max = max(abs(roll_out),roll_max)
+        if (abs(roll_out) < roll_ratio*roll_max ) :
+            roll_flag = 10.2
+        else :
+            roll_flag = -.1
+
+        if ( np.sign(roll_out) != np.sign(roll_rate)) :
+            roll_sign_flag = 10.2
+        else :
+            roll_sign_flag = -.1
+
+        if ( roll_max > peak_threshold ) :
+            roll_max_flag = 10.2
+        else :
+            roll_max_flag = -.1
+
+        if (abs(heading - heading_start) > yaw_threshold ) :
+            yaw_flag = 10.2
+        else :
+            yaw_flag = -.1
+        debug_marks_file.write(f"{mark_number},{roll_flag},{roll_sign_flag},{roll_max_flag},{yaw_flag},,{round(roll_out,2)},{round(heading,2)}\n")
+        
+            
         if (abs(roll_out) < roll_ratio*roll_max ) and ( np.sign(roll_out) != np.sign(roll_rate)) and ( roll_max > peak_threshold ) and (abs(heading - heading_start) > yaw_threshold ):
             mark_state = 0
             if ( write_requests ==1 ) :
@@ -607,7 +640,9 @@ def read_markers(marker_file) :
             log_file.write(f"{tr_mdl_speed[marker_number]}\r")
     except:
         pass
-        
+
+    
+global valid_run        
         
 def read_data(file):
     global roll_threshold
@@ -652,6 +687,7 @@ def read_data(file):
     global gyro_stdev_max , gyro_drift_max, force_stdev_max, weights_min
     global gyro_stdev , gyro_drift, force_stdev, weight_sum
     global roll_edges ,yaw_rate_edges
+    global valid_run
     gravity = np.zeros((3,1))
     gravity_sum = np.zeros((3,1))
     g_sqr_sum = 0
@@ -675,6 +711,13 @@ def read_data(file):
     pitch_gravity = 0
     roll_gravity = 0
 
+    total_valid_samples = 0
+
+    NUM_RES_COLUMNS = 14
+
+    VALID_COLUMN = 1
+
+    
     dataStr = file.read()
         
     lines = dataStr.splitlines(keepends=False)
@@ -702,8 +745,20 @@ def read_data(file):
                         line_number = line_number+1              
                 except ValueError:
                     pass    
+            if len(columns) == NUM_RES_COLUMNS :
+                try :
+                    total_valid_samples = total_valid_samples + int (columns[VALID_COLUMN])
+                except ValueError :
+                    pass
             else:
                 pass  
+    log_file.write(f"\n\ntotal number of valid samples = {total_valid_samples} \n")
+
+    if total_valid_samples > MINIMUM_VALID_SAMPLES :
+        valid_run = True
+    else :
+        valid_run = False
+
     N = 0
     gx_sum = 0
     gy_sum = 0
@@ -1016,6 +1071,7 @@ def read_data(file):
         print(">>>*****************************************************<<<")
         print("warning: the value of the gyro analysis standard deviation is ",round(gyro_stdev,2)," degrees, which is greater than the allowed threshold of ",gyro_stdev_max)
     if gyro_drift > gyro_drift_max :
+        valid_run = False
         no_warnings = False
         summary_log_file.write(f">>>*****************************************************<<<\n")
         summary_log_file.write(f"warning: the value of the total gyro rms drift is {round(gyro_drift,2)} degrees per minute, which is greater than the allowed threshold of {gyro_drift_max}\n")
@@ -1028,6 +1084,7 @@ def read_data(file):
         print(">>>*****************************************************<<<")
         print("warning: the value of the force analysis standard deviation is ",round(force_stdev,2)," ft/sec/sec, which is greater than the allowed threshold of ",force_stdev_max)
     if weight_sum < weights_min :
+        valid_run = False
         no_warnings = False
         summary_log_file.write(f">>>*****************************************************<<<\n")
         summary_log_file.write(f"warning: the sum of the analysis weights is {round(weight_sum,2)} , which is less than the allowed threshold of {weights_min}\n")
@@ -1062,10 +1119,15 @@ def read_data(file):
                         create_ypr_matrix(yaw_in,pitch_in,roll_in)
                         matrix_in = ypr_mat
                         if first_line == 1 or line_number == int(100*start) :
-                            matrix_out = np.matmul(first_mat,ypr_o_mat)
                             matrix_in_prev = matrix_in
+                            create_ypr_matrix(0.0 , pitch_in , roll_in )
+                            matrix_out  = ypr_mat
                             matrix_out_prev = matrix_out
+                            #matrix_out = np.matmul(first_mat,ypr_o_mat)
+                            #matrix_in_prev = matrix_in
+                            #matrix_out_prev = matrix_out
                         else :
+                            
                             matrix_update = np.matmul(np.matmul(np.transpose(matrix_in_prev),matrix_in),drift_mat)
                             matrix_out = np.matmul(matrix_out_prev,matrix_update)
                             matrix_out_prev = matrix_out
@@ -1190,7 +1252,7 @@ if __name__ == "__main__":
     parser.add_argument('-y','--yaw_offset', help="yaw alignment offset of wolf-pac with respect to sled")
     parser.add_argument('-p','--pitch_offset', help="pitch alignment offset of wolf-pac with respect to sled")
     parser.add_argument('-r','--roll_offset', help="roll alignment offset of wolf-pac with respect to sled")
-    parser.add_argument('-b','--rotation', help="map orientation rotation")
+    parser.add_argument('-cr','--rotation', help="map compass orientation rotation")
     parser.add_argument('-s','--start', help="time in seconds with respect to first data point to start drawing map")
     parser.add_argument('-e','--elapsed', help="time window in seconds for the map")
     parser.add_argument('-yd','--yaw_drift', help="yaw gyro drift, deg/min")
@@ -1204,9 +1266,17 @@ if __name__ == "__main__":
     parser.add_argument('-nw','--no_weights', action = 'store_true', help="no weights : option to use equal weighting to estimate alignment and drift")
     parser.add_argument('-mf','--track_marks_file_name', help="name of file with marks model of the track")
     parser.add_argument('-all','--all_files', action = 'store_true', help="generate all files types")
-    parser.add_argument('-bill','--bill', action = 'store_true', help="bills preferred selection")
+    parser.add_argument('-bill','--bill', action = 'store_true', help="bill's preferred selection")
+    parser.add_argument('-bruce','--bruce', action = 'store_true', help="bruce's preferred selection")
     parser.add_argument('-yrs','--yrs',action='store_true',help="use yaw rate for slicing into plotlets.")
     parser.add_argument('-curves','--curves',help="expected number of curves.")
+    parser.add_argument('-zfl','--zfl',help="z force lower limit, f/s/s.")
+    parser.add_argument('-strmlt','--strmlt',action='store_true',help="preparation for streamlit plotting.")
+    parser.add_argument('-log_time','--log_time',action='store_true',help="log key times during data processing.")
+    parser.add_argument('-yaw_min','--yaw_min',help="minimum change in yaw to detect end of curve.")
+    parser.add_argument('-fcn','--fcn',help="not used, but must be allowed.")
+    parser.add_argument('-skip','--skip',help = "not used, but must be allowed.")
+    parser.add_argument('-fhs','--fhs',help = "filter half size, window width = 2*fhs+1.")
     
     args = parser.parse_args()
     if args.filename :
@@ -1215,6 +1285,21 @@ if __name__ == "__main__":
     else :
         print("you need to supply a file name")
         exit()
+
+    if args.fhs :
+        filter_size = int(args.fhs)
+
+    if args.yaw_min :
+        yaw_threshold = float(args.yaw_min)
+
+    if args.log_time :
+        time_log = open("time_log.txt","a")
+        now = datetime.now()
+        time = now.time()
+        time_log.write(f"map.py, starting to process {file_name} , time = {time}.\n")
+
+    if args.zfl :
+        z_force_plot_limit = float(args.zfl)
 
     if args.yaw_offset :
         yaw_offset = float(args.yaw_offset)
@@ -1264,6 +1349,9 @@ if __name__ == "__main__":
     rabbit_log_file = open("rabbit_log.txt" , "a")
     rabbit_log_file.write(f"{file_base_name},")
 
+    debug_marks_file = open(file_base_name+"_debug_marks.csv", "w")
+    debug_marks_file.write(f"mark_number,roll_is_small,opposite_roll_n_rate,valid_roll_peak,minimum_yaw,,roll,yaw,,,minimum yaw = {yaw_threshold}\n")
+
     if args.all_files :
         variance_file = open(file_base_name+"_variance.csv" , "w")
         output_file = open(file_base_name+"_adjusted.txt", "w")
@@ -1273,6 +1361,15 @@ if __name__ == "__main__":
         time_map_100_file = open(file_base_name+"_time_map_100_HZ.csv", "w")
         distance_map_file = open(file_base_name+"_distance_map.csv", "w")
         marks_file = open(file_base_name+"_timing_marks.csv" , "w")
+        if args.no_weights :
+            log_file = open(file_base_name+"_log_no_weights.txt" , "w")
+        else :
+            log_file = open(file_base_name+"_log.txt" , "w")
+    elif args.bruce :
+        time_map_100_file = open(file_base_name+"_time_map_100_HZ.csv", "w")
+        time_map_file = open(file_base_name+"_time_map_1000_HZ.csv", "w")
+        output_file = open(file_base_name+"_adjusted.txt", "w")
+        #marks_file = open(file_base_name+".timing_marks.csv" , "w")
         if args.no_weights :
             log_file = open(file_base_name+"_log_no_weights.txt" , "w")
         else :
@@ -1290,7 +1387,10 @@ if __name__ == "__main__":
         time_map_file = open(file_base_name+"_time_map_1000_HZ.csv", "w")
         time_map_100_file = open(file_base_name+"_time_map_100_HZ.csv", "w")
         marks_file = open(file_base_name+"_timing_marks.csv" , "w")
-        
+        if args.no_weights :
+            log_file = open(file_base_name+"_log_no_weights.txt" , "w")
+        else :
+            log_file = open(file_base_name+"_log.txt" , "w")
         
     
     if args.track_marks_file_name :
@@ -1642,42 +1742,88 @@ if __name__ == "__main__":
 
     try :
 
-        time_map_100_file.write(f"time__{file_base_name}")
-        time_map_100_file.write(f",mark_number__{file_base_name}")
-        time_map_100_file.write(f",mark_state__{file_base_name}")
+        if valid_run is True :
+            run_name = file_base_name
+        else :
+            run_name = file_base_name+"?" 
+
+        if args.strmlt :
+
+            time_map_100_file.write(f"time__{run_name}")
+            time_map_100_file.write(f",mark_number__{run_name}")
+            time_map_100_file.write(f",mark_state__{run_name}")
     
-        time_map_100_file.write(f",x_force__{file_base_name}")
-        time_map_100_file.write(f",y_force__{file_base_name}")
-        time_map_100_file.write(f",z_force__{file_base_name}")
+            time_map_100_file.write(f",x_force__{run_name}")
+            time_map_100_file.write(f",y_force__{run_name}")
+            time_map_100_file.write(f",z_force__{run_name}")
     
-        time_map_100_file.write(f",roll__{file_base_name}")
-        time_map_100_file.write(f",pitch__{file_base_name}")
-        time_map_100_file.write(f",-yaw__{file_base_name}")
+            time_map_100_file.write(f",roll__{run_name}")
+            time_map_100_file.write(f",pitch__{run_name}")
+            time_map_100_file.write(f",-yaw__{run_name}")
 
-        time_map_100_file.write(f",roll_rate__{file_base_name}")
-        time_map_100_file.write(f",pitch_rate__{file_base_name}")
-        time_map_100_file.write(f",yaw_rate__{file_base_name}")
+            time_map_100_file.write(f",roll_rate__{run_name}")
+            time_map_100_file.write(f",pitch_rate__{run_name}")
+            time_map_100_file.write(f",yaw_rate__{run_name}")
 
-        #if extra_omegas == True :
+            #if extra_omegas == True :
 
-        #    time_map_100_file.write(f",total_w_rate_{file_base_name}")
-        #   time_map_100_file.write(f",yaw_rate_earth_frame_{file_base_name}")
+            #    time_map_100_file.write(f",total_w_rate_{run_name}")
+            #   time_map_100_file.write(f",yaw_rate_earth_frame_{run_name}")
           
-        time_map_100_file.write(f",velocity__{file_base_name}")
-        time_map_100_file.write(f",kalman_input__{file_base_name}")
-        time_map_100_file.write(f",distance__{file_base_name}")
-        time_map_100_file.write(f",x__{file_base_name}")
-        time_map_100_file.write(f",y__{file_base_name}")
+            time_map_100_file.write(f",velocity__{run_name}")
+            time_map_100_file.write(f",kalman_input__{run_name}")
+            time_map_100_file.write(f",distance__{run_name}")
+            time_map_100_file.write(f",x__{run_name}")
+            time_map_100_file.write(f",y__{run_name}")
 
-        #if sculling_debug == True :
+            #if sculling_debug == True :
 
-         #   time_map_100_file.write(f",roll_hf_{file_base_name}")
-         #   time_map_100_file.write(f",pitch_hf_{file_base_name}")
-         #   time_map_100_file.write(f",yaw_hf_{file_base_name}")
+             #   time_map_100_file.write(f",roll_hf_{file_base_name}")
+             #   time_map_100_file.write(f",pitch_hf_{file_base_name}")
+             #   time_map_100_file.write(f",yaw_hf_{file_base_name}")
 
-         #   time_map_100_file.write(f",sculling_{file_base_name}")
+             #   time_map_100_file.write(f",sculling_{file_base_name}")
 
-        time_map_100_file.write(f"\n")
+            time_map_100_file.write(f"\n")
+
+        else :
+
+            time_map_100_file.write(f"time__{file_base_name}")
+            time_map_100_file.write(f",mark_number__{file_base_name}")
+            time_map_100_file.write(f",mark_state__{file_base_name}")
+    
+            time_map_100_file.write(f",x_force__{file_base_name}")
+            time_map_100_file.write(f",y_force__{file_base_name}")
+            time_map_100_file.write(f",z_force__{file_base_name}")
+    
+            time_map_100_file.write(f",roll__{file_base_name}")
+            time_map_100_file.write(f",pitch__{file_base_name}")
+            time_map_100_file.write(f",-yaw__{file_base_name}")
+
+            time_map_100_file.write(f",roll_rate__{file_base_name}")
+            time_map_100_file.write(f",pitch_rate__{file_base_name}")
+            time_map_100_file.write(f",yaw_rate__{file_base_name}")
+
+            #if extra_omegas == True :
+
+            #    time_map_100_file.write(f",total_w_rate_{file_base_name}")
+            #   time_map_100_file.write(f",yaw_rate_earth_frame_{file_base_name}")
+          
+            time_map_100_file.write(f",velocity__{file_base_name}")
+            time_map_100_file.write(f",kalman_input__{file_base_name}")
+            time_map_100_file.write(f",distance__{file_base_name}")
+            time_map_100_file.write(f",x__{file_base_name}")
+            time_map_100_file.write(f",y__{file_base_name}")
+
+            #if sculling_debug == True :
+
+             #   time_map_100_file.write(f",roll_hf_{file_base_name}")
+             #   time_map_100_file.write(f",pitch_hf_{file_base_name}")
+             #   time_map_100_file.write(f",yaw_hf_{file_base_name}")
+
+             #   time_map_100_file.write(f",sculling_{file_base_name}")
+
+            time_map_100_file.write(f"\n")
         
         
 
@@ -1743,44 +1889,93 @@ if __name__ == "__main__":
 
                 try :
 
-                    w_mag = sqrt( (wx_filt[line_number])**2 + (wy_filt[line_number])**2 + (wz_filt[line_number])**2 )
+                    if args.strmlt :
 
-                    time_map_100_file.write(f"{round(( local_time   ), 2)}")
-                    time_map_100_file.write(f",{mark_number},{mark_state}")
+                       # w_mag = sqrt( (wx_filt[line_number])**2 + (wy_filt[line_number])**2 + (wz_filt[line_number])**2 )
 
-                    time_map_100_file.write(f" ,{round(( fx_filt[line_number] ),2)}" )
-                    time_map_100_file.write(f" ,{round(( fy_filt[line_number] ),2)}" )
-                    time_map_100_file.write(f" ,{round(( fz_filt[line_number] ),2)}" )
+                        time_map_100_file.write(f"{round(( local_time   ), 2)}")
+                        time_map_100_file.write(f",{mark_number},{mark_state}")
 
-                    time_map_100_file.write(f",{round(( roll_out   ), 2)}")
-                    time_map_100_file.write(f",{round(( pitch_out   ), 2)}")
-                    time_map_100_file.write(f",{round(( -heading   ), 2)}")
+                        time_map_100_file.write(f" ,{round(( fx_filt[line_number] ),2)}" )
+                        time_map_100_file.write(f" ,{round(( fy_filt[line_number] ),2)}" )
+                        if fz_filt[line_number] > z_force_plot_limit :
+                            time_map_100_file.write(f" ,{round(( fz_filt[line_number] ),2)}" )
+                        else :
+                            time_map_100_file.write(f" ,{round(( z_force_plot_limit ),2)}" )
 
-                    time_map_100_file.write(f" ,{round(degrees(wx_filt[line_number]),2 )}" )
-                    time_map_100_file.write(f" ,{round(degrees(wy_filt[line_number]),2 )}" )
-                    time_map_100_file.write(f" ,{round(degrees(wz_filt[line_number]),2 )}" )
+                        time_map_100_file.write(f",{round(( roll_out   ), 2)}")
+                        time_map_100_file.write(f",{round(( pitch_out   ), 2)}")
+                        time_map_100_file.write(f",{round(( -heading   ), 2)}")
 
-                    #if extra_omegas == True :
+                        time_map_100_file.write(f" ,{round(degrees(wx_filt[line_number]),2 )}" )
+                        time_map_100_file.write(f" ,{round(degrees(wy_filt[line_number]),2 )}" )
+                        time_map_100_file.write(f" ,{round(degrees(wz_filt[line_number]),2 )}" )
+
+                        #if extra_omegas == True :
                     
-                    #    time_map_100_file.write(f" ,{round(degrees(w_mag),2 )}" )
+                        #    time_map_100_file.write(f" ,{round(degrees(w_mag),2 )}" )
 
-                    #    time_map_100_file.write(f" ,{round(degrees(omegas_e_f_z[line_number]),2 )}" )   
+                        #    time_map_100_file.write(f" ,{round(degrees(omegas_e_f_z[line_number]),2 )}" )   
                 
-                    time_map_100_file.write(f",{round(( velocity[0,0]   ), 2)}")
-                    time_map_100_file.write(f",{round(( v_error   ), 2)}")
-                    time_map_100_file.write(f",{round((  new_distance  ), 2)}")
-                    time_map_100_file.write(f",{round(( x_ef   ), 2)}")
-                    time_map_100_file.write(f",{round(( y_ef   ), 2)}")
+                        time_map_100_file.write(f",{round(( velocity[0,0]   ), 2)}")
+                        time_map_100_file.write(f",{round(( v_error   ), 2)}")
+                        time_map_100_file.write(f",{round((  new_distance  ), 2)}")
+                        time_map_100_file.write(f",{round(( x_ef   ), 2)}")
+                        time_map_100_file.write(f",{round(( y_ef   ), 2)}")
 
-                    #if sculling_debug == True :
+                        #if sculling_debug == True :
 
-                    #    time_map_100_file.write(f" ,{round(( roll_hf[line_number] ),2)}" )
-                    #    time_map_100_file.write(f" ,{round(( pitch_hf[line_number] ),2)}" )
-                    #    time_map_100_file.write(f" ,{round(( heading_hf[line_number] ),2)}" )
+                        #    time_map_100_file.write(f" ,{round(( roll_hf[line_number] ),2)}" )
+                        #    time_map_100_file.write(f" ,{round(( pitch_hf[line_number] ),2)}" )
+                        #    time_map_100_file.write(f" ,{round(( heading_hf[line_number] ),2)}" )
 
-                    #    time_map_100_file.write(f" ,{round(( scull[line_number] ),2)}" )
+                        #    time_map_100_file.write(f" ,{round(( scull[line_number] ),2)}" )
 
-                    time_map_100_file.write(f"\n")
+                        time_map_100_file.write(f"\n")
+
+                    else :
+
+                        w_mag = sqrt( (wx_filt[line_number])**2 + (wy_filt[line_number])**2 + (wz_filt[line_number])**2 )
+
+                        time_map_100_file.write(f"{round(( local_time   ), 2)}")
+                        time_map_100_file.write(f",{mark_number},{mark_state}")
+
+                        time_map_100_file.write(f" ,{round(( fx_filt[line_number] ),2)}" )
+                        time_map_100_file.write(f" ,{round(( fy_filt[line_number] ),2)}" )
+                        if fz_filt[line_number] > z_force_plot_limit :
+                            time_map_100_file.write(f" ,{round(( fz_filt[line_number] ),2)}" )
+                        else :
+                            time_map_100_file.write(f" ,{round(( z_force_plot_limit ),2)}" )
+
+                        time_map_100_file.write(f",{round(( roll_out   ), 2)}")
+                        time_map_100_file.write(f",{round(( pitch_out   ), 2)}")
+                        time_map_100_file.write(f",{round(( -heading   ), 2)}")
+
+                        time_map_100_file.write(f" ,{round(degrees(wx_filt[line_number]),2 )}" )
+                        time_map_100_file.write(f" ,{round(degrees(wy_filt[line_number]),2 )}" )
+                        time_map_100_file.write(f" ,{round(degrees(wz_filt[line_number]),2 )}" )
+
+                        #if extra_omegas == True :
+                    
+                        #    time_map_100_file.write(f" ,{round(degrees(w_mag),2 )}" )
+
+                        #    time_map_100_file.write(f" ,{round(degrees(omegas_e_f_z[line_number]),2 )}" )   
+                
+                        time_map_100_file.write(f",{round(( velocity[0,0]   ), 2)}")
+                        time_map_100_file.write(f",{round(( v_error   ), 2)}")
+                        time_map_100_file.write(f",{round((  new_distance  ), 2)}")
+                        time_map_100_file.write(f",{round(( x_ef   ), 2)}")
+                        time_map_100_file.write(f",{round(( y_ef   ), 2)}")
+
+                        #if sculling_debug == True :
+
+                        #    time_map_100_file.write(f" ,{round(( roll_hf[line_number] ),2)}" )
+                        #    time_map_100_file.write(f" ,{round(( pitch_hf[line_number] ),2)}" )
+                        #    time_map_100_file.write(f" ,{round(( heading_hf[line_number] ),2)}" )
+
+                        #    time_map_100_file.write(f" ,{round(( scull[line_number] ),2)}" )
+
+                        time_map_100_file.write(f"\n")
 
                       
                     

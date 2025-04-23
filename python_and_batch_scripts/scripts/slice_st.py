@@ -6,13 +6,20 @@ global shift_range , margin , start_margin , end_margin , minimum_curve_duration
 #start_margin and end_margin define the extra number of elements included when slicing a portion of a run into a plotlet
 #minimum_roll defines the data window in which variance weights are non-zero
 shift_range = 200 #time shift range of +- 2 seconds
-start_margin = 20 # .2 seconds worth of data
-end_margin = 5
+#shift_range = 20 #time shift range of +- .2 seconds
+#art_margin = 20 # .2 seconds worth of data
+#end_margin = 5
+start_margin = 0 
+end_margin = 0
 minimum_roll = 15.0
+
+
+
 import argparse
 import sys
 import numpy as np
 from math import sin, cos, atan2, sqrt, radians, degrees
+from datetime import datetime
 
 global number_of_zeros
 number_of_zeros = 0
@@ -25,13 +32,14 @@ STATE_COLUMN = 2
 ROLL_COLUMN = 6
 PITCH_COLUMN = 7 
 YAW_COLUMN = 8
+Z_FORCE_COLUMN = 5
 
 global CURVE_START_COLUMN , CURVE_END_COLUMN
 CURVE_START_COLUMN = 2
 CURVE_END_COLUMN = 3
 
 global only_curve_number , first_curve_number
-first_curve_number = 1
+first_curve_number = 0
 
 global plotlet_offsets , plotlet_size
 
@@ -45,13 +53,14 @@ run_numbers = []
 global rows , row_numbers , number_of_rows , labels , label_names
 
 
-global states , rolls , pitches, times , yaws , matrices
+global states , rolls , pitches, times , yaws , matrices , z_forces
 states = []
 rolls = []
 pitches = []
 yaws = []
 times = []
 matrices = []
+z_forces = []
 
 global alignment_offsets , alignment_variances , alignment_variance
 alignment_offsets = []
@@ -117,68 +126,88 @@ def matrix_to_angle_axis(input_matrix) :
     angles.append(yaw)
     return angles
 
-#perform a protected extraction of a value from a list
-#that allows the index to fall outside of the list
-#as well as a round to 2 decimal places
-def fndr( list_of_values, index ) :
-    if index < 0 :
-        return 0.0
-    else :
-        try :
-            value = list_of_values[index]
-        except :
-            value = 0.0
-        return round(value ,2)
+global fetch_valid , skip
 
-global fetch_valid , skip        
-
-#perform a protected extraction of a value from a list
+#perform a protected extraction of a value from an array
 #that allows the index to fall outside of the list
-def fetch( list_of_values, index ) :
+def fetch_line_run ( array_of_values, index , run  ) :
     global fetch_valid
     if index < 0 :
         fetch_valid = False
         return 0
     else :
         try :
-            value = list_of_values[index]
-            fetch_valid = True
+            value = array_of_values[index][run]
         except :
             fetch_valid = False
             value = 0
         return value 
 
+global fetch_valid_true , fetch_valid_false
+
+fetch_valid_true = 0
+fetch_valid_false = 0
+
+#perform a protected extraction of a value from a list
+#that allows the index to fall outside of the list
+def fetch( list_of_values, index ) :
+    global fetch_valid
+    global fetch_valid_true , fetch_valid_false
+    if index < 0 :
+        fetch_valid = False
+        fetch_valid_false = fetch_valid_false + 1
+        return 0
+    else :
+        try :
+            value = list_of_values[index]
+            fetch_valid_true = fetch_valid_true + 1
+        except :
+            fetch_valid = False
+            fetch_valid_false = fetch_valid_false + 1
+            value = 0
+        return value 
+
+global force_wt
+force_wt = 1.0
+
 global N_minimum 
 N_minimum = 50
+
+global first_var_log
+first_var_log = True
     
 #compute the cross variance of list2 with respect to list1
 #with list2 in effect shifted by offset elements
-def cross_variance(list1, list2, offset , roll_list) :
+def cross_variance(list1, list2, offset , roll_list , plt_num , rn_num ) :
     global fetch_valid , skip , N_minimum , N_samples
-    global minimum_roll , reference_rolls , rolls
-    compute_variance = True
+    global minimum_roll , reference_rolls , rolls ,z_forces , states
+    global first_var_log
     variance_sum = 0.0
-    weight_sum = 0.0 
+    weight_sum = 0.0
+    z_variance = 0.0
+    z_variance_sum = 0.0
     N = 0
     list2_index = offset
     for list1_index in range ( len ( list1)) :
-        value1 = fetch ( list1 , list1_index )
-        if fetch_valid == False :
-            compute_variance = False
-        roll = fetch ( roll_list , list1_index )
-        if fetch_valid == False :
-            compute_variance = False
-        value2 = fetch ( list2 , list2_index )
-        if fetch_valid == False :
-            compute_variance = False
+        #initialize fetch_valid to be true
+        #fetch() will set it to false if there is an issue
+        #it will not change it if everything is ok
+        fetch_valid = True
+        value1 = fetch ( list1 , list1_index )      
+        roll = fetch ( roll_list , list1_index )       
+        value2 = fetch ( list2 , list2_index )      
         reference_roll = (fetch ( reference_rolls , list2_index ))
-        if fetch_valid == False :
-            compute_variance = False
-        if compute_variance == True :
+        state = fetch_line_run ( states , list2_index , rn_num )
+        force = fetch_line_run ( z_forces , list2_index , rn_num )
+        force_ref = fetch_line_run ( z_forces , list1_index , 0 )
+        
+        if fetch_valid == True :
             weight = abs(roll*reference_roll)
             variance_term = (value1-value2)*(value1-value2)*weight
+            z_var_term = (force-force_ref)**2
             weight_sum = weight_sum + weight
             variance_sum = variance_sum + variance_term
+            z_variance_sum = z_variance_sum + z_var_term
             N = N + 1
         list2_index = int(list2_index + 1)
 
@@ -186,9 +215,15 @@ def cross_variance(list1, list2, offset , roll_list) :
 
     if ( N > N_minimum ) and ( weight_sum > 0 ):
         skip = False
-        variance = variance_sum/weight_sum 
+        variance = variance_sum/weight_sum
+        z_variance = (force_wt*z_variance_sum) / N
+        if first_var_log == True :
+            variance_file.write(f"plot_let_number,run_number,offset,yaw_var,force_var\n")
+            first_var_log = False
+        if rn_num != 0 :
+            variance_file.write(f"{plt_num},{rn_num},{offset},{round((variance),2)},{round((z_variance),2)}\n")
         #log_file.write(f"offset = {offset} , N = {N} , weight_sum = {round(weight_sum,2)} , var = {round(variance,2)} \n")
-        return variance
+        return variance + z_variance
     else :
         skip = True
         return 10000000000000.0
@@ -196,12 +231,14 @@ def cross_variance(list1, list2, offset , roll_list) :
 
 #determine the similarity of two plots as a function of a relative time shift between them
 #this is done by computing the cross variance, the sum of the squares of the differences between plots
-def compute_similarity (reference_list,input_list , roll_list) :
+def compute_similarity (reference_list,input_list , roll_list , plt_num, rn_num ) :
     global alignment_variance , skip
     first_index = True
     best_index = 0
+    if rn_num == 0 :
+        return 0
     for index in cross_indices  :
-        variance = cross_variance(reference_list,input_list,index , roll_list)
+        variance = cross_variance(reference_list,input_list,index , roll_list , plt_num, rn_num )
         if skip == False :
             #log_file.write(f"index = {index} , var = {variance} \n")
             if first_index == True :
@@ -257,7 +294,7 @@ def factor_labels () :
     log_file.write(f"signal names = \n{signal_names}\n")
 
 def open_file() :
-    global states , rolls , pitches, yaws , times , matrices
+    global states , rolls , pitches, yaws , times , matrices , z_forces
     global number_of_runs , run_numbers
     global rows , row_numbers , number_of_rows , labels , label_names
     global columns_per_run
@@ -277,7 +314,7 @@ def open_file() :
             column_numbers = numbers(columns_per_line)
             found_blanks = False
             run_number = 0          
-            if args.no_gaps :
+            if args.strmlt :
                 factor_labels()
                 for index in range(number_of_runs) :
                     run_numbers.append(index)
@@ -292,7 +329,7 @@ def open_file() :
                         found_blanks = True
             first_row = False
             
-            if ( not args.no_gaps) :
+            if ( not args.strmlt) :
                 number_of_runs = run_number
                 columns_per_run = int((columns_per_line + 1 ) / (number_of_runs + 1))
             else :
@@ -312,11 +349,13 @@ def open_file() :
             matrix_row = []
             time_row = []
             yaw_row = []
+            z_force_row = []
 
-            if args.no_gaps :
+            if args.strmlt :
                 for run_number in run_numbers :
                     state_row.append(int(float((row[int(run_number + STATE_COLUMN*(number_of_runs))]))))
                     roll_row.append(float(row[int(run_number + ROLL_COLUMN*(number_of_runs))]))
+                    z_force_row.append(float(row[int(run_number + Z_FORCE_COLUMN*(number_of_runs))]))
                     time_row.append(float(row[int(run_number + TIME_COLUMN*(number_of_runs))]))
                     yaw_row.append(float(row[int(run_number + YAW_COLUMN*(number_of_runs))]))
                     pitch_row.append(float(row[int(run_number + PITCH_COLUMN*(number_of_runs))]))
@@ -329,6 +368,7 @@ def open_file() :
                 for run_number in run_numbers :
                     state_row.append(int(float((row[int(run_number + STATE_COLUMN*(number_of_runs+1))]))))
                     roll_row.append(float(row[int(run_number + ROLL_COLUMN*(number_of_runs+1))]))
+                    z_force_row.append(float(row[int(run_number + Z_FORCE_COLUMN*(number_of_runs+1))]))
                     time_row.append(float(row[int(run_number + TIME_COLUMN*(number_of_runs+1))]))
                     yaw_row.append(float(row[int(run_number + YAW_COLUMN*(number_of_runs+1))]))
                     pitch_row.append(float(row[int(run_number + PITCH_COLUMN*(number_of_runs+1))]))
@@ -346,8 +386,20 @@ def open_file() :
             yaws.append(yaw_row)
             pitches.append(pitch_row)
             matrices.append(matrix_row)
+            z_forces.append(z_force_row)
     number_of_rows = row_number
 
+#sequence of processing is
+#create_cross_indices
+#generate_curve_timing_marks
+#write_timing_marks
+#write_lists_of_numbers
+#prepare_plotlet_tables
+#write_plotlet_tables
+#compute_fine_adjustments
+#log_fine_adjustments
+#compute_column_fine_adjustments
+#write_plotlets        
 
 global ct_mark_tables
 ct_mark_tables = []
@@ -390,33 +442,57 @@ def write_timing_marks() :
 def generate_curve_table(run_number) :
     global shift_range , margin , start_margin , end_margin , minimum_curve_duration
     global rows , row_numbers , number_of_rows , labels
-    previous_state = 0
+    
     start_curve_row = 0
     start_curve_time = 0
     end_curve_row = 0
     end_curve_time = 0
     curve_number = 1
     log_file.write(f"calling generate_curve_table, run number = {run_number}\n")
-    for row_number in row_numbers :
-        time = times[row_number][run_number]
-        state = states[row_number][run_number]
-        if state != previous_state :
-            if abs(state) > 0 :
-                if previous_state == 0 :
-                    start_curve_row = row_number
-                    start_curve_time = time
-                    previous_state = state               
-            else:
-                if row_number - start_curve_row > minimum_curve_duration :
-                   end_curve_row = row_number
-                   end_curve_time = time
-                   table_entry = [curve_number , previous_state , start_curve_row , end_curve_row , start_curve_time , end_curve_time]
-                   ct_mark_tables[run_number].append(table_entry)
-                   previous_state = 0
-                   curve_number = curve_number + 1
-                else :
-                    print("warning, run number with index " , run_number , " had an apparent glitch at curve " , curve_number )
-                    print("the glitch was removed, but you might want to take a look.")
+    if args.only_curves :
+        previous_state = 0
+        for row_number in row_numbers :
+            time = times[row_number][run_number]
+            state = states[row_number][run_number]
+            if state != previous_state :
+                if abs(state) > 0 :
+                    if previous_state == 0 :
+                        start_curve_row = row_number
+                        start_curve_time = time
+                        previous_state = state               
+                else:
+                    if row_number - start_curve_row > minimum_curve_duration :
+                       end_curve_row = row_number
+                       end_curve_time = time
+                       table_entry = [curve_number , previous_state , start_curve_row , end_curve_row , start_curve_time , end_curve_time]
+                       ct_mark_tables[run_number].append(table_entry)
+                       previous_state = 0
+                       curve_number = curve_number + 1
+                    else :
+                        print("warning, run number with index " , run_number , " had an apparent glitch at curve " , curve_number )
+                        print("the glitch was removed, but you might want to take a look.")
+    else :
+        previous_state = 0
+        previous_row = shift_range + 1
+        previous_time = float ( previous_row ) / 100.0
+        for row_number in row_numbers :
+            time = times[row_number][run_number]
+            state = states[row_number][run_number]
+            if state != previous_state :               
+                if abs(state) == 0 :
+                    if row_number - previous_row > minimum_curve_duration :
+                        end_curve_row = row_number
+                        end_curve_time = time
+                        table_entry = [ curve_number , previous_state , previous_row , end_curve_row , previous_time , end_curve_time ]
+                        ct_mark_tables[run_number].append(table_entry)
+                        curve_number = curve_number + 1
+                        previous_row = row_number
+                        previous_time = time
+                    else :
+                        print("warning, run number with index " , run_number , " had an apparent glitch at curve " , curve_number )
+                        print("the glitch was removed, but you might want to take a look.")
+                previous_state = state
+                
 
 
 def generate_curve_timing_marks() :
@@ -473,12 +549,12 @@ def write_column_names( column_name) :
     global file_names, run_numbers
     for run_number in run_numbers :
         output_file.write(f"{column_name}{file_names[run_number]},")
-    if ( not args.no_gaps ) :
+    if ( not args.strmlt ) :
         output_file.write(f" , " )
 
 def write_column_names_commas_first( column_name) :
     global file_names, run_numbers
-    if ( not args.no_gaps ) :
+    if ( not args.strmlt ) :
         output_file.write(f" , " )
     for run_number in run_numbers :
         output_file.write(f",{column_name}{file_names[run_number]}")
@@ -518,7 +594,7 @@ def write_plotlets() :
 
     extract_file_names()
 
-    if args.no_gaps :
+    if args.strmlt :
         output_file.write(f"curve_number ,")
     else:
         output_file.write(f" , curve_number , ,")
@@ -563,7 +639,7 @@ def write_plotlets() :
     for run_number in run_numbers :
         plotlet_offset = plotlet_offset_table[last_plotlet][run_number]
         log_file.write(f"run number = {run_number} , plotlet_offset = {plotlet_offset} \n")
-        time_value = times[plotlet_offset][run_number]
+        time_value = times[plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]
         d_t = time_value - time_reference
         log_file.write(f"time = {time_value} , dt = {d_t}\n")
         if d_t < min_delta_finish_time :
@@ -589,8 +665,8 @@ def write_plotlets() :
                 #is_first_run = True
                 for run_number in run_numbers :
                     plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
-                    rabbit_matrix = matrices[line_number+plotlet_offset][pivot_reference]
-                    run_matrix = matrices[line_number+plotlet_offset][run_number]
+                    rabbit_matrix = matrices[line_number+plotlet_offset+fine_adjustments[plotlet_number][run_number]][pivot_reference]
+                    run_matrix = matrices[line_number+plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]
                     pivot_matrix = np.matmul(np.transpose(rabbit_matrix),run_matrix)
                     pivot_angles = matrix_to_angle_axis(pivot_matrix)
                     pivot_var_sums[run_number] = pivot_var_sums[run_number] + (pivot_angles[2])**2
@@ -601,7 +677,7 @@ def write_plotlets() :
                 #print (pivot_stdev[run_number])
                 
             for line_number in numbers(plotlet_sizes[plotlet_number]) :
-                if args.no_gaps :
+                if args.strmlt :
                    output_file.write(f"{curve_numbers[plotlet_number]} , ")
                 else :
                     output_file.write(f" , {curve_numbers[plotlet_number]} , , ")
@@ -613,7 +689,7 @@ def write_plotlets() :
                 is_first_run = True
                 for run_number in run_numbers :
                     plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
-                    time_value = times[line_number + plotlet_offset][run_number]
+                    time_value = times[line_number + plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]
                     if is_first_run == True :
                         reference_time = time_value
                         is_first_run = False
@@ -624,52 +700,52 @@ def write_plotlets() :
                 is_first_run = True
                 for run_number in run_numbers :
                     plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
-                    time_value = times[line_number + plotlet_offset][run_number]
+                    time_value = times[line_number + plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]
                     if is_first_run == True :
                         reference_time = time_value
                         is_first_run = False
                     delta_time = time_value-reference_time
                     output_file.write(f"{(round(delta_time - min_dt ,2))},")
-                if ( not args.no_gaps ) :
+                if ( not args.strmlt ) :
                     output_file.write(f" , ")
 
                 is_first_run = True
                 for run_number in run_numbers :
                     plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
-                    time_value = times[line_number + plotlet_offset][run_number]
+                    time_value = times[line_number + plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]
                     if is_first_run == True :
                         reference_time = time_value
                         is_first_run = False              
                     delta_time = time_value-reference_time
                     output_file.write(f"{map_color(delta_time)},")
-                if ( not args.no_gaps ) :
+                if ( not args.strmlt ) :
                     output_file.write(f",")
 
                 for run_number in run_numbers :
                     standard_dev = alignment_variances[plotlet_number][run_number]
                     output_file.write(f"{round(standard_dev,2)} , ")
 
-                if ( not args.no_gaps ) :
+                if ( not args.strmlt ) :
                     output_file.write(f",")
                 
                 
                 lists_of_angles = []
                 for run_number in run_numbers :
                     plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
-                    rabbit_matrix = matrices[line_number+plotlet_offset][pivot_reference]
-                    run_matrix = matrices[line_number+plotlet_offset][run_number]
+                    rabbit_matrix = matrices[line_number+plotlet_offset+fine_adjustments[plotlet_number][run_number]][pivot_reference]
+                    run_matrix = matrices[line_number+plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]
                     pivot_matrix = np.matmul(np.transpose(rabbit_matrix),run_matrix)
                     pivot_angles = matrix_to_angle_axis(pivot_matrix)
                     lists_of_angles.append(pivot_angles)
 
                 for run_number in run_numbers :
                     output_file.write(f"{round(pivot_stdev[run_number],2)} , ")
-                if ( not args.no_gaps ) :
+                if ( not args.strmlt ) :
                     output_file.write(f" , ")    
 
                 for run_number in run_numbers :
                     output_file.write(f"{round(lists_of_angles[run_number][2],2)} , ")    
-                if ( not args.no_gaps ) :
+                if ( not args.strmlt ) :
                     output_file.write(f" , ") 
 
             
@@ -682,13 +758,13 @@ def write_plotlets() :
                     else :
                         output_file.write(f",{fetch_row_col(line_number, plotlet_number , column_number)}")
 
-                if ( not args.no_gaps ) :
+                if ( not args.strmlt ) :
                     output_file.write(f" , ") 
 
                 for run_number in run_numbers :
                     output_file.write(f" , {round(lists_of_angles[run_number][1],2)} ")
                     
-                if ( not args.no_gaps ) :
+                if ( not args.strmlt ) :
                     output_file.write(f" , ") 
 
                 for run_number in run_numbers :
@@ -696,8 +772,21 @@ def write_plotlets() :
                     
                 output_file.write(f" \n")
                 
-            if ( number_of_zeros > 0 ) and ( not args.no_gaps) :
+            if ( number_of_zeros > 0 ) and ( not args.strmlt) :
                 block_of_zeros()
+
+#sequence of processing is
+#create_cross_indices
+#generate_curve_timing_marks
+#write_timing_marks
+#write_lists_of_numbers
+#prepare_plotlet_tables
+#write_plotlet_tables
+#compute_fine_adjustments
+#log_fine_adjustments
+#compute_column_fine_adjustments
+#write_plotlets        
+
 
 def write_plotlet_tables() :
     global plotlet_sizes , plotlet_offsets , column_offsets
@@ -775,6 +864,7 @@ def compute_fine_adjustments() :
             for run_number in run_numbers :
                 plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
                 roll_value = rolls[line_number + plotlet_offset][run_number]
+                z_force_value = z_forces[line_number + plotlet_offset][run_number]
                 time_value = times[line_number + plotlet_offset][run_number]
                 yaw_value = yaws[line_number + plotlet_offset][run_number]
                 total_roll = total_roll + roll_value
@@ -825,12 +915,24 @@ def compute_fine_adjustments() :
         adjustment_list = []
         variance_list = []
         for run_number in run_numbers :
-            similarity_index = compute_similarity ( reference_yaws , input_data[run_number] , roll_column_data[run_number] )
+            similarity_index = compute_similarity ( reference_yaws , input_data[run_number] , roll_column_data[run_number] , plotlet_number , run_number )
             #log_file.write(f"for pn {plotlet_number}, rn {run_number}, similarity index = {similarity_index}\n")
             adjustment_list.append(similarity_index)
             variance_list.append(alignment_variance)
         fine_adjustments.append(adjustment_list)
         alignment_variances.append(variance_list)
+
+#sequence of processing is
+#create_cross_indices
+#generate_curve_timing_marks
+#write_timing_marks
+#write_lists_of_numbers
+#prepare_plotlet_tables
+#write_plotlet_tables
+#compute_fine_adjustments
+#log_fine_adjustments
+#compute_column_fine_adjustments
+#write_plotlets        
 
 global fine_offset_columns
 
@@ -847,12 +949,24 @@ def compute_column_fine_adjustments() :
                     fine_offset_list.append(fine_adjustments[plotlet_number][run_number] )
                 is_first_column = False
             else :
-                fine_offset_list.append(fine_adjustments[plotlet_number][0])
+                if not args.strmlt :
+                    fine_offset_list.append(fine_adjustments[plotlet_number][0])
                 for run_number in run_numbers :
                     fine_offset_list.append(fine_adjustments[plotlet_number][run_number] )
         fine_offset_columns.append(fine_offset_list)
     log_file.write(f"\r\rfine offset columns \r {fine_offset_columns}\r")
-        
+
+#sequence of processing is
+#create_cross_indices
+#generate_curve_timing_marks
+#write_timing_marks
+#write_lists_of_numbers
+#prepare_plotlet_tables
+#write_plotlet_tables
+#compute_fine_adjustments
+#log_fine_adjustments
+#compute_column_fine_adjustments
+#write_plotlets        
 
 def prepare_plotlet(plot_number) :
     global plotlet_sizes
@@ -878,7 +992,8 @@ def prepare_plotlet(plot_number) :
                 column_offsets.append(plotlet_offsets[run_number])
             is_first_column = False
         else :
-            column_offsets.append(plotlet_offsets[0])
+            if not args.strmlt :
+                column_offsets.append(plotlet_offsets[0])
             for run_number in run_numbers :
                 column_offsets.append(plotlet_offsets[run_number])       
  
@@ -892,11 +1007,20 @@ if __name__ == "__main__":
     parser.add_argument('-curve','--curve_number', help="plot data for exactly one curve")
     parser.add_argument('-fcn','--fcn', help="first curve number")
     parser.add_argument('-skip','--skip_list', help = "Skip list in quotes with commas, such as -skip \" 9 , 10 \" .")
-    parser.add_argument('-no_gaps','--no_gaps',action='store_true',help="option to remove gaps for streamlit plotting")
-     
+    parser.add_argument('-strmlt','--strmlt',action='store_true',help="option for streamlit plotting")
+    parser.add_argument('-only_curves','--only_curves',action='store_true',help="option to plot only curves")
+    parser.add_argument('-fw','--fw',help = "fine alignment force weighting, default = 1.0")
+    parser.add_argument('-log_time','--log_time',action='store_true',help="record processing timing information")
+    parser.add_argument('-cr','--cr',help="not used but must be allowed.")
+    parser.add_argument('-curves','--curves',help="not used but must be allowed.")
+
+    
     args = parser.parse_args()
 
     skip_list_numbers = []
+
+    if args.fw :
+        force_wt = float(args.fw)
     
     if args.skip_list :
         skip_list = args.skip_list.split(',')
@@ -929,6 +1053,7 @@ if __name__ == "__main__":
         if args.curve_number :
             output_file = open(base_name+"_curve_"+str(only_curve_number)+"_plotlets.csv" , "w" )
             log_file = open(base_name+"_curve_"+str(only_curve_number)+"_log.txt" , "w" )
+            
             marks_file = open(base_name+"_curve_"+str(only_curve_number)+"_marks.txt" , "w" )
             timing_file = open(base_name+"_curve_"+str(only_curve_number)+"_timing.csv" , "w" )
         else :
@@ -936,8 +1061,18 @@ if __name__ == "__main__":
             log_file = open(base_name+"_log.txt" , "w" )
             marks_file = open(base_name+"_marks.txt" , "w" )
             timing_file = open(base_name+"_timing.csv" , "w" )
+            variance_file = open(base_name+"_variance.csv" , "w")
+        log_file.write(f"fine alignment force weighting = {round(force_wt,2)}\n\n")
         create_cross_indices(shift_range)
         open_file()
+
+        if args.log_time :
+            time_log = open("time_log.txt","a")
+            now = datetime.now()
+            time = now.time()
+            time_log.write(f"slice.py, starting to process {run_file_name} , time = {time}.\n")
+
+        
         print("number of zeros inserted between plotlets as curve separaters = " , number_of_zeros )
         generate_curve_timing_marks()
         write_timing_marks()
@@ -948,6 +1083,11 @@ if __name__ == "__main__":
         log_fine_adjustments()
         compute_column_fine_adjustments()
         write_plotlets()
+        now = datetime.now()
+        time = now.time()
+        if args.log_time :
+            time_log.write(f"slice.py, processing complete for {run_file_name} , time = {time}.\n")
+        log_file.write(f"fetch valid = {fetch_valid_true} , fetch invalid = {fetch_valid_false} \n")
     else :
         print(" You must provide a file with a list of the names of files to be processed")
 

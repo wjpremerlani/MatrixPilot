@@ -91,12 +91,21 @@ if __name__ == "__main__":
         prog='prep.py',
         description='Prepares for the Wright brothers two-step.')
     parser.add_argument('-f','--filename', help="Name of the file containing a list of files of run data.")
-    parser.add_argument('-s','--sort',action='store_true',help="Sort files by run time.")
+    #parser.add_argument('-s','--sort',action='store_true',help="Sort files by run time.")
     parser.add_argument('-fcn','--first_curve_number', help="First curve number.")
     parser.add_argument('-skip','--skip_list', help = "Skip list in quotes with commas, such as -skip \" 9 , 10 \" .")
     parser.add_argument('-yrs','--yrs',action='store_true',help="use yaw rate for slicing into plotlets.")
     parser.add_argument('-curves','--curves',help="expected number of curves.")
-    parser.add_argument('-no_gaps','--no_gaps',action='store_true',help="option to remove gaps for streamlit plotting")
+    parser.add_argument('-strmlt','--strmlt',action='store_true',help="option to prepare for streamlit plotting")
+    parser.add_argument('-bill','--bill',action='store_true',help="generate the files that bill looks at")
+    parser.add_argument('-bruce','--bruce',action='store_true',help="generate adjusted, 100 Hz and 1000 Hz files")
+    parser.add_argument('-all','--all',action='store_true',help="generate all files")
+    parser.add_argument('-zfl','--zfl',help="z force limit, f/s/s ")
+    parser.add_argument('-fw','--fw',help="z force fine alignment weighting, default is 1.0")
+    parser.add_argument('-log_time','--log_time',action='store_true',help="log the time at key points in the data processing.")
+    parser.add_argument('-cr','--cr',help="compass rotation, degrees, used to re-orient the x-y track map.")
+    parser.add_argument('-y', '--y',help = "yaw misalignment.")
+    parser.add_argument('-fhs','--fhs',help = "filter half size, window width = 2*fhs+1.")
     
     args = parser.parse_args()
 
@@ -115,16 +124,22 @@ if __name__ == "__main__":
             print(list_of_files_file_name," was opened.")
             log_file.write(f"{list_of_files_file_name} was opened.\r")
             log_file.write(f"data file descriptors: \r")
-            bat_file.write(f"cleanup.py\n")
+            #bat_file.write(f"cleanup.py\n")
         except :
             print("unable to open list of files, check spelling.")
             log_file.write("unable to open list of files, check spelling.\r")
             exit()
         dataStr = input_file.read()
         lines = dataStr.splitlines(keepends=False)
+        new_format = False
         if dataStr:
             for line in lines :
                 name_and_start = line.split(',')
+                option_pieces = line.split('-')
+                if len(option_pieces) > 2 :
+                    options = line
+                    new_format = True
+                    continue
                 data_file_name = name_and_start[0]
                 data_file_base_name = data_file_name.split('.')[0]
                 if len(name_and_start) > 1 :
@@ -132,40 +147,71 @@ if __name__ == "__main__":
                     log_file.write(f"start time for {data_file_name} = {data_file_start} was read from {list_of_files_file_name}\n")
                 else :
                     data_file_start = compute_start(data_file_name )
+
                 if data_file_start > 0 :
-                    log_file.write(f"name = {data_file_base_name} , start = {data_file_start} \r")            
-                    bat_file.write(f"map_st.py -bill -f {data_file_name} -s {data_file_start} -e 60.0")
+                    log_file.write(f"name = {data_file_base_name} , start = {data_file_start} \r")
+                    if args.all :
+                        bat_file.write(f"map_st.py -all -f {data_file_name} -s {data_file_start} -e 60.0")
+                    elif args.bruce :
+                        bat_file.write(f"map_st.py -bruce -f {data_file_name} -s {data_file_start} -e 60.0")
+                    elif args.bill or new_format == True :
+                        bat_file.write(f"map_st.py -bill -f {data_file_name} -s {data_file_start} -e 60.0")
+                    else :
+                        bat_file.write(f"map_st.py -f {data_file_name} -s {data_file_start} -e 60.0")
+                    if args.log_time :
+                        bat_file.write(f" -log_time")
+                    if args.strmlt or new_format == True :
+                        bat_file.write(f" -strmlt")
+                    if args.zfl :
+                        bat_file.write(f" -zfl {args.zfl}")
                     if args.yrs :
                         bat_file.write(f" -yrs")
                     if args.curves :
                         bat_file.write(f" -curves {args.curves}")
+                    if args.cr :
+                        bat_file.write(f" -cr {args.cr}")
+                    if args.y :
+                        bat_file.write(f" -y {args.y}")
+                    if args.fhs :
+                        bat_file.write(f" -fhs {args.fhs}")
+                    try :
+                        bat_file.write(f" {options}")
+                    except :
+                        pass
                     bat_file.write(f"\n")
                     merge_file.write(f"{data_file_base_name}_time_map_100_HZ.csv\n")
                 else :
                     log_file.write(f"unable to determine start time for {data_file_name}, file will be skipped.\n")        
-            if args.sort :
-                bat_file.write(f"sort_st.py -f {base_name}_sorted_merge_list.txt\n")
-                bat_file.write(f"merge_st.py -f {base_name}_sorted_merge_list.txt")
-                if args.curves :
-                    bat_file.write(f" -curves {args.curves}")
-                if args.no_gaps :
-                    bat_file.write(f" -no_gaps")
-                bat_file.wriite(f"\n")
-                bat_file.write(f"slice_st.py -f {base_name}_sorted_merge_list_plots.csv -zeros 100")
-            else :
-                bat_file.write(f"merge_st.py -f {base_name}_merge_list.txt")
-                if args.curves :
-                    bat_file.write(f" -curves {args.curves}")
-                if args.no_gaps :
-                    bat_file.write(f" -no_gaps")    
-                bat_file.write(f"\n")
-                bat_file.write(f"slice_st.py -f {base_name}_merge_list_plots.csv -zeros 100")
+            
+            
+            bat_file.write(f"merge_st.py -f {base_name}_merge_list.txt")
+            if args.curves :
+                bat_file.write(f" -curves {args.curves}")
+            if args.strmlt or new_format == True :
+                bat_file.write(f" -strmlt")
+            if args.log_time :
+                bat_file.write(f" -log_time")
+            try :
+                bat_file.write(f" {options}")
+            except :
+                pass
+            bat_file.write(f"\n")
+            
+            bat_file.write(f"slice_st.py -f {base_name}_merge_list_plots.csv -zeros 100")
             if args.first_curve_number :
                 bat_file.write(f" -fcn {args.first_curve_number}")
+            if args.fw :
+                bat_file.write(f" -fw {args.fw}")
             if args.skip_list:
                 bat_file.write(f" -skip \" {args.skip_list} \"")
-            if args.no_gaps :
-                    bat_file.write(f" -no_gaps")
+            if args.strmlt or new_format == True  :
+                bat_file.write(f" -strmlt")
+            if args.log_time :
+                bat_file.write(f" -log_time")
+            try :
+                bat_file.write(f" {options}")
+            except :
+                pass
             bat_file.write(f"\n")
     else :
         print(" You must provide a file with a list of the names of files to be processed")
