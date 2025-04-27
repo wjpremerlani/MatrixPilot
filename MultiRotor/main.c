@@ -52,7 +52,8 @@ const int max_tilt = 0 ;  // maximum tilt in byte cicular
 int commanded_tilt_gain ;
 
 //#define BLINK_PERIOD 100
-#define BLINK_PERIOD 200
+#define FAST_BLINK_PERIOD 160
+#define SLOW_BLINK_PERIOD 400
 #define BLINK_ON_TIME 20 
 boolean led_red_run = 0 ;
 boolean led_green_standby = 0 ;
@@ -63,7 +64,7 @@ void udb_blink_red(void)
     if (pending_uploads > 0)
     {
         
-        if ((udb_heartbeat_counter % (2*BLINK_PERIOD)) <= BLINK_ON_TIME)
+        if ((udb_heartbeat_counter % (SLOW_BLINK_PERIOD)) <= BLINK_ON_TIME)
         {
             LED_RED = LED_ON ;
         }
@@ -74,7 +75,7 @@ void udb_blink_red(void)
     }
     else
     {
-        if ((udb_heartbeat_counter % BLINK_PERIOD) <= BLINK_ON_TIME)
+        if ((udb_heartbeat_counter % FAST_BLINK_PERIOD) <= BLINK_ON_TIME)
         {
             LED_RED = LED_ON ;
         }
@@ -90,7 +91,7 @@ void udb_blink_green(void)
     if (pending_uploads > 0 )
     {
         
-        if ((udb_heartbeat_counter % (2*BLINK_PERIOD)) <= BLINK_ON_TIME)
+        if ((udb_heartbeat_counter % (SLOW_BLINK_PERIOD)) <= BLINK_ON_TIME)
         {
             LED_GREEN = LED_ON ;
         }
@@ -101,7 +102,7 @@ void udb_blink_green(void)
     }
     else
     {
-        if ((udb_heartbeat_counter % BLINK_PERIOD) <= BLINK_ON_TIME)
+        if ((udb_heartbeat_counter % FAST_BLINK_PERIOD) <= BLINK_ON_TIME)
         {
             LED_GREEN = LED_ON ;
         }
