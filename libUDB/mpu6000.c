@@ -236,6 +236,8 @@ union longww _omega32[3] ;
 union longww theta_32[3] ;
 union longww _theta_32[3] ;
 union longww omega_dt[3];
+union longww _sculling_32[3] ;
+union longww sculling_32[3] ;
 extern union longww omegagyro_filtered[];
 
 int16_t divide_by_40_and_round(int32_t total)
@@ -317,6 +319,10 @@ void reset_coning_adjustment(void)
 	_theta_32[0].WW = 0 ;
 	_theta_32[1].WW = 0 ;
 	_theta_32[2].WW = 0 ;	
+    _sculling_32[0].WW = 0 ;
+    _sculling_32[1].WW = 0 ;
+    _sculling_32[2].WW = 0 ;
+    
 }
 
 int16_t sample_counter = 0 ;
@@ -441,6 +447,9 @@ int16_t z_accel[10] ;
 // executed for each of sample at the 8000 Hz sample rate
 static void process_MPU_data(void)
 {
+    union longww s_force_raw[3] ;
+    union longww s_force_net[3] ;
+    union longww phi_X_force[3] ;
 	mpuDAV = true;
 #ifdef SIMULATED_GYRO
     mpu_data[xrate_MPU_channel].BB = 25 ;
@@ -450,10 +459,20 @@ static void process_MPU_data(void)
     
 	compute_max_gyro(); // diagnostic to detect gyro saturation
 
-//	integrate all data for use in upstream calculations other than those that need coning correction	
-	xaccel32 += ((int32_t)((int16_t)mpu_data[xaccel_MPU_channel].BB)) ;
-	yaccel32 += ((int32_t)((int16_t)mpu_data[yaccel_MPU_channel].BB)) ;
-	zaccel32 += ((int32_t)((int16_t)mpu_data[zaccel_MPU_channel].BB)) ;
+//	integrate all data for use in upstream calculations other than those that need coning correction
+//  accel data is shifted left by 10 bits for better resolution in the computations 
+    s_force_raw[0].WW = (((int32_t)((int16_t)mpu_data[xaccel_MPU_channel].BB))<<10) ;
+    s_force_raw[1].WW = (((int32_t)((int16_t)mpu_data[yaccel_MPU_channel].BB))<<10) ;
+    s_force_raw[2].WW = (((int32_t)((int16_t)mpu_data[zaccel_MPU_channel].BB))<<10) ;
+    
+	xaccel32 += s_force_raw[0].WW ;
+	yaccel32 += s_force_raw[1].WW ;
+	zaccel32 += s_force_raw[2].WW ;
+    
+    s_force_net[0].WW = s_force_raw[0].WW - (((int32_t)((int16_t)udb_xaccel.offset))<<10) ;
+    s_force_net[1].WW = s_force_raw[1].WW - (((int32_t)((int16_t)udb_yaccel.offset))<<10) ;
+    s_force_net[2].WW = s_force_raw[2].WW - (((int32_t)((int16_t)udb_zaccel.offset))<<10) ;
+    
 	
 	temp32 += ((int32_t)((int16_t)mpu_data[temp_MPU_channel].BB)) ;
     
@@ -527,7 +546,14 @@ static void process_MPU_data(void)
 #endif // SPECTRAL_ANALYSIS_CONTINUOUS
 
 #ifdef CONING_CORRECTION
-	compute_coning_adjustment(); 
+	compute_coning_adjustment();
+    VectorCross_32(phi_X_force, _theta_32 , s_force_net ) ;
+    _sculling_32[0].WW += phi_X_force[0].WW ;
+    _sculling_32[1].WW += phi_X_force[1].WW ;
+    _sculling_32[2].WW += phi_X_force[2].WW ;
+    
+    
+    
 #endif // CONING_CORRECTION
 	//  trigger synchronous processing of sensor data
 	sample_counter = sample_counter+1 ;
@@ -535,9 +561,9 @@ static void process_MPU_data(void)
 	if (sample_counter == 40)
 	{
         // divide by 40 and round toward 0
-		udb_xaccel.value = divide_by_40_and_round(xaccel32) ;
-		udb_yaccel.value = divide_by_40_and_round(yaccel32);
-		udb_zaccel.value = divide_by_40_and_round(zaccel32);
+		udb_xaccel.value = divide_by_40_and_round(xaccel32>>10);
+		udb_yaccel.value = divide_by_40_and_round(yaccel32>>10);
+		udb_zaccel.value = divide_by_40_and_round(zaccel32>>10);
 
 		mpu_temp.value = divide_by_40_and_round(temp32);
 
@@ -561,6 +587,11 @@ static void process_MPU_data(void)
 		theta_32[0].WW = _theta_32[0].WW ;
 		theta_32[1].WW = _theta_32[1].WW ;
 		theta_32[2].WW = _theta_32[2].WW ;
+        
+        sculling_32[0].WW = _sculling_32[0].WW ;
+        sculling_32[1].WW = _sculling_32[1].WW ;
+        sculling_32[2].WW = _sculling_32[2].WW ;
+        
 		
 		// round off the 32 bit theta values for the option of logging just the upper 16 bits
         _theta_32[0].WW += 0x00008000 ;
