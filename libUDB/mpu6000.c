@@ -238,6 +238,9 @@ union longww _theta_32[3] ;
 union longww omega_dt[3];
 union longww _sculling_32[3] ;
 union longww sculling_32[3] ;
+union longww _s_force_total_32[3] ;
+union longww s_force_total_32[3] ;
+union longww sculling_base_32[3] ;
 extern union longww omegagyro_filtered[];
 
 int16_t divide_by_40_and_round(int32_t total)
@@ -322,6 +325,10 @@ void reset_coning_adjustment(void)
     _sculling_32[0].WW = 0 ;
     _sculling_32[1].WW = 0 ;
     _sculling_32[2].WW = 0 ;
+    _s_force_total_32[0].WW = 0 ;
+    _s_force_total_32[1].WW = 0 ;
+    _s_force_total_32[2].WW = 0 ;
+    
     
 }
 
@@ -473,6 +480,10 @@ static void process_MPU_data(void)
     s_force_net[1].WW = s_force_raw[1].WW - (((int32_t)((int16_t)udb_yaccel.offset))<<10) ;
     s_force_net[2].WW = s_force_raw[2].WW - (((int32_t)((int16_t)udb_zaccel.offset))<<10) ;
     
+    _s_force_total_32[0].WW += s_force_net[0].WW ;
+    _s_force_total_32[1].WW += s_force_net[1].WW ;
+    _s_force_total_32[2].WW += s_force_net[2].WW ;
+    
 	
 	temp32 += ((int32_t)((int16_t)mpu_data[temp_MPU_channel].BB)) ;
     
@@ -592,6 +603,10 @@ static void process_MPU_data(void)
         sculling_32[1].WW = _sculling_32[1].WW ;
         sculling_32[2].WW = _sculling_32[2].WW ;
         
+        s_force_total_32[0].WW = _s_force_total_32[0].WW ;
+        s_force_total_32[1].WW = _s_force_total_32[1].WW ;
+        s_force_total_32[2].WW = _s_force_total_32[2].WW ;
+        
 		
 		// round off the 32 bit theta values for the option of logging just the upper 16 bits
         _theta_32[0].WW += 0x00008000 ;
@@ -607,7 +622,8 @@ static void process_MPU_data(void)
         _omega32[1].WW = omega32[1].WW ;
         _omega32[2].WW = omega32[2].WW ;
         
-		
+        VectorCross_32(sculling_base_32, theta_32 , s_force_total_32 ) ;
+        	
 		// get ready for the next batch of 40 samples
 		reset_coning_adjustment();
 #endif // CONING_CORRECTION		

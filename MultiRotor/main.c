@@ -292,6 +292,7 @@ extern float yaw_previous , yaw_angle , heading_previous ;
 extern void compute_euler(void);
 extern void send_euler_angles(void);
 uint16_t residual_log_counter = 0 ;
+#ifndef SCULLING
 void dcm_heartbeat_callback(void)
 {
 	if ( didCalibrate )
@@ -370,6 +371,36 @@ void dcm_heartbeat_callback(void)
 	}
 	return ;
 }
-
+#else
+int16_t scull_labels = 1 ;
+extern union longww theta_32[], sculling_32[] , s_force_total_32[] , sculling_base_32[] ; 
+extern void serial_output(const char* format, ...);
+void dcm_heartbeat_callback(void)
+{
+    if ( didCalibrate )
+	{
+		update_slide_detection();
+        if ((udb_heartbeat_counter % (HEARTBEAT_HZ/LOGGER_HZ) )== 0)
+        {
+            if ( scull_labels == 1 )
+            {
+         
+                serial_output("\r\n\r\ncpu,ax,ay,az,thetax,thetay,thetaz,scullx,scully,scullz,sbasex,sbasey,sbasez\r\n") ;
+            
+                scull_labels = 0 ;
+            }
+            else
+            {
+                serial_output("%u,%li,%li,%li,%li,%li,%li,%li,%li,%li,%li,%li,%li\r\n",udb_cpu_load(),
+                    (s_force_total_32[0].WW)>>10 , (s_force_total_32[1].WW)>>10  , (s_force_total_32[2].WW)>>10  , 
+                    theta_32[0].WW , theta_32[1].WW , theta_32[2].WW , 
+                    (sculling_32[0].WW)>>10 , (sculling_32[1].WW)>>10 , (sculling_32[2].WW)>>10  ,
+                    (sculling_base_32[0].WW)>>11 , (sculling_base_32[1].WW)>>11 , (sculling_base_32[2].WW)>>11 
+                    );
+            }
+        }
+    }
+}
+#endif // SCULLING
 
 void udb_callback_radio_did_turn_off( void ) {}
