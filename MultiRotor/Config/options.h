@@ -48,8 +48,8 @@
 #define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
                                     // you will also need to select a logging format
                                   // such as TEST_SLED or HELMET_IMU, for example
-//#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
-//#define LOG_RESIDUALS         // logs residual offsets between runs and during "turtle testing"
+#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
+#define LOG_RESIDUALS         // logs residual offsets between runs and during "turtle testing"
                                 // also used for align gauge
 #define RESIDUAL_LOG_PERIOD 2  // 30 times per minute
 
@@ -93,7 +93,7 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	10
+#define LOGGER_HZ	100
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
@@ -2365,6 +2365,6 @@
 
 #define CENTRIFUGAL_TESTING 0
 
-#define SCULLING
+//#define SCULLING
 
 

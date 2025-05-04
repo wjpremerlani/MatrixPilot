@@ -374,6 +374,7 @@ void dcm_heartbeat_callback(void)
 #else
 int16_t scull_labels = 1 ;
 extern union longww theta_32[], sculling_32[] , s_force_total_32[] , sculling_base_32[] ; 
+extern int16_t xaccel_no_scull , yaccel_no_scull, zaccel_no_scull ;
 extern void serial_output(const char* format, ...);
 void dcm_heartbeat_callback(void)
 {
@@ -384,19 +385,34 @@ void dcm_heartbeat_callback(void)
         {
             if ( scull_labels == 1 )
             {
-         
-                serial_output("\r\n\r\ncpu,ax,ay,az,thetax,thetay,thetaz,scullx,scully,scullz,sbasex,sbasey,sbasez\r\n") ;
+                serial_output("\r\nax,ay,az,ax_adj,ay_adj,az_adj,thetax,thetay,thetaz,scx,scy,scz,scbx,scby,scbz\r\n") ;
+                //serial_output("\r\n\r\ncpu,ax,ay,az,thetax,thetay,thetaz,scullx,scully,scullz,sbasex,sbasey,sbasez\r\n") ;
             
                 scull_labels = 0 ;
             }
             else
             {
-                serial_output("%u,%li,%li,%li,%li,%li,%li,%li,%li,%li,%li,%li,%li\r\n",udb_cpu_load(),
-                    (s_force_total_32[0].WW)>>10 , (s_force_total_32[1].WW)>>10  , (s_force_total_32[2].WW)>>10  , 
-                    theta_32[0].WW , theta_32[1].WW , theta_32[2].WW , 
-                    (sculling_32[0].WW)>>10 , (sculling_32[1].WW)>>10 , (sculling_32[2].WW)>>10  ,
-                    (sculling_base_32[0].WW)>>11 , (sculling_base_32[1].WW)>>11 , (sculling_base_32[2].WW)>>11 
-                    );
+                serial_output("%i,%i,%i,%i,%i,%i,%li,%li,%li,%li,%li,%li,%li,%li,%li\r\n",
+                        xaccel_no_scull - udb_xaccel.offset ,
+                        yaccel_no_scull - udb_yaccel.offset,
+                        zaccel_no_scull - udb_zaccel.offset ,
+                        udb_xaccel.value - udb_xaccel.offset ,
+                        udb_yaccel.value - udb_yaccel.offset ,
+                        udb_zaccel.value - udb_zaccel.offset ,
+                        theta_32[0].WW , theta_32[1].WW , theta_32[2].WW ,
+                        ((((sculling_32[0].WW)>>10))/40) ,
+                        ((((sculling_32[1].WW)>>10))/40) ,
+                        ((((sculling_32[2].WW)>>10))/40) ,
+                        ((((sculling_base_32[0].WW)>>11))/40) ,
+                        ((((sculling_base_32[1].WW)>>11))/40) ,
+                        ((((sculling_base_32[2].WW)>>11))/40)                                                
+                        );
+                //serial_output("%u,%li,%li,%li,%li,%li,%li,%li,%li,%li,%li,%li,%li\r\n",udb_cpu_load(),
+                    //(s_force_total_32[0].WW)>>10 , (s_force_total_32[1].WW)>>10  , (s_force_total_32[2].WW)>>10  , 
+                    //theta_32[0].WW , theta_32[1].WW , theta_32[2].WW , 
+                    //(sculling_32[0].WW)>>10 , (sculling_32[1].WW)>>10 , (sculling_32[2].WW)>>10  ,
+                    //(sculling_base_32[0].WW)>>11 , (sculling_base_32[1].WW)>>11 , (sculling_base_32[2].WW)>>11 
+                   // );
             }
         }
     }

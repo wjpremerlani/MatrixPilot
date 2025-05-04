@@ -335,6 +335,8 @@ void reset_coning_adjustment(void)
 int16_t sample_counter = 0 ;
 
 int32_t xaccel32, yaccel32, zaccel32, temp32, xrate32, yrate32, zrate32 ;
+int16_t xaccel_no_scull , yaccel_no_scull, zaccel_no_scull ;
+
 int32_t omegagyro32X[3] ;
 uint32_t max_gyro = 0 ;
 
@@ -571,17 +573,46 @@ static void process_MPU_data(void)
 	// time to pass the consolidation of 40 samples up to the 200 Hz processes
 	if (sample_counter == 40)
 	{
+        sculling_32[0].WW = _sculling_32[0].WW ;
+        sculling_32[1].WW = _sculling_32[1].WW ;
+        sculling_32[2].WW = _sculling_32[2].WW ;
+        
+        theta_32[0].WW = _theta_32[0].WW ;
+		theta_32[1].WW = _theta_32[1].WW ;
+		theta_32[2].WW = _theta_32[2].WW ;
+        
+        s_force_total_32[0].WW = _s_force_total_32[0].WW ;
+        s_force_total_32[1].WW = _s_force_total_32[1].WW ;
+        s_force_total_32[2].WW = _s_force_total_32[2].WW ;
+               
+        VectorCross_32(sculling_base_32, theta_32 , s_force_total_32 ) ;
+        
         // divide by 40 and round toward 0
-		udb_xaccel.value = divide_by_40_and_round(xaccel32>>10);
-		udb_yaccel.value = divide_by_40_and_round(yaccel32>>10);
-		udb_zaccel.value = divide_by_40_and_round(zaccel32>>10);
+		udb_xaccel.value = divide_by_40_and_round((xaccel32>>10)
+                +((sculling_32[0].WW)>>10)
+                -((sculling_base_32[0].WW)>>11)
+                );
+		udb_yaccel.value = divide_by_40_and_round((yaccel32>>10)
+                +((sculling_32[1].WW)>>10)
+                -((sculling_base_32[1].WW)>>11)
+                
+                );
+		udb_zaccel.value = divide_by_40_and_round((zaccel32>>10)
+                +((sculling_32[2].WW)>>10)
+                -((sculling_base_32[2].WW)>>11)            
+                );
 
 		mpu_temp.value = divide_by_40_and_round(temp32);
 
 		udb_xrate.value = divide_by_40_and_round(xrate32);
 		udb_yrate.value = divide_by_40_and_round(yrate32);
         udb_zrate.value = divide_by_40_and_round(zrate32);
-		
+        
+        
+        xaccel_no_scull = udb_xaccel.offset+ divide_by_40_and_round(s_force_total_32[0].WW>>10) ;
+        yaccel_no_scull = udb_yaccel.offset+ divide_by_40_and_round(s_force_total_32[1].WW>>10) ;
+        zaccel_no_scull = udb_zaccel.offset+ divide_by_40_and_round(s_force_total_32[2].WW>>10) ;
+               		
         omegagyro32X[0] = ( XRATE_SIGN_ORIENTED (xrate32 << 2))/((int32_t)5) ;
         omegagyro32X[1] = ( YRATE_SIGN_ORIENTED (yrate32 << 2))/((int32_t)5) ;
         omegagyro32X[2] = ( ZRATE_SIGN_ORIENTED (zrate32 << 2))/((int32_t)5) ;
@@ -593,19 +624,9 @@ static void process_MPU_data(void)
 		xrate32 = 0 ;
 		yrate32 = 0 ;
 		zrate32 = 0 ;
-#ifdef 	CONING_CORRECTION
 		// theta values used to update the 32 bit direction cosine matrix
-		theta_32[0].WW = _theta_32[0].WW ;
-		theta_32[1].WW = _theta_32[1].WW ;
-		theta_32[2].WW = _theta_32[2].WW ;
+		
         
-        sculling_32[0].WW = _sculling_32[0].WW ;
-        sculling_32[1].WW = _sculling_32[1].WW ;
-        sculling_32[2].WW = _sculling_32[2].WW ;
-        
-        s_force_total_32[0].WW = _s_force_total_32[0].WW ;
-        s_force_total_32[1].WW = _s_force_total_32[1].WW ;
-        s_force_total_32[2].WW = _s_force_total_32[2].WW ;
         
 		
 		// round off the 32 bit theta values for the option of logging just the upper 16 bits
@@ -622,11 +643,10 @@ static void process_MPU_data(void)
         _omega32[1].WW = omega32[1].WW ;
         _omega32[2].WW = omega32[2].WW ;
         
-        VectorCross_32(sculling_base_32, theta_32 , s_force_total_32 ) ;
         	
 		// get ready for the next batch of 40 samples
 		reset_coning_adjustment();
-#endif // CONING_CORRECTION		
+	
 		sample_counter = 0 ;
         
 #ifdef SPECTRAL_ANALYSIS_CONTINUOUS
