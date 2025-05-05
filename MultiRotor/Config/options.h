@@ -27,8 +27,10 @@
 // also, the number of pending uploads is reported and pending status is signaled via LEDs
 //#define DATE "Wolf_pac_2 , firmware 6.4, 4/19/2025\r\n"
 // 6.4 fixes the "upside down" bug which was found to be a rebooting during initialization
-#define DATE "Wolf_pac_2 , firmware 6.5, 4/23/2025\r\n"
+//#define DATE "Wolf_pac_2 , firmware 6.5, 4/23/2025\r\n"
 // 6.5 is an upgrade to enable power up in run orientation without wifi with no loss of data
+#define DATE "Wolf_pac_2 , firmware 6.6, 5/4/2025\r\n"
+// 6.6 : implementation of high frequency sculling compensation
 
 #define CONING_CORRECTION
 #define CONING_CORRECTION_IN_RMAT
@@ -85,7 +87,7 @@
 
 // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
 // non-printable characters are written out, as header bytes for packets.
-#define USE_PACKETIZED_TELEMERTY
+//#define USE_PACKETIZED_TELEMERTY
 
 #define LOG_EULER
 //#define LOG_RATE_AND_EULER
@@ -156,7 +158,7 @@
 //#define LUGE7_SN124
 //#define LUGE7_SN125
 //#define LUGE7_SN126
-#define LUGE7_SN127
+//#define LUGE7_SN127
 //#define LUGE7_SN128
 //#define LUGE7_SN129
 //#define LUGE7_SN130
@@ -200,7 +202,7 @@
 //#define LUGE7_SN167
 
 //#define LUGE7_SN168
-//#define LUGE7_SN169
+#define LUGE7_SN169
 //#define LUGE7_SN170
 //#define LUGE7_SN171
 
@@ -2364,5 +2366,7 @@
 //#define RESIDUAL_HZ 10
 
 #define CENTRIFUGAL_TESTING 0
+
+//#define SCULLING
 
 

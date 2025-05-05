@@ -236,6 +236,11 @@ union longww _omega32[3] ;
 union longww theta_32[3] ;
 union longww _theta_32[3] ;
 union longww omega_dt[3];
+union longww _sculling_32[3] ;
+union longww sculling_32[3] ;
+union longww _s_force_total_32[3] ;
+union longww s_force_total_32[3] ;
+union longww sculling_base_32[3] ;
 extern union longww omegagyro_filtered[];
 
 int16_t divide_by_40_and_round(int32_t total)
@@ -317,11 +322,21 @@ void reset_coning_adjustment(void)
 	_theta_32[0].WW = 0 ;
 	_theta_32[1].WW = 0 ;
 	_theta_32[2].WW = 0 ;	
+    _sculling_32[0].WW = 0 ;
+    _sculling_32[1].WW = 0 ;
+    _sculling_32[2].WW = 0 ;
+    _s_force_total_32[0].WW = 0 ;
+    _s_force_total_32[1].WW = 0 ;
+    _s_force_total_32[2].WW = 0 ;
+    
+    
 }
 
 int16_t sample_counter = 0 ;
 
 int32_t xaccel32, yaccel32, zaccel32, temp32, xrate32, yrate32, zrate32 ;
+int16_t xaccel_no_scull , yaccel_no_scull, zaccel_no_scull ;
+
 int32_t omegagyro32X[3] ;
 uint32_t max_gyro = 0 ;
 
@@ -441,6 +456,9 @@ int16_t z_accel[10] ;
 // executed for each of sample at the 8000 Hz sample rate
 static void process_MPU_data(void)
 {
+    union longww s_force_raw[3] ;
+    union longww s_force_net[3] ;
+    union longww phi_X_force[3] ;
 	mpuDAV = true;
 #ifdef SIMULATED_GYRO
     mpu_data[xrate_MPU_channel].BB = 25 ;
@@ -450,10 +468,24 @@ static void process_MPU_data(void)
     
 	compute_max_gyro(); // diagnostic to detect gyro saturation
 
-//	integrate all data for use in upstream calculations other than those that need coning correction	
-	xaccel32 += ((int32_t)((int16_t)mpu_data[xaccel_MPU_channel].BB)) ;
-	yaccel32 += ((int32_t)((int16_t)mpu_data[yaccel_MPU_channel].BB)) ;
-	zaccel32 += ((int32_t)((int16_t)mpu_data[zaccel_MPU_channel].BB)) ;
+//	integrate all data for use in upstream calculations other than those that need coning correction
+//  accel data is shifted left by 10 bits for better resolution in the computations 
+    s_force_raw[0].WW = (((int32_t)((int16_t)mpu_data[xaccel_MPU_channel].BB))<<10) ;
+    s_force_raw[1].WW = (((int32_t)((int16_t)mpu_data[yaccel_MPU_channel].BB))<<10) ;
+    s_force_raw[2].WW = (((int32_t)((int16_t)mpu_data[zaccel_MPU_channel].BB))<<10) ;
+    
+	xaccel32 += s_force_raw[0].WW ;
+	yaccel32 += s_force_raw[1].WW ;
+	zaccel32 += s_force_raw[2].WW ;
+    
+    s_force_net[0].WW = s_force_raw[0].WW - (((int32_t)((int16_t)udb_xaccel.offset))<<10) ;
+    s_force_net[1].WW = s_force_raw[1].WW - (((int32_t)((int16_t)udb_yaccel.offset))<<10) ;
+    s_force_net[2].WW = s_force_raw[2].WW - (((int32_t)((int16_t)udb_zaccel.offset))<<10) ;
+    
+    _s_force_total_32[0].WW += s_force_net[0].WW ;
+    _s_force_total_32[1].WW += s_force_net[1].WW ;
+    _s_force_total_32[2].WW += s_force_net[2].WW ;
+    
 	
 	temp32 += ((int32_t)((int16_t)mpu_data[temp_MPU_channel].BB)) ;
     
@@ -527,24 +559,60 @@ static void process_MPU_data(void)
 #endif // SPECTRAL_ANALYSIS_CONTINUOUS
 
 #ifdef CONING_CORRECTION
-	compute_coning_adjustment(); 
+	compute_coning_adjustment();
+    VectorCross_32(phi_X_force, _theta_32 , s_force_net ) ;
+    _sculling_32[0].WW += phi_X_force[0].WW ;
+    _sculling_32[1].WW += phi_X_force[1].WW ;
+    _sculling_32[2].WW += phi_X_force[2].WW ;
+    
+    
+    
 #endif // CONING_CORRECTION
 	//  trigger synchronous processing of sensor data
 	sample_counter = sample_counter+1 ;
 	// time to pass the consolidation of 40 samples up to the 200 Hz processes
 	if (sample_counter == 40)
 	{
+        sculling_32[0].WW = _sculling_32[0].WW ;
+        sculling_32[1].WW = _sculling_32[1].WW ;
+        sculling_32[2].WW = _sculling_32[2].WW ;
+        
+        theta_32[0].WW = _theta_32[0].WW ;
+		theta_32[1].WW = _theta_32[1].WW ;
+		theta_32[2].WW = _theta_32[2].WW ;
+        
+        s_force_total_32[0].WW = _s_force_total_32[0].WW ;
+        s_force_total_32[1].WW = _s_force_total_32[1].WW ;
+        s_force_total_32[2].WW = _s_force_total_32[2].WW ;
+               
+        VectorCross_32(sculling_base_32, theta_32 , s_force_total_32 ) ;
+        
         // divide by 40 and round toward 0
-		udb_xaccel.value = divide_by_40_and_round(xaccel32) ;
-		udb_yaccel.value = divide_by_40_and_round(yaccel32);
-		udb_zaccel.value = divide_by_40_and_round(zaccel32);
+		udb_xaccel.value = divide_by_40_and_round((xaccel32>>10)
+                +((sculling_32[0].WW)>>10)
+                -((sculling_base_32[0].WW)>>11)
+                );
+		udb_yaccel.value = divide_by_40_and_round((yaccel32>>10)
+                +((sculling_32[1].WW)>>10)
+                -((sculling_base_32[1].WW)>>11)
+                
+                );
+		udb_zaccel.value = divide_by_40_and_round((zaccel32>>10)
+                +((sculling_32[2].WW)>>10)
+                -((sculling_base_32[2].WW)>>11)            
+                );
 
 		mpu_temp.value = divide_by_40_and_round(temp32);
 
 		udb_xrate.value = divide_by_40_and_round(xrate32);
 		udb_yrate.value = divide_by_40_and_round(yrate32);
         udb_zrate.value = divide_by_40_and_round(zrate32);
-		
+        
+        
+        xaccel_no_scull = udb_xaccel.offset+ divide_by_40_and_round(s_force_total_32[0].WW>>10) ;
+        yaccel_no_scull = udb_yaccel.offset+ divide_by_40_and_round(s_force_total_32[1].WW>>10) ;
+        zaccel_no_scull = udb_zaccel.offset+ divide_by_40_and_round(s_force_total_32[2].WW>>10) ;
+               		
         omegagyro32X[0] = ( XRATE_SIGN_ORIENTED (xrate32 << 2))/((int32_t)5) ;
         omegagyro32X[1] = ( YRATE_SIGN_ORIENTED (yrate32 << 2))/((int32_t)5) ;
         omegagyro32X[2] = ( ZRATE_SIGN_ORIENTED (zrate32 << 2))/((int32_t)5) ;
@@ -556,11 +624,10 @@ static void process_MPU_data(void)
 		xrate32 = 0 ;
 		yrate32 = 0 ;
 		zrate32 = 0 ;
-#ifdef 	CONING_CORRECTION
 		// theta values used to update the 32 bit direction cosine matrix
-		theta_32[0].WW = _theta_32[0].WW ;
-		theta_32[1].WW = _theta_32[1].WW ;
-		theta_32[2].WW = _theta_32[2].WW ;
+		
+        
+        
 		
 		// round off the 32 bit theta values for the option of logging just the upper 16 bits
         _theta_32[0].WW += 0x00008000 ;
@@ -576,10 +643,10 @@ static void process_MPU_data(void)
         _omega32[1].WW = omega32[1].WW ;
         _omega32[2].WW = omega32[2].WW ;
         
-		
+        	
 		// get ready for the next batch of 40 samples
 		reset_coning_adjustment();
-#endif // CONING_CORRECTION		
+	
 		sample_counter = 0 ;
         
 #ifdef SPECTRAL_ANALYSIS_CONTINUOUS
