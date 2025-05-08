@@ -124,8 +124,9 @@ void MPU6000_init16(callback_fptr_t fptr)
 
 	// SAMPLE RATE
 #ifdef CONING_CORRECTION
-	writeMPUSPIreg16(MPUREG_CONFIG,0);
-    writeMPUSPIreg16(MPUREG_ACCEL_CONFIG2,BIT_4KHZ_ACC); // enable 4KHZ sampline
+	//writeMPUSPIreg16(MPUREG_CONFIG,0); //250 Hz gyro bandwidth
+    writeMPUSPIreg16(MPUREG_CONFIG,0x07); //3281 Hz gyro bandwidth
+    writeMPUSPIreg16(MPUREG_ACCEL_CONFIG2,BIT_4KHZ_ACC); // enable 4KHZ accelerometer sampling
 	writeMPUSPIreg16(MPUREG_SMPLRT_DIV, 0); // Sample_rate = 8000Hz
 #else
 	writeMPUSPIreg16(MPUREG_SMPLRT_DIV, 4); // Sample rate = 200Hz  Fsample= 1Khz/(N+1) = 200Hz

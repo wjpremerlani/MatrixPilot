@@ -33,6 +33,7 @@
 // 6.6 : implementation of high frequency sculling compensation
 #define DATE "Wolf_pac_2 , firmware 6.7, 5/7/2025\r\n"
 // 6.7 : raised accelerometer sampling rate from 1000 Hz to 4000 Hz
+// and raised gyro bandwidth from 250 Hz to 3281 Hz
 
 #define CONING_CORRECTION
 #define CONING_CORRECTION_IN_RMAT
@@ -2371,5 +2372,5 @@
 
 //#define SCULLING
 
-//#define NOT_BOTH
+#define NOT_BOTH
 
