@@ -151,9 +151,14 @@ extern int16_t subtract_saturate(int16_t x , int16_t y , int16_t margin ) ;
 #else
 #error "GYRO_RANGE must be either 500, 1000 or 2000"
 #endif
-#define XACCEL_VALUE (XACCEL_SIGN_ORIENTED ((udb_xaccel.value>>1) - (udb_xaccel.offset>>1)))
-#define YACCEL_VALUE (YACCEL_SIGN_ORIENTED ((udb_yaccel.value>>1) - (udb_yaccel.offset>>1)))
-#define ZACCEL_VALUE (ZACCEL_SIGN_ORIENTED ((udb_zaccel.value>>1) - (udb_zaccel.offset>>1)))
+#define XACCEL_VALUE_SC (XACCEL_SIGN_ORIENTED ((udb_xaccel.value>>1) - (udb_xaccel.offset>>1)))
+#define YACCEL_VALUE_SC (YACCEL_SIGN_ORIENTED ((udb_yaccel.value>>1) - (udb_yaccel.offset>>1)))
+#define ZACCEL_VALUE_SC (ZACCEL_SIGN_ORIENTED ((udb_zaccel.value>>1) - (udb_zaccel.offset>>1)))
+
+#define XACCEL_VALUE (XACCEL_SIGN_ORIENTED ((xaccel_no_scull>>1) - (udb_xaccel.offset>>1)))
+#define YACCEL_VALUE (YACCEL_SIGN_ORIENTED ((yaccel_no_scull>>1) - (udb_yaccel.offset>>1)))
+#define ZACCEL_VALUE (ZACCEL_SIGN_ORIENTED ((zaccel_no_scull>>1) - (udb_zaccel.offset>>1)))
+
 #define UDB_XACCEL udb_xaccel
 #define UDB_YACCEL udb_yaccel
 #define UDB_ZACCEL udb_zaccel

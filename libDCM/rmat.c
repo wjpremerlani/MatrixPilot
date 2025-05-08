@@ -473,18 +473,32 @@ static inline void read_gyros(void)
 boolean first_accel = 1 ;
 int16_t aero_force_new[] = { 0 , 0 , 0 } ;
 int16_t aero_force_previous[] = { 0 , 0 , 0 } ;
+int16_t aero_force_new_ns[] = { 0 , 0 , 0 } ;
+int16_t aero_force_previous_ns[] = { 0 , 0 , 0 } ;
+int16_t aero_force_ns[3] ;
+int16_t gplane_ns[3];
+
+extern int16_t xaccel_no_scull , yaccel_no_scull , zaccel_no_scull ;
 
 inline void read_accel(void)
 {
 
-	gplane[0] = __builtin_divsd(__builtin_mulss(XACCEL_VALUE,CALIB_GRAVITY),CAL_GRAV_X);
-	gplane[1] = __builtin_divsd(__builtin_mulss(YACCEL_VALUE,CALIB_GRAVITY),CAL_GRAV_Y);
-	gplane[2] = __builtin_divsd(__builtin_mulss(ZACCEL_VALUE,CALIB_GRAVITY),CAL_GRAV_Z);
-	
-	aero_force_new[0] = - gplane[0] ;
+	gplane[0] = __builtin_divsd(__builtin_mulss(XACCEL_VALUE_SC,CALIB_GRAVITY),CAL_GRAV_X);
+	gplane[1] = __builtin_divsd(__builtin_mulss(YACCEL_VALUE_SC,CALIB_GRAVITY),CAL_GRAV_Y);
+	gplane[2] = __builtin_divsd(__builtin_mulss(ZACCEL_VALUE_SC,CALIB_GRAVITY),CAL_GRAV_Z);
+    
+    gplane_ns[0] = __builtin_divsd(__builtin_mulss(XACCEL_VALUE,CALIB_GRAVITY),CAL_GRAV_X);
+	gplane_ns[1] = __builtin_divsd(__builtin_mulss(YACCEL_VALUE,CALIB_GRAVITY),CAL_GRAV_Y);
+	gplane_ns[2] = __builtin_divsd(__builtin_mulss(ZACCEL_VALUE,CALIB_GRAVITY),CAL_GRAV_Z);
+		
+    aero_force_new[0] = - gplane[0] ;
 	aero_force_new[1] = - gplane[1] ;
 	aero_force_new[2] = - gplane[2] ;
-	
+    
+    aero_force_new_ns[0] = - gplane_ns[0] ;
+	aero_force_new_ns[1] = - gplane_ns[1] ;
+	aero_force_new_ns[2] = - gplane_ns[2] ;
+    	
 	if (first_accel == 1 )
 	{
         align_roll_pitch(rmat);
@@ -495,6 +509,14 @@ inline void read_accel(void)
 		aero_force_previous[0] = aero_force_new[0] ;
 		aero_force_previous[1] = aero_force_new[1] ;
 		aero_force_previous[2] = aero_force_new[2] ;
+        
+        aero_force_ns[0] = aero_force_new_ns[0] ;
+		aero_force_ns[1] = aero_force_new_ns[1] ;
+		aero_force_ns[2] = aero_force_new_ns[2] ;
+	
+		aero_force_previous_ns[0] = aero_force_new_ns[0] ;
+		aero_force_previous_ns[1] = aero_force_new_ns[1] ;
+		aero_force_previous_ns[2] = aero_force_new_ns[2] ;
 	}
 	else
 	{
@@ -505,6 +527,14 @@ inline void read_accel(void)
 		aero_force_previous[0] = aero_force_new[0] ;
 		aero_force_previous[1] = aero_force_new[1] ;
 		aero_force_previous[2] = aero_force_new[2] ;
+        
+        aero_force_ns[0] = (aero_force_new_ns[0] + aero_force_previous_ns[0])/2 ;
+		aero_force_ns[1] = (aero_force_new_ns[1] + aero_force_previous_ns[1])/2 ;
+		aero_force_ns[2] = (aero_force_new_ns[2] + aero_force_previous_ns[2])/2 ;
+	
+		aero_force_previous_ns[0] = aero_force_new_ns[0] ;
+		aero_force_previous_ns[1] = aero_force_new_ns[1] ;
+		aero_force_previous_ns[2] = aero_force_new_ns[2] ;
 	}
 	
 	if (first_accel == 1 )

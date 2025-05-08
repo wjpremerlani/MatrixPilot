@@ -163,7 +163,7 @@ int main (void)
 	
 	return 0 ;
 }
-
+extern int16_t xaccel_no_scull , yaccel_no_scull , zaccel_no_scull ;
 void align_rmat_to_mag(void);
 // Called every 1/2 second at high priority
 void udb_background_callback_periodic(void)
