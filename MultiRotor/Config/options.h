@@ -29,8 +29,10 @@
 // 6.4 fixes the "upside down" bug which was found to be a rebooting during initialization
 //#define DATE "Wolf_pac_2 , firmware 6.5, 4/23/2025\r\n"
 // 6.5 is an upgrade to enable power up in run orientation without wifi with no loss of data
-#define DATE "Wolf_pac_2 , firmware 6.6, 5/4/2025\r\n"
+//#define DATE "Wolf_pac_2 , firmware 6.6, 5/4/2025\r\n"
 // 6.6 : implementation of high frequency sculling compensation
+#define DATE "Wolf_pac_2 , firmware 6.7, 5/7/2025\r\n"
+// 6.7 : raised accelerometer sampling rate from 1000 Hz to 4000 Hz
 
 #define CONING_CORRECTION
 #define CONING_CORRECTION_IN_RMAT
@@ -87,7 +89,7 @@
 
 // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
 // non-printable characters are written out, as header bytes for packets.
-//#define USE_PACKETIZED_TELEMERTY
+#define USE_PACKETIZED_TELEMERTY
 
 #define LOG_EULER
 //#define LOG_RATE_AND_EULER
@@ -2267,7 +2269,7 @@
 #define FILTERING "Data is not filtered.\r\n"
 #else
 #ifdef CONING_CORRECTION
-#define FILTERING "Force data reported at 100 or 200 Hz is a 5 sample average of 1000 Hz sampling.\r\n"
+#define FILTERING "Reported force data is computed from blocks of 20 samples taken at 4000 Hz.\r\n"
 #else
 #define FILTERING "Force data is filtered by averaging pairs of 200 Hz samples.\r\n"
 #endif // CONING_CORRECTION

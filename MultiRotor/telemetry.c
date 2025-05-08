@@ -68,6 +68,7 @@ int db_index = 0 ;
 boolean hasWrittenHeader = 0 ;
 int header_line = 0 ;
 
+extern int16_t aero_force_ns[];
 extern int16_t theta[3] , roll_control , pitch_control , yaw_control , accelEarth[3] , accel_feedback ;
 extern int16_t commanded_roll, commanded_pitch, commanded_yaw, pwManual[] ;
 extern int16_t roll_error , pitch_error , yaw_error ;
@@ -889,7 +890,11 @@ void send_imu_data(void)
 #ifdef DRIFT_RESEARCH
            serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,yaw_rate_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx,tmptur_xx,rpe_x,rpe_y,rpe_z\r\n");                         
 #else
+#ifdef NOT_BOTH
            serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,yaw_rate_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx,tmptur_xx\r\n");              
+#else
+           serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,x_force_sc_xx,y_force_sc_xx,z_force_sc_xx,yaw_xx,pitch_xx,roll_xx,yaw_rate_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx,tmptur_xx\r\n");              
+#endif // NOT_BOTH
 #endif // DRIFT_RESEARCH
 #endif // LOG_PITCH_RATE , TEST_RUNTIME_TILT_ALIGN
 #endif // NORMAL_RUN
@@ -1226,19 +1231,23 @@ void send_imu_data(void)
     //omega_filt_16_previous[2]=omega_filt_16[2];  
 #else
     
-#ifdef DRIFT_RESEARCH
-            serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u,%i,%i,%i,%i",
-#else
+#ifdef NOT_BOTH
             serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u,%i", 
-#endif // DRIFT_RESEARCH
             	((double)(aero_force[0]))/ACCEL_FACTOR ,
 				((double)(aero_force[1]))/ACCEL_FACTOR ,
 				((double)(aero_force[2]))/ACCEL_FACTOR ,
-#ifndef CONING_CORRECTION
-				heading ,  pitch_angle , roll_angle ,
 #else
+            serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u,%i", 
+            	((double)(aero_force_ns[0]))/ACCEL_FACTOR ,
+				((double)(aero_force_ns[1]))/ACCEL_FACTOR ,
+				((double)(aero_force_ns[2]))/ACCEL_FACTOR ,
+                ((double)(aero_force[0]))/ACCEL_FACTOR ,
+				((double)(aero_force[1]))/ACCEL_FACTOR ,
+				((double)(aero_force[2]))/ACCEL_FACTOR ,        
+#endif // NOT_BOTH
+
 				heading_8k ,  pitch_angle_8k , roll_angle_8k ,
-#endif 
+ 
                 ((double) (yaw_rate))/ ((double)93701.65) ,    
 				max_gyro/328  ,
                 udb_cpu_load(),
