@@ -1,3 +1,8 @@
+import numpy as np
+import argparse
+from math import sin, cos, atan2, sqrt, radians, degrees
+from datetime import datetime
+
 
 ############################################
 #
@@ -74,10 +79,7 @@ skip_lines = 0
 global max_err
 max_err = 20
 
-import numpy as np
-import argparse
-from math import sin, cos, atan2, sqrt, radians, degrees
-from datetime import datetime
+
 
 global current_date , current_time , current_date_time
 current_date_time = datetime.now()
@@ -270,7 +272,7 @@ def summary_log_write_adjustements(po,ro,pd,rd) :
     summary_log_file.write(f"{round_and_pad(po)},")
     summary_log_file.write(f"{round_and_pad(ro)},")
     summary_log_file.write(f"{round_and_pad(pd)},")
-    summary_log_file.write(f"{round_and_pad(rd)}\n")
+    summary_log_file.write(f"{round_and_pad(rd)}\n") 
     
 
 def saturate(input_value,size) :
@@ -502,8 +504,10 @@ def two_phase_roll_update_timing_marks(write_requests, roll_rate) :
             yaw_flag = 10.2
         else :
             yaw_flag = -.1
-        debug_marks_file.write(f"{mark_number},{roll_flag},{roll_sign_flag},{roll_max_flag},{yaw_flag},,{round(roll_out,2)},{round(heading,2)}\n")
-        
+        try :
+            debug_marks_file.write(f"{mark_number},{roll_flag},{roll_sign_flag},{roll_max_flag},{yaw_flag},,{round(roll_out,2)},{round(heading,2)}\n")
+        except :
+            pass 
             
         if (abs(roll_out) < roll_ratio*roll_max ) and ( np.sign(roll_out) != np.sign(roll_rate)) and ( roll_max > peak_threshold ) and (abs(heading - heading_start) > yaw_threshold ):
             mark_state = 0
@@ -1329,13 +1333,13 @@ if __name__ == "__main__":
         corner_w = float(args.kalman_gain)
     if args.curves :
         number_of_marks = int(2*int(args.curves))
-    try :
-        summary_log_file = open("summary_log.txt" , "r" )
-        summary_log_file.close()
-        summary_log_file = open("summary_log.txt" , "a" )
-    except :
-        summary_log_file = open("summary_log.txt" , "a" )
-        write_summary_header()
+    #try :
+        #summary_log_file = open("summary_log.txt" , "r" )
+        #summary_log_file.close()
+        #summary_log_file = open("summary_log.txt" , "a" )
+    #except :
+    summary_log_file = open("summary_log.txt" , "w" )
+    write_summary_header()
         
     try :     
         input_file = open(file_name)
@@ -1346,13 +1350,14 @@ if __name__ == "__main__":
         summary_log_file.write(f"unable to open file {file_name} , file was skipped.\n")
         exit()
 
-    rabbit_log_file = open("rabbit_log.txt" , "a")
-    rabbit_log_file.write(f"{file_base_name},")
-
-    debug_marks_file = open(file_base_name+"_debug_marks.csv", "w")
-    debug_marks_file.write(f"mark_number,roll_is_small,opposite_roll_n_rate,valid_roll_peak,minimum_yaw,,roll,yaw,,,minimum yaw = {yaw_threshold}\n")
-
+    
     if args.all_files :
+        rabbit_log_file = open("rabbit_log.txt" , "a")
+        rabbit_log_file.write(f"{file_base_name},")
+
+        debug_marks_file = open(file_base_name+"_debug_marks.csv", "w")
+        debug_marks_file.write(f"mark_number,roll_is_small,opposite_roll_n_rate,valid_roll_peak,minimum_yaw,,roll,yaw,,,minimum yaw = {yaw_threshold}\n")
+
         variance_file = open(file_base_name+"_variance.csv" , "w")
         output_file = open(file_base_name+"_adjusted.txt", "w")
         compare_file = open(file_base_name+"_compare.csv", "w")
@@ -1377,22 +1382,19 @@ if __name__ == "__main__":
     elif args.bill :
         time_map_100_file = open(file_base_name+"_time_map_100_HZ.csv", "w")
         time_map_file = open(file_base_name+"_time_map_1000_HZ.csv", "w")
-        #marks_file = open(file_base_name+".timing_marks.csv" , "w")
+        marks_file = open(file_base_name+".timing_marks.csv" , "w")
         if args.no_weights :
             log_file = open(file_base_name+"_log_no_weights.txt" , "w")
         else :
             log_file = open(file_base_name+"_log.txt" , "w")
     else :
         output_file = open(file_base_name+"_adjusted.txt", "w")
-        time_map_file = open(file_base_name+"_time_map_1000_HZ.csv", "w")
         time_map_100_file = open(file_base_name+"_time_map_100_HZ.csv", "w")
-        marks_file = open(file_base_name+"_timing_marks.csv" , "w")
         if args.no_weights :
             log_file = open(file_base_name+"_log_no_weights.txt" , "w")
         else :
             log_file = open(file_base_name+"_log.txt" , "w")
-        
-    
+            
     if args.track_marks_file_name :
         track_marks_file_name = args.track_marks_file_name
         try :
@@ -2333,7 +2335,10 @@ if __name__ == "__main__":
             map_x_sum = 0
             map_y_sum = 0
             N = 0
-    rabbit_log_file.write(f" {run_time}\n")
+    try :
+        rabbit_log_file.write(f" {run_time}\n")
+    except :
+        pass
     
             
     
