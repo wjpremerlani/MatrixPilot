@@ -162,6 +162,7 @@
           <itemPath>../../libUDB/gyro_tables/table_luge7_sn088.h</itemPath>
           <itemPath>../../libUDB/gyro_tables/table_luge7_sn089.h</itemPath>
           <itemPath>../../libUDB/gyro_tables/table_luge7_sn163_previous.h</itemPath>
+          <itemPath>../../libUDB/gyro_tables/table_luge7_sn103.h</itemPath>
         </logicalFolder>
         <itemPath>../../libUDB/ADchannel.h</itemPath>
         <itemPath>../../libUDB/analogs.h</itemPath>
@@ -320,6 +321,8 @@
           <itemPath>../Config/options_LUGE7_SNts2.h</itemPath>
           <itemPath>../Config/options_LUGE7_SN088.h</itemPath>
           <itemPath>../Config/options_LUGE7_SN089.h</itemPath>
+          <itemPath>../Config/options_LUGE7_SN103.h</itemPath>
+          <itemPath>../Config/options_LUGE7_SN102.h</itemPath>
         </logicalFolder>
         <itemPath>../rotorLib.h</itemPath>
         <itemPath>../serial_output.h</itemPath>
@@ -624,6 +627,7 @@
         <property key="UART 1" value="true"/>
         <property key="UART 2" value="true"/>
         <property key="debugoptions.useswbreakpoints" value="false"/>
+        <property key="firmware.download.all" value="false"/>
         <property key="hwtoolclock.frcindebug" value="false"/>
         <property key="memories.aux" value="false"/>
         <property key="memories.bootflash" value="true"/>

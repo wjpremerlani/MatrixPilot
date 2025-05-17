@@ -31,9 +31,11 @@
 // 6.5 is an upgrade to enable power up in run orientation without wifi with no loss of data
 //#define DATE "Wolf_pac_2 , firmware 6.6, 5/4/2025\r\n"
 // 6.6 : implementation of high frequency sculling compensation
-#define DATE "Wolf_pac_2 , firmware 6.7, 5/7/2025\r\n"
+//#define DATE "Wolf_pac_2 , firmware 6.7, 5/7/2025\r\n"
 // 6.7 : raised accelerometer sampling rate from 1000 Hz to 4000 Hz
 // and raised gyro bandwidth from 250 Hz to 3281 Hz
+#define DATE "Wolf_pac_2 , firmware 6.8, 5/15/2025\r\n"
+// 6.8 : bug fix regarding reporting of the number of pending uploads
 
 #define CONING_CORRECTION
 #define CONING_CORRECTION_IN_RMAT
@@ -53,22 +55,22 @@
 #define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
                                     // you will also need to select a logging format
                                   // such as TEST_SLED or HELMET_IMU, for example
-#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
-#define LOG_RESIDUALS         // logs residual offsets between runs and during "turtle testing"
+//#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
+//#define LOG_RESIDUALS         // logs residual offsets between runs and during "turtle testing"
                                 // also used for align gauge
 #define RESIDUAL_LOG_PERIOD 2  // 30 times per minute
 
 //#define LOG_PITCH_RATE // not commonly used
 
 // the following are used to measure offsets and gains for commissioning
-#define TURTLE_TESTING 0 // now used instead of RECORD_OFFSETS for gathering of 6 point data
+#define TURTLE_TESTING 1 // now used instead of RECORD_OFFSETS for gathering of 6 point data
                         // usually LOG_RESIDUALS should be selected when TT is 1
 //note: TURTLE_TESTING must be defined to set the option to 0 to not use it, or 1 to use it
 //      TURTLE_TESTING will report average force via residual logging
 //#define RECORD_OFFSETS        // record raw accelerometer data and verify residual gyro offsets
 // the following two options are presently used together
-//#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
-//#define ACCEL_AND_GYRO_OFFSETS
+#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
+#define ACCEL_AND_GYRO_OFFSETS
 
 // the following are special logging options
 //#define SPECTRAL_ANALYSIS_BURST // 5 hz, start at 15, remember to also uncomment the following line
@@ -90,7 +92,7 @@
 
 // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
 // non-printable characters are written out, as header bytes for packets.
-#define USE_PACKETIZED_TELEMERTY
+//#define USE_PACKETIZED_TELEMERTY
 
 #define LOG_EULER
 //#define LOG_RATE_AND_EULER
@@ -138,7 +140,7 @@
 //#define LUGE7_SN101
 //#define LUGE7_SN102
 //#define LUGE7_SN103
-//#define LUGE7_SN104
+#define LUGE7_SN104
 //#define LUGE7_SN105
 //#define LUGE7_SN106
 //#define LUGE7_SN107
@@ -205,7 +207,7 @@
 //#define LUGE7_SN167
 
 //#define LUGE7_SN168
-#define LUGE7_SN169
+//#define LUGE7_SN169
 //#define LUGE7_SN170
 //#define LUGE7_SN171
 
@@ -321,6 +323,7 @@
 #define ACCEL_RANGE         8
 #define GYRO_RANGE	    1000
 #define LOG_EULER
+#include "options_LUGE7_SN102.h"
 #endif // LUGE7_SN102
 
 #ifdef LUGE7_SN103
@@ -333,6 +336,7 @@
 #define ACCEL_RANGE         8
 #define GYRO_RANGE	    1000
 #define LOG_EULER
+#include "options_LUGE7_SN103.h"
 #endif // LUGE7_SN103
 
 #ifdef LUGE7_SN104
@@ -342,8 +346,7 @@
 #define SERIAL_NUMBERD1	1
 #define SERIAL_NUMBERD2	0
 #define SERIAL_NUMBERD3 4
-//#define ACCEL_RANGE         8
-#define ACCEL_RANGE         2
+#define ACCEL_RANGE         8
 #define GYRO_RANGE	    1000
 #define LOG_EULER
 #include "options_LUGE7_SN104.h"
@@ -1759,36 +1762,6 @@
 #define LOG_EULER
 #include "options_LUGE7_SN089.h"
 #endif // LUGE7_SNnew
-
-#ifdef LUGE7_SN102
-#define CUSTOM_OFFSETS
-#define XACCEL_OFFSET	( 0 )
-#define YACCEL_OFFSET	( -40 )
-#define ZACCEL_OFFSET	( 6 )
-#define GYRO_OFFSET_TABLE "../libUDB/gyro_tables/table_21.h"
-#define CALIBRATIONX	1.0133
-#define CALIBRATIONY	1.0132
-#define CALIBRATIONZ	1.0151
-#define CALIB_GRAVITY	4096
-#define CAL_GRAV_X	4106
-#define CAL_GRAV_Y	4103
-#define CAL_GRAV_Z	4087
-#endif //LUGE7_SN102
-
-#ifdef LUGE7_SN103
-#define CUSTOM_OFFSETS
-#define XACCEL_OFFSET	( 18 )
-#define YACCEL_OFFSET	( -63 )
-#define ZACCEL_OFFSET	( -11 )
-#define GYRO_OFFSET_TABLE "../libUDB/gyro_tables/table_22.h"
-#define CALIBRATIONX	1.0204
-#define CALIBRATIONY	1.0106
-#define CALIBRATIONZ	1.0145
-#define CALIB_GRAVITY	4096
-#define CAL_GRAV_X	4104
-#define CAL_GRAV_Y	4101
-#define CAL_GRAV_Z	4078
-#endif //LUGE7_SN103
 
 #ifdef MINI6_SN1
 #define BOARD MINI6
