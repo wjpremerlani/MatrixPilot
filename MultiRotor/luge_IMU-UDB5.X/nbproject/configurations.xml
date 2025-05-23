@@ -163,6 +163,9 @@
           <itemPath>../../libUDB/gyro_tables/table_luge7_sn089.h</itemPath>
           <itemPath>../../libUDB/gyro_tables/table_luge7_sn163_previous.h</itemPath>
           <itemPath>../../libUDB/gyro_tables/table_luge7_sn103.h</itemPath>
+          <itemPath>../../libUDB/gyro_tables/table_luge7_sn198.h</itemPath>
+          <itemPath>../../libUDB/gyro_tables/table_luge7_sn199.h</itemPath>
+          <itemPath>../../libUDB/gyro_tables/table_luge7_sn200.h</itemPath>
         </logicalFolder>
         <itemPath>../../libUDB/ADchannel.h</itemPath>
         <itemPath>../../libUDB/analogs.h</itemPath>
@@ -323,6 +326,9 @@
           <itemPath>../Config/options_LUGE7_SN089.h</itemPath>
           <itemPath>../Config/options_LUGE7_SN103.h</itemPath>
           <itemPath>../Config/options_LUGE7_SN102.h</itemPath>
+          <itemPath>../Config/options_LUGE7_SN198.h</itemPath>
+          <itemPath>../Config/options_LUGE7_SN199.h</itemPath>
+          <itemPath>../Config/options_LUGE7_SN200.h</itemPath>
         </logicalFolder>
         <itemPath>../rotorLib.h</itemPath>
         <itemPath>../serial_output.h</itemPath>

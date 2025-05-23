@@ -1,8 +1,8 @@
 
-#ifndef options_LUGE7_SN110_H
-#define	options_LUGE7_SN110_H
+#ifndef options_LUGE7_SN200_H
+#define	options_LUGE7_SN200_H
 
-#define GYRO_OFFSET_TABLE "../libUDB/gyro_tables/table_luge7_sn110.h"
+#define GYRO_OFFSET_TABLE "../libUDB/gyro_tables/table_luge7_sn200.h"
 #define CALIBRATIONX	1.0134
 #define CALIBRATIONY	1.0134
 #define CALIBRATIONZ	1.0134
@@ -11,5 +11,6 @@
 #define CAL_GRAV_Y	4096
 #define CAL_GRAV_Z	4096
 
-#endif	/* options_LUGE7_SN110_H */
+
+#endif	/* options_LUGE7_SN200_H */
 
