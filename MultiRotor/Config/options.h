@@ -36,6 +36,7 @@
 // and raised gyro bandwidth from 250 Hz to 3281 Hz
 #define DATE "Wolf_pac_2 , firmware 6.8, 5/15/2025\r\n"
 // 6.8 : bug fix regarding reporting of the number of pending uploads
+// "6.8.1" , 5/23/2025, also pings the data manager when first turned on
 
 #define CONING_CORRECTION
 #define CONING_CORRECTION_IN_RMAT
@@ -55,7 +56,7 @@
 #define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
                                     // you will also need to select a logging format
                                   // such as TEST_SLED or HELMET_IMU, for example
-#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
+//#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
 #define LOG_RESIDUALS         // logs residual offsets between runs and during "turtle testing"
                                 // also used for align gauge
 #define RESIDUAL_LOG_PERIOD 2  // 30 times per minute
@@ -63,7 +64,7 @@
 //#define LOG_PITCH_RATE // not commonly used
 
 // the following are used to measure offsets and gains for commissioning
-#define TURTLE_TESTING 0 // now used instead of RECORD_OFFSETS for gathering of 6 point data
+#define TURTLE_TESTING 1 // now used instead of RECORD_OFFSETS for gathering of 6 point data
                         // usually LOG_RESIDUALS should be selected when TT is 1
 //note: TURTLE_TESTING must be defined to set the option to 0 to not use it, or 1 to use it
 //      TURTLE_TESTING will report average force via residual logging
@@ -92,7 +93,7 @@
 
 // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
 // non-printable characters are written out, as header bytes for packets.
-#define USE_PACKETIZED_TELEMERTY
+//#define USE_PACKETIZED_TELEMERTY
 
 #define LOG_EULER
 //#define LOG_RATE_AND_EULER
@@ -138,7 +139,7 @@
 //#define LUGE7_SN089
 
 //#define LUGE7_SN101
-#define LUGE7_SN102
+//#define LUGE7_SN102
 //#define LUGE7_SN103
 //#define LUGE7_SN104
 //#define LUGE7_SN105
@@ -243,6 +244,9 @@
 //#define LUGE7_SN195
 //#define LUGE7_SN196
 //#define LUGE7_SN197
+//#define LUGE7_SN198
+//#define LUGE7_SN199
+#define LUGE7_SN200
 
 
 //#define MINI6_SN4 // SN1, Tucker West
@@ -1598,7 +1602,7 @@
 #define ACCEL_RANGE         8
 #define GYRO_RANGE	    1000
 #define LOG_EULER
-#include "options_LUGE7_SN2009.h"
+#include "options_LUGE7_SN200.h"
 #endif // LUGE7_SN200
 
 
