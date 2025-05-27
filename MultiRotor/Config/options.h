@@ -147,13 +147,13 @@
 //#define LUGE7_SN107
 //#define LUGE7_SN108 
 //#define LUGE7_SN109
-//#error #define LUGE7_SN110 // not in service, wifi issue at low temp
+//#define LUGE7_SN110
 //#define LUGE7_SN111
 //#define LUGE7_SN112
 //#define LUGE7_SN113
 //#define LUGE7_SN114
 //#define LUGE7_SN115
-//#define LUGE7_SN116
+#define LUGE7_SN116
 //#define LUGE7_SN117
 //#define LUGE7_SN118
 //#define LUGE7_SN119
@@ -176,13 +176,13 @@
 //#define LUGE7_SN136
 //#define LUGE7_SN137
 //#define LUGE7_SN138
-//#error #define LUGE7_SN139 //out of service too much drift
+//#define LUGE7_SN139
 //#define LUGE7_SN140
 //#define LUGE7_SN141
 //#define LUGE7_SN142
 //#define LUGE7_SN143
 //#define LUGE7_SN144
-//#error #define LUGE7_SN145 out of service
+//#define LUGE7_SN145
 //#define LUGE7_SN146
 //#define LUGE7_SN147
 //#define LUGE7_SN148
@@ -246,7 +246,7 @@
 //#define LUGE7_SN197
 //#define LUGE7_SN198
 //#define LUGE7_SN199
-#define LUGE7_SN200
+//#define LUGE7_SN200
 
 
 //#define MINI6_SN4 // SN1, Tucker West
