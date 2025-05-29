@@ -166,6 +166,7 @@
           <itemPath>../../libUDB/gyro_tables/table_luge7_sn198.h</itemPath>
           <itemPath>../../libUDB/gyro_tables/table_luge7_sn199.h</itemPath>
           <itemPath>../../libUDB/gyro_tables/table_luge7_sn200.h</itemPath>
+          <itemPath>../../libUDB/gyro_tables/table_luge7_sn102.h</itemPath>
         </logicalFolder>
         <itemPath>../../libUDB/ADchannel.h</itemPath>
         <itemPath>../../libUDB/analogs.h</itemPath>
