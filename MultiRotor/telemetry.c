@@ -893,7 +893,7 @@ void send_imu_data(void)
 #ifdef NOT_BOTH
            serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,yaw_rate_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx,tmptur_xx\r\n");              
 #else
-           serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,x_force_sc_xx,y_force_sc_xx,z_force_sc_xx,yaw_xx,pitch_xx,roll_xx,yaw_rate_xx,max_gyro_pct_xx,cpu_xx,seq_no_xx,tmptur_xx\r\n");              
+           serial_output("\r\nx_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,yaw_rate_xx,x_force_ns_xx,y_force_ns_xx,seq_no_xx,tmptur_xx\r\n");              
 #endif // NOT_BOTH
 #endif // DRIFT_RESEARCH
 #endif // LOG_PITCH_RATE , TEST_RUNTIME_TILT_ALIGN
@@ -1237,10 +1237,7 @@ void send_imu_data(void)
 				((double)(aero_force[1]))/ACCEL_FACTOR ,
 				((double)(aero_force[2]))/ACCEL_FACTOR ,
 #else
-            serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u,%u,%i", 
-            	((double)(aero_force_ns[0]))/ACCEL_FACTOR ,
-				((double)(aero_force_ns[1]))/ACCEL_FACTOR ,
-				((double)(aero_force_ns[2]))/ACCEL_FACTOR ,
+            serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%i", 
                 ((double)(aero_force[0]))/ACCEL_FACTOR ,
 				((double)(aero_force[1]))/ACCEL_FACTOR ,
 				((double)(aero_force[2]))/ACCEL_FACTOR ,        
@@ -1249,8 +1246,8 @@ void send_imu_data(void)
 				heading_8k ,  pitch_angle_8k , roll_angle_8k ,
  
                 ((double) (yaw_rate))/ ((double)93701.65) ,    
-				max_gyro/328  ,
-                udb_cpu_load(),
+				((double)(aero_force_ns[0]))/ACCEL_FACTOR ,
+				((double)(aero_force_ns[1]))/ACCEL_FACTOR ,
                 record_number ++ ,
 
 #ifdef LOG_PITCH_RATE
