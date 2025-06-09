@@ -12,7 +12,8 @@ global map_height , delta_time_height , curve_number_height
 #
 #   column ratios define the relative widths of left and right columns
 #   the square brackets and the comma are required syntax
-column_ratios = [ 0.65 , 0.35 ]
+#column_ratios = [ 0.65 , 0.35 ]
+column_ratios = [ 0.60 , 0.10, 0.30 ]
 #
 #   the following define plot heights in pixels
 #   map height is for the heat map :
@@ -30,6 +31,16 @@ curve_number_height = 200
 #
 #######################################################################
 
+# the following two values are used to specify color mapping type.
+# specify ABSOLUTE_MAP for absolute mapping, SIGNED_MAP for signed mapping
+# and -SIGNED_MAP for signed mapping with reversed sign
+#
+#####################################################################
+
+global ABSOLUTE_MAP , SIGNED_MAP
+ABSOLUTE_MAP = 0
+SIGNED_MAP = 1
+
 
 plotlet_height = 190
 import altair as alt
@@ -45,6 +56,34 @@ global args
 
 global signal_names , run_names , yaw_columns , yaw_rate_columns , roll_columns , roll_rate_columns
 global z_force_columns , y_force_columns , delta_time_columns , pivot_columns
+
+global hex_byte
+hex_byte = ['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F']
+global colors
+colors = []
+
+for msb in range(16) :
+    for lsb in range(16) :
+        color = "#"+hex_byte[msb]+hex_byte[lsb]+"FF00"
+        colors.append(color)
+
+for msb in range(16) :
+    for lsb in range(16) :
+        color = "#FF"+hex_byte[15-msb]+hex_byte[15-lsb]+"00"
+        colors.append(color)
+
+def scale_z(specific_force_in) :
+    specific_force = abs(specific_force_in)
+    if specific_force < 32. :
+        specific_force = 32.
+    if specific_force > 128. :
+        specific_force = 128.
+    color_index = int(512.0*((specific_force-32.)/96.))
+    if color_index < 0 :
+        color_index = 0
+    if color_index > 511 :
+        color_index = 511
+    return color_index
 
 
 if len (sys.argv) > 1 :
@@ -68,6 +107,8 @@ y_force_columns = []
 delta_time_columns = []
 pivot_columns = []
 heat_columns = []
+distance_columns = []
+pitch_columns = []
 
 
 
@@ -76,7 +117,7 @@ debug_file.write(f"plot all file opened.\n")
 
 def log_column_names() :
     global signal_names , run_names , yaw_columns , yaw_rate_columns , roll_columns , roll_rate_columns
-    global z_force_columns , y_force_columns , delta_time_columns , pivot_columns
+    global z_force_columns , y_force_columns , delta_time_columns , pivot_columns , distance_columns , pitch_columns
     debug_file.write(f"yaw\n{yaw_columns}\n")
     debug_file.write(f"yaw rate\n{yaw_rate_columns}\n")
     debug_file.write(f"roll\n{roll_columns}\n")
@@ -86,10 +127,14 @@ def log_column_names() :
     debug_file.write(f"delta_time\n{delta_time_columns}\n")
     debug_file.write(f"pivot\n{pivot_columns}\n")
     debug_file.write(f"heat\n{heat_columns}\n")
+    debug_file.write(f"distance\n{distance_columns}\n")
+    debug_file.write(f"pitch\n{pitch_columns}\n")
+
+global number_of_runs
 
 def build_frames() :
     global signal_names , run_names , yaw_columns , yaw_rate_columns , roll_columns , roll_rate_columns
-    global z_force_columns , y_force_columns , delta_time_columns , pivot_columns
+    global z_force_columns , y_force_columns , delta_time_columns , pivot_columns , distance_columns , pitch_columns , number_of_runs
     
     for run_name in run_names :       
         column_name = " -yaw__"+run_name
@@ -100,9 +145,9 @@ def build_frames() :
         roll_columns.append(column_name)       
         column_name = " roll_rate__"+run_name
         roll_rate_columns.append(column_name)
-        column_name = " z_force__"+run_name
+        column_name = " z_force_g__"+run_name
         z_force_columns.append(column_name)
-        column_name = " y_force__"+run_name
+        column_name = " y_force_g__"+run_name
         y_force_columns.append(column_name)
         column_name = " delta_time__"+run_name
         delta_time_columns.append(column_name)
@@ -110,6 +155,14 @@ def build_frames() :
         pivot_columns.append(column_name)
         column_name = " heat__"+run_name
         heat_columns.append(column_name)
+        column_name = " distance__"+run_name
+        distance_columns.append(column_name)
+        column_name = " pitch__"+run_name
+        pitch_columns.append(column_name)
+
+    number_of_runs = len(delta_time_columns)
+
+    debug_file.write(f"\r\n***************** number of runs = {number_of_runs} *************\r\n")
 
 def factor_labels(column_names) :
     global signal_names , run_names
@@ -120,6 +173,436 @@ def factor_labels(column_names) :
                 signal_names.append(name_parts[0])
             if name_parts[1] not in run_names :
                 run_names.append(name_parts[1])
+
+global map_coloring_df
+global plotlets_df
+
+def dt_color(value,dt_range) :
+    global number_of_runs
+    global colors_df
+    if dt_range > 0 and number_of_runs > 1 :
+        color_index = int(512.0*(value/dt_range))
+    else :
+        color_index = 0
+    if color_index > 511 :
+        color_index = 511
+    if color_index < 0 :
+        color_index = 0
+    color = colors_df['GYR'][color_index]
+    return color
+
+def pitch_color(value,p_range) :
+    global colors_df  
+    if p_range > 0  :
+        color_index = 256 + int(256.0*((-value)/p_range))
+    else :
+        color_index = 0
+    if color_index > 511 :
+        color_index = 511
+    if color_index < 0 :
+        color_index = 0
+    color = colors_df['GYR'][color_index]
+    return color
+
+
+def distance_color(value,min_value,max_value) :
+    global colors_df 
+    value_range = max_value - min_value 
+    if value_range > 0  :
+        color_index = int(512.0*((value-min_value)/value_range))
+    else :
+        color_index = 0
+    if color_index > 511 :
+        color_index = 511
+    if color_index < 0 :
+        color_index = 0
+    color = colors_df['GYR'][color_index]
+    return color
+
+global roll_legend_df , pitch_legend_df , z_force_legend_df , y_force_legend_df
+
+def generate_z_force_legend():
+    global z_force_legend_df , colors_df , z_force_columns , plotlets_df
+    zf_min_list = []
+    series_list = []
+    for zf_col in z_force_columns :
+        zf_min = min(plotlets_df[zf_col])
+        zf_min_list.append(zf_min)
+    zf_range = abs(min(zf_min_list)) -1.0
+    debug_file.write(f"\r\nz force legend range:\r\n")
+    debug_file.write(f"\r\n{zf_min_list}\r\n")
+    debug_file.write(f"\r\n zf range = {zf_range}\r\n")
+    zf_list = []
+    color_list = []
+    x_list = []   
+    for index in list(range(512)) :
+        zf = (((zf_range+1.0)*float(index))/512.0)
+        zf_scaled = (((zf - 1 )/zf_range))*512.0
+        color_index = int(zf_scaled)
+        if color_index < 0 :
+            color_index = 0
+        if color_index > 511 :
+            color_index = 511
+        color = colors_df['GYR'][color_index]
+        zf_list.append(zf)
+        color_list.append(color)
+        x_list.append(0.0)
+    list_size = len(color_list)
+    list_index = list(range(list_size))
+    zf_values = pd.Series(zf_list , name = "z_force")
+    z_force_legend_df = pd.DataFrame(zf_values)
+    z_force_legend_df.index = list_index
+    color_values = pd.Series(color_list , name = "color_value")
+    color_values_df = pd.DataFrame(color_values)
+    color_values_df.index = list_index
+    x_values = pd.Series(x_list , name = "|")
+    x_values_df = pd.DataFrame(x_values )
+    x_values_df.index = list_index
+    z_force_legend_df = z_force_legend_df.join(color_values_df).join(x_values_df)
+    debug_file.write(f"z_force legend = \r\n {z_force_legend_df}\r\n") 
+
+
+def generate_y_force_legend():
+    global y_force_legend_df , colors_df , y_force_columns , plotlets_df
+    yf_max_list = []
+    yf_min_list = []
+    series_list = []
+    for yf_col in y_force_columns :
+        yf_max = max(plotlets_df[yf_col])
+        yf_max_list.append(yf_max)
+        yf_min = min(plotlets_df[yf_col])
+        yf_min_list.append(yf_min)
+    yf_max = max(yf_max_list)
+    yf_min = min(yf_min_list)
+    yf_range = max(abs(yf_max),abs(yf_min))
+    debug_file.write(f"\r\ny force legend range:\r\n")
+    debug_file.write(f"\r\n{yf_max_list}\r\n{yf_min_list}\r\n")
+    debug_file.write(f"\r\n yf range = {yf_range}\r\n")
+    yf_list = []
+    color_list = []
+    x_list = []   
+    for index in list(range(512)) :
+        yf = ((yf_range*float(index - 256))/256.0)
+        color = colors_df['GYR'][index]
+        yf_list.append(yf)
+        color_list.append(color)
+        x_list.append(0.0)
+    list_size = len(color_list)
+    list_index = list(range(list_size))
+    yf_values = pd.Series(yf_list , name = "y_force")
+    y_force_legend_df = pd.DataFrame(yf_values)
+    y_force_legend_df.index = list_index
+    color_values = pd.Series(color_list , name = "color_value")
+    color_values_df = pd.DataFrame(color_values)
+    color_values_df.index = list_index
+    x_values = pd.Series(x_list , name = "|")
+    x_values_df = pd.DataFrame(x_values )
+    x_values_df.index = list_index
+    y_force_legend_df = y_force_legend_df.join(color_values_df).join(x_values_df)
+    debug_file.write(f"y_force legend = \r\n {y_force_legend_df}\r\n") 
+     
+def generate_delta_time_legend() :
+    global dt_legend_df , colors_df , dt_range , number_of_runs
+    x_list = []
+    dt_list = []
+    color_list = []
+    if number_of_runs > 1 and dt_range > 0.0  :
+        for index in list(range(512)) :
+            dt = (dt_range*float(index))/512.0
+            color = colors_df['GYR'][index]
+            dt_list.append(dt)
+            color_list.append(color)
+            x_list.append(0.0)
+    else :
+        x_list = [ 0.0 ]
+        dt_list = [ 0.0 ]
+        color_list = [ colors_df['GYR'][0] ]
+    list_size = len(color_list)
+    list_index = list(range(list_size))
+    y_values = pd.Series(dt_list , name = "dt")
+    dt_legend_df = pd.DataFrame(y_values)
+    dt_legend_df.index = list_index
+    color_values = pd.Series(color_list , name = "color_value")
+    color_values_df = pd.DataFrame(color_values)
+    color_values_df.index = list_index
+    x_values = pd.Series(x_list , name = "|")
+    x_values_df = pd.DataFrame(x_values )
+    x_values_df.index = list_index
+    dt_legend_df = dt_legend_df.join(color_values_df).join(x_values_df)
+    debug_file.write(f"dt legend = \r\n {dt_legend_df}\r\n")
+
+def generate_pitch_legend():
+    global pitch_legend_df , colors_df , p_range
+    pitch_list = []
+    color_list = []
+    x_list = []   
+    for index in list(range(512)) :
+        pitch = -((p_range*float(index - 256))/256.0)
+        color = colors_df['GYR'][index]
+        pitch_list.append(pitch)
+        color_list.append(color)
+        x_list.append(0.0)
+    list_size = len(color_list)
+    list_index = list(range(list_size))
+    y_values = pd.Series(pitch_list , name = "pitch")
+    pitch_legend_df = pd.DataFrame(y_values)
+    pitch_legend_df.index = list_index
+    color_values = pd.Series(color_list , name = "color_value")
+    color_values_df = pd.DataFrame(color_values)
+    color_values_df.index = list_index
+    x_values = pd.Series(x_list , name = "|")
+    x_values_df = pd.DataFrame(x_values )
+    x_values_df.index = list_index
+    pitch_legend_df = pitch_legend_df.join(color_values_df).join(x_values_df)
+    debug_file.write(f"pitch legend = \r\n {pitch_legend_df}\r\n")  
+
+def generate_roll_legend():
+    global roll_legend_df , colors_df
+    roll_list = []
+    color_list = []
+    x_list = []   
+    for index in list(range(180)) :
+        roll = 0.5*float(index)
+        color = colors_df['GYR'][int(2.56*index)]
+        roll_list.append(roll)
+        color_list.append(color)
+        x_list.append(0)
+    roll_list.append(90.)
+    x_list.append(0)
+    color_list.append(colors_df['GYR'][511])
+    debug_file.write(f"roll list = \r\n {roll_list}\r\n")
+    debug_file.write(f"color list = \r\n {color_list}\r\n")
+    list_size = len(color_list)
+    list_index = list(range(list_size))
+    y_values = pd.Series(roll_list , name = "roll")
+    roll_legend_df = pd.DataFrame(y_values)
+    roll_legend_df.index = list_index
+    color_values = pd.Series(color_list , name = "color_value")
+    color_values_df = pd.DataFrame(color_values)
+    color_values_df.index = list_index
+    x_values = pd.Series(x_list , name = "|")
+    x_values_df = pd.DataFrame(x_values )
+    x_values_df.index = list_index
+    roll_legend_df = roll_legend_df.join(color_values_df).join(x_values_df)
+    debug_file.write(f"roll legend = \r\n {roll_legend_df}\r\n")
+
+def abs_color(value,value_range ) :
+    global colors_df  
+    if value_range > 0  :
+        color_index = int(512.0*((abs(value))/value_range))
+    else :
+        color_index = 0
+    if color_index > 511 :
+        color_index = 511
+    if color_index < 0 :
+        color_index = 0
+    color = colors_df['GYR'][color_index]
+    return color
+
+def signed_color(value,value_range ) :
+    global colors_df  
+    if value_range > 0  :
+        color_index = 255+int(256.0*(((value))/value_range))
+    else :
+        color_index = 255
+    if color_index > 511 :
+        color_index = 511
+    if color_index < 0 :
+        color_index = 0
+    color = colors_df['GYR'][color_index]
+    return color
+
+def generate_coloring(signal_name , columns , type_of_coloring ) :
+    global ABSOLUTE_MAP , SIGNED_MAP , plotlets_df
+    first_color_map = True
+    max_list = []
+    min_list = []
+    series_list = []
+    run_index = 0
+    for col in columns :
+        value_max = max(plotlets_df[col])
+        max_list.append(value_max)
+        value_min = min(plotlets_df[col])
+        min_list.append(value_min)
+    value_max = max(max_list)
+    value_min = min(min_list)
+    value_range = max(abs(value_max),abs(value_min))
+    
+    for col in columns :
+        color_list = []
+        for row in plotlets_df[col] :
+            if type_of_coloring == ABSOLUTE_MAP :
+                color_list.append(str(abs_color(row,value_range)))
+            else :
+                if type_of_coloring > 0 :
+                    color_list.append(str(signed_color(row,value_range)))
+                else :
+                    color_list.append(str(signed_color(-row,value_range)))
+                
+        list_size = len(color_list)
+        list_index = list(range(list_size))
+        color_series = pd.Series(color_list, name = str(signal_name+"_color__"+run_names[run_index]) )
+        new_color_df = pd.DataFrame(color_series)
+        new_color_df.index = list_index
+        debug_file.write(f" {signal_name} df = {new_color_df}\r\n")
+        if first_color_map == True :
+            map_coloring_df = new_color_df
+            first_color_map = False
+        else :
+            map_coloring_df = map_coloring_df.join(new_color_df)
+        run_index = run_index + 1
+    plotlets_df = plotlets_df.join(map_coloring_df)
+    debug_file.write(f"{signal_name}_max_list = {max_list}\r\n")
+    debug_file.write(f"{signal_name}_min_list = {min_list}\r\n")
+    debug_file.write(f"{signal_name} range = {value_range}\r\n")
+    debug_file.write(f"{signal_name} coloring data frame = {map_coloring_df}\r\n")
+
+
+    value_list = []
+    color_list = []
+    x_list = []
+    if type_of_coloring == ABSOLUTE_MAP :
+        for index in list(range(512)) :
+            value = (value_range/512.0)*float(index)
+            color = colors_df['GYR'][index]
+            value_list.append(value)
+            color_list.append(color)
+            x_list.append(0.0)
+    else :
+        for index in list(range(512)) :
+            if type_of_coloring > 0  :
+                value = (value_range/256.0)*float(index) - value_range
+            else :
+                value = (-value_range/256.0)*float(index) + value_range
+            color = colors_df['GYR'][index]
+            value_list.append(value)
+            color_list.append(color)
+            x_list.append(0.0)
+    y_values = pd.Series(value_list , name = str(signal_name))
+    legend_df = pd.DataFrame(y_values)
+    legend_df.index = list(range(512))
+    color_values = pd.Series(color_list , name = "color_value")
+    color_values_df = pd.DataFrame(color_values)
+    color_values_df.index = list(range(512))
+    x_values = pd.Series(x_list , name = "|")
+    x_values_df = pd.DataFrame(x_values )
+    x_values_df.index = list(range(512))
+    legend_df = legend_df.join(color_values_df).join(x_values_df)
+    debug_file.write(f"{signal_name} legend = \r\n {legend_df}\r\n")
+    return legend_df
+
+ 
+
+
+global dt_range
+def generate_delta_time_coloring():
+    global delta_time_columns , plotlets_df , run_names , map_coloring_df , dt_range
+    first_color_map = True
+    dt_max_list = []
+    series_list = []
+    run_index = 0
+    for dt_col in delta_time_columns :
+        dt_max = max(plotlets_df[dt_col])
+        dt_max_list.append(dt_max)
+    dt_range = max(dt_max_list)
+
+    for dt_col in delta_time_columns :
+        color_list = []
+        for row in plotlets_df[dt_col] :
+            color_list.append(str(dt_color(row,dt_range)))
+        list_size = len(color_list)
+        list_index = list(range(list_size))
+        dt_c_series = pd.Series(color_list, name = str("dt_color__"+run_names[run_index]) )
+        new_color_df = pd.DataFrame(dt_c_series)
+        new_color_df.index = list_index
+        debug_file.write(f" new dt_color df = {new_color_df}\r\n")
+        if first_color_map == True :
+            map_coloring_df = new_color_df
+            first_color_map = False
+        else :
+            map_coloring_df = map_coloring_df.join(new_color_df)
+        run_index = run_index + 1
+    plotlets_df = plotlets_df.join(map_coloring_df)
+    debug_file.write(f"dt_max_list = {dt_max_list}\r\n")
+    debug_file.write(f"delta time range = {dt_range}\r\n")
+    debug_file.write(f"delta time coloring data frame = {map_coloring_df}\r\n")
+    
+global p_range
+def generate_pitch_coloring() :
+    global pitch_columns , plotlets_df , run_names , map_coloring_df , p_range
+    first_color_map = True
+    p_max_list = []
+    p_min_list = []
+    series_list = []
+    run_index = 0
+    for p_col in pitch_columns :
+        p_max = max(plotlets_df[p_col])
+        p_max_list.append(p_max)
+        p_min = min(plotlets_df[p_col])
+        p_min_list.append(p_min)
+    p_max = max(p_max_list)
+    p_min = min(p_min_list)
+    p_range = max(abs(p_max),abs(p_min))
+    for p_col in pitch_columns :
+        color_list = []
+        for row in plotlets_df[p_col] :
+            color_list.append(str(pitch_color(row,p_range)))
+        list_size = len(color_list)
+        list_index = list(range(list_size))
+        p_c_series = pd.Series(color_list, name = str("pitch_color__"+run_names[run_index]) )
+        new_color_df = pd.DataFrame(p_c_series)
+        new_color_df.index = list_index
+        debug_file.write(f" new pitch df = {new_color_df}\r\n")
+        if first_color_map == True :
+            map_coloring_df = new_color_df
+            first_color_map = False
+        else :
+            map_coloring_df = map_coloring_df.join(new_color_df)
+        run_index = run_index + 1
+    plotlets_df = plotlets_df.join(map_coloring_df)
+    debug_file.write(f"p_max_list = {p_max_list}\r\n")
+    debug_file.write(f"p_min_list = {p_min_list}\r\n")
+    debug_file.write(f"pitch range = {p_range}\r\n")
+    debug_file.write(f"pitch coloring data frame = {map_coloring_df}\r\n")
+ 
+
+def generate_distance_coloring() :
+    global distance_columns , plotlets_df , run_names , map_coloring_df
+    first_color_map = True
+    d_max_list = []
+    d_min_list = []
+    series_list = []
+    run_index = 0
+    for d_col in distance_columns :
+        d_max = max(plotlets_df[d_col])
+        d_max_list.append(d_max)
+        d_min = min(plotlets_df[d_col])
+        d_min_list.append(d_min)
+        color_list = []
+        for row in plotlets_df[d_col] :
+            color_list.append(str(distance_color(row,d_min,d_max)))
+        list_size = len(color_list)
+        list_index = list(range(list_size))
+        d_c_series = pd.Series(color_list, name = str("distance_color__"+run_names[run_index]) )
+        new_color_df = pd.DataFrame(d_c_series)
+        new_color_df.index = list_index
+        debug_file.write(f" new df = {new_color_df}\r\n")
+        if first_color_map == True :
+            map_coloring_df = new_color_df
+            first_color_map = False
+        else :
+            map_coloring_df = map_coloring_df.join(new_color_df)
+        run_index = run_index + 1
+    plotlets_df = plotlets_df.join(map_coloring_df)
+    debug_file.write(f"d_max_list = {d_max_list}\r\n")
+    debug_file.write(f"d_min_list = {d_min_list}\r\n")
+    debug_file.write(f"distance coloring data frame = {map_coloring_df}\r\n")
+    #debug_file.write(f"plotlets_df = {plotlets_df}\r\n")
+    
+    
+
+
+    
 
 pd.options.plotting.backend = "plotly"
 
@@ -141,6 +624,15 @@ roll_rate_chart = None
 y_force_chart = None
 pivot_chart = None
 
+global colors_df
+
+colors_df = pd.read_csv("palettes.txt")
+color_index = list(range(512))
+colors_df.index = color_index
+
+debug_file.write(f" colors_df['GYR'] = {colors_df['GYR']}\r\n\r\n")
+
+
               
 if plotlet_file is not None:
     plotlets_df = pd.read_csv(plotlet_file)
@@ -150,11 +642,25 @@ if plotlet_file is not None:
     debug_file.write(f"runs = \n {run_names}\n")
     build_frames()
     log_column_names()
+    generate_distance_coloring()
+    generate_pitch_coloring()
+    generate_delta_time_coloring()
+    generate_roll_legend()
+    generate_pitch_legend()
+    generate_delta_time_legend()
+    generate_y_force_legend()
+    generate_z_force_legend()
+    yaw_rate_df = generate_coloring("yaw_rate", yaw_rate_columns , ABSOLUTE_MAP )
+    roll_rate_df = generate_coloring("roll_rate", roll_rate_columns , ABSOLUTE_MAP )
+    pivot_df = generate_coloring("pivot", pivot_columns , SIGNED_MAP )
+    
     curve_list = plotlets_df["curve_number "].unique()
     debug_file.write(f"curve number list = \n{curve_list}\n")
     debug_file.write(f"run names list = \n{run_names}\n")
 
     debug_file.close()
+
+    
 
     yaw_chart = None
     roll_chart = None
@@ -164,10 +670,49 @@ if plotlet_file is not None:
     roll_rate_chart = None
     y_force_chart = None
     pivot_chart = None
+    curvelet_delta_time_chart_for_heatmap = None
 
-    
+    s_run_names = st.sidebar.multiselect("select a set of runs for plotting", options= run_names , default = run_names )
     curve_number = st.sidebar.selectbox("select a curve" , curve_list )    
-    run_number = st.sidebar.selectbox("select a run" , run_names )
+    run_number = st.sidebar.selectbox("select a run to heat map" , s_run_names )
+    color_map = st.sidebar.selectbox("select variable to heat map" , [ " roll" , " roll_rate" ," pitch" , " yaw_rate" , " z_force" , " y_force" , " delta_time" , " pivot" ] )
+
+    s_yaw_columns = []
+    s_yaw_rate_columns = []
+    s_roll_columns = []
+    s_roll_rate_columns = []
+    s_z_force_columns = []
+    s_y_force_columns = []
+    s_delta_time_columns = []
+    s_pivot_columns = []
+    heat_columns = []
+    distance_columns = []
+    s_pitch_columns = []
+
+
+    for run_name in s_run_names :       
+        column_name = " -yaw__"+run_name
+        s_yaw_columns.append(column_name)       
+        column_name = " yaw_rate__"+run_name
+        s_yaw_rate_columns.append(column_name)        
+        column_name = " roll__"+run_name
+        s_roll_columns.append(column_name)       
+        column_name = " roll_rate__"+run_name
+        s_roll_rate_columns.append(column_name)
+        column_name = " z_force_g__"+run_name
+        s_z_force_columns.append(column_name)
+        column_name = " y_force_g__"+run_name
+        s_y_force_columns.append(column_name)
+        column_name = " delta_time__"+run_name
+        s_delta_time_columns.append(column_name)
+        column_name = " degs_pivot__"+run_name
+        s_pivot_columns.append(column_name)
+        column_name = " heat__"+run_name
+        heat_columns.append(column_name)
+        column_name = " distance__"+run_name
+        distance_columns.append(column_name)
+        column_name = " pitch__"+run_name
+        s_pitch_columns.append(column_name)
 
     if curve_number is not None :
         curvelet_df = plotlets_df[plotlets_df["curve_number "] == curve_number ]    
@@ -177,17 +722,19 @@ if plotlet_file is not None:
 
         with all_left :          
             if yaw_chart == None :
-                yaw_chart = st.plotly_chart(plotlets_df[yaw_columns].plot( render_mode = 'svg').update_layout( yaxis_title = "yaw, deg") )
-                roll_chart = st.plotly_chart(plotlets_df[roll_columns].plot(render_mode = 'svg' ).update_layout( yaxis_title = "roll, deg") )
-                z_force_chart = st.plotly_chart(plotlets_df[z_force_columns].plot(render_mode = 'svg' ).update_layout( yaxis_title = "z force") )
-                delta_time_chart = st.plotly_chart(plotlets_df[delta_time_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " dt, sec "))
+                yaw_chart = st.plotly_chart(plotlets_df[s_yaw_columns].plot( render_mode = 'svg').update_layout( yaxis_title = "yaw, deg") )
+                roll_chart = st.plotly_chart(plotlets_df[s_roll_columns].plot(render_mode = 'svg' ).update_layout( yaxis_title = "roll, deg") )
+                z_force_chart = st.plotly_chart(plotlets_df[s_z_force_columns].plot(render_mode = 'svg' ).update_layout( yaxis_title = "z force, g's") )
+                delta_time_chart = st.plotly_chart(plotlets_df[s_delta_time_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " dt, sec "))
+            else :
+                st.stop()
             
         with all_right :
             if yaw_rate_chart == None :
-                yaw_rate_chart = st.plotly_chart(plotlets_df[yaw_rate_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " yaw rate, d/s ") )    
-                roll_rate_chart = st.plotly_chart(plotlets_df[roll_rate_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = " roll rate, d/s  ") )     
-                y_force_chart = st.plotly_chart(plotlets_df[y_force_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = " y force") )  
-                pivot_chart = st.plotly_chart(plotlets_df[pivot_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = " pivot, deg ") )
+                yaw_rate_chart = st.plotly_chart(plotlets_df[s_yaw_rate_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " yaw rate, d/s ") )    
+                roll_rate_chart = st.plotly_chart(plotlets_df[s_roll_rate_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = " roll rate, d/s  ") )     
+                y_force_chart = st.plotly_chart(plotlets_df[s_y_force_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = " y force, g's") )  
+                pivot_chart = st.plotly_chart(plotlets_df[s_pivot_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = " pivot, deg ") )
             else :
                 st.stop()
 
@@ -196,41 +743,96 @@ if plotlet_file is not None:
 
         with crv_left :          
             if curve_number is not None:        
-                curvelet_yaw_chart = st.plotly_chart(curvelet_df[yaw_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = "yaw, deg, crv"+str(curve_number)) )                     
-                curvelet_roll_chart = st.plotly_chart(curvelet_df[roll_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = "roll, deg, crv"+str(curve_number)) )           
-                curvelet_z_force_chart = st.plotly_chart(curvelet_df[z_force_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = "z force, crv"+str(curve_number)) )        
-                curvelet_delta_time_chart = st.plotly_chart(curvelet_df[delta_time_columns].plot(render_mode = 'svg').update_layout( yaxis_title = " dt, sec, crv"+str(curve_number))  )                  
+                curvelet_yaw_chart = st.plotly_chart(curvelet_df[s_yaw_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = "yaw, deg, crv"+str(curve_number)) )                     
+                curvelet_roll_chart = st.plotly_chart(curvelet_df[s_roll_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = "roll, deg, crv"+str(curve_number)) )           
+                curvelet_z_force_chart = st.plotly_chart(curvelet_df[s_z_force_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = "z force, g's, crv"+str(curve_number)) )        
+                curvelet_delta_time_chart = st.plotly_chart(curvelet_df[s_delta_time_columns].plot(render_mode = 'svg').update_layout( yaxis_title = " dt, sec, crv"+str(curve_number))  )                  
             else :
                 st.stop()
 
         with crv_right :       
             if curve_number is not None:           
-                curvelet_yaw_rate_chart = st.plotly_chart(curvelet_df[yaw_rate_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " yaw rate, d/s, crv"+str(curve_number)) )
-                curvelet_roll_rate_chart = st.plotly_chart(curvelet_df[roll_rate_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " roll rate, d/s, crv"+str(curve_number)) )
-                curvelet_y_force_chart = st.plotly_chart(curvelet_df[ y_force_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " y force, curv"+str(curve_number)) )        
-                curvelet_pivot_chart = st.plotly_chart(curvelet_df[ pivot_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " pivot, deg, crv"+str(curve_number)) )       
+                curvelet_yaw_rate_chart = st.plotly_chart(curvelet_df[s_yaw_rate_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " yaw rate, d/s, crv"+str(curve_number)) )
+                curvelet_roll_rate_chart = st.plotly_chart(curvelet_df[s_roll_rate_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " roll rate, d/s, crv"+str(curve_number)) )
+                curvelet_y_force_chart = st.plotly_chart(curvelet_df[ s_y_force_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " y force, g's, curv"+str(curve_number)) )        
+                curvelet_pivot_chart = st.plotly_chart(curvelet_df[ s_pivot_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " pivot, deg, crv"+str(curve_number)) )       
             else :
                 st.stop()
 
     with track_map_tab :
-        map_left , map_right = st.columns(column_ratios)
+        map_left , map_center, map_right = st.columns(column_ratios)
+        with map_center:
+            if color_map == ' pitch':
+                legend_df = pitch_legend_df
+                y_name = "pitch"
+                y_title = "pitch angle, degrees"
+            elif color_map == ' y_force':
+                legend_df = y_force_legend_df
+                y_name = "y_force"
+                y_title = "y force, g's"
+            elif color_map == ' z_force':
+                legend_df = z_force_legend_df
+                y_name = "z_force"
+                y_title = "z force, g's"
+            elif color_map == ' delta_time':
+                legend_df = dt_legend_df
+                y_name = "dt"
+                y_title = "delta time, seconds"
+            elif color_map == ' yaw_rate' :
+                legend_df = yaw_rate_df
+                y_name = "yaw_rate"
+                y_title = "yaw rate, degrees per second"
+            elif color_map == ' roll_rate' :
+                legend_df = roll_rate_df
+                y_name = "roll_rate"
+                y_title = "roll rate, degrees per second"
+            elif color_map == ' pivot' :
+                legend_df = pivot_df
+                y_name = "pivot"
+                y_title = "pivot angle, degrees"                
+            else :
+                legend_df = roll_legend_df
+                y_name = "roll"
+                y_title = "absolute roll angle, degrees"
+            legend_chart = (
+                alt.Chart(legend_df[[y_name , "|" , "color_value" ]])
+                    .mark_square()
+                        .encode(
+                        alt.X('|').axis(labels=False,title = None),
+                        alt.Y(y_name).axis(title = y_title),
+                        color = alt.Color("color_value").scale(None)
+                )
+                .interactive()
+                .properties(
+                    height = map_height ,
+                    )
+            )
+            st.altair_chart(legend_chart , use_container_width=True )
+            
         with map_left :
             if run_number is not None :
                 x_name = str(' x__'+run_number)
                 y_name = str(' y__'+run_number)
-                dis_name = str(' distance__'+run_number)
-                heat_name = str(' heat__'+run_number)
+                if color_map == ' pitch' :
+                    coloring_name = str('pitch_color__'+run_number)
+                elif color_map == ' delta_time' :
+                    coloring_name = str('dt_color__'+run_number)
+                elif color_map == ' yaw_rate' :
+                    coloring_name = str('yaw_rate_color__'+run_number)
+                elif color_map == ' roll_rate' :
+                    coloring_name = str('roll_rate_color__'+run_number)
+                elif color_map == ' pivot' :
+                    coloring_name = str('pivot_color__'+run_number)                   
+                else :
+                    coloring_name = str(color_map+'_coloring__'+run_number)
                 st.write("track map for ",run_number)
-                hm_domain = ['red','orange','yellow','green','blue']
-                hm_range = ['#FF0000','#FF6E00','#FFF200','#00FF00','#0000FF']
                 heat_map_chart = (
-                    alt.Chart(plotlets_df[[x_name , y_name , dis_name , heat_name , 'curve_number ']])
+                    alt.Chart(plotlets_df[[x_name , y_name , coloring_name ]])
                         .mark_circle()
                         .encode(
                         x=x_name,
                         y=y_name,
-                        color=alt.Color(heat_name).scale(domain = hm_domain , range = hm_range),
-                        size = 'curve_number ' ,
+                        color = alt.Color(coloring_name).scale(None)
                     )
                     .interactive()
                     .properties(
@@ -243,12 +845,16 @@ if plotlet_file is not None:
                 st.stop()
 
             with map_right :
+
+                if curvelet_delta_time_chart_for_heatmap == None :
           
-                curvelet_delta_time_chart_for_heatmap = st.plotly_chart(plotlets_df.plot(render_mode = 'svg' , x = "curve_number "  , y = delta_time_columns )
+                    curvelet_delta_time_chart_for_heatmap = st.plotly_chart(plotlets_df.plot(render_mode = 'svg' , x = "curve_number "  , y = delta_time_columns )
                                                             .update_layout( yaxis_title = "dt sec" , xaxis_title = "curve" , height = delta_time_height )
                                                             .update_xaxes( showgrid = True , dtick = int(1) )
                                                             .update_yaxes ( showgrid = True )
                                                                         )
+                else :
+                    st.stop()
 
                 
                 left_logo , right_logo = st.columns(2,vertical_alignment = "center")

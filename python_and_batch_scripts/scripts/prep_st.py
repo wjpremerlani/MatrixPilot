@@ -151,13 +151,13 @@ if __name__ == "__main__":
                 if data_file_start > 0 :
                     log_file.write(f"name = {data_file_base_name} , start = {data_file_start} \r")
                     if args.all :
-                        bat_file.write(f"map_st.py -all -f {data_file_name} -s {data_file_start} -e 60.0")
+                        bat_file.write(f"process_map_st.py -all -f {data_file_name} -s {data_file_start} -e 60.0")
                     elif args.bruce :
-                        bat_file.write(f"map_st.py -bruce -f {data_file_name} -s {data_file_start} -e 60.0")
+                        bat_file.write(f"process_map_st.py -bruce -f {data_file_name} -s {data_file_start} -e 60.0")
                     elif args.bill or new_format == True :
-                        bat_file.write(f"map_st.py -bill -f {data_file_name} -s {data_file_start} -e 60.0")
+                        bat_file.write(f"process_map_st.py -bill -f {data_file_name} -s {data_file_start} -e 60.0")
                     else :
-                        bat_file.write(f"map_st.py -f {data_file_name} -s {data_file_start} -e 60.0")
+                        bat_file.write(f"process_map_st.py -f {data_file_name} -s {data_file_start} -e 60.0")
                     if args.log_time :
                         bat_file.write(f" -log_time")
                     if args.strmlt or new_format == True :

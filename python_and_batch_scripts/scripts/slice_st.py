@@ -13,8 +13,6 @@ start_margin = 0
 end_margin = 0
 minimum_roll = 15.0
 
-
-
 import argparse
 import sys
 import numpy as np
@@ -33,6 +31,7 @@ ROLL_COLUMN = 6
 PITCH_COLUMN = 7 
 YAW_COLUMN = 8
 Z_FORCE_COLUMN = 5
+Y_FORCE_COLUMN = 4
 
 global CURVE_START_COLUMN , CURVE_END_COLUMN
 CURVE_START_COLUMN = 2
@@ -53,7 +52,7 @@ run_numbers = []
 global rows , row_numbers , number_of_rows , labels , label_names
 
 
-global states , rolls , pitches, times , yaws , matrices , z_forces
+global states , rolls , pitches, times , yaws , matrices , z_forces , y_forces, fz_max , fz_min
 states = []
 rolls = []
 pitches = []
@@ -61,6 +60,27 @@ yaws = []
 times = []
 matrices = []
 z_forces = []
+y_forces = []
+fz_max = []
+
+
+global hex_byte
+hex_byte = ['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F']
+global colors
+colors = []
+
+for msb in range(16) :
+    for lsb in range(16) :
+        color = "#"+hex_byte[msb]+hex_byte[lsb]+"FF00"
+        colors.append(color)
+
+for msb in range(16) :
+    for lsb in range(16) :
+        color = "#FF"+hex_byte[15-msb]+hex_byte[15-lsb]+"00"
+        colors.append(color)
+
+
+
 
 global alignment_offsets , alignment_variances , alignment_variance
 alignment_offsets = []
@@ -180,7 +200,7 @@ first_var_log = True
 #with list2 in effect shifted by offset elements
 def cross_variance(list1, list2, offset , roll_list , plt_num , rn_num ) :
     global fetch_valid , skip , N_minimum , N_samples
-    global minimum_roll , reference_rolls , rolls ,z_forces , states
+    global minimum_roll , reference_rolls , rolls ,z_forces , y_forces, states
     global first_var_log
     variance_sum = 0.0
     weight_sum = 0.0
@@ -294,12 +314,15 @@ def factor_labels () :
     log_file.write(f"signal names = \n{signal_names}\n")
 
 def open_file() :
-    global states , rolls , pitches, yaws , times , matrices , z_forces
+    global states , rolls , pitches, yaws , times , matrices , z_forces , y_forces
     global number_of_runs , run_numbers
     global rows , row_numbers , number_of_rows , labels , label_names
     global columns_per_run
     global columns_per_line
     global column_numbers
+    global fz_min
+    global fy_min , fy_max
+    global fz_min_all , fy_min_all , fy_max_all
     row_number = 0
     first_row = True
     rows = []
@@ -350,12 +373,14 @@ def open_file() :
             time_row = []
             yaw_row = []
             z_force_row = []
+            y_force_row = []
 
             if args.strmlt :
                 for run_number in run_numbers :
                     state_row.append(int(float((row[int(run_number + STATE_COLUMN*(number_of_runs))]))))
                     roll_row.append(float(row[int(run_number + ROLL_COLUMN*(number_of_runs))]))
                     z_force_row.append(float(row[int(run_number + Z_FORCE_COLUMN*(number_of_runs))]))
+                    y_force_row.append(float(row[int(run_number + Y_FORCE_COLUMN*(number_of_runs))]))
                     time_row.append(float(row[int(run_number + TIME_COLUMN*(number_of_runs))]))
                     yaw_row.append(float(row[int(run_number + YAW_COLUMN*(number_of_runs))]))
                     pitch_row.append(float(row[int(run_number + PITCH_COLUMN*(number_of_runs))]))
@@ -369,6 +394,7 @@ def open_file() :
                     state_row.append(int(float((row[int(run_number + STATE_COLUMN*(number_of_runs+1))]))))
                     roll_row.append(float(row[int(run_number + ROLL_COLUMN*(number_of_runs+1))]))
                     z_force_row.append(float(row[int(run_number + Z_FORCE_COLUMN*(number_of_runs+1))]))
+                    y_force_row.append(float(row[int(run_number + Y_FORCE_COLUMN*(number_of_runs+1))]))                   
                     time_row.append(float(row[int(run_number + TIME_COLUMN*(number_of_runs+1))]))
                     yaw_row.append(float(row[int(run_number + YAW_COLUMN*(number_of_runs+1))]))
                     pitch_row.append(float(row[int(run_number + PITCH_COLUMN*(number_of_runs+1))]))
@@ -387,7 +413,23 @@ def open_file() :
             pitches.append(pitch_row)
             matrices.append(matrix_row)
             z_forces.append(z_force_row)
+            y_forces.append(y_force_row)
     number_of_rows = row_number
+    #log_file.write(f"{z_forces}\r\n")
+    fz_min = min(z_forces[:][:])
+    fz_min_all = min(fz_min)
+    log_file.write(f"\r\n\r\n  fz minimum = {fz_min}\r\n\r\n")
+    log_file.write(f"fz minimum global = {fz_min_all}\r\n")
+    fy_min = min(y_forces[:][:])
+    fy_max = max(y_forces[:][:])
+    fy_min_all = min(fy_min)
+    fy_max_all = max(fy_max)
+    log_file.write(f"\r\n\r\n fy min = {fy_min}\r\n fy max = {fy_max}\r\n")
+    log_file.write(f"fy global min, max = {fy_min_all} , {fy_max_all}\r\n")
+    
+    
+        
+        
 
 #sequence of processing is
 #create_cross_indices
@@ -561,8 +603,67 @@ def write_column_names_commas_first( column_name) :
 
 global curve_number
 
+#HM_RED = '#FF0000'
+#HM_ORANGE = '#FF6E00'
+#HM_YELLOW = '#FFF200'
+#HM_GREEN = '#00FF00'
+HM_GREEN = colors[0]
+HM_RED = colors[511]
+HM_YELLOW = colors[256]
+HM_ORANGE = colors[256+128]
+HM_BLUE = '#0000FF'
+
+
+def scale_roll(roll_angle) :
+    color_index = int((511.0/90.0)*abs(roll_angle))
+    if color_index < 0 :
+        color_index = 0
+    if color_index > 511 :
+        color_index = 511
+    return color_index
+
+def map_roll_color(roll_in) :
+    return colors[scale_roll(roll_in)]
+
+def scale_y(specific_force_in,run) :
+    global fy_min, fy_max , fy_min_all , fy_max_all
+    scale_range = max(abs(fy_min_all),abs(fy_max_all))
+    if scale_range > 0 :
+        color_index = 256 + int((256.0*specific_force_in)/scale_range)
+    else :
+        color_index = 256
+    if color_index < 0 :
+        color_index = 0
+    if color_index > 511 :
+        color_index = 511
+    return color_index
+
+def map_y_color(force_in,run) :
+    return colors[scale_y(force_in,run)]
+
+
+def scale_z(specific_force_in,run) :
+    global fz_min , fz_min_all
+    specific_force = abs(specific_force_in)
+    if specific_force < 32.0 :
+        specific_force = 32.0
+    if specific_force > abs(fz_min_all) :
+        specific_force = abs(fz_min_all)
+    if abs(fz_min_all) > 32.0 :
+        color_index = int(512.0*((specific_force-32.)/(abs(fz_min_all)-32.0)))
+    else :
+        color_index = 256
+    if color_index < 0 :
+        color_index = 0
+    if color_index > 511 :
+        color_index = 511
+    return color_index
+
+def map_z_color(force_in,run) :
+    return colors[scale_z(force_in,run)]
+
 global map_colors , map_thresholds
-map_colors = [ "blue" , "green" , "yellow" , "orange" , "red" ]
+map_colors = [ HM_BLUE , HM_GREEN , HM_YELLOW , HM_ORANGE , HM_RED ]
 map_thresholds = [ -0.7 , -.2 , .2 , .7 ]
 
 def map_color(dtime) :
@@ -600,7 +701,11 @@ def write_plotlets() :
         output_file.write(f" , curve_number , ,")
 
     write_column_names(" delta_time__")
-    write_column_names(" heat__")
+    write_column_names(" z_force_g__")
+    write_column_names(" z_force_coloring__")
+    write_column_names(" y_force_g__")   
+    write_column_names(" y_force_coloring__")
+    write_column_names(" roll_coloring__")
     write_column_names(" degs_align_stdev__")
     write_column_names(" degs_pivot_stdev__")
     write_column_names(" degs_pivot__")
@@ -709,15 +814,45 @@ def write_plotlets() :
                 if ( not args.strmlt ) :
                     output_file.write(f" , ")
 
+                for run_number in run_numbers :
+                    plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
+                    z_force_value = z_forces[line_number + plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]                  
+                    output_file.write(f"{round(z_force_value/32.17,2)},")
+                if ( not args.strmlt ) :
+                    output_file.write(f",")
+
                 is_first_run = True
                 for run_number in run_numbers :
                     plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
                     time_value = times[line_number + plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]
+                    z_force_value = z_forces[line_number + plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]                  
                     if is_first_run == True :
                         reference_time = time_value
                         is_first_run = False              
                     delta_time = time_value-reference_time
-                    output_file.write(f"{map_color(delta_time)},")
+                    output_file.write(f"{map_z_color(z_force_value,run_number)},")
+                if ( not args.strmlt ) :
+                    output_file.write(f",")
+
+                for run_number in run_numbers :
+                    plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
+                    y_force_value = y_forces[line_number + plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]                  
+                    output_file.write(f"{round(y_force_value/32.17,2)},")
+                if ( not args.strmlt ) :
+                    output_file.write(f",")                  
+
+                is_first_run = True
+                for run_number in run_numbers :
+                    plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
+                    y_force_value = y_forces[line_number + plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]                  
+                    output_file.write(f"{map_y_color(y_force_value,run_number)},")
+                if ( not args.strmlt ) :
+                    output_file.write(f",")
+
+                for run_number in run_numbers :
+                    plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
+                    roll_value = rolls[line_number + plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]                  
+                    output_file.write(f"{map_roll_color(roll_value)},")
                 if ( not args.strmlt ) :
                     output_file.write(f",")
 

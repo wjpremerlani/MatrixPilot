@@ -56,7 +56,7 @@
 #define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
                                     // you will also need to select a logging format
                                   // such as TEST_SLED or HELMET_IMU, for example
-//#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
+#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
 #define LOG_RESIDUALS         // logs residual offsets between runs and during "turtle testing"
                                 // also used for align gauge
 #define RESIDUAL_LOG_PERIOD 2  // 30 times per minute
@@ -64,7 +64,7 @@
 //#define LOG_PITCH_RATE // not commonly used
 
 // the following are used to measure offsets and gains for commissioning
-#define TURTLE_TESTING 1 // now used instead of RECORD_OFFSETS for gathering of 6 point data
+#define TURTLE_TESTING 0 // now used instead of RECORD_OFFSETS for gathering of 6 point data
                         // usually LOG_RESIDUALS should be selected when TT is 1
 //note: TURTLE_TESTING must be defined to set the option to 0 to not use it, or 1 to use it
 //      TURTLE_TESTING will report average force via residual logging
@@ -93,7 +93,7 @@
 
 // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
 // non-printable characters are written out, as header bytes for packets.
-//#define USE_PACKETIZED_TELEMERTY
+#define USE_PACKETIZED_TELEMERTY
 
 #define LOG_EULER
 //#define LOG_RATE_AND_EULER
@@ -188,7 +188,7 @@
 //#define LUGE7_SN148
 //#define LUGE7_SN149
 //#define LUGE7_SN150
-#define LUGE7_SN151
+//#define LUGE7_SN151
 //#define LUGE7_SN152
 //#define LUGE7_SN153
 //#define LUGE7_SN154
@@ -204,7 +204,7 @@
 
 //#define LUGE7_SN164
 //#define LUGE7_SN165
-//#define LUGE7_SN166
+#define LUGE7_SN166
 //#define LUGE7_SN167
 
 //#define LUGE7_SN168
