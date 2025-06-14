@@ -56,7 +56,7 @@ global args
 
 global signal_names , run_names , yaw_columns , yaw_rate_columns , roll_columns , roll_rate_columns
 global z_force_columns , y_force_columns , delta_time_columns , pivot_columns
-
+global x_force_columns, velocity_columns , acceleration_columns , raw_z_columns
 global hex_byte
 hex_byte = ['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F']
 global colors
@@ -109,7 +109,10 @@ pivot_columns = []
 heat_columns = []
 distance_columns = []
 pitch_columns = []
-
+x_force_columns = []
+velocity_columns = []
+acceleration_columns = []
+raw_z_columns = []
 
 
 debug_file = open("plot_all_log_file.txt" , "w" )
@@ -118,6 +121,7 @@ debug_file.write(f"plot all file opened.\n")
 def log_column_names() :
     global signal_names , run_names , yaw_columns , yaw_rate_columns , roll_columns , roll_rate_columns
     global z_force_columns , y_force_columns , delta_time_columns , pivot_columns , distance_columns , pitch_columns
+    global x_force_columns, velocity_columns , acceleration_columns
     debug_file.write(f"yaw\n{yaw_columns}\n")
     debug_file.write(f"yaw rate\n{yaw_rate_columns}\n")
     debug_file.write(f"roll\n{roll_columns}\n")
@@ -129,13 +133,18 @@ def log_column_names() :
     debug_file.write(f"heat\n{heat_columns}\n")
     debug_file.write(f"distance\n{distance_columns}\n")
     debug_file.write(f"pitch\n{pitch_columns}\n")
-
+    debug_file.write(f"x_force\n{x_force_columns}\n")
+    debug_file.write(f"velocity\n{velocity_columns}\n")
+    debug_file.write(f"acceleration\n{acceleration_columns}\n")
+    debug_file.write(f"raw_z\n{raw_z_columns}\n")
+    
+    
 global number_of_runs
 
 def build_frames() :
     global signal_names , run_names , yaw_columns , yaw_rate_columns , roll_columns , roll_rate_columns
     global z_force_columns , y_force_columns , delta_time_columns , pivot_columns , distance_columns , pitch_columns , number_of_runs
-    
+    global x_force_columns, velocity_columns , acceleration_columns  
     for run_name in run_names :       
         column_name = " -yaw__"+run_name
         yaw_columns.append(column_name)       
@@ -159,6 +168,16 @@ def build_frames() :
         distance_columns.append(column_name)
         column_name = " pitch__"+run_name
         pitch_columns.append(column_name)
+
+        column_name = " friction+aero__"+run_name
+        x_force_columns.append(column_name)
+        column_name = " velocity__"+run_name
+        velocity_columns.append(column_name)
+        column_name = " x-acceleration__"+run_name
+        acceleration_columns.append(column_name)
+        column_name = " z-force-filtered__"+run_name
+        raw_z_columns.append(column_name)
+
 
     number_of_runs = len(delta_time_columns)
 
@@ -610,11 +629,12 @@ alt.renderers.enable('svg')
                 
 plotlet_file = st.sidebar.file_uploader("select a file")
 
-track_map_tab , all_data_tab , curve_data_tab  = st.tabs(["  track_map  " , "  all_data  " , "   curve_data  " ])
+track_map_tab , all_data_tab , curve_data_tab , friction_tab = st.tabs(["  track_map  " , "  all_data  " , "   curve_data  "  , "   friction+aero  "])
 
 #plotlet_file = sys.argv[1]
 
 global yaw_chart , roll_chart , z_force_chart , delta_time_chart , yaw_rate_chart , roll_rate_chart , y_force_chart , pivot_chart
+global friction_chart , velocity_chart , acceleration_chart , curvelet_delta_time_chart_for_heatmap , raw_z_chart
 yaw_chart = None
 roll_chart = None
 z_force_chart = None
@@ -623,6 +643,12 @@ yaw_rate_chart = None
 roll_rate_chart = None
 y_force_chart = None
 pivot_chart = None
+friction_chart = None
+velocity_chart = None
+acceleration_chart = None
+curvelet_delta_time_chart_for_heatmap = None
+raw_z_chart = None
+
 
 global colors_df
 
@@ -653,6 +679,9 @@ if plotlet_file is not None:
     yaw_rate_df = generate_coloring("yaw_rate", yaw_rate_columns , ABSOLUTE_MAP )
     roll_rate_df = generate_coloring("roll_rate", roll_rate_columns , ABSOLUTE_MAP )
     pivot_df = generate_coloring("pivot", pivot_columns , SIGNED_MAP )
+    friction_df = generate_coloring("friction+aero", x_force_columns , ABSOLUTE_MAP)
+    velocity_df = generate_coloring("velocity", velocity_columns , ABSOLUTE_MAP)
+    acceleration_df = generate_coloring("x-acceleration", acceleration_columns , -SIGNED_MAP)
     
     curve_list = plotlets_df["curve_number "].unique()
     debug_file.write(f"curve number list = \n{curve_list}\n")
@@ -662,20 +691,11 @@ if plotlet_file is not None:
 
     
 
-    yaw_chart = None
-    roll_chart = None
-    z_force_chart = None
-    delta_time_chart = None
-    yaw_rate_chart = None
-    roll_rate_chart = None
-    y_force_chart = None
-    pivot_chart = None
-    curvelet_delta_time_chart_for_heatmap = None
-
+    
     s_run_names = st.sidebar.multiselect("select a set of runs for plotting", options= run_names , default = run_names )
     curve_number = st.sidebar.selectbox("select a curve" , curve_list )    
     run_number = st.sidebar.selectbox("select a run to heat map" , s_run_names )
-    color_map = st.sidebar.selectbox("select variable to heat map" , [ " roll" , " roll_rate" ," pitch" , " yaw_rate" , " z_force" , " y_force" , " delta_time" , " pivot" ] )
+    color_map = st.sidebar.selectbox("select variable to heat map" , [ " roll" , " roll_rate" ," pitch" , " yaw_rate" , " z_force" , " y_force" , " delta_time" , " pivot" , " friction+aero" , " velocity" , " x-acceleration" ] )
 
     s_yaw_columns = []
     s_yaw_rate_columns = []
@@ -688,7 +708,11 @@ if plotlet_file is not None:
     heat_columns = []
     distance_columns = []
     s_pitch_columns = []
-
+    s_x_force_columns= []
+    s_velocity_columns = []
+    s_acceleration_columns = []
+    s_raw_z_columns = []
+    
 
     for run_name in s_run_names :       
         column_name = " -yaw__"+run_name
@@ -713,10 +737,26 @@ if plotlet_file is not None:
         distance_columns.append(column_name)
         column_name = " pitch__"+run_name
         s_pitch_columns.append(column_name)
+        column_name = " friction+aero__"+run_name
+        s_x_force_columns.append(column_name)
+        column_name = " velocity__"+run_name
+        s_velocity_columns.append(column_name)
+        column_name = " x-acceleration__"+run_name
+        s_acceleration_columns.append(column_name)
+        column_name = " z-force-filtered__"+run_name
+        s_raw_z_columns.append(column_name)
+        
 
     if curve_number is not None :
         curvelet_df = plotlets_df[plotlets_df["curve_number "] == curve_number ]    
-    
+
+    with friction_tab :
+        if friction_chart == None :
+            friction_chart = st.plotly_chart(plotlets_df[s_x_force_columns].plot( render_mode = 'svg').update_layout( yaxis_title = "friction+aero, ft/s/s") )
+            velocity_chart = st.plotly_chart(plotlets_df[s_velocity_columns].plot( render_mode = 'svg').update_layout( yaxis_title = "velocity, ft/s") )
+            acceleration_chart = st.plotly_chart(plotlets_df[s_acceleration_columns].plot( render_mode = 'svg').update_layout( yaxis_title = "x-acceleration, ft/s/s") )
+            raw_z_chart = st.plotly_chart(plotlets_df[s_raw_z_columns].plot( render_mode = 'svg').update_layout( yaxis_title = "z-force-filtered, g's") )
+            
     with all_data_tab :
         all_left , all_right = st.columns(2)
 
@@ -789,7 +829,19 @@ if plotlet_file is not None:
             elif color_map == ' pivot' :
                 legend_df = pivot_df
                 y_name = "pivot"
-                y_title = "pivot angle, degrees"                
+                y_title = "pivot angle, degrees"
+            elif color_map == ' friction+aero' :
+                legend_df = friction_df
+                y_name = "friction+aero"
+                y_title = "friction+aero, ft/sec/sec"
+            elif color_map == ' velocity' :
+                legend_df = velocity_df
+                y_name = "velocity"
+                y_title = "velocity, ft/sec"
+            elif color_map == ' x-acceleration' :
+                legend_df = acceleration_df
+                y_name = "x-acceleration"
+                y_title = "x-acceleration, ft/sec/sec"
             else :
                 legend_df = roll_legend_df
                 y_name = "roll"
@@ -822,7 +874,13 @@ if plotlet_file is not None:
                 elif color_map == ' roll_rate' :
                     coloring_name = str('roll_rate_color__'+run_number)
                 elif color_map == ' pivot' :
-                    coloring_name = str('pivot_color__'+run_number)                   
+                    coloring_name = str('pivot_color__'+run_number)
+                elif color_map == ' friction+aero' :
+                    coloring_name = str('friction+aero_color__'+run_number)
+                elif color_map == ' velocity' :
+                    coloring_name = str('velocity_color__'+run_number)
+                elif color_map == ' x-acceleration' :
+                    coloring_name = str('x-acceleration_color__'+run_number)
                 else :
                     coloring_name = str(color_map+'_coloring__'+run_number)
                 st.write("track map for ",run_number)

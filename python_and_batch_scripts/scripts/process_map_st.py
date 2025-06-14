@@ -81,7 +81,7 @@ minimum_speed = 20.0
 skip_lines = 0
 
 global max_err
-max_err = 20
+max_err = 30
 
 
 
@@ -133,9 +133,10 @@ global heading_list , pitch_list , roll_list , heading_filt , pitch_filt , roll_
 heading_list = []
 pitch_list = []
 roll_list = []
-global errors_in, errors_out
+global errors_in, errors_out , acceleration
 errors_in = []
 errors_out = []
+acceleration = []
 
 global omega_e , omegas_e_x, omegas_e_y , omegas_e_z , omegas_e_f_x , omegas_e_f_y , omegas_e_f_z
 omega_e = np.zeros((3,1))
@@ -732,6 +733,52 @@ def read_data(file):
     first_line = 1
     line_number = 0
     if dataStr:
+    ##################################################################
+    #
+    #
+    #  compute yaw misalignment
+    #
+    #
+    ################################################################
+
+        A = np.zeros((1,2))
+        AT = np.transpose(A)
+        ATA = np.matmul(AT,A)
+        Y = np.zeros((1,1))
+        ATY = np.matmul(AT,Y)
+
+    
+        for line in lines :
+            columns = line.split(',')
+            if len(columns) == NUM_COLS:
+                try:
+                    roll_angle = float(columns[ROLL_COL])
+                    if abs(roll_angle) > 45 :
+                        Y[0,0] = float(columns[PITCH_COL])
+                        A[0,0] = 1
+                        A[0,1] = sin(radians(roll_angle))
+                        AT = np.transpose(A)
+                        ATA = ATA + np.matmul(AT,A)
+                        ATY = ATY + np.matmul(AT,Y)
+                except:
+                    pass
+        ATA_INVERSE = np.linalg.inv(ATA)
+        cross = np.matmul(ATA_INVERSE,ATY)
+        yaw_offset= - cross[1,0]
+        track_pitch = cross[0,0]
+
+        try :
+            log_file.write(f"yaw misalignment model\r\n")
+            log_file.write(f"ATA={ATA}\r\n")
+            log_file.write(f"ATY={ATY}\r\n")
+            log_file.write(f"det of ATA = {np.linalg.det(ATA)}\r\n")        
+            log_file.write(f"ATA inverse = {ATA_INVERSE}\r\n")       
+            log_file.write(f"yaw model = {cross}\r\n")       
+            log_file.write(f"yaw_offset = {yaw_offset}\r\n")
+            log_file.write(f"average track slope = {track_pitch} degrees.\r\n")
+        except :
+            pass 
+         
         for line in lines:
             columns = line.split(',')
             if len(columns) == NUM_COLS:
@@ -760,7 +807,10 @@ def read_data(file):
                     pass
             else:
                 pass
-    log_file.write(f"\n\ntotal number of valid samples = {total_valid_samples} \n")
+    try :
+        log_file.write(f"\n\ntotal number of valid samples = {total_valid_samples} \n")
+    except :
+        pass
 
     if total_valid_samples > MINIMUM_VALID_SAMPLES:
         valid_run = True
@@ -938,7 +988,7 @@ def read_data(file):
             log_file.write(f"There were {N} data points used, with a sum of weights equal to {round(weight_sum,2)}\r\r")
 
             if not args.yaw_offset:
-                log_file.write(f"default yaw alignment offset of {yaw_offset} degrees was used.\r")
+                log_file.write(f"computed yaw alignment offset of {yaw_offset} degrees was used.\r")
             else:
                 log_file.write(f"yaw alignment offset of {yaw_offset} degrees was specified.\r")
 
@@ -1262,7 +1312,7 @@ def run_passes():
     global debug_file, log_file, marks_file, time_map_100_file, time_map_file, distance_map_file, rabbit_log_file
     global start, elapsed, end, line_nums, g_force, force_out, omega, max_err, feedback_gain
     global gravity_value, z_force_plot_limit, rotation, first_heading_recorded, speed, distance
-    global x, y, x_ef, y_ef, args, errors_in, errors_out, mark_state, mark_number
+    global x, y, x_ef, y_ef, args, errors_in, errors_out, acceleration , mark_state, mark_number
     global distance_origin, line_origin, run_end_distance, run_end_time, table_end_distance
     global table_end_time, alignment_accel, previous_line_number, first_heading, valid_run
     global file_base_name, run_time, number_of_marks
@@ -1326,6 +1376,70 @@ def run_passes():
     roll_edges = mav_filter(roll_list,indices(roll_edge_filter_size))
     yaw_rate_edges = edge_filter(omegas_e_f_z,indices(filter_size))
 
+
+    ##################################################################
+    #
+    #
+    #  recompute yaw misalignment
+    #
+    #
+    ################################################################
+
+    A = np.zeros((1,2))
+    AT = np.transpose(A)
+    ATA = np.matmul(AT,A)
+    Y = np.zeros((1,1))
+    ATY = np.matmul(AT,Y)
+
+    try :
+        log_file.write(f"recomputation of residual yaw offset\r\n")
+    except :
+        pass
+
+    
+    for index in range ( len(pitch_list ) ):
+        roll_angle = roll_list[index]
+        if abs(roll_angle) > 45 :
+            Y[0,0] = pitch_list[index]
+            A[0,0] = 1
+            A[0,1] = sin(radians(roll_angle))
+            AT = np.transpose(A)
+            ATA = ATA + np.matmul(AT,A)
+            ATY = ATY + np.matmul(AT,Y)
+
+    ATA_INVERSE = np.linalg.inv(ATA)
+    cross = np.matmul(ATA_INVERSE,ATY)
+    yaw_offset = cross[1,0]
+
+    try :
+
+        log_file.write(f"computing yaw misalignment model\r\n")
+        log_file.write(f"ATA={ATA}\r\n")
+        log_file.write(f"ATY={ATY}\r\n")
+        log_file.write(f"det of ATA = {np.linalg.det(ATA)}\r\n")
+        log_file.write(f"ATA inverse = {ATA_INVERSE}\r\n")
+        log_file.write(f"cross = {cross}\r\n")
+        log_file.write(f"yaw_offset = {yaw_offset}")
+    except :
+        pass
+
+
+############################################################
+#
+#   extra filtering
+#
+#
+#
+############################################################
+      
+    fx_filt_filt = mav_filter(fx_filt , indices(80))
+    fx_filt = fx_filt_filt
+    fz_filt_filt = mav_filter(fz_filt , indices(80))
+    
+    wx_filt_filt = mav_filter(wx_filt,indices(80))
+    wy_filt_filt = mav_filter(wy_filt,indices(80))
+    wz_filt_filt = mav_filter(wz_filt,indices(80))
+     
     #######################################
     #
     # pass 3: write data to debug file and
@@ -1347,6 +1461,13 @@ def run_passes():
 
     error_sum = 0
     acc_sum = 0
+
+    A = np.zeros((1,3))
+    AT = np.transpose(A)
+    ATA = np.matmul(AT,A)
+    Y = np.zeros((1,1))
+    ATY = np.matmul(AT,Y)
+
 
     for line_number in line_nums:
         try:
@@ -1373,7 +1494,8 @@ def run_passes():
         except:
             pass
 
-
+        
+        
         if int(100*start) <= line_number <= int(100*end):
             heading = heading_list[line_number]
             pitch_out = pitch_list[line_number]
@@ -1383,9 +1505,9 @@ def run_passes():
             g_force[2,0]=gz_list[line_number]
             force_out[0,0]=fx_filt[line_number]
             force_out[1,0]=fy_filt[line_number]
-            force_out[2,0]=fz_filt[line_number]
+            force_out[2,0]=fz_filt_filt[line_number]
             omega[0,0]=wx_filt[line_number]
-            omega[1,0]=wy_filt[line_number]
+            omega[1,0]=wy_filt_filt[line_number]
             omega[2,0]=wz_filt[line_number]
 
             velocity_dot = g_force + force_out
@@ -1393,21 +1515,29 @@ def run_passes():
             correction_gain = k_gain(omega[1,0],velocity[0,0],velocity_dot[2,0])
             v_error = k_error(omega[1,0],velocity[0,0],velocity_dot[2,0],correction_gain)
 
-            if v_error > max_err:
-                v_error = max_err
-            if v_error < -max_err:
-                v_error = -max_err
+            Y[0,0] = v_error
+            A[0,0] = A[0,0]+1.0/100.0
+            A[0,1] = A[0,1] + (force_out[2,0]+32.1741)/100.0
+            A[0,2] = A[0,2] + ((force_out[2,0]+32.1741)**2)/100.0
+            AT = np.transpose(A)
+            ATA = ATA + np.matmul(AT,A)
+            ATY = ATY + np.matmul(AT,Y)
 
+            velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0]  )/100.0
 
-            velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0] + feedback_gain*v_error + (z_x_cc/gravity_value)*(velocity_dot[2,0]**2) )/100.0
+    ATA_INVERSE = np.linalg.inv(ATA)
 
-            error_sum = error_sum + v_error
-            acc_sum = acc_sum + (velocity_dot[2,0]**2)
+    cross_couple_model = np.matmul(ATA_INVERSE,ATY)
+    
 
-    z_x_cc = gravity_value*(error_sum/acc_sum)
+    try :
 
-    try:
-        log_file.write(f"z to x residual specific cross coupling = {round(z_x_cc,4)}\r")
+        log_file.write(f"\r\n\r\ncomputation force cross couple modele\r\n")                              
+        log_file.write(f"ATA={ATA}\r\n")
+        log_file.write(f"ATY={ATY}\r\n")
+        log_file.write(f"det of ATA = {np.linalg.det(ATA)}\r\n")
+        log_file.write(f"ATA inverse = {ATA_INVERSE}\r\n")
+        log_file.write(f"model = {cross_couple_model}\r\n")
     except:
         pass
 
@@ -1440,32 +1570,36 @@ def run_passes():
             g_force[2,0]=gz_list[line_number]
             force_out[0,0]=fx_filt[line_number]
             force_out[1,0]=fy_filt[line_number]
-            force_out[2,0]=fz_filt[line_number]
+            force_out[2,0]=fz_filt_filt[line_number]
             omega[0,0]=wx_filt[line_number]
-            omega[1,0]=wy_filt[line_number]
+            omega[1,0]=wy_filt_filt[line_number]
             omega[2,0]=wz_filt[line_number]
-
+            
             velocity_dot = g_force + force_out
-
+            
             correction_gain = k_gain(omega[1,0],velocity[0,0],velocity_dot[2,0])
+            
             v_error = k_error(omega[1,0],velocity[0,0],velocity_dot[2,0],correction_gain)
-
 
             if v_error > max_err:
                 v_error = max_err
             if v_error < -max_err:
                 v_error = -max_err
 
-            if args.no_kalman:
-                velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0] + (z_x_cc/gravity_value)*(velocity_dot[2,0]**2) )/100.0
-            else:
-                velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0] + feedback_gain*v_error + (z_x_cc/gravity_value)*(velocity_dot[2,0]**2) )/100.0
+            force_out[0,0] = force_out[0,0] + cross_couple_model[0,0] + cross_couple_model[1,0]*(force_out[2,0]+32.1741)+cross_couple_model[2,0]*(force_out[2,0]+32.1741)**2 + v_error
 
+            velocity_dot[0,0] = g_force[0,0]+force_out[0,0] 
+            
+            velocity[0,0] = velocity[0,0] + velocity_dot[0,0]/100.0
+            
             new_distance = new_distance + velocity[0,0]/100.0
 
-        errors_in.append(v_error)
+        #errors_in.append(v_error)
+        #acceleration.append(velocity_dot[0,0])
 
-    errors_out = mav_filter(errors_in,indices(20))
+    #errors_out = mav_filter(errors_in,indices(20))
+
+    '''
 
     #################################################################
     #
@@ -1552,6 +1686,8 @@ def run_passes():
         except:
             pass
 
+    '''
+
     #########################################################
     #
     #  pass 6 compute and store 100 Hz time map
@@ -1610,7 +1746,7 @@ def run_passes():
             time_map_100_file.write(f",mark_number__{run_name}")
             time_map_100_file.write(f",mark_state__{run_name}")
 
-            time_map_100_file.write(f",x_force__{run_name}")
+            time_map_100_file.write(f",friction+aero__{run_name}")
             time_map_100_file.write(f",y_force__{run_name}")
             time_map_100_file.write(f",z_force__{run_name}")
 
@@ -1628,6 +1764,8 @@ def run_passes():
             #   time_map_100_file.write(f",yaw_rate_earth_frame_{run_name}")
 
             time_map_100_file.write(f",velocity__{run_name}")
+            time_map_100_file.write(f",x-acceleration__{run_name}")
+            time_map_100_file.write(f",z-force-filtered__{run_name}")          
             time_map_100_file.write(f",kalman_input__{run_name}")
             time_map_100_file.write(f",distance__{run_name}")
             time_map_100_file.write(f",x__{run_name}")
@@ -1649,7 +1787,7 @@ def run_passes():
             time_map_100_file.write(f",mark_number__{file_base_name}")
             time_map_100_file.write(f",mark_state__{file_base_name}")
 
-            time_map_100_file.write(f",x_force__{file_base_name}")
+            time_map_100_file.write(f",friction+aero__{file_base_name}")
             time_map_100_file.write(f",y_force__{file_base_name}")
             time_map_100_file.write(f",z_force__{file_base_name}")
 
@@ -1667,6 +1805,8 @@ def run_passes():
             #   time_map_100_file.write(f",yaw_rate_earth_frame_{file_base_name}")
 
             time_map_100_file.write(f",velocity__{file_base_name}")
+            time_map_100_file.write(f",x-acceleration__{run_name}")          
+            time_map_100_file.write(f",z-force-filtered__{run_name}")                     
             time_map_100_file.write(f",kalman_input__{file_base_name}")
             time_map_100_file.write(f",distance__{file_base_name}")
             time_map_100_file.write(f",x__{file_base_name}")
@@ -1687,6 +1827,14 @@ def run_passes():
     except:
         pass
 
+    A = np.zeros((1,2))
+    AT = np.transpose(A)
+    ATA = np.matmul(AT,A)
+    Y = np.zeros((1,1))
+    ATY = np.matmul(AT,Y)
+    ysqr = 0
+    N = 0
+
     for line_number in line_nums:
 
         if int(100*start) <= line_number <= int(100*end):
@@ -1698,9 +1846,9 @@ def run_passes():
             g_force[2,0]=gz_list[line_number]
             force_out[0,0]=fx_filt[line_number]
             force_out[1,0]=fy_filt[line_number]
-            force_out[2,0]=fz_filt[line_number]
+            force_out[2,0]=fz_filt_filt[line_number]
             omega[0,0]=wx_filt[line_number]
-            omega[1,0]=wy_filt[line_number]
+            omega[1,0]=wy_filt_filt[line_number]
             omega[2,0]=wz_filt[line_number]
             omega_e[0,0] = omegas_e_f_x[line_number]
             omega_e[1,0] = omegas_e_f_y[line_number]
@@ -1721,8 +1869,9 @@ def run_passes():
             y_ef = y_ef + velocity[0,0]*(sine/100.0)
 
             velocity_dot = g_force + force_out
-
+            
             correction_gain = k_gain(omega[1,0],velocity[0,0],velocity_dot[2,0])
+            
             v_error = k_error(omega[1,0],velocity[0,0],velocity_dot[2,0],correction_gain)
 
             if v_error > max_err:
@@ -1730,15 +1879,32 @@ def run_passes():
             if v_error < -max_err:
                 v_error = -max_err
 
+            force_out[0,0] = force_out[0,0] + cross_couple_model[0,0] + cross_couple_model[1,0]*(force_out[2,0]+32.1741)+cross_couple_model[2,0]*(force_out[2,0]+32.1741)**2 + v_error
+
+            velocity_dot[0,0] = g_force[0,0]+force_out[0,0] 
+            
+            velocity[0,0] = velocity[0,0] + velocity_dot[0,0]/100.0
+            
+            new_distance = new_distance + velocity[0,0]/100.0
+
+            Y[0,0] = fx_filt[line_number]
+            A[0,0] = force_out[2,0]
+            A[0,1] = A[0,1] + (velocity[0,0])**2
+            AT = np.transpose(A)
+            ATA = ATA + np.matmul(AT,A)
+            ATY = ATY + np.matmul(AT,Y)
+            ysqr = ysqr + (Y[0,0])**2
+            N = N + 1
+            
+            
+
             #note: in the code below, alignment_accel is used to reconcile the run time marks with the track model time marks
 
-            if args.no_kalman:
-                velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0]  + (z_x_cc/gravity_value)*(velocity_dot[2,0]**2) + alignment_accel )/100.0
-            else:
-                velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0] + feedback_gain*v_error + (z_x_cc/gravity_value)*(velocity_dot[2,0]**2) + alignment_accel )/100.0
+            #if args.no_kalman:
+                #velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0]  + (z_x_cc/gravity_value)*(velocity_dot[2,0]**2) + alignment_accel )/100.0
+            #else:
+                #velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0] + feedback_gain*v_error + (z_x_cc/gravity_value)*(velocity_dot[2,0]**2) + alignment_accel )/100.0
 
-
-            new_distance = new_distance + velocity[0,0]/100.0
 
             local_time = ( line_number -  line_origin )/100.0
 
@@ -1775,6 +1941,8 @@ def run_passes():
                         #    time_map_100_file.write(f" ,{round(degrees(omegas_e_f_z[line_number]),2 )}" )   
 
                         time_map_100_file.write(f",{round(( velocity[0,0]   ), 2)}")
+                        time_map_100_file.write(f",{round(( velocity_dot[0,0]   ), 2)}")
+                        time_map_100_file.write(f",{round(( fz_filt_filt[line_number]/ 32.1741  ), 4)}")
                         time_map_100_file.write(f",{round(( v_error   ), 2)}")
                         time_map_100_file.write(f",{round((  new_distance  ), 2)}")
                         time_map_100_file.write(f",{round(( x_ef   ), 2)}")
@@ -1819,6 +1987,7 @@ def run_passes():
                         #    time_map_100_file.write(f" ,{round(degrees(omegas_e_f_z[line_number]),2 )}" )   
 
                         time_map_100_file.write(f",{round(( velocity[0,0]   ), 2)}")
+                        time_map_100_file.write(f",{round(( velocity_dot[0,0]   ), 2)}")
                         time_map_100_file.write(f",{round(( v_error   ), 2)}")
                         time_map_100_file.write(f",{round((  new_distance  ), 2)}")
                         time_map_100_file.write(f",{round(( x_ef   ), 2)}")
@@ -1855,6 +2024,25 @@ def run_passes():
                 map_x_accels.append( ( fx_filt[line_number] ) )
                 map_y_accels.append( ( fy_filt[line_number] ) )
                 map_z_accels.append( ( fz_filt[line_number] ) )
+
+    ATA_INVERSE = np.linalg.inv(ATA)
+
+    drag_model = np.matmul(ATA_INVERSE,ATY)
+
+    ATYTX = np.matmul(np.transpose(ATY),drag_model)
+
+    if N > 0 :
+        sigma_sqr = ( ysqr - ATYTX[0,0] ) / N
+    else :
+        sigma_sqr = 0
+    variance = sqrt (abs(sigma_sqr))
+
+    log_file.write(f"drag model = {drag_model}\n")
+    log_file.write(f"friction = {drag_model[0,0]}\n")
+    log_file.write(f"aero coef = {drag_model[1,0]}\n")
+    log_file.write(f"variance = {variance}\n")
+
+    
 
 
 #########################################################
