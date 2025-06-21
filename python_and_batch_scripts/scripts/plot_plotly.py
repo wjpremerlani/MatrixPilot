@@ -14,6 +14,8 @@ global map_height , delta_time_height , curve_number_height
 #   the square brackets and the comma are required syntax
 #column_ratios = [ 0.65 , 0.35 ]
 column_ratios = [ 0.60 , 0.10, 0.30 ]
+fs_column_ratios = [ 0.90 , 0.10 ]
+trim_delay = 6.0
 #
 #   the following define plot heights in pixels
 #   map height is for the heat map :
@@ -57,6 +59,7 @@ global args
 global signal_names , run_names , yaw_columns , yaw_rate_columns , roll_columns , roll_rate_columns
 global z_force_columns , y_force_columns , delta_time_columns , pivot_columns
 global x_force_columns, velocity_columns , acceleration_columns , raw_z_columns
+global aero_columns , friction_columns , z_force_filtered_columns
 global hex_byte
 hex_byte = ['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F']
 global colors
@@ -113,6 +116,9 @@ x_force_columns = []
 velocity_columns = []
 acceleration_columns = []
 raw_z_columns = []
+aero_columns = []
+friction_columns = []
+z_force_filtered_columns = []
 
 
 debug_file = open("plot_all_log_file.txt" , "w" )
@@ -122,6 +128,8 @@ def log_column_names() :
     global signal_names , run_names , yaw_columns , yaw_rate_columns , roll_columns , roll_rate_columns
     global z_force_columns , y_force_columns , delta_time_columns , pivot_columns , distance_columns , pitch_columns
     global x_force_columns, velocity_columns , acceleration_columns
+    global aero_columns , friction_columns , z_force_filtered_columns
+
     debug_file.write(f"yaw\n{yaw_columns}\n")
     debug_file.write(f"yaw rate\n{yaw_rate_columns}\n")
     debug_file.write(f"roll\n{roll_columns}\n")
@@ -136,7 +144,10 @@ def log_column_names() :
     debug_file.write(f"x_force\n{x_force_columns}\n")
     debug_file.write(f"velocity\n{velocity_columns}\n")
     debug_file.write(f"acceleration\n{acceleration_columns}\n")
-    debug_file.write(f"raw_z\n{raw_z_columns}\n")
+    debug_file.write(f"aero\n{aero_columns}\n")
+    debug_file.write(f"friction\n{friction_columns}\n")
+    debug_file.write(f"z_force_filtered\n{z_force_filtered_columns}\n")
+    
     
     
 global number_of_runs
@@ -144,7 +155,9 @@ global number_of_runs
 def build_frames() :
     global signal_names , run_names , yaw_columns , yaw_rate_columns , roll_columns , roll_rate_columns
     global z_force_columns , y_force_columns , delta_time_columns , pivot_columns , distance_columns , pitch_columns , number_of_runs
-    global x_force_columns, velocity_columns , acceleration_columns  
+    global x_force_columns, velocity_columns , acceleration_columns
+    global aero_columns , friction_columns , z_force_filtered_columns
+
     for run_name in run_names :       
         column_name = " -yaw__"+run_name
         yaw_columns.append(column_name)       
@@ -175,8 +188,13 @@ def build_frames() :
         velocity_columns.append(column_name)
         column_name = " x-acceleration__"+run_name
         acceleration_columns.append(column_name)
-        column_name = " z-force-filtered__"+run_name
-        raw_z_columns.append(column_name)
+        column_name = " z_force_filtered__"+run_name
+        z_force_filtered_columns.append(column_name)
+        column_name = " aero__"+run_name
+        aero_columns.append(column_name)
+        column_name = " friction__"+run_name
+        friction_columns.append(column_name)
+        
 
 
     number_of_runs = len(delta_time_columns)
@@ -629,12 +647,13 @@ alt.renderers.enable('svg')
                 
 plotlet_file = st.sidebar.file_uploader("select a file")
 
-track_map_tab , all_data_tab , curve_data_tab , friction_tab = st.tabs(["  track_map  " , "  all_data  " , "   curve_data  "  , "   friction+aero  "])
+track_map_tab , all_data_tab , curve_data_tab , friction_tab , friction_scatter_tab = st.tabs(["  track_map  " , "  all_data  " , "   curve_data  "  , "   friction+aero  " , "  friction_scatter "])
 
 #plotlet_file = sys.argv[1]
 
 global yaw_chart , roll_chart , z_force_chart , delta_time_chart , yaw_rate_chart , roll_rate_chart , y_force_chart , pivot_chart
 global friction_chart , velocity_chart , acceleration_chart , curvelet_delta_time_chart_for_heatmap , raw_z_chart
+global friction_scatter_chart 
 yaw_chart = None
 roll_chart = None
 z_force_chart = None
@@ -643,11 +662,14 @@ yaw_rate_chart = None
 roll_rate_chart = None
 y_force_chart = None
 pivot_chart = None
-friction_chart = None
+aero_friction_chart = None
 velocity_chart = None
 acceleration_chart = None
 curvelet_delta_time_chart_for_heatmap = None
 raw_z_chart = None
+aero_chart = None
+friction_chart = None
+friction_scatter_chart = None
 
 
 global colors_df
@@ -668,7 +690,7 @@ if plotlet_file is not None:
     debug_file.write(f"runs = \n {run_names}\n")
     build_frames()
     log_column_names()
-    generate_distance_coloring()
+    #generate_distance_coloring()
     generate_pitch_coloring()
     generate_delta_time_coloring()
     generate_roll_legend()
@@ -676,6 +698,7 @@ if plotlet_file is not None:
     generate_delta_time_legend()
     generate_y_force_legend()
     generate_z_force_legend()
+    distance_df = generate_coloring("distance", distance_columns , ABSOLUTE_MAP )
     yaw_rate_df = generate_coloring("yaw_rate", yaw_rate_columns , ABSOLUTE_MAP )
     roll_rate_df = generate_coloring("roll_rate", roll_rate_columns , ABSOLUTE_MAP )
     pivot_df = generate_coloring("pivot", pivot_columns , SIGNED_MAP )
@@ -712,6 +735,8 @@ if plotlet_file is not None:
     s_velocity_columns = []
     s_acceleration_columns = []
     s_raw_z_columns = []
+    s_aero_columns = []
+    s_friction_columns = []
     
 
     for run_name in s_run_names :       
@@ -743,19 +768,79 @@ if plotlet_file is not None:
         s_velocity_columns.append(column_name)
         column_name = " x-acceleration__"+run_name
         s_acceleration_columns.append(column_name)
-        column_name = " z-force-filtered__"+run_name
+        column_name = " z_force_filtered__"+run_name
         s_raw_z_columns.append(column_name)
+        column_name = " aero__"+run_name
+        s_aero_columns.append(column_name)
+        column_name = " friction__"+run_name
+        s_friction_columns.append(column_name)
+        
         
 
     if curve_number is not None :
         curvelet_df = plotlets_df[plotlets_df["curve_number "] == curve_number ]    
 
+
+    with friction_scatter_tab :
+        fs_map_left , fs_map_right = st.columns(fs_column_ratios)
+        
+               
+        with fs_map_right :
+            fs_y_name = "distance"
+            fs_y_title = "distance , feet"
+            fs_legend_chart = (
+                alt.Chart(distance_df[[fs_y_name , "|" , "color_value" ]])
+                    .mark_square()
+                        .encode(
+                        alt.X('|').axis(labels=False,title = None),
+                        alt.Y(fs_y_name).axis(title = fs_y_title),
+                        color = alt.Color("color_value").scale(None)
+                )
+                .interactive()
+                .properties(
+                    height = map_height ,
+                    )
+            )
+            st.altair_chart(fs_legend_chart , use_container_width=True )
+            
+
+
+
+        with fs_map_left :
+            if run_number is not None :
+                z_force_name = str(' z_force_filtered__'+run_number)
+                friction_name = str(' friction__'+run_number)
+                distance_coloring_name = str('distance_color__'+run_number)
+                scatter_df = plotlets_df[[z_force_name , friction_name , distance_coloring_name ]]
+                st.write("friction scatter plot for ",run_number)
+                friction_scatter_chart = (
+                    alt.Chart(scatter_df[scatter_df.index > int(100.0*trim_delay ) ])
+                        .mark_circle()
+                        .encode(
+                        alt.X(z_force_name).title("z force, g's"),
+                        alt.Y(friction_name).title("friction, ft/s/s"),
+                        color = alt.Color(distance_coloring_name).scale(None)
+                    )
+                    .interactive()
+                    .properties(
+                        height = map_height ,
+                        )
+                )
+                st.altair_chart(friction_scatter_chart, use_container_width=True)
+
+            else :
+                st.stop()
+
+
+
+
     with friction_tab :
         if friction_chart == None :
-            friction_chart = st.plotly_chart(plotlets_df[s_x_force_columns].plot( render_mode = 'svg').update_layout( yaxis_title = "friction+aero, ft/s/s") )
-            velocity_chart = st.plotly_chart(plotlets_df[s_velocity_columns].plot( render_mode = 'svg').update_layout( yaxis_title = "velocity, ft/s") )
+            aero_friction_chart = st.plotly_chart(plotlets_df[s_x_force_columns].plot( render_mode = 'svg').update_layout( yaxis_title = "friction+aero, ft/s/s") )
+            aero_chart = st.plotly_chart(plotlets_df[s_aero_columns].plot( render_mode = 'svg').update_layout( yaxis_title = "aero, ft/s/s") )
+            friction_chart = st.plotly_chart(plotlets_df[s_friction_columns].plot( render_mode = 'svg').update_layout( yaxis_title = "friction, ft/s/s") )
             acceleration_chart = st.plotly_chart(plotlets_df[s_acceleration_columns].plot( render_mode = 'svg').update_layout( yaxis_title = "x-acceleration, ft/s/s") )
-            raw_z_chart = st.plotly_chart(plotlets_df[s_raw_z_columns].plot( render_mode = 'svg').update_layout( yaxis_title = "z-force-filtered, g's") )
+            velocity_chart = st.plotly_chart(plotlets_df[s_velocity_columns].plot( render_mode = 'svg').update_layout( yaxis_title = "velocity, ft/s") )          
             
     with all_data_tab :
         all_left , all_right = st.columns(2)

@@ -68,7 +68,7 @@ weight_sum = 0.0
 
 global acc_z_gain , gravity_value , z_x_cc
 acc_z_gain = 1.0
-gravity_value = 32.174
+gravity_value = 32.1741
 z_x_cc = 0.0
 
 global minimum_speed
@@ -435,10 +435,10 @@ global feedback_gain
 feedback_gain = 1.0
 
 def k_gain(w,v,f):
-    return w*w/(w*w+corner_w*corner_w)
+    return ( (w*w/(w*w+corner_w*corner_w)))
 
 def k_error(w,v,f,gain):
-    return((-f/w)-v)*gain
+    return (f/w+v)*gain
 
 global tr_mdl_num , tr_mdl_state ,tr_mdl_distance ,tr_mdl_time,tr_mdl_speed
 tr_mdl_num = []
@@ -1380,7 +1380,7 @@ def run_passes():
     ##################################################################
     #
     #
-    #  recompute yaw misalignment
+    #  compute yaw misalignment
     #
     #
     ################################################################
@@ -1449,6 +1449,12 @@ def run_passes():
     #
     #######################################
 
+    map_marks = []
+    map_states = []
+    mark_number = 0
+    mark_state = 0
+    
+
     try:
         debug_file.write(f"line,fx_raw,fx_filt,fy_raw,fy_filt,fz_raw,fz_filt,wx_raw,wx_filt,wy_raw,wy_filt,wz_raw,wz_filt,")
         debug_file.write(f"wx_earth,wx_earth_filt,wy_earth,wy_earth_filt,wz_earth,wz_earth_filt,")
@@ -1462,7 +1468,7 @@ def run_passes():
     error_sum = 0
     acc_sum = 0
 
-    A = np.zeros((1,3))
+    A = np.zeros((1,1))
     AT = np.transpose(A)
     ATA = np.matmul(AT,A)
     Y = np.zeros((1,1))
@@ -1510,24 +1516,32 @@ def run_passes():
             omega[1,0]=wy_filt_filt[line_number]
             omega[2,0]=wz_filt[line_number]
 
+            update_timing_mark(omega[2,0],omega[0,0],roll_out,heading)
+
+            map_marks.append(mark_number)
+            map_states.append(mark_state)
+
             velocity_dot = g_force + force_out
 
-            correction_gain = k_gain(omega[1,0],velocity[0,0],velocity_dot[2,0])
-            v_error = k_error(omega[1,0],velocity[0,0],velocity_dot[2,0],correction_gain)
+            if mark_number > 2 and mark_number < number_of_marks - 2 :
 
-            Y[0,0] = v_error
-            A[0,0] = A[0,0]+1.0/100.0
-            A[0,1] = A[0,1] + (force_out[2,0]+32.1741)/100.0
-            A[0,2] = A[0,2] + ((force_out[2,0]+32.1741)**2)/100.0
-            AT = np.transpose(A)
-            ATA = ATA + np.matmul(AT,A)
-            ATY = ATY + np.matmul(AT,Y)
+                correction_gain = k_gain(omega[1,0],velocity[0,0],velocity_dot[2,0])
+                v_error = k_error(omega[1,0],velocity[0,0],velocity_dot[2,0],correction_gain)
+
+                Y[0,0] = v_error
+                A[0,0] = A[0,0]-correction_gain*(((force_out[2,0]/32.1741)+1.0)*force_out[2,0] + (force_out[2,0]+32.1714)*cos(radians(roll_out) ))/100.0
+                #A[0,0] = A[0,0]-(((force_out[2,0]/32.1741)+1.0)*force_out[2,0] + (force_out[2,0]+32.1714)*cos(radians(roll_out) ))/100.0
+                
+                AT = np.transpose(A)
+                ATA = ATA + np.matmul(AT,A)
+                ATY = ATY + np.matmul(AT,Y)
 
             velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0]  )/100.0
 
     ATA_INVERSE = np.linalg.inv(ATA)
 
-    cross_couple_model = np.matmul(ATA_INVERSE,ATY)
+    compliance = np.matmul(ATA_INVERSE,ATY)[0,0]
+    
     
 
     try :
@@ -1537,7 +1551,7 @@ def run_passes():
         log_file.write(f"ATY={ATY}\r\n")
         log_file.write(f"det of ATA = {np.linalg.det(ATA)}\r\n")
         log_file.write(f"ATA inverse = {ATA_INVERSE}\r\n")
-        log_file.write(f"model = {cross_couple_model}\r\n")
+        log_file.write(f"compliance = {compliance}\r\n")
     except:
         pass
 
@@ -1559,6 +1573,16 @@ def run_passes():
     new_distance = 0
     v_error = 0
 
+    A = np.zeros((1,4))
+    AT = np.transpose(A)
+    ATA = np.matmul(AT,A)
+    Y = np.zeros((1,1))
+    ATY = np.matmul(AT,Y)
+    ysqr = 0
+    N = 0
+
+
+
     for line_number in line_nums:
 
         if int(100*start) <= line_number <= int(100*end):
@@ -1574,25 +1598,79 @@ def run_passes():
             omega[0,0]=wx_filt[line_number]
             omega[1,0]=wy_filt_filt[line_number]
             omega[2,0]=wz_filt[line_number]
+            mark_number = map_marks[line_number-int(100.0*start)]
+            mark_state = map_states[line_number-int(100.0*start)]
+            
+
+    #adjust x force for compliance coupling
+
+            force_out[0,0] = force_out[0,0] - compliance*(((force_out[2,0]/32.1741)+1.0)*force_out[2,0] )
+
+            fx_filt[line_number] = force_out[0,0]
             
             velocity_dot = g_force + force_out
-            
-            correction_gain = k_gain(omega[1,0],velocity[0,0],velocity_dot[2,0])
-            
-            v_error = k_error(omega[1,0],velocity[0,0],velocity_dot[2,0],correction_gain)
 
-            if v_error > max_err:
-                v_error = max_err
-            if v_error < -max_err:
-                v_error = -max_err
-
-            force_out[0,0] = force_out[0,0] + cross_couple_model[0,0] + cross_couple_model[1,0]*(force_out[2,0]+32.1741)+cross_couple_model[2,0]*(force_out[2,0]+32.1741)**2 + v_error
-
-            velocity_dot[0,0] = g_force[0,0]+force_out[0,0] 
+            if mark_number > 2 and mark_number < number_of_marks -2 :
+          
+                correction_gain = k_gain(omega[1,0],velocity[0,0],velocity_dot[2,0])
             
+                v_error = k_error(omega[1,0],velocity[0,0],velocity_dot[2,0],correction_gain)
+
+                if v_error > max_err:
+                    v_error = max_err
+                if v_error < -max_err:
+                    v_error = -max_err
+
+                velocity_dot[0,0] = velocity_dot[0,0] - compliance*(force_out[2,0]+32.1714)*cos(radians(roll_out) ) - v_error
+
+                #log_file.write(f"{round(force_out[2,0],2)},{round(fx_filt[line_number],2)}\n")
+
+                Y[0,0] = fx_filt[line_number]
+                A[0,0] = -gravity_value
+                A[0,1] = force_out[2,0]
+                A[0,2] = -gravity_value*((force_out[2,0]/gravity_value)**2)
+                A[0,3] = -gravity_value*(velocity[0,0]/100.0)**2
+                AT = np.transpose(A)
+                ATA = ATA + np.matmul(AT,A)
+                ATY = ATY + np.matmul(AT,Y)
+                ysqr = ysqr + (Y[0,0])**2
+                N = N + 1
+            
+           
+                    
             velocity[0,0] = velocity[0,0] + velocity_dot[0,0]/100.0
             
             new_distance = new_distance + velocity[0,0]/100.0
+
+    ATA_INVERSE = np.linalg.inv(ATA)
+
+    drag_model = np.matmul(ATA_INVERSE,ATY)
+
+    log_file.write(f"drag model calculation\n")
+    log_file.write(f"ATA:\n{ATA}\n")
+    log_file.write(f"ATA_INVERSE:\n{ATA_INVERSE}\n")
+    log_file.write(f"ATY:\n{ATY}\n")
+    log_file.write(f"drag model = {drag_model}\n")
+    
+    
+
+    ATYTX = np.matmul(np.transpose(ATY),drag_model)
+
+    if N > 0 :
+        sigma_sqr = ( ysqr - ATYTX[0,0] ) / N
+    else :
+        sigma_sqr = 0
+    variance = sqrt (abs(sigma_sqr))
+
+    aero_factor = drag_model[3,0]
+
+    #log_file.write(f"offset = {drag_model[0,0]}\n")
+    log_file.write(f"friction = {drag_model[1,0]}\n")
+    log_file.write(f"splay = {drag_model[2,0]}\n")
+    log_file.write(f"aero = {drag_model[3,0]}\n")
+    log_file.write(f"variance = {variance}\n")
+
+    
 
         #errors_in.append(v_error)
         #acceleration.append(velocity_dot[0,0])
@@ -1605,9 +1683,7 @@ def run_passes():
     #
     # pass 5
     #
-    # if a time mark model was not supplied, compute one and save it.
-    # if so, compute one and compare it with the supplied model,
-    # in order to compute the adustment factor, alignment_accel
+    # 
     # 
     ################################################################
 
@@ -1666,10 +1742,10 @@ def run_passes():
 
             new_distance = new_distance + velocity[0,0]/100.0
 
-            if args.track_marks_file_name:
-               update_mark_state_with_tr_mdl(omega[2,0],omega[0,0] , roll_out , heading )
-            else:
-               update_mark_state_no_tr_mdl(omega[2,0],omega[0,0] , roll_out , heading )
+            #if args.track_marks_file_name:
+               #update_mark_state_with_tr_mdl(omega[2,0],omega[0,0] , roll_out , heading )
+            #else:
+               #update_mark_state_no_tr_mdl(omega[2,0],omega[0,0] , roll_out , heading )
 
     if args.track_marks_file_name:
         if run_end_time > 0.0:
@@ -1724,8 +1800,6 @@ def run_passes():
     map_distances = []
     map_xs = []
     map_ys = []
-    map_marks = []
-    map_states = []
     map_roll_rates = []
     map_pitch_rates = []
     map_yaw_rates = []
@@ -1747,6 +1821,7 @@ def run_passes():
             time_map_100_file.write(f",mark_state__{run_name}")
 
             time_map_100_file.write(f",friction+aero__{run_name}")
+            
             time_map_100_file.write(f",y_force__{run_name}")
             time_map_100_file.write(f",z_force__{run_name}")
 
@@ -1765,7 +1840,10 @@ def run_passes():
 
             time_map_100_file.write(f",velocity__{run_name}")
             time_map_100_file.write(f",x-acceleration__{run_name}")
-            time_map_100_file.write(f",z-force-filtered__{run_name}")          
+            time_map_100_file.write(f",friction__{run_name}")
+            time_map_100_file.write(f",aero__{run_name}")
+      
+            time_map_100_file.write(f",z_force_filtered__{run_name}")          
             time_map_100_file.write(f",kalman_input__{run_name}")
             time_map_100_file.write(f",distance__{run_name}")
             time_map_100_file.write(f",x__{run_name}")
@@ -1806,7 +1884,7 @@ def run_passes():
 
             time_map_100_file.write(f",velocity__{file_base_name}")
             time_map_100_file.write(f",x-acceleration__{run_name}")          
-            time_map_100_file.write(f",z-force-filtered__{run_name}")                     
+            time_map_100_file.write(f",z_force_filtered__{run_name}")                     
             time_map_100_file.write(f",kalman_input__{file_base_name}")
             time_map_100_file.write(f",distance__{file_base_name}")
             time_map_100_file.write(f",x__{file_base_name}")
@@ -1825,16 +1903,8 @@ def run_passes():
 
 
     except:
-        pass
-
-    A = np.zeros((1,2))
-    AT = np.transpose(A)
-    ATA = np.matmul(AT,A)
-    Y = np.zeros((1,1))
-    ATY = np.matmul(AT,Y)
-    ysqr = 0
-    N = 0
-
+        pass   
+    
     for line_number in line_nums:
 
         if int(100*start) <= line_number <= int(100*end):
@@ -1853,12 +1923,9 @@ def run_passes():
             omega_e[0,0] = omegas_e_f_x[line_number]
             omega_e[1,0] = omegas_e_f_y[line_number]
             omega_e[2,0] = omegas_e_f_z[line_number]
-
-            update_timing_mark(omega[2,0],omega[0,0],roll_out,heading)
-
-            map_marks.append(mark_number)
-            map_states.append(mark_state)
-
+            mark_number = map_marks[line_number-int(100.0*start)]
+            mark_state = map_states[line_number-int(100.0*start)]
+            
             if first_heading_recorded == 0:
                 first_heading = heading
                 first_heading_recorded = 1
@@ -1869,7 +1936,7 @@ def run_passes():
             y_ef = y_ef + velocity[0,0]*(sine/100.0)
 
             velocity_dot = g_force + force_out
-            
+          
             correction_gain = k_gain(omega[1,0],velocity[0,0],velocity_dot[2,0])
             
             v_error = k_error(omega[1,0],velocity[0,0],velocity_dot[2,0],correction_gain)
@@ -1879,24 +1946,16 @@ def run_passes():
             if v_error < -max_err:
                 v_error = -max_err
 
-            force_out[0,0] = force_out[0,0] + cross_couple_model[0,0] + cross_couple_model[1,0]*(force_out[2,0]+32.1741)+cross_couple_model[2,0]*(force_out[2,0]+32.1741)**2 + v_error
-
-            velocity_dot[0,0] = g_force[0,0]+force_out[0,0] 
-            
+            velocity_dot[0,0] = velocity_dot[0,0] - compliance*(force_out[2,0]+32.1714)*cos(radians(roll_out) ) - v_error
+                    
             velocity[0,0] = velocity[0,0] + velocity_dot[0,0]/100.0
             
             new_distance = new_distance + velocity[0,0]/100.0
 
-            Y[0,0] = fx_filt[line_number]
-            A[0,0] = force_out[2,0]
-            A[0,1] = A[0,1] + (velocity[0,0])**2
-            AT = np.transpose(A)
-            ATA = ATA + np.matmul(AT,A)
-            ATY = ATY + np.matmul(AT,Y)
-            ysqr = ysqr + (Y[0,0])**2
-            N = N + 1
-            
-            
+            aero =  - aero_factor*gravity_value*(velocity[0,0]/100.0)**2
+            friction = force_out[0,0] - aero
+
+             
 
             #note: in the code below, alignment_accel is used to reconcile the run time marks with the track model time marks
 
@@ -1919,7 +1978,8 @@ def run_passes():
                         time_map_100_file.write(f"{round(( local_time   ), 2)}")
                         time_map_100_file.write(f",{mark_number},{mark_state}")
 
-                        time_map_100_file.write(f" ,{round(( fx_filt[line_number] ),2)}" )
+                        time_map_100_file.write(f" ,{round(( fx_filt_filt[line_number] ),2)}" )
+                        
                         time_map_100_file.write(f" ,{round(( fy_filt[line_number] ),2)}" )
                         if fz_filt[line_number] > z_force_plot_limit:
                             time_map_100_file.write(f" ,{round(( fz_filt[line_number] ),2)}" )
@@ -1942,6 +2002,9 @@ def run_passes():
 
                         time_map_100_file.write(f",{round(( velocity[0,0]   ), 2)}")
                         time_map_100_file.write(f",{round(( velocity_dot[0,0]   ), 2)}")
+                        time_map_100_file.write(f" ,{round(( friction ),2)}" )
+                        time_map_100_file.write(f" ,{round(( aero ),4)}" )
+                        
                         time_map_100_file.write(f",{round(( fz_filt_filt[line_number]/ 32.1741  ), 4)}")
                         time_map_100_file.write(f",{round(( v_error   ), 2)}")
                         time_map_100_file.write(f",{round((  new_distance  ), 2)}")
@@ -2024,23 +2087,6 @@ def run_passes():
                 map_x_accels.append( ( fx_filt[line_number] ) )
                 map_y_accels.append( ( fy_filt[line_number] ) )
                 map_z_accels.append( ( fz_filt[line_number] ) )
-
-    ATA_INVERSE = np.linalg.inv(ATA)
-
-    drag_model = np.matmul(ATA_INVERSE,ATY)
-
-    ATYTX = np.matmul(np.transpose(ATY),drag_model)
-
-    if N > 0 :
-        sigma_sqr = ( ysqr - ATYTX[0,0] ) / N
-    else :
-        sigma_sqr = 0
-    variance = sqrt (abs(sigma_sqr))
-
-    log_file.write(f"drag model = {drag_model}\n")
-    log_file.write(f"friction = {drag_model[0,0]}\n")
-    log_file.write(f"aero coef = {drag_model[1,0]}\n")
-    log_file.write(f"variance = {variance}\n")
 
     
 
