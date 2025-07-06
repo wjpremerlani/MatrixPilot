@@ -106,6 +106,7 @@ if __name__ == "__main__":
     parser.add_argument('-cr','--cr',help="compass rotation, degrees, used to re-orient the x-y track map.")
     parser.add_argument('-y', '--y',help = "yaw misalignment.")
     parser.add_argument('-fhs','--fhs',help = "filter half size, window width = 2*fhs+1.")
+    parser.add_argument('-dfs','--dfs',action='store_true',help="dual filter switch : filter twice")
     
     args = parser.parse_args()
 
@@ -162,6 +163,8 @@ if __name__ == "__main__":
                         bat_file.write(f" -log_time")
                     if args.strmlt or new_format == True :
                         bat_file.write(f" -strmlt")
+                    if args.dfs :
+                        bat_file.write(f" -dfs")
                     if args.zfl :
                         bat_file.write(f" -zfl {args.zfl}")
                     if args.yrs :

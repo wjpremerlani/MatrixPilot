@@ -11,6 +11,7 @@ shift_range = 200 #time shift range of +- 2 seconds
 #end_margin = 5
 start_margin = 0 
 end_margin = 0
+#end_margin = 150
 minimum_roll = 15.0
 
 import argparse
@@ -702,10 +703,7 @@ def write_plotlets() :
 
     write_column_names(" delta_time__")
     write_column_names(" z_force_g__")
-    write_column_names(" z_force_coloring__")
     write_column_names(" y_force_g__")   
-    write_column_names(" y_force_coloring__")
-    write_column_names(" roll_coloring__")
     write_column_names(" degs_align_stdev__")
     write_column_names(" degs_pivot_stdev__")
     write_column_names(" degs_pivot__")
@@ -817,52 +815,23 @@ def write_plotlets() :
                 for run_number in run_numbers :
                     plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
                     z_force_value = z_forces[line_number + plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]                  
-                    output_file.write(f"{round(z_force_value/32.17,2)},")
-                if ( not args.strmlt ) :
-                    output_file.write(f",")
-
-                is_first_run = True
-                for run_number in run_numbers :
-                    plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
-                    time_value = times[line_number + plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]
-                    z_force_value = z_forces[line_number + plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]                  
-                    if is_first_run == True :
-                        reference_time = time_value
-                        is_first_run = False              
-                    delta_time = time_value-reference_time
-                    output_file.write(f"{map_z_color(z_force_value,run_number)},")
+                    output_file.write(f"{round(z_force_value/32.17,4)},")
                 if ( not args.strmlt ) :
                     output_file.write(f",")
 
                 for run_number in run_numbers :
                     plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
                     y_force_value = y_forces[line_number + plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]                  
-                    output_file.write(f"{round(y_force_value/32.17,2)},")
+                    output_file.write(f"{round(y_force_value/32.17,4)},")
                 if ( not args.strmlt ) :
                     output_file.write(f",")                  
-
-                is_first_run = True
-                for run_number in run_numbers :
-                    plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
-                    y_force_value = y_forces[line_number + plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]                  
-                    output_file.write(f"{map_y_color(y_force_value,run_number)},")
-                if ( not args.strmlt ) :
-                    output_file.write(f",")
-
-                for run_number in run_numbers :
-                    plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
-                    roll_value = rolls[line_number + plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]                  
-                    output_file.write(f"{map_roll_color(roll_value)},")
-                if ( not args.strmlt ) :
-                    output_file.write(f",")
 
                 for run_number in run_numbers :
                     standard_dev = alignment_variances[plotlet_number][run_number]
                     output_file.write(f"{round(standard_dev,2)} , ")
 
                 if ( not args.strmlt ) :
-                    output_file.write(f",")
-                
+                    output_file.write(f",")             
                 
                 lists_of_angles = []
                 for run_number in run_numbers :
@@ -879,7 +848,7 @@ def write_plotlets() :
                     output_file.write(f" , ")    
 
                 for run_number in run_numbers :
-                    output_file.write(f"{round(lists_of_angles[run_number][2],2)} , ")    
+                    output_file.write(f"{round(lists_of_angles[run_number][2],4)} , ")    
                 if ( not args.strmlt ) :
                     output_file.write(f" , ") 
 
@@ -897,13 +866,13 @@ def write_plotlets() :
                     output_file.write(f" , ") 
 
                 for run_number in run_numbers :
-                    output_file.write(f" , {round(lists_of_angles[run_number][1],2)} ")
+                    output_file.write(f" , {round(lists_of_angles[run_number][1],4)} ")
                     
                 if ( not args.strmlt ) :
                     output_file.write(f" , ") 
 
                 for run_number in run_numbers :
-                    output_file.write(f" , {round(lists_of_angles[run_number][0],2)} ")
+                    output_file.write(f" , {round(lists_of_angles[run_number][0],4)} ")
                     
                 output_file.write(f" \n")
                 
@@ -1108,10 +1077,14 @@ def prepare_plotlet(plot_number) :
     global plotlet_offsets , plotlet_size , column_offsets
     global ct_mark_tables
     global CURVE_START_COLUMN , CURVE_END_COLUMN
-    global margin , start_margin , end_margin 
+    global margin , start_margin , end_margin
+    global plotlet_numbers
+    last_plotlet = plotlet_numbers[len(plotlet_numbers)-1]
     plotlet_offsets = []
     column_offsets = []
     total_margin = start_margin + end_margin
+    if plot_number == last_plotlet :
+        total_margin = total_margin + 150
     max_size = total_margin
     for run_number in run_numbers :
         curve_start = ct_mark_tables[run_number][plot_number][CURVE_START_COLUMN]
