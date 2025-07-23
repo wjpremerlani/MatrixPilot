@@ -515,7 +515,7 @@ if plotlet_file is not None:
     roll_df = generate_coloring("roll" , " roll" , ABSOLUTE_MAP )
     pitch_df = generate_coloring("pitch" , " pitch" , SIGNED_MAP )
     y_force_df = generate_coloring("y_force" , " y_force_g" , SIGNED_MAP )
-    #delta_time_df = generate_coloring("delta_time" , " delta_time" , ABSOLUTE_MAP )
+    delta_time_df = generate_coloring("delta_time" , " delta_time" , ABSOLUTE_MAP )
   
     curve_list = plotlets_df["curve_number "].unique()
     #debug_file.write(f"curve number list = \n{curve_list}\n")
@@ -526,7 +526,7 @@ if plotlet_file is not None:
     s_run_names = st.sidebar.multiselect("select a set of runs for plotting", options= run_names , default = run_names )
     #curve_number = st.sidebar.selectbox("select a curve" , curve_list )    
     run_number = st.sidebar.selectbox("select a run to heat map" , s_run_names )
-    color_map = st.sidebar.selectbox("select variable to heat map" , [   " z_force" , " y_force" ,  " x-acceleration" , " roll" , " pitch" , " yaw_rate" , " roll_rate" , " pivot" ] )
+    color_map = st.sidebar.selectbox("select variable to heat map" , [   " z_force" , " y_force" ,  " x-acceleration" , " roll" , " pitch" , " yaw_rate" , " roll_rate" , " pivot" , " delta_time" ] )
 
     s_yaw_columns = []
     s_yaw_rate_columns = []
