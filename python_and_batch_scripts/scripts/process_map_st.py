@@ -4,9 +4,25 @@ from datetime import datetime
 import argparse
 import io
 
+global args_dfs , args_centrifuge_testing , args_no_weights
+global args_yrs , args_strmlt , args_log_time , args_no_kalman
+global number_of_marks
+
+number_of_marks = 24 # default value for 12 curves to prevent crash if number of curves is not specified
+
+args_dfs = True
+args_centrifuge_testing = False
+args_no_weights = False
+args_yrs = False
+args_strmlt = True
+args_log_time = False
+args_no_kalman = False
 
 global skip_pass_7_and_8
 skip_pass_7_and_8 = True
+
+global prerun_margin
+prerun_margin = 200
 
 ############################################
 #
@@ -33,6 +49,8 @@ yaw_rate_start = 10.0
 yaw_rate_end = 3.0
 #
 #
+global int_dtpe
+int_dtpe = 180
 #
 global z_force_plot_limit
 # z_force_plot_limit is used to clip the reported z force
@@ -151,8 +169,7 @@ global roll_edges ,yaw_rate_edges
 
 
 global filter_size
-filter_size = 20
-#filter_size = 40
+filter_size = 10
 #note: width of the window is 2*filter_size + 1
 
 
@@ -184,9 +201,9 @@ roll_zero = 0.0
 global rotation , start , end , elapsed
 #default values
 rotation = 0.0
-start = 0
-elapsed = 300.
-end = 300.
+start = 60.
+elapsed = 70.
+end = 130.
 
 global ypr_o_mat , ypr_o_mat_trans, y_mat , p_mat , r_mat , yp_mat , ypr_mat
 global drift_mat
@@ -471,7 +488,7 @@ def write_new_mark():
         pass
     
 
-global number_of_marks , heading_start
+global heading_start
 
 def two_phase_roll_update_timing_marks(write_requests, roll_rate , roll_out , heading ):
     global mark_state, mark_number, new_distance , distance_origin , line_origin , velocity , line_number , yaw_rate_start , yaw_rate_end , number_of_marks
@@ -530,7 +547,7 @@ def update_timing_mark(yaw_rate,roll_rate,roll_out,heading):
     if ( args.curves ):
         if mark_number == number_of_marks:
             return
-    if args.yrs == True:
+    if args_yrs == True:
         signal = degrees(yaw_rate)
         start = yaw_rate_start
         end = yaw_rate_end
@@ -551,7 +568,7 @@ def update_mark_state_no_tr_mdl(yaw_rate,roll_rate,roll_out,heading):
     if ( args.curves ):
         if mark_number == number_of_marks:
             return
-    if args.yrs == True:
+    if args_yrs == True:
         signal = degrees(yaw_rate)
         start = yaw_rate_start
         end = yaw_rate_end
@@ -610,7 +627,7 @@ def update_mark_state_with_tr_mdl(yaw_rate,roll_rate,roll_out,heading):
     if ( args.curves ):
         if mark_number == number_of_marks:
             return
-    if args.yrs == True:
+    if args_yrs == True:
         signal = degrees(yaw_rate)
         start = yaw_rate_start
         end = yaw_rate_end
@@ -862,7 +879,7 @@ def read_data(file):
 
     for line_number in line_numbers:
         total_variance = gx_gy_variance[line_number]
-        if args.no_weights:
+        if args_no_weights:
             weight = 1.0
         else:
             weight = corner_variance / (corner_variance + total_variance)
@@ -1094,7 +1111,7 @@ def read_data(file):
     except:
         pass
 
-    if args.centrifuge_testing:
+    if args_centrifuge_testing:
         create_ypr_matrix(yaw_offset, pitch_offset , roll_offset)
         first_mat = ypr_mat
         create_ypr_matrix(0.0, 0.0 , 0.0)
@@ -1180,7 +1197,7 @@ def read_data(file):
                         matrix_in = ypr_mat
                         if first_line == 1 or line_number == int(100*start):
                             matrix_in_prev = matrix_in
-                            create_ypr_matrix(0.0 , pitch_in , roll_in )
+                            create_ypr_matrix(yaw_offset , pitch_in , roll_in )
                             matrix_out  = ypr_mat
                             matrix_out_prev = matrix_out
                             #matrix_out = np.matmul(first_mat,ypr_o_mat)
@@ -1318,6 +1335,7 @@ def run_passes():
     global distance_origin, line_origin, run_end_distance, run_end_time, table_end_distance
     global table_end_time, alignment_accel, previous_line_number, first_heading, valid_run
     global file_base_name, run_time, number_of_marks
+    global prerun_margin
 
     ######################################
     #
@@ -1453,6 +1471,15 @@ def run_passes():
     #
     #######################################
 
+    try :
+        pass1.write(f"gx,fx,ax,gz,fz,az,pitch_rate,kalman_weight, vg,vf,v_total,weighted_error\n")
+    except :
+        pass
+
+
+    vg = 0
+    vf = 0
+
     map_marks = []
     map_states = []
     mark_number = 0
@@ -1535,22 +1562,70 @@ def run_passes():
 
             velocity_dot = g_force + force_out
 
-            if mark_number > 2 and mark_number < number_of_marks - 2 :
+            
 
-                correction_gain = k_gain(omega[1,0],velocity[0,0],velocity_dot[2,0])
-                v_error = k_error(omega[1,0],velocity[0,0],velocity_dot[2,0],correction_gain)
+            correction_gain = k_gain(omega[1,0],velocity[0,0],velocity_dot[2,0])
 
-                Y[0,0] = v_error
-                sqr_sum = sqr_sum + v_error*v_error
-                w_sqr_sum = w_sqr_sum + correction_gain**2
-                v_error_sum = v_error_sum + v_error
-                weight_sum = weight_sum + correction_gain
+            wt = correction_gain
                 
-                A[0,0] = A[0,0]-correction_gain*(((force_out[2,0]/32.1741)+1.0)*force_out[2,0] + (force_out[2,0]+32.1714)*cos(radians(roll_out) ))/100.0
+            v_error = k_error(omega[1,0],velocity[0,0],velocity_dot[2,0],correction_gain)
+
+            if v_error > max_err:
+                v_error = max_err
+            if v_error < -max_err:
+                v_error = -max_err
+
+            gx = g_force[0,0]
+            fx = force_out[0,0]
+            gz = g_force[2,0]
+            fz = force_out[2,0]
+            ax = gx+fx
+            az = gz+fz
+            pitch_rate = omega[1,0]
+            vg = vg + gx/100.0
+            vf = vf + fx/100.0
+            v = vg+vf
+
+            wvhat = -wt*az/pitch_rate
+
+            verror1 = wt*v - wvhat
+
+            if verror1 > max_err:
+                verror1 = max_err
+            if verror1 < -max_err:
+                verror1 = -max_err
+            
+            verror2 = v_error
+
+            try :
+
+                pass1.write(f"{round(gx,2)},")
+                pass1.write(f"{round(fx,2)},")
+                pass1.write(f"{round(ax,2)},")
+                pass1.write(f"{round(gz,2)},")
+                pass1.write(f"{round(fz,2)},")
+                pass1.write(f"{round(az,2)},")
+                pass1.write(f"{round(pitch_rate,2)},")
+                pass1.write(f"{round(wt,2)},")       
+                pass1.write(f"{round(vg,2)},")
+                pass1.write(f"{round(vf,2)},")
+                pass1.write(f"{round(v,2)},")
+                pass1.write(f"{round(verror2,2)}\n")
+
+            except :
+                pass
+
+            Y[0,0] = v_error
+            sqr_sum = sqr_sum + v_error*v_error
+            w_sqr_sum = w_sqr_sum + correction_gain**2
+            v_error_sum = v_error_sum + v_error
+            weight_sum = weight_sum + correction_gain
+                
+            A[0,0] = A[0,0]-correction_gain*(((force_out[2,0]/32.1741)+1.0)*force_out[2,0] + (force_out[2,0]+32.1714)*cos(radians(roll_out) ))/100.0
              
-                AT = np.transpose(A)
-                ATA = ATA + np.matmul(AT,A)
-                ATY = ATY + np.matmul(AT,Y)
+            AT = np.transpose(A)
+            ATA = ATA + np.matmul(AT,A)
+            ATY = ATY + np.matmul(AT,Y)
 
             velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0]  )/100.0
 
@@ -1589,6 +1664,14 @@ def run_passes():
     # cross coupling taken into acount
     #
     #########################################
+    try :
+        pass2.write(f"gx,fx,ax,gz,fz,az,pitch_rate,kalman_weight,vg,vf,v_total,weighted_residual_error\n")
+    except :
+        pass
+
+    vg = 0
+    vf = 0
+
 
     first_heading_recorded = 0
     speed = 0
@@ -1610,6 +1693,13 @@ def run_passes():
     vsqr = 0 
     wsqr = 0 
     N = 0
+
+    A2 = np.zeros((1,3))
+    AT2 = np.transpose(A2)
+    ATA2 = np.matmul(AT2,A2)
+    Y2 = np.zeros((1,1))
+    ATY2 = np.matmul(AT2,Y2)
+    ysqr2 = 0
 
     for line_number in line_nums:
 
@@ -1651,24 +1741,63 @@ def run_passes():
 
             velocity_dot[0,0] = velocity_dot[0,0] + compliance*(force_out[2,0]+32.1714)*cos(radians(roll_out) ) - v_error
 
-            Y[0,0] = force_out[0,0]
-            A[0,0] = force_out[2,0]
-            A[0,1] = -gravity_value*((force_out[2,0]/gravity_value)**2)
-            A[0,2] = -gravity_value*(velocity[0,0]/100.0)**2
-            AT = np.transpose(A)
-            ATA = ATA + np.matmul(AT,A)
-            ATY = ATY + np.matmul(AT,Y)
-            ysqr = ysqr + (Y[0,0])**2
-            wsqr = wsqr + correction_gain**2
-            vsqr = vsqr + v_error**2
-            N = N + 1         
+            gx = g_force[0,0] + compliance*(force_out[2,0]+32.1714)*cos(radians(roll_out) )
+            fx = force_out[0,0]
+            gz = g_force[2,0]
+            fz = force_out[2,0]
+            ax = gx+fx
+            az = gz+fz
+            pitch_rate = omega[1,0]
+            vg = vg + gx/100.0
+            vf = vf + fx/100.0
+            v2 = velocity[0,0]
+            wt = correction_gain
+
+            if verror1 > max_err:
+                verror1 = max_err
+            if verror1 < -max_err:
+                verror1 = -max_err
+            
+            verror2 = v_error
+
+            try :
+
+                pass2.write(f"{round(gx,2)},")
+                pass2.write(f"{round(fx,2)},")
+                pass2.write(f"{round(ax,2)},")
+                pass2.write(f"{round(gz,2)},")
+                pass2.write(f"{round(fz,2)},")
+                pass2.write(f"{round(az,2)},")
+                pass2.write(f"{round(pitch_rate,2)},")
+                pass2.write(f"{round(wt,2)},")  
+                pass2.write(f"{round(vg,2)},")
+                pass2.write(f"{round(vf,2)},")
+                pass2.write(f"{round(v2,2)},")           
+                pass2.write(f"{round(verror2,2)}\n")
+
+            except :
+                pass
+
+            if mark_number > 4 and mark_number < number_of_marks - 4 :
+
+                Y[0,0] = force_out[0,0]
+                A[0,0] = force_out[2,0]
+                A[0,1] = -gravity_value*((force_out[2,0]/gravity_value)**2)
+                A[0,2] = -gravity_value*(velocity[0,0]/100.0)**2
+                AT = np.transpose(A)
+                ATA = ATA + np.matmul(AT,A)
+                ATY = ATY + np.matmul(AT,Y)
+                ysqr = ysqr + (Y[0,0])**2
+                wsqr = wsqr + correction_gain**2
+                vsqr = vsqr + v_error**2
+                N = N + 1
                     
             velocity[0,0] = velocity[0,0] + velocity_dot[0,0]/100.0
             
             new_distance = new_distance + velocity[0,0]/100.0
 
     try :
-        
+     
         ATA_INVERSE = np.linalg.inv(ATA)
 
         drag_model = np.matmul(ATA_INVERSE,ATY)
@@ -1680,7 +1809,6 @@ def run_passes():
         log_file.write(f"ATY:\n{ATY}\n")
         log_file.write(f"drag model = {drag_model}\n")
       
-
         ATYTX = np.matmul(np.transpose(ATY),drag_model)
 
         if N > 0 :
@@ -1702,12 +1830,7 @@ def run_passes():
         log_file.write(f"second pass standard deviation of velocity estimate = {round(velocity_std,2)}\r\n")
     except :
         pass
-
    
-        #errors_in.append(v_error)
-        #acceleration.append(velocity_dot[0,0])
-
-    #errors_out = mav_filter(errors_in,indices(20))
 
     '''
 
@@ -1766,7 +1889,7 @@ def run_passes():
             if v_error < -max_err:
                 v_error = -max_err
 
-            if args.no_kalman:
+            if args_no_kalman:
                 velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0]  + (z_x_cc/gravity_value)*(velocity_dot[2,0]**2) )/100.0
             else:
                 velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0] + feedback_gain*v_error + (z_x_cc/gravity_value)*(velocity_dot[2,0]**2) )/100.0
@@ -1801,8 +1924,6 @@ def run_passes():
     #  pass 6 compute and store 100 Hz time map
     #
     #########################################################
-
-
 
 
     first_heading_recorded = 0
@@ -1851,7 +1972,7 @@ def run_passes():
         else:
             run_name = file_base_name+"?"
 
-        if args.strmlt:
+        if args_strmlt:
 
             time_map_100_file.write(f"time__{run_name}")
             time_map_100_file.write(f",mark_number__{run_name}")
@@ -1869,6 +1990,7 @@ def run_passes():
             time_map_100_file.write(f",roll_rate__{run_name}")
             time_map_100_file.write(f",pitch_rate__{run_name}")
             time_map_100_file.write(f",yaw_rate__{run_name}")
+            
 
             #if extra_omegas == True:
 
@@ -1885,6 +2007,8 @@ def run_passes():
             time_map_100_file.write(f",distance__{run_name}")
             time_map_100_file.write(f",x__{run_name}")
             time_map_100_file.write(f",y__{run_name}")
+            time_map_100_file.write(f",timing_eye__{run_name}")
+            
 
             #if sculling_debug == True:
 
@@ -1940,11 +2064,13 @@ def run_passes():
 
 
     except:
-        pass   
+        pass
+
+    start_int = int(100*start)
     
     for line_number in line_nums:
 
-        if int(100*start) <= line_number <= int(100*end):
+        if int(100*start) - prerun_margin <= line_number <= int(100*end):
             heading = heading_list[line_number]
             pitch_out = pitch_list[line_number]
             roll_out = roll_list[line_number]
@@ -1963,14 +2089,19 @@ def run_passes():
             mark_number = map_marks[line_number-int(100.0*start)]
             mark_state = map_states[line_number-int(100.0*start)]
             
-            if first_heading_recorded == 0:
+            if line_number == start_int:
                 first_heading = heading
-                first_heading_recorded = 1
-            cosine = cos(radians(heading-first_heading+rotation))
-            sine = -sin(radians(heading-first_heading+rotation))
+            if line_number >= start_int :
+                cosine = cos(radians(heading-first_heading+rotation))
+                sine = -sin(radians(heading-first_heading+rotation))
+            else :
+                cosine = cos(radians(rotation))
+                sine = -sin(radians(rotation))
 
-            x_ef = x_ef + velocity[0,0]*(cosine/100.0)
-            y_ef = y_ef + velocity[0,0]*(sine/100.0)
+            if line_number >= start_int :
+
+                x_ef = x_ef + velocity[0,0]*(cosine/100.0)
+                y_ef = y_ef + velocity[0,0]*(sine/100.0)
 
             force_out[0,0] = force_out[0,0] + compliance*(((force_out[2,0]/32.1741)+1.0)*force_out[2,0] )
 
@@ -1989,13 +2120,14 @@ def run_passes():
             wt_sqr_sum = wt_sqr_sum + correction_gain**2
 
             velocity_dot[0,0] = velocity_dot[0,0] + compliance*(force_out[2,0]+32.1714)*cos(radians(roll_out) ) - v_error
-                                        
-            velocity[0,0] = velocity[0,0] + velocity_dot[0,0]/100.0
             
-            new_distance = new_distance + velocity[0,0]/100.0
+            if line_number >= start_int :                            
+                velocity[0,0] = velocity[0,0] + velocity_dot[0,0]/100.0
+            
+                new_distance = new_distance + velocity[0,0]/100.0
 
             aero =  - aero_factor*gravity_value*(velocity[0,0]/100.0)**2
-            friction = friction_factor*force_out[2,0] - splay_factor*gravity_value*((force_out[2,0]/gravity_value)**2)
+            friction = friction_factor*force_out[2,0] - splay_factor*gravity_value*((force_out[2,0]/gravity_value)**2) + aero
 
             local_time = ( line_number -  line_origin )/100.0
 
@@ -2003,19 +2135,19 @@ def run_passes():
 
                 try:
 
-                    if args.strmlt:
+                    if args_strmlt:
 
                         time_map_100_file.write(f"{round(( local_time   ), 2)}")
                         time_map_100_file.write(f",{mark_number},{mark_state}")
 
                         time_map_100_file.write(f" ,{round(( fx_filt_filt[line_number] ),2)}" )
 
-                        if args.dfs :
+                        if args_dfs :
                             time_map_100_file.write(f" ,{round(( fy_filt_filt[line_number] ),2)}" )
                         else :
                             time_map_100_file.write(f" ,{round(( fy_filt[line_number] ),2)}" )
                         if fz_filt[line_number] > z_force_plot_limit:
-                            if args.dfs :
+                            if args_dfs :
                                 time_map_100_file.write(f" ,{round(( fz_filt_filt[line_number] ),2)}" )
                             else :
                                 time_map_100_file.write(f" ,{round(( fz_filt[line_number] ),2)}" )
@@ -2024,9 +2156,12 @@ def run_passes():
 
                         time_map_100_file.write(f",{round(( roll_out   ), 2)}")
                         time_map_100_file.write(f",{round(( pitch_out   ), 2)}")
-                        time_map_100_file.write(f",{round(( -heading   ), 2)}")
+                        if line_number >= start_int :
+                            time_map_100_file.write(f",{round(( -heading   ), 2)}")
+                        else :
+                            time_map_100_file.write(f",0.0")
 
-                        if args.dfs :
+                        if args_dfs :
                             time_map_100_file.write(f" ,{round(degrees(wx_filt_filt[line_number]),2 )}" )
                             time_map_100_file.write(f" ,{round(degrees(wy_filt_filt[line_number]),2 )}" )
                             time_map_100_file.write(f" ,{round(degrees(wz_filt_filt[line_number]),2 )}" )
@@ -2051,6 +2186,11 @@ def run_passes():
                         time_map_100_file.write(f",{round((  new_distance  ), 2)}")
                         time_map_100_file.write(f",{round(( x_ef   ), 2)}")
                         time_map_100_file.write(f",{round(( y_ef   ), 2)}")
+                        #if is_timing_eye(line_number - int_start) = True :
+                        if (( line_number - start_int ) in timing_eye_times) == True :
+                            time_map_100_file.write(f",1")
+                        else :
+                            time_map_100_file.write(f",0")
 
                         #if sculling_debug == True:
 
@@ -2495,24 +2635,25 @@ def build_arg_parser():
     parser.add_argument('-pz', '--pitch_at_zero', help="actual pitch of the sled at the first data point, degrees")
     parser.add_argument('-rz', '--roll_at_zero', help="actual roll of the sled at the first data point, degrees")
     parser.add_argument('-ct', '--centrifuge_testing', action='store_true', help="centrifuge testing option")
-    parser.add_argument('-nk', '--no_kalman', action='store_true', help="turn off kalman filter")
+    #parser.add_argument('-nk', '--no_kalman', action='store_true', help="turn off kalman filter")
     parser.add_argument('-kg', '--kalman_gain', help="kalman corner gain, default is 1.4")
-    parser.add_argument('-nw', '--no_weights', action='store_true',
-                        help="no weights: option to use equal weighting to estimate alignment and drift")
+    #parser.add_argument('-nw', '--no_weights', action='store_true', help="no weights: option to use equal weighting to estimate alignment and drift")
     parser.add_argument('-mf', '--track_marks_file_name', help="name of file with marks model of the track")
     parser.add_argument('-all', '--all_files', action='store_true', help="generate all files types")
     parser.add_argument('-bill', '--bill', action='store_true', help="bill's preferred selection")
     parser.add_argument('-bruce', '--bruce', action='store_true', help="bruce's preferred selection")
-    parser.add_argument('-yrs', '--yrs', action='store_true', help="use yaw rate for slicing into plotlets.")
+    #parser.add_argument('-yrs', '--yrs', action='store_true', help="use yaw rate for slicing into plotlets.")
     parser.add_argument('-curves', '--curves', help="expected number of curves.")
     parser.add_argument('-zfl', '--zfl', help="z force lower limit, f/s/s.")
-    parser.add_argument('-strmlt', '--strmlt', action='store_true', help="preparation for streamlit plotting.")
-    parser.add_argument('-log_time', '--log_time', action='store_true', help="log key times during data processing.")
+    #parser.add_argument('-strmlt', '--strmlt', action='store_true', help="preparation for streamlit plotting.")
+    #parser.add_argument('-log_time', '--log_time', action='store_true', help="log key times during data processing.")
     parser.add_argument('-yaw_min', '--yaw_min', help="minimum change in yaw to detect end of curve.")
     parser.add_argument('-fcn', '--fcn', help="not used, but must be allowed.")
     parser.add_argument('-skip', '--skip', help="not used, but must be allowed.")
     parser.add_argument('-fhs', '--fhs', help="filter half size, window width = 2*fhs+1.")
-    parser.add_argument('-dfs', '--dfs', action='store_true', help="double filter")
+    #parser.add_argument('-dfs', '--dfs', action='store_true', help="double filter")
+    parser.add_argument('-te', '--te',  help="list of timing eye times")
+    parser.add_argument('-dtpe', '--dtpe', help="delta time from peak of pull in seconds")
     
     return parser
 
@@ -2584,14 +2725,15 @@ if __name__ == "__main__":
     else:
         print("you need to supply a file name")
         exit()
-
+    if args.dtpe :
+        int_dtpe = int (100.0 * float(args.dtpe))
     if args.fhs:
         filter_size = int(args.fhs)
 
     if args.yaw_min:
         yaw_threshold = float(args.yaw_min)
 
-    if args.log_time:
+    if args_log_time:
         time_log = open("time_log.txt", "a")
         now = datetime.now()
         time = now.time()
@@ -2622,31 +2764,33 @@ if __name__ == "__main__":
         pitch_zero = float(args.pitch_at_zero)
     if args.roll_at_zero:
         roll_zero = float(args.roll_at_zero)
-    if args.no_kalman:
+    if args_no_kalman:
         max_err = 100.0
     if args.kalman_gain:
         corner_w = float(args.kalman_gain)
     if args.curves:
         number_of_marks = int(2 * int(args.curves))
-    # try:
-    # summary_log_file = open("summary_log.txt" , "r" )
-    # summary_log_file.close()
-    # summary_log_file = open("summary_log.txt" , "a" )
-    # except:
-    summary_log_file = open("summary_log.txt", "w")
-    write_summary_header()
+    if ( args.bruce or args.bill or args.all_files ) :
+        try:
+            summary_log_file = open("summary_log.txt" , "r" )
+            summary_log_file.close()
+            summary_log_file = open("summary_log.txt" , "a" )
+        except:
+            summary_log_file = open("summary_log.txt", "w")
+            write_summary_header()
 
     try:
         input_file = open(file_name)
-        summary_log_file.write(f"{pad_14(file_base_name)},")
-        if start < 30.0:
-            summary_log_file.write(f">>>> start time = {start} is too short <<<<< \n")
+        if ( args.bruce or args.bill or args.all_files ) :
+            summary_log_file.write(f"{pad_14(file_base_name)},")
     except:
-        summary_log_file.write(f"unable to open file {file_name} , file was skipped.\n")
         exit()
-
+    
     if args.all_files:
-        skip_pass_7_and_8 = False
+        pass1 = open("velocity_estimation_research_pass1"+file_base_name+".csv", "w")
+        pass2 = open("velocity_estimation_research_pass2"+file_base_name+".csv", "w")
+    
+        #skip_pass_7_and_8 = False
         rabbit_log_file = open("rabbit_log.txt", "a")
         rabbit_log_file.write(f"{file_base_name},")
 
@@ -2658,36 +2802,43 @@ if __name__ == "__main__":
         output_file = open(file_base_name + "_adjusted.txt", "w")
         compare_file = open(file_base_name + "_compare.csv", "w")
         debug_file = open(file_base_name + "_debug.csv", "w")
-        time_map_file = open(file_base_name + "_time_map_1000_HZ.csv", "w")
+        #time_map_file = open(file_base_name + "_time_map_1000_HZ.csv", "w")
         time_map_100_file = open(file_base_name + "_time_map_100_HZ.csv", "w")
-        distance_map_file = open(file_base_name + "_distance_map.csv", "w")
+        #distance_map_file = open(file_base_name + "_distance_map.csv", "w")
         #marks_file = open(file_base_name + "_timing_marks.csv", "w")
-        if args.no_weights:
+        if args_no_weights:
             log_file = open(file_base_name + "_log_no_weights.txt", "w")
         else:
             log_file = open(file_base_name + "_log.txt", "w")
     elif args.bruce:
-        skip_pass_7_and_8 = False       
+        pass1 = open("velocity_estimation_research_pass1"+file_base_name+".csv", "w")
+        pass2 = open("velocity_estimation_research_pass2"+file_base_name+".csv", "w")
+        #skip_pass_7_and_8 = False       
         time_map_100_file = open(file_base_name + "_time_map_100_HZ.csv", "w")
-        time_map_file = open(file_base_name + "_time_map_1000_HZ.csv", "w")
+        #time_map_file = open(file_base_name + "_time_map_1000_HZ.csv", "w")
         output_file = open(file_base_name + "_adjusted.txt", "w")
         # marks_file = open(file_base_name+".timing_marks.csv" , "w")
-        if args.no_weights:
+        if args_no_weights:
             log_file = open(file_base_name + "_log_no_weights.txt", "w")
         else:
             log_file = open(file_base_name + "_log.txt", "w")
     elif args.bill:
+        pass1 = open("velocity_estimation_research_pass1"+file_base_name+".csv", "w")
+        pass2 = open("velocity_estimation_research_pass2"+file_base_name+".csv", "w")
+        output_file = open(file_base_name + "_adjusted.txt", "w")
         time_map_100_file = open(file_base_name + "_time_map_100_HZ.csv", "w")
+        skip_pass_7_and_8 = True
         #time_map_file = open(file_base_name + "_time_map_1000_HZ.csv", "w")
         #marks_file = open(file_base_name + ".timing_marks.csv", "w")
-        if args.no_weights:
+        if args_no_weights:
             log_file = open(file_base_name + "_log_no_weights.txt", "w")
         else:
             log_file = open(file_base_name + "_log.txt", "w")
     else:
+        skip_pass_7_and_8 = True
         output_file = open(file_base_name + "_adjusted.txt", "w")
         time_map_100_file = open(file_base_name + "_time_map_100_HZ.csv", "w")
-        if args.no_weights:
+        if args_no_weights:
             log_file = open(file_base_name + "_log_no_weights.txt", "w")
         else:
             log_file = open(file_base_name + "_log.txt", "w")
@@ -2707,5 +2858,13 @@ if __name__ == "__main__":
             except:
                 pass
             pass
+    timing_eye_times = []
+    
+    if args.te :
+        te_list = args.te.split(' ')
+        for item in te_list :
+            timing_eye_times.append(int(100.0*float(item))+int_dtpe)
+
+    log_file.write(f"timing eye time values.\r\n{timing_eye_times}\r\n")
 
     run_passes()

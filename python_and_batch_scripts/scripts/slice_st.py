@@ -1,6 +1,13 @@
-
+global args_strmlt , args_only_curves , args_log_time , all_data_first_curve
+global args_curve_number
+args_strmlt = True
+args_only_curves = False
+args_log_time = False
+all_data_first_curve = False
+args_curve_number = False
 
 global shift_range , margin , start_margin , end_margin , minimum_curve_duration , minimum_roll
+global time_after_last_curve
 #shift_range determines the minimum and maximum shit in the range of elements
 #used to scan cross variance as a function of element number shift
 #start_margin and end_margin define the extra number of elements included when slicing a portion of a run into a plotlet
@@ -13,6 +20,7 @@ start_margin = 0
 end_margin = 0
 #end_margin = 150
 minimum_roll = 15.0
+time_after_last_curve = 300
 
 import argparse
 import sys
@@ -258,19 +266,24 @@ def compute_similarity (reference_list,input_list , roll_list , plt_num, rn_num 
     best_index = 0
     if rn_num == 0 :
         return 0
-    for index in cross_indices  :
-        variance = cross_variance(reference_list,input_list,index , roll_list , plt_num, rn_num )
-        if skip == False :
-            #log_file.write(f"index = {index} , var = {variance} \n")
-            if first_index == True :
-                minimum_variance = variance
-                first_index = False
-            else :
-                if variance < minimum_variance :
-                    best_index = index
+    if (plt_num > 0) or ( all_data_first_curve == False ) :
+        for index in cross_indices  :
+            variance = cross_variance(reference_list,input_list,index , roll_list , plt_num, rn_num )
+            if skip == False :
+                #log_file.write(f"index = {index} , var = {variance} \n")
+                if first_index == True :
                     minimum_variance = variance
+                    first_index = False
+                else :
+                    if variance < minimum_variance :
+                        best_index = index
+                        minimum_variance = variance
             #log_file.write(f"var = {round(variance,2)} , min_var = {round(minimum_variance,2)} , index = {index} , best = {best_index} \n")
-    alignment_variance = sqrt(minimum_variance)
+        alignment_variance = sqrt(minimum_variance)
+    else :
+        minimum_variance = cross_variance(reference_list,input_list,0 , roll_list , plt_num, rn_num )
+        best_index = 0
+        alignment_variance = sqrt(minimum_variance)
     #log_file.write(f"best index = {best_index}\n")
     return best_index
 
@@ -338,7 +351,7 @@ def open_file() :
             column_numbers = numbers(columns_per_line)
             found_blanks = False
             run_number = 0          
-            if args.strmlt :
+            if args_strmlt :
                 factor_labels()
                 for index in range(number_of_runs) :
                     run_numbers.append(index)
@@ -353,7 +366,7 @@ def open_file() :
                         found_blanks = True
             first_row = False
             
-            if ( not args.strmlt) :
+            if ( not args_strmlt) :
                 number_of_runs = run_number
                 columns_per_run = int((columns_per_line + 1 ) / (number_of_runs + 1))
             else :
@@ -376,7 +389,7 @@ def open_file() :
             z_force_row = []
             y_force_row = []
 
-            if args.strmlt :
+            if args_strmlt :
                 for run_number in run_numbers :
                     state_row.append(int(float((row[int(run_number + STATE_COLUMN*(number_of_runs))]))))
                     roll_row.append(float(row[int(run_number + ROLL_COLUMN*(number_of_runs))]))
@@ -485,14 +498,14 @@ def write_timing_marks() :
 def generate_curve_table(run_number) :
     global shift_range , margin , start_margin , end_margin , minimum_curve_duration
     global rows , row_numbers , number_of_rows , labels
-    
+    global all_data_first_curve
     start_curve_row = 0
     start_curve_time = 0
     end_curve_row = 0
     end_curve_time = 0
     curve_number = 1
     log_file.write(f"calling generate_curve_table, run number = {run_number}\n")
-    if args.only_curves :
+    if args_only_curves :
         previous_state = 0
         for row_number in row_numbers :
             time = times[row_number][run_number]
@@ -516,7 +529,10 @@ def generate_curve_table(run_number) :
                         print("the glitch was removed, but you might want to take a look.")
     else :
         previous_state = 0
-        previous_row = shift_range + 1
+        if all_data_first_curve == True :
+            previous_row = 0
+        else :
+            previous_row = shift_range + 1
         previous_time = float ( previous_row ) / 100.0
         for row_number in row_numbers :
             time = times[row_number][run_number]
@@ -592,12 +608,12 @@ def write_column_names( column_name) :
     global file_names, run_numbers
     for run_number in run_numbers :
         output_file.write(f"{column_name}{file_names[run_number]},")
-    if ( not args.strmlt ) :
+    if ( not args_strmlt ) :
         output_file.write(f" , " )
 
 def write_column_names_commas_first( column_name) :
     global file_names, run_numbers
-    if ( not args.strmlt ) :
+    if ( not args_strmlt ) :
         output_file.write(f" , " )
     for run_number in run_numbers :
         output_file.write(f",{column_name}{file_names[run_number]}")
@@ -696,7 +712,7 @@ def write_plotlets() :
 
     extract_file_names()
 
-    if args.strmlt :
+    if args_strmlt :
         output_file.write(f"curve_number ,")
     else:
         output_file.write(f" , curve_number , ,")
@@ -704,15 +720,15 @@ def write_plotlets() :
     write_column_names(" delta_time__")
     write_column_names(" z_force_g__")
     write_column_names(" y_force_g__")   
-    write_column_names(" degs_align_stdev__")
-    write_column_names(" degs_pivot_stdev__")
+    #write_column_names(" degs_align_stdev__")
+    #write_column_names(" degs_pivot_stdev__")
     write_column_names(" degs_pivot__")
     
     
     output_file.write(f"{labels}")
 
-    write_column_names_commas_first(" gauss_map_degs_x__")
-    write_column_names_commas_first(" gauss_map_degs_y__")
+    #write_column_names_commas_first(" gauss_map_degs_x__")
+    #write_column_names_commas_first(" gauss_map_degs_y__")
     output_file.write(f"\n")
 
     curve_numbers = []
@@ -754,7 +770,7 @@ def write_plotlets() :
    
 
     for plotlet_number in plotlet_numbers :
-        if ( not args.curve_number ) or  ( curve_numbers[plotlet_number] == only_curve_number ) :
+        if ( not args_curve_number ) or  ( curve_numbers[plotlet_number] == only_curve_number ) :
             pivot_var_sums = []
             pivot_samples = []
             pivot_stdev = []
@@ -767,21 +783,27 @@ def write_plotlets() :
             for line_number in numbers(plotlet_sizes[plotlet_number]) :
                 #is_first_run = True
                 for run_number in run_numbers :
-                    plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
-                    rabbit_matrix = matrices[line_number+plotlet_offset+fine_adjustments[plotlet_number][run_number]][pivot_reference]
-                    run_matrix = matrices[line_number+plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]
-                    pivot_matrix = np.matmul(np.transpose(rabbit_matrix),run_matrix)
-                    pivot_angles = matrix_to_angle_axis(pivot_matrix)
-                    pivot_var_sums[run_number] = pivot_var_sums[run_number] + (pivot_angles[2])**2
-                    pivot_samples[run_number] = pivot_samples[run_number] + 1
-
+                    try :
+                        plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
+                        rabbit_matrix = matrices[line_number+plotlet_offset+fine_adjustments[plotlet_number][run_number]][pivot_reference]
+                        run_matrix = matrices[line_number+plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]
+                        pivot_matrix = np.matmul(np.transpose(rabbit_matrix),run_matrix)
+                        pivot_angles = matrix_to_angle_axis(pivot_matrix)
+                        pivot_var_sums[run_number] = pivot_var_sums[run_number] + (pivot_angles[2])**2
+                        pivot_samples[run_number] = pivot_samples[run_number] + 1
+                    except :
+                        pass
             for run_number in run_numbers :
-                pivot_stdev[run_number] = sqrt( pivot_var_sums[run_number] / pivot_samples[run_number] )
+                try :
+                    pivot_stdev[run_number] = sqrt( pivot_var_sums[run_number] / pivot_samples[run_number] )
+                except :
+                    pass
                 #print (pivot_stdev[run_number])
-                
+
+            valid_data = True   
             for line_number in numbers(plotlet_sizes[plotlet_number]) :
-                if args.strmlt :
-                   output_file.write(f"{curve_numbers[plotlet_number]} , ")
+                if args_strmlt :
+                    output_file.write(f"{curve_numbers[plotlet_number]} , ")
                 else :
                     output_file.write(f" , {curve_numbers[plotlet_number]} , , ")
 
@@ -791,92 +813,171 @@ def write_plotlets() :
 
                 is_first_run = True
                 for run_number in run_numbers :
-                    plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
-                    time_value = times[line_number + plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]
-                    if is_first_run == True :
-                        reference_time = time_value
-                        is_first_run = False
-                    delta_time = time_value-reference_time
-                    min_dt = min(min_dt , delta_time)
-                    max_dt = max(max_dt , delta_time)
+                    try :
+                        plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
+                        time_value = times[line_number + plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]
+                        if is_first_run == True :
+                            reference_time = time_value
+                            is_first_run = False
+                        delta_time = time_value-reference_time
+                        min_dt = min(min_dt , delta_time)
+                        max_dt = max(max_dt , delta_time)
+                    except :
+                        plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
+                        time_value = times[line_number-1 + plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]
+                        if is_first_run == True :
+                            reference_time = time_value
+                            is_first_run = False
+                        delta_time = time_value-reference_time
+                        min_dt = min(min_dt , delta_time)
+                        max_dt = max(max_dt , delta_time)
 
                 is_first_run = True
                 for run_number in run_numbers :
-                    plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
-                    time_value = times[line_number + plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]
-                    if is_first_run == True :
-                        reference_time = time_value
-                        is_first_run = False
-                    delta_time = time_value-reference_time
-                    output_file.write(f"{(round(delta_time - min_dt ,2))},")
-                if ( not args.strmlt ) :
+                    try :
+                        plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
+                        time_value = times[line_number + plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]
+                        if is_first_run == True :
+                            reference_time = time_value
+                            is_first_run = False
+                        delta_time = time_value-reference_time
+                        output_file.write(f"{(round(delta_time - min_dt ,2))},")
+                    except :
+                        plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
+                        time_value = times[line_number-1 + plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]
+                        if is_first_run == True :
+                            reference_time = time_value
+                            is_first_run = False
+                        delta_time = time_value-reference_time
+                        output_file.write(f"{(round(delta_time - min_dt ,2))},")
+                        valid_data = False
+                if ( not args_strmlt ) :
                     output_file.write(f" , ")
+                    
 
                 for run_number in run_numbers :
-                    plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
-                    z_force_value = z_forces[line_number + plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]                  
-                    output_file.write(f"{round(z_force_value/32.17,4)},")
-                if ( not args.strmlt ) :
+                    try :
+                        plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
+                        z_force_value = z_forces[line_number + plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]                  
+                        output_file.write(f"{round(z_force_value/32.17,4)},")
+                    except :
+                        plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
+                        z_force_value = z_forces[line_number - 1 + plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]                  
+                        output_file.write(f"{round(z_force_value/32.17,4)},")
+                        valid_data = False
+                if ( not args_strmlt ) :
                     output_file.write(f",")
 
                 for run_number in run_numbers :
-                    plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
-                    y_force_value = y_forces[line_number + plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]                  
-                    output_file.write(f"{round(y_force_value/32.17,4)},")
-                if ( not args.strmlt ) :
+                    try :
+                        plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
+                        y_force_value = y_forces[line_number + plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]                  
+                        output_file.write(f"{round(y_force_value/32.17,4)},")
+                    except :
+                        plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
+                        y_force_value = y_forces[line_number-1 + plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]                  
+                        output_file.write(f"{round(y_force_value/32.17,4)},")
+                        valid_data = False
+                if ( not args_strmlt ) :
                     output_file.write(f",")                  
 
                 for run_number in run_numbers :
-                    standard_dev = alignment_variances[plotlet_number][run_number]
-                    output_file.write(f"{round(standard_dev,2)} , ")
-
-                if ( not args.strmlt ) :
+                    try :
+                        standard_dev = alignment_variances[plotlet_number][run_number]
+                        #output_file.write(f"{round(standard_dev,2)} , ")
+                    except :
+                        #output_file.write(f"0,")
+                        valid_data = False
+                if ( not args_strmlt ) :
                     output_file.write(f",")             
                 
                 lists_of_angles = []
                 for run_number in run_numbers :
-                    plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
-                    rabbit_matrix = matrices[line_number+plotlet_offset+fine_adjustments[plotlet_number][run_number]][pivot_reference]
-                    run_matrix = matrices[line_number+plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]
-                    pivot_matrix = np.matmul(np.transpose(rabbit_matrix),run_matrix)
-                    pivot_angles = matrix_to_angle_axis(pivot_matrix)
-                    lists_of_angles.append(pivot_angles)
+                    try :
+                        plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
+                        rabbit_matrix = matrices[line_number+plotlet_offset+fine_adjustments[plotlet_number][run_number]][pivot_reference]
+                        run_matrix = matrices[line_number+plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]
+                        pivot_matrix = np.matmul(np.transpose(rabbit_matrix),run_matrix)
+                        pivot_angles = matrix_to_angle_axis(pivot_matrix)
+                        lists_of_angles.append(pivot_angles)
+                    except :
+                        plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
+                        rabbit_matrix = matrices[line_number-1+plotlet_offset+fine_adjustments[plotlet_number][run_number]][pivot_reference]
+                        run_matrix = matrices[line_number-1+plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]
+                        pivot_matrix = np.matmul(np.transpose(rabbit_matrix),run_matrix)
+                        pivot_angles = matrix_to_angle_axis(pivot_matrix)
+                        lists_of_angles.append(pivot_angles)
 
-                for run_number in run_numbers :
-                    output_file.write(f"{round(pivot_stdev[run_number],2)} , ")
-                if ( not args.strmlt ) :
+                #for run_number in run_numbers :
+                    #try :
+                        #output_file.write(f"{round(pivot_stdev[run_number],2)} , ")
+                    #except :
+                        #output_file.write(f"0,")
+                        #valid_data = False
+                if ( not args_strmlt ) :
                     output_file.write(f" , ")    
 
-                for run_number in run_numbers :
-                    output_file.write(f"{round(lists_of_angles[run_number][2],4)} , ")    
-                if ( not args.strmlt ) :
+                for run_number in run_numbers:
+                    try :
+                        output_file.write(f"{round(lists_of_angles[run_number][2],4)} , ")
+                    except :
+                        output_file.write(f"0,")
+                        valid_data = False
+                if ( not args_strmlt ) :
                     output_file.write(f" , ") 
 
             
                 
                 is_first_column = True
                 for column_number in column_numbers :
-                    if is_first_column == True :
-                        output_file.write(f"{fetch_row_col(line_number, plotlet_number , column_number)}")
-                        is_first_column = False
-                    else :
-                        output_file.write(f",{fetch_row_col(line_number, plotlet_number , column_number)}")
-
-                if ( not args.strmlt ) :
+                    try :
+                        if is_first_column == True :
+                            output_file.write(f"{fetch_row_col(line_number, plotlet_number , column_number)}")
+                            is_first_column = False
+                        else :
+                            output_file.write(f",{fetch_row_col(line_number, plotlet_number , column_number)}")
+                    except :
+                        if is_first_column == True :
+                            output_file.write(f"{fetch_row_col(line_number-1, plotlet_number , column_number)}")
+                            is_first_column = False
+                        else :
+                            output_file.write(f",{fetch_row_col(line_number-1, plotlet_number , column_number)}")              
+                        valid_data = False
+                if ( not args_strmlt ) :
                     output_file.write(f" , ") 
 
-                for run_number in run_numbers :
-                    output_file.write(f" , {round(lists_of_angles[run_number][1],4)} ")
+                #for run_number in run_numbers :
+                    #try :
+                        #output_file.write(f" , {round(lists_of_angles[run_number][1],4)} ")
+                    #except :
+                        #output_file.write(f" , 0")
+                        #valid_data = False
                     
-                if ( not args.strmlt ) :
+                if ( not args_strmlt ) :
                     output_file.write(f" , ") 
 
-                for run_number in run_numbers :
-                    output_file.write(f" , {round(lists_of_angles[run_number][0],4)} ")
+                #for run_number in run_numbers :
+                    #try :
+                        #output_file.write(f" , {round(lists_of_angles[run_number][0],4)} ")
+                    #except :
+                        #output_file.write(f" , 0")
+                        #valid_data = False
                     
                 output_file.write(f" \n")
+
+                if valid_data == False :
+                    try :
+                        log_file.write(f"****************************************\n")
+                        log_file.write(f"*\n*\n*\n*\n*\n*\n*\n*\n*\n")
+                        log_file.write(f"*   warning: there was not enough data to complete all computations.\n")
+                        log_file.write(f"*\n*\n*\n*\n*\n*\n*\n*\n*\n")
+                        log_file.write(f"****************************************\n")
+                    except :
+                        pass          
+                                       
+                    sys.exit()
                 
-            if ( number_of_zeros > 0 ) and ( not args.strmlt) :
+            if ( number_of_zeros > 0 ) and ( not args_strmlt) :
                 block_of_zeros()
 
 #sequence of processing is
@@ -966,21 +1067,24 @@ def compute_fine_adjustments() :
             total_time = 0
             is_first_run = True
             for run_number in run_numbers :
-                plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
-                roll_value = rolls[line_number + plotlet_offset][run_number]
-                z_force_value = z_forces[line_number + plotlet_offset][run_number]
-                time_value = times[line_number + plotlet_offset][run_number]
-                yaw_value = yaws[line_number + plotlet_offset][run_number]
-                total_roll = total_roll + roll_value
-                total_time = total_time + time_value
-                total_yaw = total_yaw + yaw_value
-                if is_first_run == True :
-                    reference_time_value = time_value
-                    reference_yaw_value = yaw_value
-                    is_first_run = False
-                else :
-                    min_dt = min(min_dt , time_value - reference_time_value )
-                    max_dt = max(max_dt , time_value - reference_time_value )
+                try :
+                    plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
+                    roll_value = rolls[line_number + plotlet_offset][run_number]
+                    z_force_value = z_forces[line_number + plotlet_offset][run_number]
+                    time_value = times[line_number + plotlet_offset][run_number]
+                    yaw_value = yaws[line_number + plotlet_offset][run_number]
+                    total_roll = total_roll + roll_value
+                    total_time = total_time + time_value
+                    total_yaw = total_yaw + yaw_value
+                    if is_first_run == True :
+                        reference_time_value = time_value
+                        reference_yaw_value = yaw_value
+                        is_first_run = False
+                    else :
+                        min_dt = min(min_dt , time_value - reference_time_value )
+                        max_dt = max(max_dt , time_value - reference_time_value )
+                except :
+                    pass
             reference_roll_value = total_roll / number_of_runs
             #reference_yaw_value = total_yaw / number_of_runs
             reference_rolls.append(round(reference_roll_value,2))
@@ -991,14 +1095,17 @@ def compute_fine_adjustments() :
             timing_file.write(f"{plotlet_number+first_curve_number} ,  , ")
             is_first_ref_time = True
             for run_number in run_numbers :
-                plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
-                time_value = times[line_number + plotlet_offset][run_number]
-                reference_time = reference_times[line_number]
-                if is_first_ref_time == True :
-                    timing_file.write(f"{(round(time_value-reference_time,2))}")
-                    is_first_ref_time = False
-                else :
-                    timing_file.write(f",{(round(time_value-reference_time,2))}")
+                try :
+                    plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
+                    time_value = times[line_number + plotlet_offset][run_number]
+                    reference_time = reference_times[line_number]
+                    if is_first_ref_time == True :
+                        timing_file.write(f"{(round(time_value-reference_time,2))}")
+                        is_first_ref_time = False
+                    else :
+                        timing_file.write(f",{(round(time_value-reference_time,2))}")
+                except :
+                    pass
             timing_file.write(f"\r")
                     
         input_data = []
@@ -1007,11 +1114,14 @@ def compute_fine_adjustments() :
             input_column = []
             roll_column = []
             for line_number in numbers(plotlet_sizes[plotlet_number]) :
-                plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
-                yaw_value = yaws[line_number + plotlet_offset][run_number]
-                roll_value = rolls[line_number + plotlet_offset][run_number]
-                input_column.append(yaw_value)
-                roll_column.append(roll_value )
+                try :
+                    plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
+                    yaw_value = yaws[line_number + plotlet_offset][run_number]
+                    roll_value = rolls[line_number + plotlet_offset][run_number]
+                    input_column.append(yaw_value)
+                    roll_column.append(roll_value )
+                except :
+                    pass
             input_data.append(input_column)
             roll_column_data.append(roll_column)
         #log_file.write(f"reference rolls = {reference_rolls} \r " )
@@ -1053,7 +1163,7 @@ def compute_column_fine_adjustments() :
                     fine_offset_list.append(fine_adjustments[plotlet_number][run_number] )
                 is_first_column = False
             else :
-                if not args.strmlt :
+                if not args_strmlt :
                     fine_offset_list.append(fine_adjustments[plotlet_number][0])
                 for run_number in run_numbers :
                     fine_offset_list.append(fine_adjustments[plotlet_number][run_number] )
@@ -1084,7 +1194,7 @@ def prepare_plotlet(plot_number) :
     column_offsets = []
     total_margin = start_margin + end_margin
     if plot_number == last_plotlet :
-        total_margin = total_margin + 150
+        total_margin = total_margin + time_after_last_curve
     max_size = total_margin
     for run_number in run_numbers :
         curve_start = ct_mark_tables[run_number][plot_number][CURVE_START_COLUMN]
@@ -1100,7 +1210,7 @@ def prepare_plotlet(plot_number) :
                 column_offsets.append(plotlet_offsets[run_number])
             is_first_column = False
         else :
-            if not args.strmlt :
+            if not args_strmlt :
                 column_offsets.append(plotlet_offsets[0])
             for run_number in run_numbers :
                 column_offsets.append(plotlet_offsets[run_number])       
@@ -1111,21 +1221,29 @@ if __name__ == "__main__":
         prog='slice.py',
         description='slices a merged run file into plotlet')
     parser.add_argument('-f','--filename', help="name of the file with plotlets")
-    parser.add_argument('-zeros','--nz', help="optional number of zeros between plotlets")
-    parser.add_argument('-curve','--curve_number', help="plot data for exactly one curve")
+    #parser.add_argument('-zeros','--nz', help="optional number of zeros between plotlets")
+    #parser.add_argument('-curve','--curve_number', help="plot data for exactly one curve")
     parser.add_argument('-fcn','--fcn', help="first curve number")
     parser.add_argument('-skip','--skip_list', help = "Skip list in quotes with commas, such as -skip \" 9 , 10 \" .")
-    parser.add_argument('-strmlt','--strmlt',action='store_true',help="option for streamlit plotting")
-    parser.add_argument('-only_curves','--only_curves',action='store_true',help="option to plot only curves")
+    #parser.add_argument('-strmlt','--strmlt',action='store_true',help="option for streamlit plotting")
+    #parser.add_argument('-only_curves','--only_curves',action='store_true',help="option to plot only curves")
     parser.add_argument('-fw','--fw',help = "fine alignment force weighting, default = 1.0")
-    parser.add_argument('-log_time','--log_time',action='store_true',help="record processing timing information")
+    #parser.add_argument('-log_time','--log_time',action='store_true',help="record processing timing information")
     parser.add_argument('-cr','--cr',help="not used but must be allowed.")
     parser.add_argument('-curves','--curves',help="not used but must be allowed.")
-
+    parser.add_argument('-talc','--talc',help="time after last curve in seconds")
+    parser.add_argument('-adfc','--adfc',action='store_true',help="plot all data for the first curve")
+    
     
     args = parser.parse_args()
 
     skip_list_numbers = []
+
+    if args.adfc :
+        args_adfc = True
+
+    if args.talc :
+        time_after_last_curve = int(100.0*float(args.talc))
 
     if args.fw :
         force_wt = float(args.fw)
@@ -1140,14 +1258,11 @@ if __name__ == "__main__":
         first_curve_number = int(args.fcn)
         print("first curve number = " , first_curve_number )
 
-    if args.nz :
-        number_of_zeros = int(args.nz)
-
-    if args.curve_number :
-        only_curve_number = int(args.curve_number)
-        print("")
-        print(">>> data will be printed only for curve number " , only_curve_number  )
-        print("")
+    #if args_curve_number :
+        #only_curve_number = int(args_curve_number)
+        #print("")
+        #print(">>> data will be printed only for curve number " , only_curve_number  )
+        #print("")
 
     if args.filename :
         run_file_name = args.filename
@@ -1158,7 +1273,7 @@ if __name__ == "__main__":
         except :
             print("unable to open merged run file, check spelling.")
             exit()
-        if args.curve_number :
+        if args_curve_number :
             output_file = open(base_name+"_curve_"+str(only_curve_number)+"_plotlets.csv" , "w" )
             log_file = open(base_name+"_curve_"+str(only_curve_number)+"_log.txt" , "w" )
             
@@ -1174,11 +1289,11 @@ if __name__ == "__main__":
         create_cross_indices(shift_range)
         open_file()
 
-        if args.log_time :
-            time_log = open("time_log.txt","a")
-            now = datetime.now()
-            time = now.time()
-            time_log.write(f"slice.py, starting to process {run_file_name} , time = {time}.\n")
+        #if args_log_time :
+            #time_log = open("time_log.txt","a")
+            #now = datetime.now()
+            #time = now.time()
+            #time_log.write(f"slice.py, starting to process {run_file_name} , time = {time}.\n")
 
         
         print("number of zeros inserted between plotlets as curve separaters = " , number_of_zeros )
@@ -1193,8 +1308,8 @@ if __name__ == "__main__":
         write_plotlets()
         now = datetime.now()
         time = now.time()
-        if args.log_time :
-            time_log.write(f"slice.py, processing complete for {run_file_name} , time = {time}.\n")
+        #if args_log_time :
+            #time_log.write(f"slice.py, processing complete for {run_file_name} , time = {time}.\n")
         log_file.write(f"fetch valid = {fetch_valid_true} , fetch invalid = {fetch_valid_false} \n")
     else :
         print(" You must provide a file with a list of the names of files to be processed")

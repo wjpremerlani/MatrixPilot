@@ -6,6 +6,15 @@ import numpy as np
 import argparse
 from math import sin, cos, atan2, sqrt, radians, degrees
 
+global args_yrs , args_strmlt , args_log_time , args_dfs , args_adfc
+
+args_yrs = False
+args_strmlt = False
+args_log_time = False
+args_dfs = False
+args_adfc = False
+
+
 NUM_COLS  = 11
 
 XA_COL = 0 
@@ -94,21 +103,29 @@ if __name__ == "__main__":
     #parser.add_argument('-s','--sort',action='store_true',help="Sort files by run time.")
     parser.add_argument('-fcn','--first_curve_number', help="First curve number.")
     parser.add_argument('-skip','--skip_list', help = "Skip list in quotes with commas, such as -skip \" 9 , 10 \" .")
-    parser.add_argument('-yrs','--yrs',action='store_true',help="use yaw rate for slicing into plotlets.")
+    #parser.add_argument('-yrs','--yrs',action='store_true',help="use yaw rate for slicing into plotlets.")
     parser.add_argument('-curves','--curves',help="expected number of curves.")
-    parser.add_argument('-strmlt','--strmlt',action='store_true',help="option to prepare for streamlit plotting")
+    #parser.add_argument('-strmlt','--strmlt',action='store_true',help="option to prepare for streamlit plotting")
     parser.add_argument('-bill','--bill',action='store_true',help="generate the files that bill looks at")
     parser.add_argument('-bruce','--bruce',action='store_true',help="generate adjusted, 100 Hz and 1000 Hz files")
     parser.add_argument('-all','--all',action='store_true',help="generate all files")
     parser.add_argument('-zfl','--zfl',help="z force limit, f/s/s ")
     parser.add_argument('-fw','--fw',help="z force fine alignment weighting, default is 1.0")
-    parser.add_argument('-log_time','--log_time',action='store_true',help="log the time at key points in the data processing.")
+    #parser.add_argument('-log_time','--log_time',action='store_true',help="log the time at key points in the data processing.")
     parser.add_argument('-cr','--cr',help="compass rotation, degrees, used to re-orient the x-y track map.")
     parser.add_argument('-y', '--y',help = "yaw misalignment.")
     parser.add_argument('-fhs','--fhs',help = "filter half size, window width = 2*fhs+1.")
-    parser.add_argument('-dfs','--dfs',action='store_true',help="dual filter switch : filter twice")
+    #parser.add_argument('-dfs','--dfs',action='store_true',help="dual filter switch : filter twice")
+    parser.add_argument('-talc','--talc',help="extra time after last curve in seconds")
+    parser.add_argument('-dtpe','--dtpe',help="delta time from peak of pull")
+    parser.add_argument('-adfc','--adfc',action='store_true',help="option for all data on the first curve, starting from the pull")
+    
     
     args = parser.parse_args()
+
+    if args.adfc :
+        args_adfc = True
+
 
     if args.filename :
         list_of_files_file_name = args.filename
@@ -116,6 +133,7 @@ if __name__ == "__main__":
         file_name_parts = list_of_files_file_name.split('.' )
         base_name = file_name_parts[0]
         log_file = open(base_name+"_log.txt" , "w" )
+       
         bat_file = open(base_name+".bat" , "w" )
         merge_file = open(base_name+"_merge_list.txt" , "w" )
         print("base name = " , base_name )
@@ -152,22 +170,22 @@ if __name__ == "__main__":
                 if data_file_start > 0 :
                     log_file.write(f"name = {data_file_base_name} , start = {data_file_start} \r")
                     if args.all :
-                        bat_file.write(f"process_map_st.py -all -f {data_file_name} -s {data_file_start} -e 60.0")
+                        bat_file.write(f"process_map_st.py -all -f {data_file_name} -s {data_file_start} -e 70.0")
                     elif args.bruce :
-                        bat_file.write(f"process_map_st.py -bruce -f {data_file_name} -s {data_file_start} -e 60.0")
-                    elif args.bill or new_format == True :
-                        bat_file.write(f"process_map_st.py -bill -f {data_file_name} -s {data_file_start} -e 60.0")
+                        bat_file.write(f"process_map_st.py -bruce -f {data_file_name} -s {data_file_start} -e 70.0")
+                    elif args.bill :
+                        bat_file.write(f"process_map_st.py -bill -f {data_file_name} -s {data_file_start} -e 70.0")
                     else :
-                        bat_file.write(f"process_map_st.py -f {data_file_name} -s {data_file_start} -e 60.0")
-                    if args.log_time :
+                        bat_file.write(f"process_map_st.py -f {data_file_name} -s {data_file_start} -e 70.0")
+                    if args_log_time :
                         bat_file.write(f" -log_time")
-                    if args.strmlt or new_format == True :
+                    if args_strmlt  :
                         bat_file.write(f" -strmlt")
-                    if args.dfs :
+                    if args_dfs :
                         bat_file.write(f" -dfs")
                     if args.zfl :
                         bat_file.write(f" -zfl {args.zfl}")
-                    if args.yrs :
+                    if args_yrs :
                         bat_file.write(f" -yrs")
                     if args.curves :
                         bat_file.write(f" -curves {args.curves}")
@@ -177,6 +195,10 @@ if __name__ == "__main__":
                         bat_file.write(f" -y {args.y}")
                     if args.fhs :
                         bat_file.write(f" -fhs {args.fhs}")
+                    if args.dtpe :
+                        bat_file.write(f" -dtpe {args.dtpe}")
+                    if len(name_and_start) == 6 :
+                        bat_file.write(f" {name_and_start[5]}")
                     try :
                         bat_file.write(f" {options}")
                     except :
@@ -190,9 +212,9 @@ if __name__ == "__main__":
             bat_file.write(f"merge_st.py -f {base_name}_merge_list.txt")
             if args.curves :
                 bat_file.write(f" -curves {args.curves}")
-            if args.strmlt or new_format == True :
+            if args_strmlt :
                 bat_file.write(f" -strmlt")
-            if args.log_time :
+            if args_log_time :
                 bat_file.write(f" -log_time")
             try :
                 bat_file.write(f" {options}")
@@ -200,17 +222,21 @@ if __name__ == "__main__":
                 pass
             bat_file.write(f"\n")
             
-            bat_file.write(f"slice_st.py -f {base_name}_merge_list_plots.csv -zeros 100")
+            bat_file.write(f"slice_st.py -f {base_name}_merge_list_plots.csv")
             if args.first_curve_number :
                 bat_file.write(f" -fcn {args.first_curve_number}")
             if args.fw :
                 bat_file.write(f" -fw {args.fw}")
             if args.skip_list:
                 bat_file.write(f" -skip \" {args.skip_list} \"")
-            if args.strmlt or new_format == True  :
+            if args_strmlt :
                 bat_file.write(f" -strmlt")
-            if args.log_time :
+            if args_log_time :
                 bat_file.write(f" -log_time")
+            if args.talc :
+                bat_file.write(f" -talc {args.talc}")
+            if args_adfc :
+                bat_file.write(f" -adfc")
             try :
                 bat_file.write(f" {options}")
             except :

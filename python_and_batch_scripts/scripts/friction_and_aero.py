@@ -452,7 +452,7 @@ alt.renderers.enable('svg')
                 
 plotlet_file = st.sidebar.file_uploader("select a file")
 
-track_map_tab , all_data_tab , curve_data_tab , friction_tab , friction_scatter_tab = st.tabs(["  track_map  " , "  all_data  " , "   curve_data  "  , "   friction+aero  " , "  friction+aero_scatter "])
+friction_tab , friction_scatter_tab = st.tabs(["   friction+aero  " , "  friction+aero_scatter "])
 
 #plotlet_file = sys.argv[1]
 
@@ -505,17 +505,17 @@ if plotlet_file is not None:
     ngen = ngen + 1
          
     distance_df = generate_coloring("distance", " distance" , ABSOLUTE_MAP )
-    yaw_rate_df = generate_coloring("yaw_rate", " yaw_rate" , ABSOLUTE_MAP )
-    roll_rate_df = generate_coloring("roll_rate", " roll_rate" , ABSOLUTE_MAP )
-    pivot_df = generate_coloring("pivot", " degs_pivot" , SIGNED_MAP )
-    friction_df = generate_coloring("friction+aero", " friction+aero" , ABSOLUTE_MAP)
-    velocity_df = generate_coloring("velocity", " velocity" , ABSOLUTE_MAP)
-    acceleration_df = generate_coloring("x-acceleration", " x-acceleration" , -SIGNED_MAP)
-    z_force_df = generate_coloring("z_force", " z_force_g" , Z_FORCE_MAP)
-    roll_df = generate_coloring("roll" , " roll" , ABSOLUTE_MAP )
-    pitch_df = generate_coloring("pitch" , " pitch" , SIGNED_MAP )
-    y_force_df = generate_coloring("y_force" , " y_force_g" , SIGNED_MAP )
-    delta_time_df = generate_coloring("delta_time" , " delta_time" , ABSOLUTE_MAP )
+    #yaw_rate_df = generate_coloring("yaw_rate", " yaw_rate" , ABSOLUTE_MAP )
+    #roll_rate_df = generate_coloring("roll_rate", " roll_rate" , ABSOLUTE_MAP )
+    #pivot_df = generate_coloring("pivot", " degs_pivot" , SIGNED_MAP )
+    #friction_df = generate_coloring("friction+aero", " friction+aero" , ABSOLUTE_MAP)
+    #velocity_df = generate_coloring("velocity", " velocity" , ABSOLUTE_MAP)
+    #acceleration_df = generate_coloring("x-acceleration", " x-acceleration" , -SIGNED_MAP)
+    #z_force_df = generate_coloring("z_force", " z_force_g" , Z_FORCE_MAP)
+    #roll_df = generate_coloring("roll" , " roll" , ABSOLUTE_MAP )
+    #pitch_df = generate_coloring("pitch" , " pitch" , SIGNED_MAP )
+    #y_force_df = generate_coloring("y_force" , " y_force_g" , SIGNED_MAP )
+    #delta_time_df = generate_coloring("delta_time" , " delta_time" , ABSOLUTE_MAP )
   
     curve_list = plotlets_df["curve_number "].unique()
     #debug_file.write(f"curve number list = \n{curve_list}\n")
@@ -524,9 +524,9 @@ if plotlet_file is not None:
     #debug_file.close()
     
     s_run_names = st.sidebar.multiselect("select a set of runs for plotting", options= run_names , default = run_names )
-    curve_number = st.sidebar.selectbox("select a curve" , curve_list )    
-    run_number = st.sidebar.selectbox("select a run to heat map" , s_run_names )
-    color_map = st.sidebar.selectbox("select variable to heat map" , [  " z_force" , " roll" , " roll_rate" ," pitch" , " yaw_rate" ," y_force" , " delta_time" , " pivot" , " friction+aero" , " velocity" , " x-acceleration" ] )
+    #curve_number = st.sidebar.selectbox("select a curve" , curve_list )    
+    run_number = st.sidebar.selectbox("select a run for a friction+aero scatter plot" , s_run_names )
+    #color_map = st.sidebar.selectbox("select variable to heat map" , [  " z_force" , " roll" , " roll_rate" ," pitch" , " yaw_rate" ," y_force" , " delta_time" , " pivot" , " friction+aero" , " velocity" , " x-acceleration" ] )
 
     s_yaw_columns = []
     s_yaw_rate_columns = []
@@ -582,8 +582,8 @@ if plotlet_file is not None:
         column_name = " friction__"+run_name
         s_friction_columns.append(column_name)
 
-    if curve_number is not None :
-        curvelet_df = plotlets_df[plotlets_df["curve_number "] == curve_number ]    
+    #if curve_number is not None :
+        #curvelet_df = plotlets_df[plotlets_df["curve_number "] == curve_number ]    
 
     with friction_scatter_tab :
         fs_map_left , fs_map_right = st.columns(fs_column_ratios)
@@ -639,204 +639,7 @@ if plotlet_file is not None:
             acceleration_chart = st.plotly_chart(plotlets_df[s_acceleration_columns].plot( render_mode = 'svg').update_layout( yaxis_title = "estimated acceleration, g's") )
             velocity_chart = st.plotly_chart(plotlets_df[s_velocity_columns].plot( render_mode = 'svg').update_layout( yaxis_title = "estimated velocity, kilometers per hour") )          
             
-    with all_data_tab :
-        all_left , all_right = st.columns(2)
-
-        with all_left :          
-            if yaw_chart == None :
-                debug_file.write(f"plot all, pass number {nall}\r\n")
-                debug_file.flush()
-                nall = nall + 1
-                yaw_chart = st.plotly_chart(plotlets_df[s_yaw_columns].plot( render_mode = 'svg').update_layout( yaxis_title = "yaw, deg") )
-                roll_chart = st.plotly_chart(plotlets_df[s_roll_columns].plot(render_mode = 'svg' ).update_layout( yaxis_title = "roll, deg") )
-                z_force_chart = st.plotly_chart(plotlets_df[s_z_force_columns].plot(render_mode = 'svg' ).update_layout( yaxis_title = "z force, g's") )
-                delta_time_chart = st.plotly_chart(plotlets_df[s_delta_time_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " dt, sec "))
-            else :
-                st.stop()
-            
-        with all_right :
-            if yaw_rate_chart == None :
-                yaw_rate_chart = st.plotly_chart(plotlets_df[s_yaw_rate_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " yaw rate, d/s ") )    
-                roll_rate_chart = st.plotly_chart(plotlets_df[s_roll_rate_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = " roll rate, d/s  ") )     
-                y_force_chart = st.plotly_chart(plotlets_df[s_y_force_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = " y force, g's") )  
-                pivot_chart = st.plotly_chart(plotlets_df[s_pivot_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = " pivot, deg ") )
-            else :
-                st.stop()
-
-    with curve_data_tab :
-        crv_left , crv_right = st.columns(2)
-
-        with crv_left :          
-            if curve_number is not None:        
-                curvelet_yaw_chart = st.plotly_chart(curvelet_df[s_yaw_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = "yaw, deg, crv"+str(curve_number)) )                     
-                curvelet_roll_chart = st.plotly_chart(curvelet_df[s_roll_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = "roll, deg, crv"+str(curve_number)) )           
-                curvelet_z_force_chart = st.plotly_chart(curvelet_df[s_z_force_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = "z force, g's, crv"+str(curve_number)) )        
-                curvelet_delta_time_chart = st.plotly_chart(curvelet_df[s_delta_time_columns].plot(render_mode = 'svg').update_layout( yaxis_title = " dt, sec, crv"+str(curve_number))  )                  
-            else :
-                st.stop()
-
-        with crv_right :       
-            if curve_number is not None:           
-                curvelet_yaw_rate_chart = st.plotly_chart(curvelet_df[s_yaw_rate_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " yaw rate, d/s, crv"+str(curve_number)) )
-                curvelet_roll_rate_chart = st.plotly_chart(curvelet_df[s_roll_rate_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " roll rate, d/s, crv"+str(curve_number)) )
-                curvelet_y_force_chart = st.plotly_chart(curvelet_df[ s_y_force_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " y force, g's, curv"+str(curve_number)) )        
-                curvelet_pivot_chart = st.plotly_chart(curvelet_df[ s_pivot_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " pivot, deg, crv"+str(curve_number)) )       
-            else :
-                st.stop()
-
-    with track_map_tab :
-        map_left , map_center, map_right = st.columns(column_ratios)
-        with map_center:
-            if color_map == ' pitch':
-                legend_df = pitch_df
-                y_name = "pitch"
-                y_title = "pitch angle, degrees"
-            elif color_map == ' y_force':
-                legend_df = y_force_df
-                y_name = "y_force"
-                y_title = "y force, g's"
-            elif color_map == ' z_force':
-                legend_df = z_force_df
-                y_name = "z_force"
-                y_title = "z force, g's"
-            elif color_map == ' delta_time':
-                legend_df = delta_time_df
-                y_name = "delta_time"
-                y_title = "delta time, seconds"
-            elif color_map == ' yaw_rate' :
-                legend_df = yaw_rate_df
-                y_name = "yaw_rate"
-                y_title = "absolute yaw rate, degrees per second"
-            elif color_map == ' roll_rate' :
-                legend_df = roll_rate_df
-                y_name = "roll_rate"
-                y_title = "absolute roll rate, degrees per second"
-            elif color_map == ' pivot' :
-                legend_df = pivot_df
-                y_name = "pivot"
-                y_title = "pivot angle, degrees"
-            elif color_map == ' friction+aero' :
-                legend_df = friction_df
-                y_name = "friction+aero"
-                y_title = "friction+aero, g's"
-            elif color_map == ' velocity' :
-                legend_df = velocity_df
-                y_name = "velocity"
-                y_title = "velocity, kph"
-            elif color_map == ' x-acceleration' :
-                legend_df = acceleration_df
-                y_name = "x-acceleration"
-                y_title = "x-acceleration, g's"
-            elif color_map == ' roll' :
-                legend_df = roll_df
-                y_name = "roll"
-                y_title = "absolute roll angle, degrees"
-            legend_chart = (
-                alt.Chart(legend_df[[y_name , "|" , "color_value" ]])
-                    .mark_square()
-                        .encode(
-                        alt.X('|').axis(labels=False,title = None),
-                        alt.Y(y_name).axis(title = y_title),
-                        color = alt.Color("color_value").scale(None)
-                )
-                #.interactive()
-                .properties(
-                    height = map_height ,
-                    )
-            )
-            st.altair_chart(legend_chart , use_container_width=True )
-            
-        with map_left :
-            if run_number is not None :
-                debug_file.write(f"map plot, pass number {nmap} \r\n")
-                debug_file.flush()
-                nmap = nmap+1
-                x_name = str(' x__'+run_number)
-                y_name = str(' y__'+run_number)
-                if color_map == ' pitch' :
-                    coloring_name = str('pitch_color__'+run_number)
-                elif color_map == ' roll':
-                    coloring_name = str('roll_color__'+run_number)
-                elif color_map == ' delta_time' :
-                    coloring_name = str('delta_time_color__'+run_number)
-                elif color_map == ' yaw_rate' :
-                    coloring_name = str('yaw_rate_color__'+run_number)
-                elif color_map == ' roll_rate' :
-                    coloring_name = str('roll_rate_color__'+run_number)
-                elif color_map == ' pivot' :
-                    coloring_name = str('pivot_color__'+run_number)
-                elif color_map == ' friction+aero' :
-                    coloring_name = str('friction+aero_color__'+run_number)
-                elif color_map == ' velocity' :
-                    coloring_name = str('velocity_color__'+run_number)
-                elif color_map == ' x-acceleration' :
-                    coloring_name = str('x-acceleration_color__'+run_number)
-                elif color_map == ' z_force' :
-                    coloring_name = str('z_force_color__'+run_number)
-                elif color_map == ' y_force' :
-                    coloring_name = str('y_force_color__'+run_number)
-                st.write("track map for ",run_number)
-                heat_map_chart = (
-                    alt.Chart(plotlets_df[[x_name , y_name , coloring_name ]])
-                        .mark_circle()
-                        .encode(
-                        x=x_name,
-                        y=y_name,
-                        color = alt.Color(coloring_name).scale(None)
-                    )
-                    #.interactive()
-                    .properties(
-                        height = map_height ,
-                        )
-                )
-                st.altair_chart(heat_map_chart, use_container_width=True)
-
-            else :
-                st.stop()
-
-            with map_right :
-
-                if curvelet_delta_time_chart_for_heatmap == None :
-          
-                    curvelet_delta_time_chart_for_heatmap = st.plotly_chart(plotlets_df.plot(render_mode = 'svg' , x = "curve_number "  , y = s_delta_time_columns )
-                                                            .update_layout( yaxis_title = "dt sec" , xaxis_title = "curve" , height = delta_time_height )
-                                                            .update_xaxes( showgrid = True , dtick = int(1) )
-                                                            .update_yaxes ( showgrid = True )
-                                                                        )
-                else :
-                    st.stop()
-            
-                left_logo , right_logo = st.columns(2,vertical_alignment = "center")
-
-                with right_logo :
-                    try :
-                        st.image("luge_image.jpg" )
-                    except :
-                        pass
-
-                with left_logo :
-                    try :
-                        st.image("wolf-pac_logo.jpg")
-                    except :
-                        pass              
-
-                with st.sidebar :
-                    st.text("Data Quality")
-                for run_name in run_names :
-                    with st.sidebar :
-                        with st.container() :
-                            mark_col , run_col = st.columns([.1 , .9])
-                            with run_col :
-                                st.text(str(run_name+"\r"))
-                            with mark_col :
-                                if '?' in run_name :
-                                    st.image("red_mark.jpg")
-                                else :
-                                    st.image("green_mark.jpg")
-
-
-            
-
+    
    
 
 
