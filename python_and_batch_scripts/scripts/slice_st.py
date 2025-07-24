@@ -247,10 +247,16 @@ def cross_variance(list1, list2, offset , roll_list , plt_num , rn_num ) :
         variance = variance_sum/weight_sum
         z_variance = (force_wt*z_variance_sum) / N
         if first_var_log == True :
-            variance_file.write(f"plot_let_number,run_number,offset,yaw_var,force_var\n")
+            try :
+                variance_file.write(f"plot_let_number,run_number,offset,yaw_var,force_var\n")
+            except :
+                pass
             first_var_log = False
         if rn_num != 0 :
-            variance_file.write(f"{plt_num},{rn_num},{offset},{round((variance),2)},{round((z_variance),2)}\n")
+            try :
+                variance_file.write(f"{plt_num},{rn_num},{offset},{round((variance),2)},{round((z_variance),2)}\n")
+            except :
+                pass
         #log_file.write(f"offset = {offset} , N = {N} , weight_sum = {round(weight_sum,2)} , var = {round(variance,2)} \n")
         return variance + z_variance
     else :
@@ -1045,15 +1051,27 @@ def compute_fine_adjustments() :
     global run_numbers , rolls , yaws , times , number_of_runs , plotlet_offsets , fine_adjustments 
     global plotlet_offset_table
     global plotlet_number, plotlet_numbers
-    timing_file.write(f"curve_number , ,")
+    try :
+        timing_file.write(f"curve_number , ,")
+    except :
+        pass
     is_first_run = True
     for run_number in run_numbers :
         if is_first_run == True :
-            timing_file.write(f"delta_{label_names[0]}")
+            try :
+                timing_file.write(f"delta_{label_names[0]}")
+            except :
+                pass
             is_first_run = False
         else :
-            timing_file.write(f",delta_{label_names[run_number]}")
-    timing_file.write(f"\r")
+            try :
+                timing_file.write(f",delta_{label_names[run_number]}")
+            except :
+                pass
+    try :
+        timing_file.write(f"\r")
+    except :
+        pass
     for plotlet_number in plotlet_numbers :
         #log_file.write(f"computing fine adjustments for plotlet number : {plotlet_number} \r")
         print("computing fine adjustments for plotlet number " , plotlet_number )
@@ -1092,7 +1110,10 @@ def compute_fine_adjustments() :
             reference_yaws.append(round(reference_yaw_value,2))
             
         for line_number in numbers(plotlet_sizes[plotlet_number]) :
-            timing_file.write(f"{plotlet_number+first_curve_number} ,  , ")
+            try :
+                timing_file.write(f"{plotlet_number+first_curve_number} ,  , ")
+            except :
+                pass
             is_first_ref_time = True
             for run_number in run_numbers :
                 try :
@@ -1100,13 +1121,22 @@ def compute_fine_adjustments() :
                     time_value = times[line_number + plotlet_offset][run_number]
                     reference_time = reference_times[line_number]
                     if is_first_ref_time == True :
-                        timing_file.write(f"{(round(time_value-reference_time,2))}")
+                        try :
+                            timing_file.write(f"{(round(time_value-reference_time,2))}")
+                        except :
+                            pass
                         is_first_ref_time = False
                     else :
-                        timing_file.write(f",{(round(time_value-reference_time,2))}")
+                        try :
+                            timing_file.write(f",{(round(time_value-reference_time,2))}")
+                        except :
+                            pass
                 except :
                     pass
-            timing_file.write(f"\r")
+            try :
+                timing_file.write(f"\r")
+            except :
+                pass
                     
         input_data = []
         roll_column_data = []
@@ -1278,13 +1308,13 @@ if __name__ == "__main__":
             log_file = open(base_name+"_curve_"+str(only_curve_number)+"_log.txt" , "w" )
             
             marks_file = open(base_name+"_curve_"+str(only_curve_number)+"_marks.txt" , "w" )
-            timing_file = open(base_name+"_curve_"+str(only_curve_number)+"_timing.csv" , "w" )
+            #timing_file = open(base_name+"_curve_"+str(only_curve_number)+"_timing.csv" , "w" )
         else :
             output_file = open(base_name+"_plotlets.csv" , "w" )
             log_file = open(base_name+"_log.txt" , "w" )
             marks_file = open(base_name+"_marks.txt" , "w" )
-            timing_file = open(base_name+"_timing.csv" , "w" )
-            variance_file = open(base_name+"_variance.csv" , "w")
+            #timing_file = open(base_name+"_timing.csv" , "w" )
+            #variance_file = open(base_name+"_variance.csv" , "w")
         log_file.write(f"fine alignment force weighting = {round(force_wt,2)}\n\n")
         create_cross_indices(shift_range)
         open_file()

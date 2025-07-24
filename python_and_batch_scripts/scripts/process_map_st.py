@@ -1570,10 +1570,12 @@ def run_passes():
                 
             v_error = k_error(omega[1,0],velocity[0,0],velocity_dot[2,0],correction_gain)
 
-            if v_error > max_err:
-                v_error = max_err
-            if v_error < -max_err:
-                v_error = -max_err
+            if ( False ) :
+
+                if v_error > max_err:
+                    v_error = max_err
+                if v_error < -max_err:
+                    v_error = -max_err
 
             gx = g_force[0,0]
             fx = force_out[0,0]
@@ -1615,17 +1617,19 @@ def run_passes():
             except :
                 pass
 
-            Y[0,0] = v_error
-            sqr_sum = sqr_sum + v_error*v_error
-            w_sqr_sum = w_sqr_sum + correction_gain**2
-            v_error_sum = v_error_sum + v_error
-            weight_sum = weight_sum + correction_gain
+            if mark_number > 4 and mark_number < number_of_marks - 4 :
+
+                Y[0,0] = v_error
+                sqr_sum = sqr_sum + v_error*v_error
+                w_sqr_sum = w_sqr_sum + correction_gain**2
+                v_error_sum = v_error_sum + v_error
+                weight_sum = weight_sum + correction_gain
                 
-            A[0,0] = A[0,0]-correction_gain*(((force_out[2,0]/32.1741)+1.0)*force_out[2,0] + (force_out[2,0]+32.1714)*cos(radians(roll_out) ))/100.0
+                A[0,0] = A[0,0]-correction_gain*(((force_out[2,0]/32.1741)+1.0)*force_out[2,0] + (force_out[2,0]+32.1714)*cos(radians(roll_out) ))/100.0
              
-            AT = np.transpose(A)
-            ATA = ATA + np.matmul(AT,A)
-            ATY = ATY + np.matmul(AT,Y)
+                AT = np.transpose(A)
+                ATA = ATA + np.matmul(AT,A)
+                ATY = ATY + np.matmul(AT,Y)
 
             velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0]  )/100.0
 

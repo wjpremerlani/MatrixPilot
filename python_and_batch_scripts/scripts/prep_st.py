@@ -14,6 +14,9 @@ args_log_time = False
 args_dfs = False
 args_adfc = False
 
+global elapsed
+elapsed = 70.0
+
 
 NUM_COLS  = 11
 
@@ -119,6 +122,7 @@ if __name__ == "__main__":
     parser.add_argument('-talc','--talc',help="extra time after last curve in seconds")
     parser.add_argument('-dtpe','--dtpe',help="delta time from peak of pull")
     parser.add_argument('-adfc','--adfc',action='store_true',help="option for all data on the first curve, starting from the pull")
+    parser.add_argument('-e', '--elapsed', help="time window in seconds for the map")
     
     
     args = parser.parse_args()
@@ -126,6 +130,8 @@ if __name__ == "__main__":
     if args.adfc :
         args_adfc = True
 
+    if args.elapsed :
+        elapsed = float(args.elapsed)
 
     if args.filename :
         list_of_files_file_name = args.filename
@@ -170,13 +176,13 @@ if __name__ == "__main__":
                 if data_file_start > 0 :
                     log_file.write(f"name = {data_file_base_name} , start = {data_file_start} \r")
                     if args.all :
-                        bat_file.write(f"process_map_st.py -all -f {data_file_name} -s {data_file_start} -e 70.0")
+                        bat_file.write(f"process_map_st.py -all -f {data_file_name} -s {data_file_start} -e {elapsed}")
                     elif args.bruce :
-                        bat_file.write(f"process_map_st.py -bruce -f {data_file_name} -s {data_file_start} -e 70.0")
+                        bat_file.write(f"process_map_st.py -bruce -f {data_file_name} -s {data_file_start} -e {elapsed}")
                     elif args.bill :
-                        bat_file.write(f"process_map_st.py -bill -f {data_file_name} -s {data_file_start} -e 70.0")
+                        bat_file.write(f"process_map_st.py -bill -f {data_file_name} -s {data_file_start} -e {elapsed}")
                     else :
-                        bat_file.write(f"process_map_st.py -f {data_file_name} -s {data_file_start} -e 70.0")
+                        bat_file.write(f"process_map_st.py -f {data_file_name} -s {data_file_start} -e {elapsed}")
                     if args_log_time :
                         bat_file.write(f" -log_time")
                     if args_strmlt  :
