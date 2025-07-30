@@ -1645,19 +1645,19 @@ def run_passes():
         std = 0  
 
     try :
-        log_file.write(f"\r\nfirst pass, Kalman filter is open loop.\r\n")
-        log_file.write(f"\r\n\r\ncomputation force cross couple model\r\n")                              
-        log_file.write(f"ATA={ATA}\r\n")
-        log_file.write(f"ATY={ATY}\r\n")
-        log_file.write(f"det of ATA = {np.linalg.det(ATA)}\r\n")
-        log_file.write(f"ATA inverse = {ATA_INVERSE}\r\n")
-        log_file.write(f"compliance = {compliance}\r\n")
-        log_file.write(f"variance = {round(variance,2)}\r\n")
-        log_file.write(f"standard deviation of compliance model = {round(std,2)} feet per second\r\n")
+        log_file.write(f"\r\nfirst pass, Kalman filter is open loop.\n")
+        log_file.write(f"\r\n\r\ncomputation of compliance force cross couple model\n")                              
+        log_file.write(f"ATA={ATA}\n")
+        log_file.write(f"ATY={ATY}\n")
+        log_file.write(f"det of ATA = {np.linalg.det(ATA)}\n")
+        log_file.write(f"ATA inverse = {ATA_INVERSE}\n")
+        log_file.write(f"**\n----> compliance = {round(compliance,4)} radians per g <----\n**\n")
+        log_file.write(f"total sum of squares of errors for the compliance fit = {round(variance,2)}\n")
+        log_file.write(f"**\n----> root mean square of compliance fit  = {round(std,2)} feet per second <----\n**\n")
         raw_std = sqrt(sqr_sum/w_sqr_sum)
-        log_file.write(f"first pass stdrd dev of uncompensated velocity estimate = {round(raw_std,2)} feet per second.\r\n")
+        log_file.write(f"**\n----> first pass root mean square error of uncompensated velocity estimate = {round(raw_std,2)} feet per second. <----\n**\n")
         v_bias = v_error_sum / weight_sum
-        log_file.write(f"first pass velocity estimate bias = {round(v_bias,2)} feet per second.\r\n")
+        log_file.write(f"**\n----> first pass velocity estimate bias = {round(v_bias,2)} feet per second. <----\n**\n")
         
     except:
         pass
@@ -1806,12 +1806,11 @@ def run_passes():
 
         drag_model = np.matmul(ATA_INVERSE,ATY)
 
-        log_file.write(f"second pass normal force based friction model.\r\n")
-        log_file.write(f"drag model calculation\n")
+        log_file.write(f"second pass estimation of friction and aero model parameters.\n")
         log_file.write(f"ATA:\n{ATA}\n")
         log_file.write(f"ATA_INVERSE:\n{ATA_INVERSE}\n")
         log_file.write(f"ATY:\n{ATY}\n")
-        log_file.write(f"drag model = {drag_model}\n")
+        log_file.write(f"friction and aero model = {drag_model}\n")
       
         ATYTX = np.matmul(np.transpose(ATY),drag_model)
 
@@ -1825,13 +1824,13 @@ def run_passes():
         friction_factor = drag_model[0,0]
         splay_factor = drag_model[1,0]
 
-        log_file.write(f"friction = {drag_model[0,0]}\n")
-        log_file.write(f"splay = {drag_model[1,0]}\n")
-        log_file.write(f"aero = {drag_model[2,0]}\n")
-        log_file.write(f"variance = {variance} ft/sec/sec\r\n\r\n")
+        log_file.write(f"**\n----> friction linear coefficient = {round(drag_model[0,0],5)} g per g <----\n**\n")
+        log_file.write(f"**\n----> friction quadratic coefficient = {round(drag_model[1,0],5)} g per g per g <----\n**\n")
+        log_file.write(f"**\n----> aero = {round(drag_model[2,0],5)} g per (ft/sec/100)**2 <----\n**\n")
+        log_file.write(f"**\n----> rms regression error = {round(variance,5)} ft/sec/sec <----\n**\n")
 
         velocity_std = sqrt( vsqr/wsqr)
-        log_file.write(f"second pass standard deviation of velocity estimate = {round(velocity_std,2)}\r\n")
+        log_file.write(f"**\n----> second pass rms error of velocity estimate = {round(velocity_std,2)} ft/sec <----\n**\n")
     except :
         pass
    
@@ -2274,9 +2273,9 @@ def run_passes():
     velocity_bias = v_error_sum / wt_sum
     velocity_variance = sqrt( v_error_sqr_sum / wt_sqr_sum )
     try :
-        log_file.write(f"\r\nThird pass velocity estimation bias and variance.\r\n")
-        log_file.write(f"velocity estimation bias = {round(velocity_bias,2)} feet per second.\r\n")
-        log_file.write(f"velocity estimation total variance, including bias, = {round(velocity_variance,2)} feet per second.\r\n")
+        log_file.write(f"**\n----> Third pass velocity estimation rms and bias errors. <----\n**\n**\n")
+        log_file.write(f"**\n----> velocity estimation bias = {round(velocity_bias,2)} feet per second. <----\n**\n")
+        log_file.write(f"**\n----> velocity estimation rms error, including bias, = {round(velocity_variance,2)} feet per second. <----\n**\n")
     except :
         pass
 
