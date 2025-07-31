@@ -1662,6 +1662,9 @@ def run_passes():
     except:
         pass
 
+    if mark_number < number_of_marks :
+        valid_run = False
+
     ######################################
     #
     # pass 4: recompute velocity with with
