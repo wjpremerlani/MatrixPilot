@@ -1664,6 +1664,12 @@ def run_passes():
 
     if mark_number < number_of_marks :
         valid_run = False
+        try :
+            log_file.write(f"**\n**\n---->invalid run, not enough curve markers. <----\n")
+            log_file.write(f"**\n**\nrequired number of marks = {number_of_marks}\n")
+            log_file.write(f"**\n**\ndetected number of marks = {mark_number}\n**\n**\n")
+        except :
+            pass
 
     ######################################
     #

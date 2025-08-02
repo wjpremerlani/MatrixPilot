@@ -50,10 +50,11 @@ ft_to_meter = 0.3048
 ftps_to_kph = 1.09728
 g_to_fpsps = 32.1714
 
-global ABSOLUTE_MAP , SIGNED_MAP , Z_FORCE_MAP
+global ABSOLUTE_MAP , SIGNED_MAP , Z_FORCE_MAP , SIGNED_CLAMPED_MAP
 ABSOLUTE_MAP = 0
 SIGNED_MAP = 1
 Z_FORCE_MAP = 2
+SIGNED_CLAMPED_MAP = 3
 
 plotlet_height = 190
 import altair as alt
@@ -269,8 +270,8 @@ FIRST_MAP = True
 global num_tes_list 
 num_tes_list = []
 
-def generate_coloring(signal_name , signal_column_name , type_of_coloring ) :
-    global ABSOLUTE_MAP , SIGNED_MAP , Z_FORCE_MAP , plotlets_df
+def generate_coloring(signal_name , signal_column_name , type_of_coloring , max_value ) :
+    global ABSOLUTE_MAP , SIGNED_MAP , Z_FORCE_MAP , plotlets_df , SIGNED_CLAMPED_MAP 
     global FIRST_MAP , num_tes_list
     gap = 8
     first_color_map = True
@@ -278,15 +279,20 @@ def generate_coloring(signal_name , signal_column_name , type_of_coloring ) :
     min_list = []
     series_list = []
     run_index = 0
-    for run_name in run_names :
-        col = str(signal_column_name+'__'+run_name)
-        value_max = max(plotlets_df[col])
-        max_list.append(value_max)
-        value_min = min(plotlets_df[col])
-        min_list.append(value_min)
-    value_max = max(max_list)
-    value_min = min(min_list)
-    value_range = max(abs(value_max),abs(value_min))
+    if abs(type_of_coloring) == SIGNED_CLAMPED_MAP :
+        value_max = max_value
+        value_min = - max_value
+        value_range = max_value
+    else :
+        for run_name in run_names :
+            col = str(signal_column_name+'__'+run_name)
+            value_max = max(plotlets_df[col])
+            max_list.append(value_max)
+            value_min = min(plotlets_df[col])
+            min_list.append(value_min)
+        value_max = max(max_list)
+        value_min = min(min_list)
+        value_range = max(abs(value_max),abs(value_min))
 
 
     if FIRST_MAP == True :
@@ -504,18 +510,18 @@ if plotlet_file is not None:
     debug_file.flush()
     ngen = ngen + 1
          
-    distance_df = generate_coloring("distance", " distance" , ABSOLUTE_MAP )
-    yaw_rate_df = generate_coloring("yaw_rate", " yaw_rate" , ABSOLUTE_MAP )
-    roll_rate_df = generate_coloring("roll_rate", " roll_rate" , ABSOLUTE_MAP )
-    pivot_df = generate_coloring("pivot", " degs_pivot" , SIGNED_MAP )
-    #friction_df = generate_coloring("friction+aero", " friction+aero" , ABSOLUTE_MAP)
-    #velocity_df = generate_coloring("velocity", " velocity" , ABSOLUTE_MAP)
-    acceleration_df = generate_coloring("x-acceleration", " x-acceleration" , -SIGNED_MAP)
-    z_force_df = generate_coloring("z_force", " z_force_g" , Z_FORCE_MAP)
-    roll_df = generate_coloring("roll" , " roll" , ABSOLUTE_MAP )
-    pitch_df = generate_coloring("pitch" , " pitch" , SIGNED_MAP )
-    y_force_df = generate_coloring("y_force" , " y_force_g" , SIGNED_MAP )
-    delta_time_df = generate_coloring("delta_time" , " delta_time" , ABSOLUTE_MAP )
+    distance_df = generate_coloring("distance", " distance" , ABSOLUTE_MAP , 0  )
+    yaw_rate_df = generate_coloring("yaw_rate", " yaw_rate" , ABSOLUTE_MAP , 0 )
+    roll_rate_df = generate_coloring("roll_rate", " roll_rate" , ABSOLUTE_MAP , 0 )
+    pivot_df = generate_coloring("pivot", " degs_pivot" , SIGNED_MAP , 0)
+    #friction_df = generate_coloring("friction+aero", " friction+aero" , ABSOLUTE_MAP , 0)
+    #velocity_df = generate_coloring("velocity", " velocity" , ABSOLUTE_MAP, 0)
+    acceleration_df = generate_coloring("x-acceleration", " x-acceleration" , -SIGNED_CLAMPED_MAP, .3)
+    z_force_df = generate_coloring("z_force", " z_force_g" , Z_FORCE_MAP , 0 )
+    roll_df = generate_coloring("roll" , " roll" , ABSOLUTE_MAP , 0  )
+    pitch_df = generate_coloring("pitch" , " pitch" , SIGNED_MAP  , 0 )
+    y_force_df = generate_coloring("y_force" , " y_force_g" , SIGNED_MAP , 0  )
+    delta_time_df = generate_coloring("delta_time" , " delta_time" , ABSOLUTE_MAP , 0  )
   
     curve_list = plotlets_df["curve_number "].unique()
     #debug_file.write(f"curve number list = \n{curve_list}\n")
