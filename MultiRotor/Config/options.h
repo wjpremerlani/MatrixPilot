@@ -1,3 +1,4 @@
+
 // This file is part of the MatrixPilotQuad firmware.
 //
 //    http://code.google.com/p/gentlenav/
@@ -156,7 +157,8 @@
 #define MIN_LIDAR_PULSE_THRESH 2
 #define IMU_CLIMB_RATE_DIVISOR 2
 #define IMU_ALT_DIVISOR 2
-#define TARGET_MIN_ALTITUDE -1000
+//#define TARGET_MIN_ALTITUDE -1000
+#define TARGET_MIN_ALTITUDE -500
 #define DR_TAU 2.5
 #define MIN_THRUST 2400
 #define MAX_THRUST 3100
