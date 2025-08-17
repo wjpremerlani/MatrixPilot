@@ -135,6 +135,8 @@ union longww throttle_accum = {0};
 
 int16_t land_enable = 0 ;
 
+int16_t esc_enable = 1 ;
+
 int16_t flipped_over = 0 ;
 
 void motorCntrl(void)
@@ -188,7 +190,14 @@ void motorCntrl(void)
 			{
 				if (land_enable==0)
 				{
-					THROTTLE_COMMAND = THROTTLE_COMMAND_IN ;
+                    if ( esc_enable == 1)
+                    {
+                        THROTTLE_COMMAND = THROTTLE_COMMAND_IN ;
+                    }
+                    else
+                    {
+                        THROTTLE_COMMAND = udb_pwTrim[THROTTLE_INPUT_CHANNEL] ;
+                    }
 				}
 				else
 				{
@@ -199,13 +208,18 @@ void motorCntrl(void)
 					else
 					{
 						THROTTLE_COMMAND = udb_pwTrim[THROTTLE_INPUT_CHANNEL] ;
-						if ((int16_t)THROTTLE_COMMAND_IN<(int16_t)udb_pwTrim[THROTTLE_INPUT_CHANNEL]+300) land_enable = 0 ;
+						//if ((int16_t)THROTTLE_COMMAND_IN<(int16_t)udb_pwTrim[THROTTLE_INPUT_CHANNEL]+300)
+                        {
+                            land_enable = 0 ;
+                            esc_enable = 0 ;
+                        }
 					}
 				}
 			}
 			else
 			{
 				land_enable = 1 ;
+                esc_enable = 1 ;
 				throttle_accum.WW += __builtin_mulsu(THROTTLE_COMMAND_IN-3000 , COMMAND_STEP_RATE_MULTIPLIER ) ;
 			
 				if (THROTTLE_COMMAND>4000)
@@ -533,10 +547,21 @@ void motorCntrl(void)
 		int16_t yaw_total = yaw_control + YAW_TRIM ;
 		int16_t pitch_total = pitch_control + PITCH_TRIM ;
 		int16_t roll_total = roll_control + ROLL_TRIM ;
-		motor_A = thrust - yaw_total + ( - pitch_total + roll_total )/2 ;
-		motor_B = thrust + yaw_total + ( - pitch_total - roll_total )/2 ;
-		motor_C = thrust - yaw_total + ( + pitch_total - roll_total )/2 ;
-		motor_D = thrust + yaw_total + ( + pitch_total + roll_total )/2 ;
+        if ( esc_enable == 1 )
+        {
+            motor_A = thrust - yaw_total + ( - pitch_total + roll_total )/2 ;
+            motor_B = thrust + yaw_total + ( - pitch_total - roll_total )/2 ;
+            motor_C = thrust - yaw_total + ( + pitch_total - roll_total )/2 ;
+            motor_D = thrust + yaw_total + ( + pitch_total + roll_total )/2 ;
+        }
+        else
+        {
+            motor_A = 2000 ;
+            motor_B = 2000 ;
+            motor_C = 2000 ;
+            motor_D = 2000 ;
+        }
+        
 #endif
 
 #ifdef desktest		

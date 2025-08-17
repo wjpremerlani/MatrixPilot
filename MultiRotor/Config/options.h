@@ -79,8 +79,8 @@
 #define BOARD_ORIENTATION					ORIENTATION_FORWARDS
 
 //#define desktest
-#define draganflier
-//#define spedix
+//#define draganflier
+#define spedix
 //#define arduCopter
 
 #ifdef arduCopter
