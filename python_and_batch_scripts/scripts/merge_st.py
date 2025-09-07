@@ -161,7 +161,7 @@ def validate_curves() :
             valid_file_names.append(opened_file_names[index] )
         else :
             print("---->>>>> warning <<<<<<<<<<--------")
-            print(opened_file_names[index] , "has wrong number of timing marks = " , max_mark_numbers[index])
+            print(opened_file_names[index] , "has wrong number of timing marks = " , max_mark_numbers[index], min_mark)
             log_file.write(f"warning-->>> {opened_file_names[index]} has wrong number of timing marks = {max_mark_numbers[index]}.\n")
     log_file.write(f"valid runs : \n")
     for file_name in valid_file_names :
@@ -218,7 +218,8 @@ if __name__ == "__main__":
     parser.add_argument('-cr','--cr',help="not used but must be allowed.")
     parser.add_argument('-fcn','--fcn',help="not used but must be allowed.")
     parser.add_argument('-skip', '--skip',help="not used but must be allowed.")
-    
+    parser.add_argument('-dtpe','--dtpe',help="not used but must be allowed.")
+
     args = parser.parse_args()
 
     if args_log_time :

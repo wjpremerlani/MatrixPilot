@@ -12,9 +12,12 @@ global time_after_last_curve
 #used to scan cross variance as a function of element number shift
 #start_margin and end_margin define the extra number of elements included when slicing a portion of a run into a plotlet
 #minimum_roll defines the data window in which variance weights are non-zero
-shift_range = 200 #time shift range of +- 2 seconds
-#shift_range = 20 #time shift range of +- .2 seconds
-#art_margin = 20 # .2 seconds worth of data
+
+#shift_range = 200 #time shift range of +- 2.0 seconds
+shift_range  = 100 #time shift range of +- 1.0 seconds
+#shift_range =  20 #time shift range of +- 0.2 seconds
+
+#start_margin = 20 # .2 seconds worth of data
 #end_margin = 5
 start_margin = 0 
 end_margin = 0
@@ -1261,9 +1264,10 @@ if __name__ == "__main__":
     #parser.add_argument('-log_time','--log_time',action='store_true',help="record processing timing information")
     parser.add_argument('-cr','--cr',help="not used but must be allowed.")
     parser.add_argument('-curves','--curves',help="not used but must be allowed.")
+    parser.add_argument('-dtpe','--dtpe',help="not used but must be allowed.")
     parser.add_argument('-talc','--talc',help="time after last curve in seconds")
     parser.add_argument('-adfc','--adfc',action='store_true',help="plot all data for the first curve")
-    
+
     
     args = parser.parse_args()
 
