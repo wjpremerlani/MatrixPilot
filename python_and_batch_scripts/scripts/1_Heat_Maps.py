@@ -96,9 +96,24 @@ for msb in range(16):
         colors.append(color)
 
 if di:
-    st.set_page_config(page_title=f"WolfPac {SERVER_SPORT_NAME} Data Manager", layout="wide")
     if not di.authenticate():
         st.stop()
+
+    # Get collection id from the url query string
+    coll_id = st.query_params.get("coll_id")
+    try:
+        coll_id = int(coll_id)
+    except:
+        pass
+
+    if coll_id:
+        st.session_state["coll_id"] = coll_id
+
+    if not st.session_state.get("did_clear_query"):
+        st.session_state["did_clear_query"] = True
+        st.query_params.clear()
+
+    st.set_page_config(page_title=f"WolfPac {SERVER_SPORT_NAME} Data Manager", layout="wide")
 
     coll_id = st.session_state.get('coll_id')
 else:
@@ -500,7 +515,7 @@ if di:
             st.write("--- Plot data file not found ---")
             st.stop()
     else:
-        st.switch_page("Collections.py")
+        st.switch_page("pages/4_Logs.py")
 else:
     plotlet_file = st.sidebar.file_uploader("select a file")
 

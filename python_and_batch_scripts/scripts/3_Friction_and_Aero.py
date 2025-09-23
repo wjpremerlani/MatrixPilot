@@ -494,7 +494,7 @@ if di:
             st.write("--- Plot data file not found ---")
             st.stop()
     else:
-        st.switch_page("Collections.py")
+        st.switch_page("pages/4_Logs.py")
 else:
     plotlet_file = st.sidebar.file_uploader("select a file")
 

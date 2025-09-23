@@ -1995,17 +1995,10 @@ def run_passes():
 
         if valid_run is True:
             run_name = column_run_name
+            print("RUN:VALID\n")
         else:
-            if django:
-                run_name = column_run_name
-            else:
-                run_name = column_run_name + "?"
-
-        if django:
-            if valid_run:
-                print("RUN:VALID\n")
-            else:
-                print("RUN:INVALID\n")
+            run_name = column_run_name + "?"
+            print("RUN:INVALID\n")
 
         if args_strmlt:
 
@@ -2706,7 +2699,7 @@ try:
     from luge.scripts import script_base
 
     class MapStScript(script_base.ScriptBase):
-        OUTPUT_FILE_SUFFIX = ["_adjusted.txt", "_time_map_100_HZ.csv", "_log.txt"]
+        OUTPUT_FILE_SUFFIXES = {"adjusted":"_adjusted.txt", "map":"_time_map_100_HZ.csv", "log":"_log.txt"}
 
 except ImportError:
     MapStScript = None
