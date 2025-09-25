@@ -529,6 +529,26 @@ colors_df.index = color_index
 
 # debug_file.write(f" colors_df['GYR'] = {colors_df['GYR']}\r\n\r\n")
 
+
+if di:
+    coll_group_id = st.session_state.get('coll_group_id')
+    if coll_group_id:
+        coll_group = models.RunCollectionGroup.objects.get(pk=coll_group_id)
+        if coll_group:
+            run_colls = coll_group.runcollection_set.all()
+            if run_colls.count() > 1:
+                display_vals = {run_coll.get_collection().pk: run_coll.slider.name for run_coll in run_colls}
+                options = display_vals.keys()
+                def coll_changed():
+                    if st.session_state.get('_coll_id'):
+                        st.session_state['coll_id'] = st.session_state['_coll_id']
+                st.sidebar.pills("Choose a Slider Collection",
+                                 options,
+                                 format_func=lambda v: display_vals[v],
+                                 default=st.session_state['coll_id'],
+                                 key='_coll_id',
+                                 on_change=coll_changed)
+
 if plotlet_file is not None:
     plotlets_df = pd.read_csv(plotlet_file)
     # debug_file.write(f"first row = \n {plotlets_df.columns}\n")
@@ -561,6 +581,8 @@ if plotlet_file is not None:
     # color_map = st.sidebar.pills("select variable to heat map" , [  " z_force" , " roll" , " roll_rate" ," pitch" , " yaw_rate" ," y_force" , " delta_time" , " pivot" , " friction+aero" , " velocity" , " x-acceleration" ]s_run_names, default=" z_force") )
 
     if di:
+        if st.sidebar.button("⟳&nbsp;Reload"):
+            st.rerun()
         if st.sidebar.button("⬅&nbsp;Collections"):
             di.go_to_collections()
         if st.sidebar.button("⬅&nbsp;Runs"):
