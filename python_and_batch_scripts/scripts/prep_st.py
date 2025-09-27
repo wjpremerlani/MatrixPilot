@@ -123,6 +123,9 @@ if __name__ == "__main__":
     parser.add_argument('-dtpe','--dtpe',help="delta time from peak of pull")
     parser.add_argument('-adfc','--adfc',action='store_true',help="option for all data on the first curve, starting from the pull")
     parser.add_argument('-e', '--elapsed', help="time window in seconds for the map")
+    parser.add_argument('-b_radius','--b_radius',help="button radius in seconds, must be less than 2.0")
+    parser.add_argument('-b_space','--b_space',help="space between button centers, seconds")
+    parser.add_argument('-b_range','--b_range',help="search range, seconds, must be less than 2.0")
     
     
     args = parser.parse_args()
@@ -243,6 +246,13 @@ if __name__ == "__main__":
                 bat_file.write(f" -talc {args.talc}")
             if args_adfc :
                 bat_file.write(f" -adfc")
+            if args.b_radius :
+                bat_file.write(f" -b_radius {args.b_radius}")
+            if args.b_space :
+                bat_file.write(f" -b_space {args.b_space}")
+            if args.b_range :
+                bat_file.write(f" -b_range {args.b_range}")
+                
             try :
                 bat_file.write(f" {options}")
             except :

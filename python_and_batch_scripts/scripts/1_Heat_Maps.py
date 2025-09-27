@@ -799,16 +799,16 @@ if plotlet_file is not None:
 
             with map_right:
 
-                if curvelet_delta_time_chart_for_heatmap == None:
+                #if curvelet_delta_time_chart_for_heatmap == None:
 
-                    curvelet_delta_time_chart_for_heatmap = st.plotly_chart(
-                        plotlets_df.plot(render_mode='svg', x="curve_number ", y=s_delta_time_columns)
-                        .update_layout(yaxis_title="dt sec", xaxis_title="curve", height=delta_time_height, legend={"orientation": "h"})
-                        .update_xaxes(showgrid=True, dtick=int(1))
-                        .update_yaxes(showgrid=True)
-                        )
-                else:
-                    st.stop()
+                    #curvelet_delta_time_chart_for_heatmap = st.plotly_chart(
+                        #plotlets_df.plot(render_mode='svg', x="curve_number ", y=s_delta_time_columns)
+                        #.update_layout(yaxis_title="dt sec", xaxis_title="curve", height=delta_time_height, legend={"orientation": "h"})
+                        #.update_xaxes(showgrid=True, dtick=int(1))
+                        #.update_yaxes(showgrid=True)
+                        #)
+                #else:
+                    #st.stop()
 
                 left_logo, right_logo = st.columns(2, vertical_alignment="center")
 

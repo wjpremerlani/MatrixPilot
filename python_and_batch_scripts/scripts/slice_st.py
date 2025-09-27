@@ -12,18 +12,19 @@ global time_after_last_curve
 #used to scan cross variance as a function of element number shift
 #start_margin and end_margin define the extra number of elements included when slicing a portion of a run into a plotlet
 #minimum_roll defines the data window in which variance weights are non-zero
-
-#shift_range = 200 #time shift range of +- 2.0 seconds
-shift_range  = 100 #time shift range of +- 1.0 seconds
-#shift_range =  20 #time shift range of +- 0.2 seconds
-
-#start_margin = 20 # .2 seconds worth of data
+shift_range = 200 #time shift range of +- 2 seconds
+#shift_range = 20 #time shift range of +- .2 seconds
+#art_margin = 20 # .2 seconds worth of data
 #end_margin = 5
 start_margin = 0 
 end_margin = 0
 #end_margin = 150
 minimum_roll = 15.0
 time_after_last_curve = 300
+
+global button_radius , button_spacing
+button_radius = 150
+button_spacing = 50
 
 import argparse
 import sys
@@ -44,6 +45,7 @@ PITCH_COLUMN = 7
 YAW_COLUMN = 8
 Z_FORCE_COLUMN = 5
 Y_FORCE_COLUMN = 4
+VELOCITY_COLUMN = 12
 
 global CURVE_START_COLUMN , CURVE_END_COLUMN
 CURVE_START_COLUMN = 2
@@ -61,10 +63,12 @@ global column_numbers
 global number_of_runs , run_numbers
 run_numbers = []
 
+global rabbit_run , fastest_time , slowest_time
+
 global rows , row_numbers , number_of_rows , labels , label_names
 
 
-global states , rolls , pitches, times , yaws , matrices , z_forces , y_forces, fz_max , fz_min
+global states , rolls , pitches, times , yaws , matrices , z_forces , y_forces, fz_max , fz_min , velocities
 states = []
 rolls = []
 pitches = []
@@ -74,6 +78,7 @@ matrices = []
 z_forces = []
 y_forces = []
 fz_max = []
+velocities = []
 
 
 global hex_byte
@@ -249,13 +254,13 @@ def cross_variance(list1, list2, offset , roll_list , plt_num , rn_num ) :
         skip = False
         variance = variance_sum/weight_sum
         z_variance = (force_wt*z_variance_sum) / N
-        if first_var_log == True :
+        if (first_var_log == True) and args.log_var :
             try :
                 variance_file.write(f"plot_let_number,run_number,offset,yaw_var,force_var\n")
             except :
                 pass
             first_var_log = False
-        if rn_num != 0 :
+        if (rn_num != 0 ) and args.log_var :
             try :
                 variance_file.write(f"{plt_num},{rn_num},{offset},{round((variance),2)},{round((z_variance),2)}\n")
             except :
@@ -337,7 +342,7 @@ def factor_labels () :
     log_file.write(f"signal names = \n{signal_names}\n")
 
 def open_file() :
-    global states , rolls , pitches, yaws , times , matrices , z_forces , y_forces
+    global states , rolls , pitches, yaws , times , matrices , z_forces , y_forces , velocities
     global number_of_runs , run_numbers
     global rows , row_numbers , number_of_rows , labels , label_names
     global columns_per_run
@@ -397,6 +402,7 @@ def open_file() :
             yaw_row = []
             z_force_row = []
             y_force_row = []
+            velocity_row = []
 
             if args_strmlt :
                 for run_number in run_numbers :
@@ -406,6 +412,7 @@ def open_file() :
                     y_force_row.append(float(row[int(run_number + Y_FORCE_COLUMN*(number_of_runs))]))
                     time_row.append(float(row[int(run_number + TIME_COLUMN*(number_of_runs))]))
                     yaw_row.append(float(row[int(run_number + YAW_COLUMN*(number_of_runs))]))
+                    velocity_row.append(float(row[int(run_number + VELOCITY_COLUMN*(number_of_runs))]))
                     pitch_row.append(float(row[int(run_number + PITCH_COLUMN*(number_of_runs))]))
                     euler_yaw = (float(row[int(run_number + YAW_COLUMN*(number_of_runs))]))
                     euler_pitch = (float(row[int(run_number + PITCH_COLUMN*(number_of_runs))]))
@@ -433,6 +440,7 @@ def open_file() :
             #log_file.write(f"time row = {time_row}\n")
             times.append(time_row)
             yaws.append(yaw_row)
+            velocities.append(velocity_row)
             pitches.append(pitch_row)
             matrices.append(matrix_row)
             z_forces.append(z_force_row)
@@ -474,6 +482,7 @@ global plotlet_numbers
 def write_timing_marks() :
     global ct_mark_tables , run_numbers
     global plotlet_numbers
+    global rabbit_run , fastest_time , slowest_time
     table_lengths = []
     for run_number in run_numbers :
         table_length = 0
@@ -503,6 +512,15 @@ def write_timing_marks() :
     for plotlet_number in plotlet_numbers :
         for run_number in run_numbers :
             log_file.write(f"{ct_mark_tables[run_number][plotlet_number]}\r")
+    last_plotlet = max(plotlet_numbers)
+    finish_times = []
+    for run_number in run_numbers :
+        finish_times.append(ct_mark_tables[run_number][last_plotlet][5])
+    log_file.write(f"finish times\n{finish_times}\n")
+    fastest_time = min(finish_times)
+    slowest_time = max(finish_times)
+    rabbit_run = finish_times.index(fastest_time)
+    log_file.write(f"fastest time = {fastest_time} for run {rabbit_run}\n")
 
 def generate_curve_table(run_number) :
     global shift_range , margin , start_margin , end_margin , minimum_curve_duration
@@ -723,9 +741,11 @@ def write_plotlets() :
 
     if args_strmlt :
         output_file.write(f"curve_number ,")
+        output_file.write(f" ref_curve_number ,")
     else:
         output_file.write(f" , curve_number , ,")
 
+    write_column_names(" Delta_Time__")
     write_column_names(" delta_time__")
     write_column_names(" z_force_g__")
     write_column_names(" y_force_g__")   
@@ -777,7 +797,7 @@ def write_plotlets() :
     log_file.write(f"pivot angle reference run = {pivot_reference} \n")
 
    
-
+    time_index = 0
     for plotlet_number in plotlet_numbers :
         if ( not args_curve_number ) or  ( curve_numbers[plotlet_number] == only_curve_number ) :
             pivot_var_sums = []
@@ -813,6 +833,7 @@ def write_plotlets() :
             for line_number in numbers(plotlet_sizes[plotlet_number]) :
                 if args_strmlt :
                     output_file.write(f"{curve_numbers[plotlet_number]} , ")
+                    output_file.write(f"{round(-0.01*float(curve_numbers[plotlet_number]),2)} , ")
                 else :
                     output_file.write(f" , {curve_numbers[plotlet_number]} , , ")
 
@@ -841,25 +862,17 @@ def write_plotlets() :
                         min_dt = min(min_dt , delta_time)
                         max_dt = max(max_dt , delta_time)
 
-                is_first_run = True
                 for run_number in run_numbers :
-                    try :
-                        plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
-                        time_value = times[line_number + plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]
-                        if is_first_run == True :
-                            reference_time = time_value
-                            is_first_run = False
-                        delta_time = time_value-reference_time
-                        output_file.write(f"{(round(delta_time - min_dt ,2))},")
-                    except :
-                        plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
-                        time_value = times[line_number-1 + plotlet_offset+fine_adjustments[plotlet_number][run_number]][run_number]
-                        if is_first_run == True :
-                            reference_time = time_value
-                            is_first_run = False
-                        delta_time = time_value-reference_time
-                        output_file.write(f"{(round(delta_time - min_dt ,2))},")
-                        valid_data = False
+                    b_delta_time = button_delta_time(run_number,time_index)
+                    output_file.write(f"{b_delta_time},")
+                
+                time_index = time_index+1       
+
+                for run_number in run_numbers :
+                    plotlet_offset = plotlet_offset_table[plotlet_number][run_number]
+                    p_delta_time = button_delta_time(run_number,line_number + plotlet_offset+fine_adjustments[plotlet_number][run_number])
+                    output_file.write(f"{p_delta_time},")
+
                 if ( not args_strmlt ) :
                     output_file.write(f" , ")
                     
@@ -999,8 +1012,131 @@ def write_plotlets() :
 #compute_fine_adjustments
 #log_fine_adjustments
 #compute_column_fine_adjustments
-#write_plotlets        
+#write_plotlets
 
+def button_variance( reference_run , target_run  , ref_index , target_index , radius ) :
+    global rolls, z_forces , yaws , N_minimum , N_samples , force_wt
+    variance_sum = 0.0
+    weight_sum = 0.0
+    z_variance = 0.0
+    z_variance_sum = 0.0
+    N = 0
+    for sample_index in range ( -radius , radius ) :
+        fetch_valid = True
+        roll_ref = fetch_line_run( rolls , ref_index + sample_index , reference_run )
+        roll_targ = fetch_line_run( rolls , target_index + sample_index , target_run )
+        force_ref = fetch_line_run( z_forces , ref_index + sample_index , reference_run )
+        force_targ = fetch_line_run( z_forces , target_index + sample_index , target_run )
+        yaw_ref = fetch_line_run( yaws , ref_index + sample_index , reference_run )
+        yaw_targ = fetch_line_run( yaws , target_index + sample_index , target_run )
+        if fetch_valid == True :
+            weight = abs ( roll_ref*roll_targ )
+            variance_term = ((yaw_ref-yaw_targ)**2)*weight
+            z_var_term = (force_ref-force_targ)**2
+            weight_sum = weight_sum + weight
+            variance_sum = variance_sum + variance_term
+            z_variance_sum = z_variance_sum + z_var_term
+            N = N + 1
+
+    if ( N > 0 ) and ( weight_sum > 0 ):
+        skip = False
+        variance = variance_sum/weight_sum
+        z_variance = (force_wt*z_variance_sum) / N
+        return variance + z_variance
+    else :
+        skip = True
+        return 10000000000000.0
+
+global button_search_range
+button_search_range = 10
+
+def align_one_button ( reference_run , target_run  , ref_index , target_index , radius ) :
+    offsets = []
+    var_vals = []
+    for offset in range (-button_search_range,button_search_range) :
+        var_val = round ( button_variance( reference_run , target_run  , ref_index + offset , target_index , radius ) , 2 )
+        offsets.append(offset)
+        var_vals.append(var_val)
+        min_var = min(var_vals)
+        
+    best_offset = offsets[var_vals.index(min_var)]
+    #b_var_file.write(f"R{target_run}B{target_index},")
+    if ( args.log_var) :
+        b_var_file.write(f"variance for run {target_run} , button index {ref_index}\n")
+        for var_val in var_vals :
+            b_var_file.write(f"{var_val},")
+        b_var_file.write(f"\n")
+    return ref_index+best_offset
+
+def align_run_buttons(reference_run, target_run , radius , spacing , quantity ) :
+    shifts = []
+    shift = 0
+    shifts.append(shift)
+    ref_index = 200 # 2 seconds of prepull data
+    target_index = 200 
+    for button_no in range(quantity) :
+        target_index = target_index + spacing
+        ref_index = align_one_button(reference_run , target_run  , ref_index + spacing , target_index , radius)
+        shift =  target_index - ref_index
+        shifts.append(shift)
+    return shifts
+
+global button_alignments , number_of_buttons
+
+def compute_buttons() :
+    global rabbit_run , fastest_time , slowest_time , button_radius , button_spacing , run_numbers , button_search_range , button_alignments , number_of_buttons
+    number_of_buttons = int((time_after_last_curve + int(100.0*slowest_time))/button_spacing)
+    log_file.write(f"\n\ncomputing buttons, search range = {button_search_range} , button radius = {button_radius} , button spacing = {button_spacing} , number of buttons = {number_of_buttons}\n\n")
+    button_alignments = []
+    for run in run_numbers :
+        run_button_alignments = align_run_buttons(rabbit_run,run , button_radius , button_spacing , number_of_buttons+5 )
+        button_alignments.append(run_button_alignments)
+        log_file.write(f"button alignments for run {run} :\n")
+        log_file.write(f"{run_button_alignments}\n")
+
+def button_delta_time_no_interp(run,time_step) :
+    global button_algnments , button_spacing , number_of_buttons
+    time_index = int ( time_step / button_spacing )
+    time_index = min ( time_index , number_of_buttons - 1 )
+    return round( 0.01* button_alignments [run][time_index] , 2 )
+
+def button_delta_time(run,time_step) :
+    global button_algnments , button_spacing , number_of_buttons
+    try :
+        time_index = int ( time_step / button_spacing )
+        #time_index = min ( time_index , number_of_buttons - 2 )
+        this_button_delta = float(button_alignments [run][time_index])
+        next_button_delta = float( button_alignments [run][time_index+1])
+        interpolation_factor = (float(time_step) - float(int(time_step/button_spacing))*float(button_spacing))/float(button_spacing)
+        return  round ( .01 * (this_button_delta+interpolation_factor*(next_button_delta-this_button_delta)) , 3 )
+    except :
+        return 0.0
+    
+def write_delta_time():
+    global button_algnments , button_spacing , number_of_buttons , run_numbers , velocities
+    #log_file.write(f"\n{velocities}\n")
+    for run in run_numbers :
+        dtime_file.write(f"btime_{run},")
+    for run in run_numbers :
+        dtime_file.write(f"velocity_{run},")
+    for run in run_numbers :
+        dtime_file.write(f"dtime_{run},")
+    dtime_file.write(f"\n")
+    for time_index in range (number_of_buttons*button_spacing) :    
+        for run in run_numbers :
+            dtime_file.write(f"{button_delta_time(run,time_index)},")
+        for run in run_numbers :
+            try :
+                dtime_file.write(f"{velocities[time_index][run]},")
+            except :
+                pass
+        for run in run_numbers :
+            try :
+                dtime_file.write(f"{v_delta_ts[run][time_index]},")
+            except :
+                pass
+
+        dtime_file.write(f"\n")
 
 def write_plotlet_tables() :
     global plotlet_sizes , plotlet_offsets , column_offsets
@@ -1267,11 +1403,24 @@ if __name__ == "__main__":
     parser.add_argument('-dtpe','--dtpe',help="not used but must be allowed.")
     parser.add_argument('-talc','--talc',help="time after last curve in seconds")
     parser.add_argument('-adfc','--adfc',action='store_true',help="plot all data for the first curve")
-
+    parser.add_argument('-b_radius','--b_radius',help="button radius in seconds, must be less than 2.0")
+    parser.add_argument('-b_space','--b_space',help="space between button centers, seconds")
+    parser.add_argument('-b_range','--b_range',help="search range, seconds, must be less than 2.0")
+    parser.add_argument('-log_var','--log_var',action='store_true',help="report variance values during alignment")
+    
     
     args = parser.parse_args()
 
     skip_list_numbers = []
+
+    if args.b_radius :
+        button_radius = min ( int(abs(100.0*float(args.b_radius))), 200 )
+
+    if args.b_space :
+        button_spacing = int(abs(100.0*float(args.b_space)))
+        
+    if args.b_range :
+        button_search_range = int(abs(100.0*float(args.b_range)))
 
     if args.adfc :
         args_adfc = True
@@ -1318,7 +1467,9 @@ if __name__ == "__main__":
             log_file = open(base_name+"_log.txt" , "w" )
             marks_file = open(base_name+"_marks.txt" , "w" )
             #timing_file = open(base_name+"_timing.csv" , "w" )
-            #variance_file = open(base_name+"_variance.csv" , "w")
+            if args.log_var :
+                variance_file = open(base_name+"_variance.csv" , "w")
+                b_var_file = open(base_name+"button_variance.csv" , "w")
         log_file.write(f"fine alignment force weighting = {round(force_wt,2)}\n\n")
         create_cross_indices(shift_range)
         open_file()
@@ -1339,6 +1490,7 @@ if __name__ == "__main__":
         compute_fine_adjustments()
         log_fine_adjustments()
         compute_column_fine_adjustments()
+        compute_buttons()
         write_plotlets()
         now = datetime.now()
         time = now.time()

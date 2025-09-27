@@ -131,6 +131,7 @@ roll_rate_columns = []
 z_force_columns = []
 y_force_columns = []
 delta_time_columns = []
+all_delta_time_columns = []
 pivot_columns = []
 heat_columns = []
 distance_columns = []
@@ -181,41 +182,44 @@ def build_frames():
     global x_force_columns, velocity_columns, acceleration_columns
     global aero_columns, friction_columns, z_force_filtered_columns
 
-    for run_name in run_names:
-        column_name = " -yaw__" + run_name
-        yaw_columns.append(column_name)
-        column_name = " yaw_rate__" + run_name
-        yaw_rate_columns.append(column_name)
-        column_name = " roll__" + run_name
-        roll_columns.append(column_name)
-        column_name = " roll_rate__" + run_name
+    for run_name in run_names :       
+        column_name = " -yaw__"+run_name
+        yaw_columns.append(column_name)       
+        column_name = " yaw_rate__"+run_name
+        yaw_rate_columns.append(column_name)        
+        column_name = " roll__"+run_name
+        roll_columns.append(column_name)       
+        column_name = " roll_rate__"+run_name
         roll_rate_columns.append(column_name)
-        column_name = " z_force_g__" + run_name
+        column_name = " z_force_g__"+run_name
         z_force_columns.append(column_name)
-        column_name = " y_force_g__" + run_name
+        column_name = " y_force_g__"+run_name
         y_force_columns.append(column_name)
-        column_name = " delta_time__" + run_name
+        column_name = " delta_time__"+run_name
         delta_time_columns.append(column_name)
-        column_name = " degs_pivot__" + run_name
+        all_delta_time_columns.append(column_name)
+        column_name = " Delta_Time__"+run_name
+        all_delta_time_columns.append(column_name)
+        column_name = " degs_pivot__"+run_name
         pivot_columns.append(column_name)
-        column_name = " heat__" + run_name
+        column_name = " heat__"+run_name
         heat_columns.append(column_name)
-        column_name = " distance__" + run_name
+        column_name = " distance__"+run_name
         distance_columns.append(column_name)
-        column_name = " pitch__" + run_name
+        column_name = " pitch__"+run_name
         pitch_columns.append(column_name)
 
-        column_name = " friction+aero__" + run_name
+        column_name = " friction+aero__"+run_name
         x_force_columns.append(column_name)
-        column_name = " velocity__" + run_name
+        column_name = " velocity__"+run_name
         velocity_columns.append(column_name)
-        column_name = " x-acceleration__" + run_name
+        column_name = " x-acceleration__"+run_name
         acceleration_columns.append(column_name)
-        column_name = " z_force_filtered__" + run_name
+        column_name = " z_force_filtered__"+run_name
         z_force_filtered_columns.append(column_name)
-        column_name = " aero__" + run_name
+        column_name = " aero__"+run_name
         aero_columns.append(column_name)
-        column_name = " friction__" + run_name
+        column_name = " friction__"+run_name
         friction_columns.append(column_name)
 
     number_of_runs = len(delta_time_columns)
@@ -595,52 +599,58 @@ if plotlet_file is not None:
     s_z_force_columns = []
     s_y_force_columns = []
     s_delta_time_columns = []
+    s_all_delta_time_columns = []
     s_pivot_columns = []
     heat_columns = []
     distance_columns = []
     s_pitch_columns = []
-    s_x_force_columns = []
+    s_x_force_columns= []
     s_velocity_columns = []
     s_acceleration_columns = []
     s_raw_z_columns = []
     s_aero_columns = []
     s_friction_columns = []
 
-    for run_name in s_run_names:
-        column_name = " -yaw__" + run_name
-        s_yaw_columns.append(column_name)
-        column_name = " yaw_rate__" + run_name
-        s_yaw_rate_columns.append(column_name)
-        column_name = " roll__" + run_name
-        s_roll_columns.append(column_name)
-        column_name = " roll_rate__" + run_name
+    for run_name in s_run_names :       
+        column_name = " -yaw__"+run_name
+        s_yaw_columns.append(column_name)       
+        column_name = " yaw_rate__"+run_name
+        s_yaw_rate_columns.append(column_name)        
+        column_name = " roll__"+run_name
+        s_roll_columns.append(column_name)       
+        column_name = " roll_rate__"+run_name
         s_roll_rate_columns.append(column_name)
-        column_name = " z_force_g__" + run_name
+        column_name = " z_force_g__"+run_name
         s_z_force_columns.append(column_name)
-        column_name = " y_force_g__" + run_name
+        column_name = " y_force_g__"+run_name
         s_y_force_columns.append(column_name)
-        column_name = " delta_time__" + run_name
+        column_name = " delta_time__"+run_name
         s_delta_time_columns.append(column_name)
-        column_name = " degs_pivot__" + run_name
+        #s_all_delta_time_columns.append(column_name)
+        column_name = " Delta_Time__"+run_name
+        s_all_delta_time_columns.append(column_name)
+        column_name = " degs_pivot__"+run_name
         s_pivot_columns.append(column_name)
-        column_name = " heat__" + run_name
+        column_name = " heat__"+run_name
         heat_columns.append(column_name)
-        column_name = " distance__" + run_name
+        column_name = " distance__"+run_name
         distance_columns.append(column_name)
-        column_name = " pitch__" + run_name
+        column_name = " pitch__"+run_name
         s_pitch_columns.append(column_name)
-        column_name = " friction+aero__" + run_name
+        column_name = " friction+aero__"+run_name
         s_x_force_columns.append(column_name)
-        column_name = " velocity__" + run_name
+        column_name = " velocity__"+run_name
         s_velocity_columns.append(column_name)
-        column_name = " x-acceleration__" + run_name
+        column_name = " x-acceleration__"+run_name
         s_acceleration_columns.append(column_name)
-        column_name = " z_force_filtered__" + run_name
+        column_name = " z_force_filtered__"+run_name
         s_raw_z_columns.append(column_name)
-        column_name = " aero__" + run_name
+        column_name = " aero__"+run_name
         s_aero_columns.append(column_name)
-        column_name = " friction__" + run_name
+        column_name = " friction__"+run_name
         s_friction_columns.append(column_name)
+
+    s_all_delta_time_columns.append(" ref_curve_number ")
 
     if curve_number is not None:
         curvelet_df = plotlets_df[plotlets_df["curve_number "] == curve_number]
@@ -653,28 +663,21 @@ if plotlet_file is not None:
                 # debug_file.write(f"plot all, pass number {nall}\r\n")
                 # debug_file.flush()
                 nall = nall + 1
-                yaw_chart = st.plotly_chart(
-                    plotlets_df[s_yaw_columns].plot(render_mode='svg').update_layout(yaxis_title="yaw, deg"))
-                roll_chart = st.plotly_chart(
-                    plotlets_df[s_roll_columns].plot(render_mode='svg').update_layout(yaxis_title="roll, deg"))
-                z_force_chart = st.plotly_chart(
-                    plotlets_df[s_z_force_columns].plot(render_mode='svg').update_layout(yaxis_title="z force, g's"))
-                delta_time_chart = st.plotly_chart(
-                    plotlets_df[s_delta_time_columns].plot(render_mode='svg').update_layout(yaxis_title=" dt, sec "))
+                yaw_chart = st.plotly_chart(plotlets_df[s_yaw_columns].plot( render_mode = 'svg').update_layout( yaxis_title = "yaw, deg") )
+                roll_chart = st.plotly_chart(plotlets_df[s_roll_columns].plot(render_mode = 'svg' ).update_layout( yaxis_title = "roll, deg") )
+                pitch_chart = st.plotly_chart(plotlets_df[s_pitch_columns].plot(render_mode = 'svg' ).update_layout( yaxis_title = "pitch, deg") )
+                z_force_chart = st.plotly_chart(plotlets_df[s_z_force_columns].plot(render_mode = 'svg' ).update_layout( yaxis_title = "z force, g's") )
+                delta_time_chart = st.plotly_chart(plotlets_df[s_all_delta_time_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " dt, sec "))
             else:
                 st.stop()
 
         with all_right:
             if yaw_rate_chart == None:
-                yaw_rate_chart = st.plotly_chart(plotlets_df[s_yaw_rate_columns].plot(render_mode='svg').update_layout(
-                    yaxis_title=" yaw rate, d/s "))
-                roll_rate_chart = st.plotly_chart(
-                    plotlets_df[s_roll_rate_columns].plot(render_mode='svg').update_layout(
-                        yaxis_title=" roll rate, d/s  "))
-                y_force_chart = st.plotly_chart(
-                    plotlets_df[s_y_force_columns].plot(render_mode='svg').update_layout(yaxis_title=" y force, g's"))
-                pivot_chart = st.plotly_chart(
-                    plotlets_df[s_pivot_columns].plot(render_mode='svg').update_layout(yaxis_title=" pivot, deg "))
+                yaw_rate_chart = st.plotly_chart(plotlets_df[s_yaw_rate_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " yaw rate, d/s ") )    
+                roll_rate_chart = st.plotly_chart(plotlets_df[s_roll_rate_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = " roll rate, d/s  ") )
+                acceleration_chart = st.plotly_chart(plotlets_df[s_acceleration_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = " acceleration, g's") )  
+                y_force_chart = st.plotly_chart(plotlets_df[s_y_force_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = " y force, g's") )  
+                pivot_chart = st.plotly_chart(plotlets_df[s_pivot_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = " pivot, deg ") )
             else:
                 st.stop()
 
@@ -683,32 +686,20 @@ if plotlet_file is not None:
 
         with crv_left:
             if curve_number is not None:
-                curvelet_yaw_chart = st.plotly_chart(curvelet_df[s_yaw_columns].plot(render_mode='svg').update_layout(
-                    yaxis_title="yaw, deg, crv" + str(curve_number)))
-                curvelet_roll_chart = st.plotly_chart(curvelet_df[s_roll_columns].plot(render_mode='svg').update_layout(
-                    yaxis_title="roll, deg, crv" + str(curve_number)))
-                curvelet_z_force_chart = st.plotly_chart(
-                    curvelet_df[s_z_force_columns].plot(render_mode='svg').update_layout(
-                        yaxis_title="z force, g's, crv" + str(curve_number)))
-                curvelet_delta_time_chart = st.plotly_chart(
-                    curvelet_df[s_delta_time_columns].plot(render_mode='svg').update_layout(
-                        yaxis_title=" dt, sec, crv" + str(curve_number)))
+                curvelet_yaw_chart = st.plotly_chart(curvelet_df[s_yaw_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = "yaw, deg, crv"+str(curve_number)) )                     
+                curvelet_roll_chart = st.plotly_chart(curvelet_df[s_roll_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = "roll, deg, crv"+str(curve_number)) )
+                curvelet_pitch_chart = st.plotly_chart(curvelet_df[s_pitch_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = "pitch, deg, crv"+str(curve_number)) )
+                curvelet_z_force_chart = st.plotly_chart(curvelet_df[s_z_force_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = " z force, g's, crv"+str(curve_number)) )        
+                curvelet_delta_time_chart = st.plotly_chart(curvelet_df[s_delta_time_columns].plot(render_mode = 'svg').update_layout( yaxis_title = " dt, sec, crv"+str(curve_number))  )                  
             else:
                 st.stop()
 
         with crv_right:
             if curve_number is not None:
-                curvelet_yaw_rate_chart = st.plotly_chart(
-                    curvelet_df[s_yaw_rate_columns].plot(render_mode='svg').update_layout(
-                        yaxis_title=" yaw rate, d/s, crv" + str(curve_number)))
-                curvelet_roll_rate_chart = st.plotly_chart(
-                    curvelet_df[s_roll_rate_columns].plot(render_mode='svg').update_layout(
-                        yaxis_title=" roll rate, d/s, crv" + str(curve_number)))
-                curvelet_y_force_chart = st.plotly_chart(
-                    curvelet_df[s_y_force_columns].plot(render_mode='svg').update_layout(
-                        yaxis_title=" y force, g's, curv" + str(curve_number)))
-                curvelet_pivot_chart = st.plotly_chart(
-                    curvelet_df[s_pivot_columns].plot(render_mode='svg').update_layout(
-                        yaxis_title=" pivot, deg, crv" + str(curve_number)))
+                curvelet_yaw_rate_chart = st.plotly_chart(curvelet_df[s_yaw_rate_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " yaw rate, d/s, crv"+str(curve_number)) )
+                curvelet_roll_rate_chart = st.plotly_chart(curvelet_df[s_roll_rate_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " roll rate, d/s, crv"+str(curve_number)) )
+                curvelet_acceleration_chart = st.plotly_chart(curvelet_df[s_acceleration_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " acceleration, g's, crv"+str(curve_number)) )
+                curvelet_y_force_chart = st.plotly_chart(curvelet_df[ s_y_force_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " y force, g's, curv"+str(curve_number)) )        
+                curvelet_pivot_chart = st.plotly_chart(curvelet_df[ s_pivot_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " pivot, deg, crv"+str(curve_number)) )       
             else:
                 st.stop()
