@@ -637,6 +637,7 @@ if plotlet_file is not None:
     s_z_force_columns = []
     s_y_force_columns = []
     s_delta_time_columns = []
+    s_all_delta_time_columns = []   
     s_pivot_columns = []
     heat_columns = []
     distance_columns = []
@@ -683,7 +684,13 @@ if plotlet_file is not None:
         s_aero_columns.append(column_name)
         column_name = " friction__" + run_name
         s_friction_columns.append(column_name)
+        column_name = " Delta_Time__"+run_name
+        s_all_delta_time_columns.append(column_name)
+        
+        
 
+    s_all_delta_time_columns.append(" ref_curve_number ")
+    
     # if curve_number is not None :
     # curvelet_df = plotlets_df[plotlets_df["curve_number "] == curve_number ]
 
@@ -799,16 +806,10 @@ if plotlet_file is not None:
 
             with map_right:
 
-                #if curvelet_delta_time_chart_for_heatmap == None:
-
-                    #curvelet_delta_time_chart_for_heatmap = st.plotly_chart(
-                        #plotlets_df.plot(render_mode='svg', x="curve_number ", y=s_delta_time_columns)
-                        #.update_layout(yaxis_title="dt sec", xaxis_title="curve", height=delta_time_height, legend={"orientation": "h"})
-                        #.update_xaxes(showgrid=True, dtick=int(1))
-                        #.update_yaxes(showgrid=True)
-                        #)
-                #else:
-                    #st.stop()
+                if delta_time_chart == None:
+                    delta_time_chart = st.plotly_chart(plotlets_df[s_all_delta_time_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " dt, sec "))                       
+                else:
+                    st.stop()
 
                 left_logo, right_logo = st.columns(2, vertical_alignment="center")
 
