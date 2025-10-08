@@ -601,7 +601,11 @@ if plotlet_file is not None:
 
     # debug_file.close()
 
-    di.select_new_runs(run_names)
+    if di:
+        di.select_new_runs(run_names)
+    else:
+        st.session_state['s_run_names'] = run_names
+
     s_run_names = st.session_state['s_run_names']
     def on_s_run_names_changed():
         global s_run_names
