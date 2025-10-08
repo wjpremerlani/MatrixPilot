@@ -21,6 +21,7 @@ end_margin = 0
 #end_margin = 150
 minimum_roll = 15.0
 time_after_last_curve = 300
+args_frr = False
 
 global button_radius , button_spacing
 button_radius = 150
@@ -519,7 +520,10 @@ def write_timing_marks() :
     log_file.write(f"finish times\n{finish_times}\n")
     fastest_time = min(finish_times)
     slowest_time = max(finish_times)
-    rabbit_run = finish_times.index(fastest_time)
+    if args_frr:  # first run in the list is meant as the rabbit
+        rabbit_run = 0
+    else:
+        rabbit_run = finish_times.index(fastest_time)
     log_file.write(f"fastest time = {fastest_time} for run {rabbit_run}\n")
 
 def generate_curve_table(run_number) :
@@ -1399,6 +1403,7 @@ if __name__ == "__main__":
     parser.add_argument('-fw','--fw',help = "fine alignment force weighting, default = 1.0")
     #parser.add_argument('-log_time','--log_time',action='store_true',help="record processing timing information")
     parser.add_argument('-cr','--cr',help="not used but must be allowed.")
+    parser.add_argument('-frr','--frr', action='store_true', help="use the first run as the rabbit.")
     parser.add_argument('-curves','--curves',help="not used but must be allowed.")
     parser.add_argument('-dtpe','--dtpe',help="not used but must be allowed.")
     parser.add_argument('-talc','--talc',help="time after last curve in seconds")
@@ -1424,6 +1429,9 @@ if __name__ == "__main__":
 
     if args.adfc :
         args_adfc = True
+
+    if args.frr :
+        args_frr = True
 
     if args.talc :
         time_after_last_curve = int(100.0*float(args.talc))

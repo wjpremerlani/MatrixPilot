@@ -98,7 +98,7 @@ if di:
     st.set_page_config(page_title=f"WolfPac {SERVER_SPORT_NAME} Data Manager", layout="wide")
     if not di.authenticate():
         st.stop()
-    coll_id = st.session_state.get('coll_id')
+    (coll_group_id, coll_id) = di.get_current_collection_id()
 else:
     if len(sys.argv) > 1:
         try:
@@ -497,11 +497,14 @@ if di:
             st.write("--- Plot data file not found ---")
             st.stop()
     else:
-        st.switch_page("pages/4_Logs.py")
+        plotlet_file = None
+        if not st.session_state.get("did_redirect"):
+            st.session_state["did_redirect"] = True
+            st.switch_page("pages/4_Logs.py")
 else:
     plotlet_file = st.sidebar.file_uploader("select a file")
 
-all_data_tab, curve_data_tab = st.tabs(["  all_data  ", "   curve_data  "])
+all_data_tab, curve_data_tab = st.tabs(["  all_data  ", "   curve_data  "], default="   curve_data  ")
 
 # plotlet_file = sys.argv[1]
 
@@ -540,17 +543,21 @@ if di:
         coll_group = models.RunCollectionGroup.objects.get(pk=coll_group_id)
         if coll_group:
             run_colls = coll_group.runcollection_set.all()
-            if run_colls.count() > 1:
-                display_vals = {run_coll.get_collection().pk: run_coll.slider.name for run_coll in run_colls}
+            run_colls = [rc for rc in run_colls if rc.runs.count()]
+            if len(run_colls) > 1:
+                display_vals = {run_coll.pk: run_coll.slider.name if run_coll.slider else "Runs" for run_coll in run_colls}
                 options = display_vals.keys()
                 def coll_changed():
-                    if st.session_state.get('_coll_id'):
-                        st.session_state['coll_id'] = st.session_state['_coll_id']
+                    if st.session_state.get('run_coll_id'):
+                        run_coll = models.RunCollection.objects.get(pk=st.session_state['run_coll_id'])
+                        if run_coll:
+                            coll = run_coll.get_collection()
+                            if coll:
+                                st.session_state['coll_id'] = coll.pk
                 st.sidebar.pills("Choose a Slider Collection",
                                  options,
                                  format_func=lambda v: display_vals[v],
-                                 default=st.session_state['coll_id'],
-                                 key='_coll_id',
+                                 key='run_coll_id',
                                  on_change=coll_changed)
 
 if plotlet_file is not None:
@@ -579,13 +586,31 @@ if plotlet_file is not None:
 
     # debug_file.close()
 
-    s_run_names = st.sidebar.multiselect("select a set of runs for plotting", options=run_names, default=run_names)
-    curve_number = st.sidebar.pills("select a curve", curve_list, default=curve_list[0])
+    di.select_new_runs(run_names)
+    s_run_names = st.session_state['s_run_names']
+    def on_s_run_names_changed():
+        global s_run_names
+        s_run_names = st.session_state['s_run_names_val']
+        st.session_state['s_run_names'] = s_run_names
+    st.sidebar.multiselect("select a set of runs for plotting", options=run_names, on_change=on_s_run_names_changed,
+                           key='s_run_names_val', default=st.session_state['s_run_names'])
+
+    if not st.session_state.get('curve_number'): st.session_state['curve_number'] = curve_list[0]
+    curve_number = st.session_state['curve_number']
+    def on_curve_number_changed():
+        global curve_number
+        curve_number = st.session_state['curve_number_val']
+        st.session_state['curve_number'] = curve_number
+    st.sidebar.pills("select a curve", options=curve_list, on_change=on_curve_number_changed,
+                     key="curve_number_val", default=st.session_state['curve_number'])
+
     # run_number = st.sidebar.pills("select a run to heat map" , s_run_names, default=s_run_names[0])
     # color_map = st.sidebar.pills("select variable to heat map" , [  " z_force" , " roll" , " roll_rate" ," pitch" , " yaw_rate" ," y_force" , " delta_time" , " pivot" , " friction+aero" , " velocity" , " x-acceleration" ]s_run_names, default=" z_force") )
 
     if di:
-        if st.sidebar.button("⟳&nbsp;Reload"):
+        if st.sidebar.button("⟳&nbsp;Refresh"):
+            if 'coll_group_id' in st.session_state and 'coll_id' in st.session_state:
+                del st.session_state['coll_id']
             st.rerun()
         if st.sidebar.button("⬅&nbsp;Collections"):
             di.go_to_collections()
@@ -611,13 +636,13 @@ if plotlet_file is not None:
     s_aero_columns = []
     s_friction_columns = []
 
-    for run_name in s_run_names :       
+    for run_name in s_run_names :
         column_name = " -yaw__"+run_name
-        s_yaw_columns.append(column_name)       
+        s_yaw_columns.append(column_name)
         column_name = " yaw_rate__"+run_name
-        s_yaw_rate_columns.append(column_name)        
+        s_yaw_rate_columns.append(column_name)
         column_name = " roll__"+run_name
-        s_roll_columns.append(column_name)       
+        s_roll_columns.append(column_name)
         column_name = " roll_rate__"+run_name
         s_roll_rate_columns.append(column_name)
         column_name = " z_force_g__"+run_name
@@ -673,10 +698,10 @@ if plotlet_file is not None:
 
         with all_right:
             if yaw_rate_chart == None:
-                yaw_rate_chart = st.plotly_chart(plotlets_df[s_yaw_rate_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " yaw rate, d/s ") )    
+                yaw_rate_chart = st.plotly_chart(plotlets_df[s_yaw_rate_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " yaw rate, d/s ") )
                 roll_rate_chart = st.plotly_chart(plotlets_df[s_roll_rate_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = " roll rate, d/s  ") )
-                acceleration_chart = st.plotly_chart(plotlets_df[s_acceleration_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = " acceleration, g's") )  
-                y_force_chart = st.plotly_chart(plotlets_df[s_y_force_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = " y force, g's") )  
+                acceleration_chart = st.plotly_chart(plotlets_df[s_acceleration_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = " acceleration, g's") )
+                y_force_chart = st.plotly_chart(plotlets_df[s_y_force_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = " y force, g's") )
                 pivot_chart = st.plotly_chart(plotlets_df[s_pivot_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = " pivot, deg ") )
             else:
                 st.stop()
@@ -686,11 +711,11 @@ if plotlet_file is not None:
 
         with crv_left:
             if curve_number is not None:
-                curvelet_yaw_chart = st.plotly_chart(curvelet_df[s_yaw_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = "yaw, deg, crv"+str(curve_number)) )                     
+                curvelet_yaw_chart = st.plotly_chart(curvelet_df[s_yaw_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = "yaw, deg, crv"+str(curve_number)) )
                 curvelet_roll_chart = st.plotly_chart(curvelet_df[s_roll_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = "roll, deg, crv"+str(curve_number)) )
                 curvelet_pitch_chart = st.plotly_chart(curvelet_df[s_pitch_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = "pitch, deg, crv"+str(curve_number)) )
-                curvelet_z_force_chart = st.plotly_chart(curvelet_df[s_z_force_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = " z force, g's, crv"+str(curve_number)) )        
-                curvelet_delta_time_chart = st.plotly_chart(curvelet_df[s_delta_time_columns].plot(render_mode = 'svg').update_layout( yaxis_title = " dt, sec, crv"+str(curve_number))  )                  
+                curvelet_z_force_chart = st.plotly_chart(curvelet_df[s_z_force_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = " z force, g's, crv"+str(curve_number)) )
+                curvelet_delta_time_chart = st.plotly_chart(curvelet_df[s_delta_time_columns].plot(render_mode = 'svg').update_layout( yaxis_title = " dt, sec, crv"+str(curve_number))  )
             else:
                 st.stop()
 
@@ -699,7 +724,7 @@ if plotlet_file is not None:
                 curvelet_yaw_rate_chart = st.plotly_chart(curvelet_df[s_yaw_rate_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " yaw rate, d/s, crv"+str(curve_number)) )
                 curvelet_roll_rate_chart = st.plotly_chart(curvelet_df[s_roll_rate_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " roll rate, d/s, crv"+str(curve_number)) )
                 curvelet_acceleration_chart = st.plotly_chart(curvelet_df[s_acceleration_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " acceleration, g's, crv"+str(curve_number)) )
-                curvelet_y_force_chart = st.plotly_chart(curvelet_df[ s_y_force_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " y force, g's, curv"+str(curve_number)) )        
-                curvelet_pivot_chart = st.plotly_chart(curvelet_df[ s_pivot_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " pivot, deg, crv"+str(curve_number)) )       
+                curvelet_y_force_chart = st.plotly_chart(curvelet_df[ s_y_force_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " y force, g's, curv"+str(curve_number)) )
+                curvelet_pivot_chart = st.plotly_chart(curvelet_df[ s_pivot_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " pivot, deg, crv"+str(curve_number)) )
             else:
                 st.stop()

@@ -1,6 +1,7 @@
 import django_integration as di
 from LugeServer.settings import SERVER_SPORT_NAME
 import streamlit as st
+import luge.models as models
 
 st.set_page_config(page_title=f"WolfPac {SERVER_SPORT_NAME} Data Manager", layout="wide")
 st.markdown("""
@@ -15,6 +16,30 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+if di:
+    coll_group_id = st.session_state.get('coll_group_id')
+    if coll_group_id:
+        coll_group = models.RunCollectionGroup.objects.get(pk=coll_group_id)
+        if coll_group:
+            run_colls = coll_group.runcollection_set.all()
+            run_colls = [rc for rc in run_colls if rc.runs.count()]
+            if len(run_colls) > 1:
+                display_vals = {run_coll.get_collection().pk: run_coll.slider.name if run_coll.slider else "Runs" for run_coll in run_colls}
+                options = display_vals.keys()
+                def coll_changed():
+                    if st.session_state.get('_coll_id'):
+                        st.session_state['coll_id'] = st.session_state['_coll_id']
+                st.sidebar.pills("Choose a Slider Collection",
+                                 options,
+                                 format_func=lambda v: display_vals[v],
+                                 default=st.session_state['coll_id'],
+                                 key='_coll_id',
+                                 on_change=coll_changed)
+
+if st.sidebar.button("⟳&nbsp;Refresh"):
+    if 'coll_group_id' in st.session_state and 'coll_id' in st.session_state:
+        del st.session_state['coll_id']
+    st.rerun()
 if st.sidebar.button("⬅&nbsp;Collections"):
     di.go_to_collections()
 if st.sidebar.button("⬅&nbsp;Runs"):
@@ -22,28 +47,18 @@ if st.sidebar.button("⬅&nbsp;Runs"):
 
 if not di.authenticate():
     st.stop()
-
-# Get collection id from the url query string
-coll_id = st.query_params.get("coll_id")
-try:
-    coll_id = int(coll_id)
-except:
-    pass
-
-if coll_id:
-    st.session_state["coll_id"] = coll_id
-else:
-    coll_id = st.session_state.get("coll_id")
+(coll_group_id, coll_id) = di.get_current_collection_id()
 
 # Show Logs
-log_path = f"../../run_data/collections/{coll_id}/filelist_merge_list_log.txt"
-log_file = open(log_path)
-if log_file:
-    st.write("<b>filelist_merge_list_log.txt</b>", unsafe_allow_html=True)
-    st.code(log_file.read())
+if coll_id:
+    log_path = f"../../run_data/collections/{coll_id}/filelist_merge_list_log.txt"
+    log_file = open(log_path)
+    if log_file:
+        st.write("<b>filelist_merge_list_log.txt</b>", unsafe_allow_html=True)
+        st.code(log_file.read())
 
-plots_log_path = f"../../run_data/collections/{coll_id}/filelist_merge_list_plots_log.txt"
-plots_log_file = open(plots_log_path)
-if plots_log_file:
-    st.write("<b>filelist_merge_list_plots_log.txt</b>", unsafe_allow_html=True)
-    st.code(plots_log_file.read())
+    plots_log_path = f"../../run_data/collections/{coll_id}/filelist_merge_list_plots_log.txt"
+    plots_log_file = open(plots_log_path)
+    if plots_log_file:
+        st.write("<b>filelist_merge_list_plots_log.txt</b>", unsafe_allow_html=True)
+        st.code(plots_log_file.read())

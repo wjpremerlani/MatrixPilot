@@ -98,8 +98,7 @@ if di:
     st.set_page_config(page_title=f"WolfPac {SERVER_SPORT_NAME} Data Manager", layout="wide")
     if not di.authenticate():
         st.stop()
-
-    coll_id = st.session_state.get('coll_id')
+    (coll_group_id, coll_id) = di.get_current_collection_id()
 else:
     if len(sys.argv) > 1:
         try:
@@ -494,7 +493,10 @@ if di:
             st.write("--- Plot data file not found ---")
             st.stop()
     else:
-        st.switch_page("pages/4_Logs.py")
+        plotlet_file = None
+        if not st.session_state.get("did_redirect"):
+            st.session_state["did_redirect"] = True
+            st.switch_page("pages/4_Logs.py")
 else:
     plotlet_file = st.sidebar.file_uploader("select a file")
 
@@ -536,17 +538,21 @@ if di:
         coll_group = models.RunCollectionGroup.objects.get(pk=coll_group_id)
         if coll_group:
             run_colls = coll_group.runcollection_set.all()
-            if run_colls.count() > 1:
-                display_vals = {run_coll.get_collection().pk: run_coll.slider.name for run_coll in run_colls}
+            run_colls = [rc for rc in run_colls if rc.runs.count()]
+            if len(run_colls) > 1:
+                display_vals = {run_coll.pk: run_coll.slider.name if run_coll.slider else "Runs" for run_coll in run_colls}
                 options = display_vals.keys()
                 def coll_changed():
-                    if st.session_state.get('_coll_id'):
-                        st.session_state['coll_id'] = st.session_state['_coll_id']
+                    if st.session_state.get('run_coll_id'):
+                        run_coll = models.RunCollection.objects.get(pk=st.session_state['run_coll_id'])
+                        if run_coll:
+                            coll = run_coll.get_collection()
+                            if coll:
+                                st.session_state['coll_id'] = coll.pk
                 st.sidebar.pills("Choose a Slider Collection",
                                  options,
                                  format_func=lambda v: display_vals[v],
-                                 default=st.session_state['coll_id'],
-                                 key='_coll_id',
+                                 key='run_coll_id',
                                  on_change=coll_changed)
 
 if plotlet_file is not None:
@@ -588,13 +594,23 @@ if plotlet_file is not None:
 
     # debug_file.close()
 
-    s_run_names = st.sidebar.multiselect("select a set of runs for plotting", options=run_names, default=run_names)
+    di.select_new_runs(run_names)
+    s_run_names = st.session_state['s_run_names']
+    def on_s_run_names_changed():
+        global s_run_names
+        s_run_names = st.session_state['s_run_names_val']
+        st.session_state['s_run_names'] = s_run_names
+    st.sidebar.multiselect("select a set of runs for plotting", options=run_names, on_change=on_s_run_names_changed,
+                           key='s_run_names_val', default=st.session_state['s_run_names'])
+
     # curve_number = st.sidebar.pills("select a curve" , curve_list, , default=curve_list[0] )
     run_number = st.sidebar.pills("select a run for a friction+aero scatter plot", s_run_names, default=s_run_names[0] if len(s_run_names) else None)
     # color_map = st.sidebar.pills("select variable to heat map" , [  " z_force" , " roll" , " roll_rate" ," pitch" , " yaw_rate" ," y_force" , " delta_time" , " pivot" , " friction+aero" , " velocity" , " x-acceleration" ], default=" z_force" )
 
     if di:
-        if st.sidebar.button("⟳&nbsp;Reload"):
+        if st.sidebar.button("⟳&nbsp;Refresh"):
+            if 'coll_group_id' in st.session_state and 'coll_id' in st.session_state:
+                del st.session_state['coll_id']
             st.rerun()
         if st.sidebar.button("⬅&nbsp;Collections"):
             di.go_to_collections()

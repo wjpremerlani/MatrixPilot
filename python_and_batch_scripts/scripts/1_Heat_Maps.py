@@ -2,7 +2,7 @@ try:
     import django_integration as di
     from LugeServer.settings import SERVER_SPORT_NAME
     import os
-    import luge.models as models
+    from luge.models import RunCollectionGroup, RunCollection
 except ImportError:
     di = None
 
@@ -98,38 +98,9 @@ for msb in range(16):
 if di:
     if not di.authenticate():
         st.stop()
-
-    # Get collection id from the url query string
-    coll_id = st.query_params.get("coll_id")
-    try:
-        coll_id = int(coll_id)
-    except:
-        pass
-
-    if coll_id:
-        st.session_state["coll_id"] = coll_id
-    else:
-        # Get collection_set id from the url query string
-        coll_group_id = st.query_params.get('coll_group_id')
-        try:
-            coll_group_id = int(coll_group_id)
-        except:
-            pass
-
-        if coll_group_id:
-            st.session_state["coll_group_id"] = coll_group_id
-            run_coll_group = models.RunCollectionGroup.objects.get(pk=coll_group_id)
-            if run_coll_group:
-                collections = run_coll_group.get_collections()
-                st.session_state["coll_id"] = collections[0].pk
-
-    if not st.session_state.get("did_clear_query"):
-        st.session_state["did_clear_query"] = True
-        st.query_params.clear()
-
+    (coll_group_id, coll_id) = di.get_current_collection_id()
     st.set_page_config(page_title=f"WolfPac {SERVER_SPORT_NAME} Data Manager", layout="wide")
 
-    coll_id = st.session_state.get('coll_id')
 else:
     if len(sys.argv) > 1:
         try:
@@ -529,7 +500,10 @@ if di:
             st.write("--- Plot data file not found ---")
             st.stop()
     else:
-        st.switch_page("pages/4_Logs.py")
+        plotlet_file = None
+        if not st.session_state.get("did_redirect"):
+            st.session_state["did_redirect"] = True
+            st.switch_page("pages/4_Logs.py")
 else:
     plotlet_file = st.sidebar.file_uploader("select a file")
 
@@ -568,20 +542,24 @@ colors_df.index = color_index
 if di:
     coll_group_id = st.session_state.get('coll_group_id')
     if coll_group_id:
-        coll_group = models.RunCollectionGroup.objects.get(pk=coll_group_id)
+        coll_group = RunCollectionGroup.objects.get(pk=coll_group_id)
         if coll_group:
             run_colls = coll_group.runcollection_set.all()
-            if run_colls.count() > 1:
-                display_vals = {run_coll.get_collection().pk: run_coll.slider.name for run_coll in run_colls}
+            run_colls = [rc for rc in run_colls if rc.runs.count()]
+            if len(run_colls) > 1:
+                display_vals = {run_coll.pk: run_coll.slider.name if run_coll.slider else "Runs" for run_coll in run_colls}
                 options = display_vals.keys()
                 def coll_changed():
-                    if st.session_state.get('_coll_id'):
-                        st.session_state['coll_id'] = st.session_state['_coll_id']
+                    if st.session_state.get('run_coll_id'):
+                        run_coll = RunCollection.objects.get(pk=st.session_state['run_coll_id'])
+                        if run_coll:
+                            coll = run_coll.get_collection()
+                            if coll:
+                                st.session_state['coll_id'] = coll.pk
                 st.sidebar.pills("Choose a Slider Collection",
                                  options,
                                  format_func=lambda v: display_vals[v],
-                                 default=st.session_state['coll_id'],
-                                 key='_coll_id',
+                                 key='run_coll_id',
                                  on_change=coll_changed)
 
 if plotlet_file is not None:
@@ -623,12 +601,27 @@ if plotlet_file is not None:
 
     # debug_file.close()
 
-    s_run_names = st.sidebar.multiselect("select a set of runs for plotting", options=run_names, default=run_names)
+    di.select_new_runs(run_names)
+    s_run_names = st.session_state['s_run_names']
+    def on_s_run_names_changed():
+        global s_run_names
+        s_run_names = st.session_state['s_run_names_val']
+        st.session_state['s_run_names'] = s_run_names
+    st.sidebar.multiselect("select a set of runs for plotting", options=run_names, on_change=on_s_run_names_changed,
+                           key='s_run_names_val', default=st.session_state['s_run_names'])
+
     # curve_number = st.sidebar.pills("select a curve" , curve_list, default=curve_list[0])
     run_number = st.sidebar.pills("select a run to heat map", s_run_names, default=s_run_names[0] if len(s_run_names) else None)
-    color_map = st.sidebar.pills("select variable to heat map",
-                                     [" z_force", " y_force", " x-acceleration", " roll", " pitch", " yaw_rate",
-                                      " roll_rate", " pivot", " delta_time"], default=" z_force")
+
+    if not st.session_state.get('color_map'): st.session_state['color_map'] = " z_force"
+    color_map = st.session_state['color_map']
+    def on_color_map_changed():
+        global color_map
+        color_map = st.session_state['color_map_val']
+        st.session_state['color_map'] = color_map
+    st.sidebar.pills("select variable to heat map", on_change=on_color_map_changed, key="color_map_val",
+                                     options=[" z_force", " y_force", " x-acceleration", " roll", " pitch", " yaw_rate",
+                                      " roll_rate", " pivot"], default=st.session_state['color_map'])
 
     s_yaw_columns = []
     s_yaw_rate_columns = []
@@ -694,7 +687,7 @@ if plotlet_file is not None:
     # if curve_number is not None :
     # curvelet_df = plotlets_df[plotlets_df["curve_number "] == curve_number ]
 
-    if track_map == True:
+    if track_map == True and color_map is not None:
         map_left, map_center, map_right = st.columns(column_ratios)
         with map_center:
             if color_map == ' pitch':
@@ -825,6 +818,16 @@ if plotlet_file is not None:
                     except:
                         pass
 
+                if di:
+                    if st.sidebar.button("⟳&nbsp;Refresh"):
+                        if 'coll_group_id' in st.session_state and 'coll_id' in st.session_state:
+                            del st.session_state['coll_id']
+                        st.rerun()
+                    if st.sidebar.button("⬅&nbsp;Collections"):
+                        di.go_to_collections()
+                    if st.sidebar.button("⬅&nbsp;Runs"):
+                        di.go_to_runs()
+
                 with st.sidebar:
                     st.text("Data Quality")
                 for run_name in run_names:
@@ -838,11 +841,3 @@ if plotlet_file is not None:
                                     st.image("red_mark.jpg")
                                 else:
                                     st.image("green_mark.jpg")
-
-    if di:
-        if st.sidebar.button("⟳&nbsp;Reload"):
-            st.rerun()
-        if st.sidebar.button("⬅&nbsp;Collections"):
-            di.go_to_collections()
-        if st.sidebar.button("⬅&nbsp;Runs"):
-            di.go_to_runs()
