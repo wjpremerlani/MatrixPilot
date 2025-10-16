@@ -98,7 +98,7 @@ if di:
     st.set_page_config(page_title=f"WolfPac {SERVER_SPORT_NAME} Data Manager", layout="wide")
     if not di.authenticate():
         st.stop()
-    (coll_group_id, coll_id) = di.get_current_collection_id()
+    (run_coll_group, run_coll) = di.get_current_collection()
 else:
     if len(sys.argv) > 1:
         try:
@@ -487,12 +487,16 @@ pd.options.plotting.backend = "plotly"
 alt.renderers.enable('svg')
 
 if di:
-    if coll_id:
-        plotlet_file = f"../../run_data/collections/{coll_id}/filelist_merge_list_plots_plotlets.csv"
-        if not os.path.exists(plotlet_file) or os.path.getsize(plotlet_file) == 0:
-            st.write("--- Plot data file not found ---")
-            st.stop()
-    else:
+    coll_id = None
+    if run_coll:
+        coll = run_coll.get_collection()
+        if coll:
+            coll_id = coll.pk
+            plotlet_file = f"../../run_data/collections/{coll_id}/filelist_merge_list_plots_plotlets.csv"
+            if not os.path.exists(plotlet_file) or os.path.getsize(plotlet_file) == 0:
+                st.write("--- Plot data file not found ---")
+                st.stop()
+    if coll_id is None:
         plotlet_file = None
         if not st.session_state.get("did_redirect"):
             st.session_state["did_redirect"] = True
@@ -533,27 +537,30 @@ colors_df.index = color_index
 # debug_file.write(f" colors_df['GYR'] = {colors_df['GYR']}\r\n\r\n")
 
 if di:
-    coll_group_id = st.session_state.get('coll_group_id')
-    if coll_group_id:
-        coll_group = models.RunCollectionGroup.objects.get(pk=coll_group_id)
-        if coll_group:
-            run_colls = coll_group.runcollection_set.all()
-            run_colls = [rc for rc in run_colls if rc.runs.count()]
-            if len(run_colls) > 1:
-                display_vals = {run_coll.pk: run_coll.slider.name if run_coll.slider else "Runs" for run_coll in run_colls}
-                options = display_vals.keys()
-                def coll_changed():
-                    if st.session_state.get('run_coll_id'):
-                        run_coll = models.RunCollection.objects.get(pk=st.session_state['run_coll_id'])
-                        if run_coll:
-                            coll = run_coll.get_collection()
-                            if coll:
-                                st.session_state['coll_id'] = coll.pk
-                st.sidebar.pills("Choose a Slider Collection",
-                                 options,
-                                 format_func=lambda v: display_vals[v],
-                                 key='run_coll_id',
-                                 on_change=coll_changed)
+    if run_coll_group:
+        run_colls = run_coll_group.runcollection_set.all()
+        run_colls = [rc for rc in run_colls if rc.runs.count()]
+        if len(run_colls) > 1:
+            display_vals = {rc.pk: rc.slider.name if rc.slider else "Runs" for rc in run_colls}
+            options = display_vals.keys()
+            st.session_state["run_coll_id"] = run_coll.pk if run_coll else list(display_vals.keys())[0]
+
+            def coll_changed():
+                if st.session_state.get('run_coll_id'):
+                    run_coll = models.RunCollection.objects.get(pk=st.session_state['run_coll_id'])
+                    if run_coll:
+                        st.session_state['run_coll_id'] = run_coll.pk
+                        if 's_run_names' in st.session_state:
+                            del st.session_state['s_run_names']
+                        if 'old_run_names' in st.session_state:
+                            del st.session_state['old_run_names']
+
+
+            st.sidebar.pills("Choose a Slider Collection",
+                             options,
+                             format_func=lambda v: display_vals[v],
+                             key='run_coll_id',
+                             on_change=coll_changed)
 
 if plotlet_file is not None:
     plotlets_df = pd.read_csv(plotlet_file)

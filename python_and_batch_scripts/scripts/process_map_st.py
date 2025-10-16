@@ -55,6 +55,8 @@ yaw_rate_end = 3.0
 #
 global int_dtpe
 int_dtpe = 180
+global distance_0
+distance_0 = 30.0
 #
 global z_force_plot_limit
 # z_force_plot_limit is used to clip the reported z force
@@ -1347,6 +1349,7 @@ def run_passes():
     global table_end_time, alignment_accel, previous_line_number, first_heading, valid_run
     global file_base_name, run_time, number_of_marks
     global prerun_margin
+    global distance_0
 
     ######################################
     #
@@ -1730,6 +1733,8 @@ def run_passes():
     ATY2 = np.matmul(AT2,Y2)
     ysqr2 = 0
 
+    start_int = int(100*start)
+
     for line_number in line_nums:
 
         if int(100*start) <= line_number <= int(100*end):
@@ -1822,6 +1827,15 @@ def run_passes():
             velocity[0,0] = velocity[0,0] + velocity_dot[0,0]/100.0
             
             new_distance = new_distance + velocity[0,0]/100.0
+
+            if (args.d0) :
+                if ( new_distance > distance_0/2.0 ) and (new_distance < distance_0) :
+                    time_0 = round(float( line_number - start_int)/100.0 + (distance_0 - new_distance)/velocity[0,0],3)
+                
+
+    if ( args.d0) :
+        print("t0:",time_0)
+        log_file.write(f"\n\ntime from pull to first timing eye = {time_0} seconds.\n\n")
 
     try :
      
@@ -2218,11 +2232,18 @@ def run_passes():
                         time_map_100_file.write(f",{round((  new_distance  ), 2)}")
                         time_map_100_file.write(f",{round(( x_ef   ), 2)}")
                         time_map_100_file.write(f",{round(( y_ef   ), 2)}")
-                        #if is_timing_eye(line_number - int_start) = True :
-                        if (( line_number - start_int ) in timing_eye_times) == True :
+
+                        if ( args.d0 ) :
+                            te0_offset = int(100.0*time_0)
+                        else:
+                            te0_offset = start_int
+                        
+                        if (( line_number - start_int - te0_offset ) in timing_eye_times) == True :
                             time_map_100_file.write(f",1")
                         else :
                             time_map_100_file.write(f",0")
+
+                        
 
                         #if sculling_debug == True:
 
@@ -2690,6 +2711,7 @@ def build_arg_parser():
     #parser.add_argument('-dfs', '--dfs', action='store_true', help="double filter")
     parser.add_argument('-te', '--te',  help="list of timing eye times")
     parser.add_argument('-dtpe', '--dtpe', help="delta time from peak of pull in seconds")
+    parser.add_argument('-d0','--d0', help="distance from pull to first timeing eye in feet")
     
     return parser
 
@@ -2731,6 +2753,9 @@ if __name__ == "__main__":
 
     if args.zfl:
         z_force_plot_limit = float(args.zfl)
+
+    if args.d0:
+        distance_0 = float(args.d0)
 
     if args.yaw_offset:
         yaw_offset = float(args.yaw_offset)
@@ -2859,8 +2884,8 @@ if __name__ == "__main__":
     if args.te :
         te_list = args.te.split(' ')
         for item in te_list :
-            timing_eye_times.append(int(100.0*float(item))+int_dtpe)
+            timing_eye_times.append(int(100.0*float(item)))
 
-    log_file.write(f"timing eye time values.\r\n{timing_eye_times}\r\n")
+    log_file.write(f"raw timing eye time values.\r\n{timing_eye_times}\r\n")
 
     run_passes()
