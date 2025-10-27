@@ -281,6 +281,9 @@ omega = np.zeros((3,1))
 s_force = np.zeros((3,1))
 g_force = np.zeros((3,1))
 
+time_0 = 0
+velocity_0 = 0
+
 def pad_14(instring):
     outstring = instring
     lenstring = len(instring)
@@ -1831,12 +1834,13 @@ def run_passes():
             if (args.d0) :
                 if ( new_distance > distance_0/2.0 ) and (new_distance < distance_0) :
                     time_0 = round(float( line_number - start_int)/100.0 + (distance_0 - new_distance)/velocity[0,0],3)
-                
+                    velocity_0 = round(velocity[0,0] + velocity_dot[0,0]*(distance_0 - new_distance)/velocity[0,0],3)              
 
     if ( args.d0) :
         print("t0:",time_0)
+        print("v0:",velocity_0)
         log_file.write(f"\n\ntime from pull to first timing eye = {time_0} seconds.\n\n")
-
+        log_file.write(f"\n\nvelocity at first timing eye = {velocity_0} seconds.\n\n")
     try :
      
         ATA_INVERSE = np.linalg.inv(ATA)

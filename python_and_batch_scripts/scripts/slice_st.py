@@ -498,6 +498,8 @@ def write_timing_marks() :
             marks_file.write(f"{round((table_entry[5]-table_entry[4]),2)}")
             marks_file.write(f"\r")
         table_lengths.append(table_length)
+        if len(ct_mark_tables[run_number]):
+            print(f"\nTLCE for run:{run_number}:{ct_mark_tables[run_number][-1][5]}")
     minimum_length = min(table_lengths)
     table_number = 0
     for table_length in table_lengths :

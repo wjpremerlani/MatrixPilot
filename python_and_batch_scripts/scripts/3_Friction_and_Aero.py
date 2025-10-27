@@ -619,14 +619,21 @@ if plotlet_file is not None:
     # color_map = st.sidebar.pills("select variable to heat map" , [  " z_force" , " roll" , " roll_rate" ," pitch" , " yaw_rate" ," y_force" , " delta_time" , " pivot" , " friction+aero" , " velocity" , " x-acceleration" ], default=" z_force" )
 
     if di:
-        if st.sidebar.button("⟳&nbsp;Refresh"):
-            if 'coll_group_id' in st.session_state and 'coll_id' in st.session_state:
-                del st.session_state['coll_id']
-            st.rerun()
-        if st.sidebar.button("⬅&nbsp;Collections"):
-            di.go_to_collections()
-        if st.sidebar.button("⬅&nbsp;Runs"):
-            di.go_to_runs()
+        with st.sidebar:
+            col1, col2, = st.columns(2, gap=None)
+            col3, col4 = st.columns(2, gap=None)
+            with col1:
+                if st.button("⬅Colls", use_container_width=True):
+                    di.go_to_collections()
+            with col2:
+                if st.button("⬅Runs", use_container_width=True):
+                    di.go_to_runs()
+            with col3:
+                if st.button("⟳Refresh", use_container_width=True):
+                    di.refresh()
+            with col4:
+                if st.button("⟳Reproc.", use_container_width=True):
+                    di.reprocess()
 
     s_yaw_columns = []
     s_yaw_rate_columns = []

@@ -12,11 +12,12 @@ ZA_COL = 2
 YAW_COL = 3
 PITCH_COL = 4
 ROLL_COL = 5
-
+SEQ_COL = 9
 
 global mark_state, mark_number
 global roll_max , roll_ratio , peak_threshold , start_threshold
 global heading_start , yaw_threshold
+
 
 start_threshold = 15.0 # roll angle to detect the start of a curve
 peak_threshold = 20.0 # roll angle to confirm a curve
@@ -24,6 +25,9 @@ yaw_threshold = 7.5
 roll_ratio = 0.1 # value of roll/roll_max needed to detect end of curve
 mark_number = 0
 mark_state = 0
+
+seq_num_start = None
+seq_num_end = None
 
 global line_numbers , yaws , rolls
 line_numbers = []
@@ -88,16 +92,18 @@ def mav_filter(raw_list,index_table):
     return filter_table
 
 def read_data(run_file) :
-    global line_numbers , yaws , rolls
+    global line_numbers , yaws , rolls, seq_num_start, seq_num_end
     dataStr = run_file.read()
     lines = dataStr.splitlines(keepends=False)
-    first_line = 1
     line_number = 0
     if dataStr:
         for line in lines:
             columns = line.split(',')
             if len(columns) == NUM_COLS:
                 try:
+                    if seq_num_start is None:
+                        seq_num_start = int(columns[SEQ_COL])
+                    seq_num_end = int(columns[SEQ_COL])
                     yaw_in = float(columns[YAW_COL])
                     roll_in = float(columns[ROLL_COL])
                     line_numbers.append(line_number)
@@ -162,7 +168,11 @@ if __name__ == "__main__":
 
     run_steps()
 
-    print(int(mark_number/2))
+    if seq_num_start is None:
+        seq_num_start = 0
+    if seq_num_end is None:
+        seq_num_end = 0
+    print(f"{int(mark_number / 2)},{seq_num_start},{seq_num_end}")
 
     if args.log :
         cc_log.write(f"{int(mark_number/2)} , {file_name}\n")
