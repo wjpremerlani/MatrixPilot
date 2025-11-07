@@ -1159,28 +1159,32 @@ def read_data(file):
     no_warnings = True
     if gyro_stdev > gyro_stdev_max:
         no_warnings = False
-        summary_log_file.write(f">>>*****************************************************<<<\n")
-        summary_log_file.write(f"warning: the value of the gyro analysis standard deviation is {round(gyro_stdev,2)} degrees, which is greater than the allowed threshold of {gyro_stdev_max}\n")
+        if summary_log_file:
+            summary_log_file.write(f">>>*****************************************************<<<\n")
+            summary_log_file.write(f"warning: the value of the gyro analysis standard deviation is {round(gyro_stdev,2)} degrees, which is greater than the allowed threshold of {gyro_stdev_max}\n")
         print(">>>*****************************************************<<<")
         print("warning: the value of the gyro analysis standard deviation is ",round(gyro_stdev,2)," degrees, which is greater than the allowed threshold of ",gyro_stdev_max)
     if gyro_drift > gyro_drift_max:
         valid_run = False
         no_warnings = False
-        summary_log_file.write(f">>>*****************************************************<<<\n")
-        summary_log_file.write(f"warning: the value of the total gyro rms drift is {round(gyro_drift,2)} degrees per minute, which is greater than the allowed threshold of {gyro_drift_max}\n")
+        if summary_log_file:
+            summary_log_file.write(f">>>*****************************************************<<<\n")
+            summary_log_file.write(f"warning: the value of the total gyro rms drift is {round(gyro_drift,2)} degrees per minute, which is greater than the allowed threshold of {gyro_drift_max}\n")
         print(">>>*****************************************************<<<")
         print("warning: the value of the total gyro rms drift is ",round(gyro_drift,2)," degrees per minute, which is greater than the allowed threshold of ",gyro_drift_max)
     if force_stdev > force_stdev_max:
         no_warnings = False
-        summary_log_file.write(f">>>*****************************************************<<<\n")
-        summary_log_file.write(f"warning: the value of the force analysis standard deviation is {round(force_stdev,2)} ft/sec/sec, which is greater than the allowed threshold of {force_stdev_max}\n")
+        if summary_log_file:
+            summary_log_file.write(f">>>*****************************************************<<<\n")
+            summary_log_file.write(f"warning: the value of the force analysis standard deviation is {round(force_stdev,2)} ft/sec/sec, which is greater than the allowed threshold of {force_stdev_max}\n")
         print(">>>*****************************************************<<<")
         print("warning: the value of the force analysis standard deviation is ",round(force_stdev,2)," ft/sec/sec, which is greater than the allowed threshold of ",force_stdev_max)
     if weight_sum < weights_min:
         valid_run = False
         no_warnings = False
-        summary_log_file.write(f">>>*****************************************************<<<\n")
-        summary_log_file.write(f"warning: the sum of the analysis weights is {round(weight_sum,2)} , which is less than the allowed threshold of {weights_min}\n")
+        if summary_log_file:
+            summary_log_file.write(f">>>*****************************************************<<<\n")
+            summary_log_file.write(f"warning: the sum of the analysis weights is {round(weight_sum,2)} , which is less than the allowed threshold of {weights_min}\n")
         print(">>>*****************************************************<<<")
         print("warning: the sum of the analysis weights is ",round(weight_sum,2),", which is less than the allowed threshold of ",weights_min)
     try:
@@ -2113,6 +2117,9 @@ def run_passes():
         pass
 
     start_int = int(100*start)
+
+    previous_state = 0
+    finish_time = 0.0
     
     for line_number in line_nums:
 
@@ -2186,6 +2193,10 @@ def run_passes():
                 try:
 
                     if args_strmlt:
+
+                        if ( mark_state == 0 ) and (abs(previous_state) > 0 ) :
+                            finish_time = round( local_time , 2 )
+                        previous_state = mark_state
 
                         time_map_100_file.write(f"{round(( local_time   ), 2)}")
                         time_map_100_file.write(f",{mark_number},{mark_state}")
@@ -2333,8 +2344,12 @@ def run_passes():
         log_file.write(f"**\n----> Third pass velocity estimation rms and bias errors. <----\n**\n**\n")
         log_file.write(f"**\n----> velocity estimation bias = {round(velocity_bias,2)} feet per second. <----\n**\n")
         log_file.write(f"**\n----> velocity estimation rms error, including bias, = {round(velocity_variance,2)} feet per second. <----\n**\n")
+        log_file.write(f"TLCE:{finish_time}\n")
     except :
         pass
+
+    print("TLCE:",finish_time)
+    
 
 
 #########################################################
@@ -2803,6 +2818,8 @@ if __name__ == "__main__":
         except:
             summary_log_file = open("summary_log.txt", "w")
             write_summary_header()
+    else:
+        summary_log_file = None
 
     try:
         input_file = open(file_name)
