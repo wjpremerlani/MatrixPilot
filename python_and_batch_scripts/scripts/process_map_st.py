@@ -832,7 +832,7 @@ def read_data(file):
                         line_number = line_number+1
                 except ValueError:
                     pass
-            if len(columns) == NUM_RES_COLUMNS:
+            if len(columns) >= NUM_RES_COLUMNS:
                 try:
                     total_valid_samples = total_valid_samples + int (columns[VALID_COLUMN])
                 except ValueError:
@@ -847,6 +847,9 @@ def read_data(file):
     if total_valid_samples > MINIMUM_VALID_SAMPLES:
         valid_run = True
     else:
+        log_file.write(f"\n\nvalid_run = False, not enough prerun samples\n")
+        log_file.write(f"\ntotal_valid_samples = {total_valid_samples}\n")
+        log_file.write(f"\nMINIMUM_VALID_SAMPLES = {MINIMUM_VALID_SAMPLES}\n")
         valid_run = False
 
     N = 0
@@ -1166,6 +1169,7 @@ def read_data(file):
         print("warning: the value of the gyro analysis standard deviation is ",round(gyro_stdev,2)," degrees, which is greater than the allowed threshold of ",gyro_stdev_max)
     if gyro_drift > gyro_drift_max:
         valid_run = False
+        log_file.write(f"valid_run = False , too much gyro drift.\n")
         no_warnings = False
         if summary_log_file:
             summary_log_file.write(f">>>*****************************************************<<<\n")
@@ -1181,6 +1185,7 @@ def read_data(file):
         print("warning: the value of the force analysis standard deviation is ",round(force_stdev,2)," ft/sec/sec, which is greater than the allowed threshold of ",force_stdev_max)
     if weight_sum < weights_min:
         valid_run = False
+        log_file.write(f"valid_run = False , weight_sum too small: {weight_sum}.\n")
         no_warnings = False
         if summary_log_file:
             summary_log_file.write(f">>>*****************************************************<<<\n")
@@ -1691,7 +1696,7 @@ def run_passes():
     if mark_number < number_of_marks :
         valid_run = False
         try :
-            log_file.write(f"**\n**\n---->invalid run, not enough curve markers. <----\n")
+            log_file.write(f"**\n**\n---->valid_run = False, not enough curve markers. <----\n")
             log_file.write(f"**\n**\nrequired number of marks = {number_of_marks}\n")
             log_file.write(f"**\n**\ndetected number of marks = {mark_number}\n**\n**\n")
         except :
