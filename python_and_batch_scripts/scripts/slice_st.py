@@ -480,6 +480,9 @@ ct_mark_tables = []
 
 global plotlet_numbers
 
+global finish_times
+finish_times = []
+
 def write_timing_marks() :
     global ct_mark_tables , run_numbers
     global plotlet_numbers
@@ -516,7 +519,7 @@ def write_timing_marks() :
         for run_number in run_numbers :
             log_file.write(f"{ct_mark_tables[run_number][plotlet_number]}\r")
     last_plotlet = max(plotlet_numbers)
-    finish_times = []
+    #finish_times = []
     for run_number in run_numbers :
         finish_times.append(ct_mark_tables[run_number][last_plotlet][5])
     log_file.write(f"finish times\n{finish_times}\n")
@@ -728,6 +731,9 @@ def map_color(dtime) :
     else :
         heat_color = "yellow"
     return heat_color
+
+global total_lines_of_data
+total_lines_of_data = 0
            
 
 def write_plotlets() :
@@ -740,6 +746,12 @@ def write_plotlets() :
     global plotlet_offset_table , column_offset_table
     global only_curve_number , first_curve_number
     global curve_number
+    global total_lines_of_data , finish_times
+
+    for plotlet_size in plotlet_sizes :
+        total_lines_of_data = total_lines_of_data + plotlet_size
+
+    log_file.write(f"\n\ntotal number of lines of plotlet data = {total_lines_of_data}\n\n")
 
     log_file.write(f"minimum dt = {min_dt} , maximum dt = {max_dt} \n")
 
@@ -869,7 +881,12 @@ def write_plotlets() :
                         max_dt = max(max_dt , delta_time)
 
                 for run_number in run_numbers :
-                    b_delta_time = button_delta_time(run_number,time_index)
+                    #b_delta_time = button_delta_time(run_number,time_index)
+                    if total_lines_of_data > 0 :
+                        b_delta_time = button_delta_time(run_number,int(finish_times[run_number]*100*float(time_index)/float(total_lines_of_data)))
+                    else :
+                        b_delta_time = 0
+                    
                     output_file.write(f"{b_delta_time},")
                 
                 time_index = time_index+1       
