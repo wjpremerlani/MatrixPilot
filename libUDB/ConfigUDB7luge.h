@@ -52,6 +52,21 @@
 // y -> x
 // x -> -y
 
+#define ROCKET_OFFSETS
+
+#ifdef ROCKET_OFFSETS
+
+#define xrate_MPU_channel   4
+#define yrate_MPU_channel   5
+#define zrate_MPU_channel   6
+#define temp_MPU_channel    3
+#define xaccel_MPU_channel  0
+#define yaccel_MPU_channel  1
+#define zaccel_MPU_channel  2
+
+
+#else
+
 #define xrate_MPU_channel   5
 #define yrate_MPU_channel   4
 #define zrate_MPU_channel   6
@@ -59,6 +74,8 @@
 #define xaccel_MPU_channel  1
 #define yaccel_MPU_channel  0
 #define zaccel_MPU_channel  2
+
+#endif // ROCKET_OFFSETS
 
 #define XRATE_SIGN          -
 #define YRATE_SIGN          -

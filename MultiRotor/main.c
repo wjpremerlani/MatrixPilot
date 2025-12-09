@@ -137,7 +137,8 @@ int main (void)
 	udb_serial_set_rate(57600) ;
 #else
 //    udb_serial_set_rate(460800) ;
-    udb_serial_set_rate(473933) ;   
+//    udb_serial_set_rate(473933) ;
+    udb_serial_set_rate(19200) ;
 #endif // UDB7LUGE
 #endif // USE_PACKETIZED_TELEMERTY
     

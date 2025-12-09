@@ -53,11 +53,11 @@
 
 // the following defines select what gets sent to the logger
 // for a normal production run, define LOG_IMU_WP2, NORMAL_RUN, LOG_RESIDUALS AND RESIDUAL_LOG_PERIOD
-#define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
+//#define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
                                     // you will also need to select a logging format
                                   // such as TEST_SLED or HELMET_IMU, for example
-#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
-#define LOG_RESIDUALS         // logs residual offsets between runs and during "turtle testing"
+//#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
+//#define LOG_RESIDUALS         // logs residual offsets between runs and during "turtle testing"
                                 // also used for align gauge
 #define RESIDUAL_LOG_PERIOD 2  // 30 times per minute
 
@@ -70,8 +70,8 @@
 //      TURTLE_TESTING will report average force via residual logging
 //#define RECORD_OFFSETS        // record raw accelerometer data and verify residual gyro offsets
 // the following two options are presently used together
-//#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
-//#define ACCEL_AND_GYRO_OFFSETS
+#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
+#define ACCEL_AND_GYRO_OFFSETS
 
 // the following are special logging options
 //#define SPECTRAL_ANALYSIS_BURST // 5 hz, start at 15, remember to also uncomment the following line
@@ -93,7 +93,7 @@
 
 // When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
 // non-printable characters are written out, as header bytes for packets.
-#define USE_PACKETIZED_TELEMERTY
+//#define USE_PACKETIZED_TELEMERTY
 
 #define LOG_EULER
 //#define LOG_RATE_AND_EULER
@@ -115,7 +115,7 @@
 //#define LUGE7_SNnew // used to program a WP without a serial number
 
 //bill's research boards
-//#define LUGE7_SNts1
+#define LUGE7_SNts1
 //#define LUGE7_SNts2
 
 
@@ -166,7 +166,7 @@
 //#define LUGE7_SN126
 //#define LUGE7_SN127
 //#define LUGE7_SN128
-#define LUGE7_SN129
+//#define LUGE7_SN129
 //#define LUGE7_SN130
 //#define LUGE7_SN131
 //#define LUGE7_SN132
