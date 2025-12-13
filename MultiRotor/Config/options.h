@@ -53,11 +53,11 @@
 
 // the following defines select what gets sent to the logger
 // for a normal production run, define LOG_IMU_WP2, NORMAL_RUN, LOG_RESIDUALS AND RESIDUAL_LOG_PERIOD
-#define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
+//#define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
                                     // you will also need to select a logging format
                                   // such as TEST_SLED or HELMET_IMU, for example
-#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
-#define LOG_RESIDUALS         // logs residual offsets between runs and during "turtle testing"
+//#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
+//#define LOG_RESIDUALS         // logs residual offsets between runs and during "turtle testing"
                                 // also used for align gauge
 #define RESIDUAL_LOG_PERIOD 2  // 30 times per minute
 
@@ -70,8 +70,8 @@
 //      TURTLE_TESTING will report average force via residual logging
 //#define RECORD_OFFSETS        // record raw accelerometer data and verify residual gyro offsets
 // the following two options are presently used together
-//#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
-//#define ACCEL_AND_GYRO_OFFSETS
+#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
+#define ACCEL_AND_GYRO_OFFSETS
 
 #define SERIAL_PRIORITY
 
@@ -103,10 +103,8 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-//#define LOGGER_HZ	100
-//#define HEADER_HZ	20          // records per second during header logging
-#define LOGGER_HZ	1
-#define HEADER_HZ	1          // records per second during header logging
+#define LOGGER_HZ	100
+#define HEADER_HZ	20          // records per second during header logging         // records per second during header logging
 
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
@@ -120,8 +118,14 @@
 //#define LUGE7_SNnew // used to program a WP without a serial number
 
 //bill's research boards
-#define LUGE7_SNts1
+//#define LUGE7_SNts1
 //#define LUGE7_SNts2
+
+// rocket VOS boards
+
+#define VOS_SN09
+//#define VOS_SN10
+//#define VOS_SN11
 
 
 //#define LUGE7_SN050
@@ -268,6 +272,19 @@
 //#define MINI5_SN12 // SN12
 //#define MINI6_SN2 // was SN2, now SN14
 //#define MINI6_SN15 // SN15
+
+#ifdef VOS_SN09
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	0
+#define SERIAL_NUMBERD2	0
+#define SERIAL_NUMBERD3 9
+#define ACCEL_RANGE         4
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_VOS_SN09.h"
+#endif // VOS_SN09
 
 #ifdef LUGE7_SNnew
 #define ENABLE_ESP32
