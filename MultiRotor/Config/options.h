@@ -57,21 +57,21 @@
                                     // you will also need to select a logging format
                                   // such as TEST_SLED or HELMET_IMU, for example
 //#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
-#define LOG_RESIDUALS         // logs residual offsets between runs and during "turtle testing"
+//#define LOG_RESIDUALS         // logs residual offsets between runs and during "turtle testing"
                                 // also used for align gauge
 #define RESIDUAL_LOG_PERIOD 2  // 30 times per minute
 
 //#define LOG_PITCH_RATE // not commonly used
 
 // the following are used to measure offsets and gains for commissioning
-#define TURTLE_TESTING 1 // now used instead of RECORD_OFFSETS for gathering of 6 point data
+#define TURTLE_TESTING 0 // now used instead of RECORD_OFFSETS for gathering of 6 point data
                         // usually LOG_RESIDUALS should be selected when TT is 1
 //note: TURTLE_TESTING must be defined to set the option to 0 to not use it, or 1 to use it
 //      TURTLE_TESTING will report average force via residual logging
 //#define RECORD_OFFSETS        // record raw accelerometer data and verify residual gyro offsets
 // the following two options are presently used together
-//#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
-//#define ACCEL_AND_GYRO_OFFSETS
+#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
+#define ACCEL_AND_GYRO_OFFSETS
 
 #define SERIAL_PRIORITY
 
@@ -123,9 +123,9 @@
 
 // rocket VOS boards
 
-#define VOS_SN09
+//#define VOS_SN09
 //#define VOS_SN10
-//#define VOS_SN11
+#define VOS_SN11
 
 
 //#define LUGE7_SN050
@@ -285,6 +285,32 @@
 #define LOG_EULER
 #include "options_VOS_SN09.h"
 #endif // VOS_SN09
+
+#ifdef VOS_SN10
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	0
+#define SERIAL_NUMBERD2	1
+#define SERIAL_NUMBERD3 0
+#define ACCEL_RANGE         4
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_VOS_SN10.h"
+#endif // VOS_SN10
+
+#ifdef VOS_SN11
+#define ENABLE_ESP32
+#define UDB7LUGE
+#define BOARD LUGE7
+#define SERIAL_NUMBERD1	0
+#define SERIAL_NUMBERD2	1
+#define SERIAL_NUMBERD3 1
+#define ACCEL_RANGE         4
+#define GYRO_RANGE	    1000
+#define LOG_EULER
+#include "options_VOS_SN11.h"
+#endif // VOS_SN11
 
 #ifdef LUGE7_SNnew
 #define ENABLE_ESP32
