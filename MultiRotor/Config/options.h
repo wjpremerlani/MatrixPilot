@@ -123,9 +123,9 @@
 
 // rocket VOS boards
 
-//#define VOS_SN09
+#define VOS_SN09
 //#define VOS_SN10
-#define VOS_SN11
+//#define VOS_SN11
 
 
 //#define LUGE7_SN050
@@ -280,7 +280,7 @@
 #define SERIAL_NUMBERD1	0
 #define SERIAL_NUMBERD2	0
 #define SERIAL_NUMBERD3 9
-#define ACCEL_RANGE         4
+#define ACCEL_RANGE         16
 #define GYRO_RANGE	    1000
 #define LOG_EULER
 #include "options_VOS_SN09.h"
@@ -293,7 +293,7 @@
 #define SERIAL_NUMBERD1	0
 #define SERIAL_NUMBERD2	1
 #define SERIAL_NUMBERD3 0
-#define ACCEL_RANGE         4
+#define ACCEL_RANGE         16
 #define GYRO_RANGE	    1000
 #define LOG_EULER
 #include "options_VOS_SN10.h"
@@ -306,7 +306,7 @@
 #define SERIAL_NUMBERD1	0
 #define SERIAL_NUMBERD2	1
 #define SERIAL_NUMBERD3 1
-#define ACCEL_RANGE         4
+#define ACCEL_RANGE         16
 #define GYRO_RANGE	    1000
 #define LOG_EULER
 #include "options_VOS_SN11.h"
