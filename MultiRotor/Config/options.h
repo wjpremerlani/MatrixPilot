@@ -124,8 +124,8 @@
 // rocket VOS boards
 
 //#define VOS_SN09
-#define VOS_SN10
-//#define VOS_SN11
+//#define VOS_SN10
+#define VOS_SN11
 
 
 //#define LUGE7_SN050
