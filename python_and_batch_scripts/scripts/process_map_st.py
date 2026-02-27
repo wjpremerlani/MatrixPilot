@@ -1361,7 +1361,7 @@ def run_passes():
     global table_end_time, alignment_accel, previous_line_number, first_heading, valid_run
     global file_base_name, run_time, number_of_marks
     global prerun_margin
-    global distance_0
+    global distance_0, velocity_0, time_0
 
     ######################################
     #
@@ -1850,6 +1850,11 @@ def run_passes():
         print("v0:",velocity_0)
         log_file.write(f"\n\ntime from pull to first timing eye = {time_0} seconds.\n\n")
         log_file.write(f"\n\nvelocity at first timing eye = {velocity_0} seconds.\n\n")
+
+    aero_factor = 0
+    friction_factor = 0
+    splay_factor = 0
+
     try :
      
         ATA_INVERSE = np.linalg.inv(ATA)
