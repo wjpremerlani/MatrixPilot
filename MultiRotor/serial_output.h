@@ -12,6 +12,7 @@
 #define PKT_CMD_MSG 0xD2
 #define PKT_CMD_STOP 0xD3
 #define PKT_CMD_RUN_START 0xD4
+#define PKT_CMD_LINE_START 0xD5
 
 void udb_serial_start_sending_data(void);
 void serial_output(const char* format, ...);

@@ -7,8 +7,7 @@
 #include "../libUDB/interrupt.h"
 #include "../libUDB/serialIO.h"
 
-#define SERIAL_BUFFER_SIZE	10200
-#define NUM_CHUNKS_TO_BUFFER 86
+#define SERIAL_BUFFER_SIZE	1024
 
 
 // Set up two serial buffers, and swap back and forth between then as we buffer
@@ -23,7 +22,6 @@ uint8_t write_buffer_index = 0;
 uint8_t read_buffer_index = 0;
 uint16_t packet_data_start;
 uint16_t packet_data_length;
-uint8_t num_chunks_buffered = 0;
 boolean is_packet_open = false;
 
 void finalize_packet();
@@ -87,10 +85,7 @@ void udb_serial_stop_sending_data(void)
 // 0xDED2LLLLXXXX... - Send a packet of data 0xLLLL bytes long
 //                     High length byte, low length byte, then N data bytes
 // 
-// We bundle up NUM_CHUNKS_TO_BUFFER messages into one packet, so that we're
-// able to burst a bunch of data at once, leaving some time in between these
-// large packets, since the ESP32 needs uninterrupted time to write this data
-// to flash storage in between packets.
+// We send one line per packet to the ESP32, and it adds a timestamp field to the end of each line.
 
 void serial_output(const char* format, ...)
 {
@@ -101,16 +96,16 @@ void serial_output(const char* format, ...)
     
     va_start(arglist, format);
     
-    if (!is_packet_open) {
-        serial_output_send_packet_cmd(PKT_CMD_START);
+    if (end_index[write_buffer_index] == 0) {
+        serial_output_send_packet_cmd(PKT_CMD_LINE_START);
     }
-    
+
 	start_index = end_index[write_buffer_index];
 	remaining = SERIAL_BUFFER_SIZE - start_index;
 
 	if (remaining > 5)
 	{
-        if (num_chunks_buffered == 0) {
+        if (start_index == 0) {
             serial_buffer[write_buffer_index][start_index++] = PKT_CMD_HEADER;
             serial_buffer[write_buffer_index][start_index++] = PKT_CMD_MSG;
             serial_buffer[write_buffer_index][start_index++] = 0x00; // Save space for length bytes
@@ -123,9 +118,8 @@ void serial_output(const char* format, ...)
         
         packet_data_length += wrote;
 		end_index[write_buffer_index] = start_index + wrote;
-        num_chunks_buffered++;
         
-        if (num_chunks_buffered >= NUM_CHUNKS_TO_BUFFER) {
+        if (serial_buffer[write_buffer_index][end_index[write_buffer_index]-1] == '\n') {
             finalize_packet();
             read_buffer_index = write_buffer_index;
             write_buffer_index = !write_buffer_index;
@@ -138,13 +132,12 @@ void serial_output(const char* format, ...)
 
 void finalize_packet()
 {
-    if (num_chunks_buffered && packet_data_start) {
+    if (packet_data_start) {
         // Go back and write the length bytes
         uint8_t lenH = packet_data_length/256;
         uint8_t lenL = packet_data_length%256;
         serial_buffer[write_buffer_index][packet_data_start-2] = lenH;
         serial_buffer[write_buffer_index][packet_data_start-1] = lenL;
-        num_chunks_buffered = 0;
     }
 }
 
