@@ -1236,19 +1236,27 @@ void send_imu_data(void)
             	((double)(aero_force[0]))/ACCEL_FACTOR ,
 				((double)(aero_force[1]))/ACCEL_FACTOR ,
 				((double)(aero_force[2]))/ACCEL_FACTOR ,
+                heading_8k ,  pitch_angle_8k , roll_angle_8k ,
+                ((double) (yaw_rate))/ ((double)93701.65) ,
+                    max_gyro/328 ,
+                    udb_cpu_load(),
+                    record_number ++ ,
+                
 #else
             serial_output("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%i", 
                 ((double)(aero_force[0]))/ACCEL_FACTOR ,
 				((double)(aero_force[1]))/ACCEL_FACTOR ,
-				((double)(aero_force[2]))/ACCEL_FACTOR ,        
-#endif // NOT_BOTH
-
-				heading_8k ,  pitch_angle_8k , roll_angle_8k ,
+				((double)(aero_force[2]))/ACCEL_FACTOR , 
+                    heading_8k ,  pitch_angle_8k , roll_angle_8k ,
  
                 ((double) (yaw_rate))/ ((double)93701.65) ,    
 				((double)(aero_force_ns[0]))/ACCEL_FACTOR ,
 				((double)(aero_force_ns[1]))/ACCEL_FACTOR ,
                 record_number ++ ,
+                    
+#endif // NOT_BOTH
+
+				
 
 #ifdef LOG_PITCH_RATE
                 omegagyro[1]
