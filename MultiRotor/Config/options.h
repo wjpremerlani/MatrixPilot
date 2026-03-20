@@ -51,6 +51,8 @@
 #define LUGE7 "UDBluge7 hardware, 200 Hz sampling.\r\n"
 #endif // CONING_CORRECTION
 
+#define SERIAL_PRIORITY
+
 // the following defines select what gets sent to the logger
 // for a normal production run, define LOG_IMU_WP2, NORMAL_RUN, LOG_RESIDUALS AND RESIDUAL_LOG_PERIOD
 #define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
@@ -142,7 +144,7 @@
 //#define LUGE7_SN102
 //#define LUGE7_SN103
 //#define LUGE7_SN104
-//#define LUGE7_SN105
+#define LUGE7_SN105
 //#define LUGE7_SN106
 //#define LUGE7_SN107
 //#define LUGE7_SN108 
@@ -166,7 +168,7 @@
 //#define LUGE7_SN126
 //#define LUGE7_SN127
 //#define LUGE7_SN128
-#define LUGE7_SN129
+//#define LUGE7_SN129
 //#define LUGE7_SN130
 //#define LUGE7_SN131
 //#define LUGE7_SN132
