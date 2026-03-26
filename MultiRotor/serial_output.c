@@ -110,6 +110,7 @@ void serial_output(const char* format, ...)
             serial_buffer[write_buffer_index][start_index++] = PKT_CMD_MSG;
             serial_buffer[write_buffer_index][start_index++] = 0x00; // Save space for length bytes
             serial_buffer[write_buffer_index][start_index++] = 0x00;
+            remaining -= 4;
             packet_data_start = start_index;
             packet_data_length = 0;
         }
