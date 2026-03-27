@@ -34,9 +34,13 @@
 //#define DATE "Wolf_pac_2 , firmware 6.7, 5/7/2025\r\n"
 // 6.7 : raised accelerometer sampling rate from 1000 Hz to 4000 Hz
 // and raised gyro bandwidth from 250 Hz to 3281 Hz
-#define DATE "Wolf_pac_2 , firmware 6.8, 5/15/2025\r\n"
+//#define DATE "Wolf_pac_2 , firmware 6.8, 5/15/2025\r\n"
 // 6.8 : bug fix regarding reporting of the number of pending uploads
 // "6.8.1" , 5/23/2025, also pings the data manager when first turned on
+
+#define DATE "Wolf_pac_2 , firmware 7.0, 3/27/2026\r\n"
+// 7.0 : implementation of time stamping in the ESP32 to improve time accuracy
+// including the use of SERIAL_PRIORITY option
 
 #define CONING_CORRECTION
 #define CONING_CORRECTION_IN_RMAT
