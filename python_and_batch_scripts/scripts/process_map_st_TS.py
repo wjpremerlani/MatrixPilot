@@ -69,6 +69,11 @@ z_force_plot_limit = - 600.0
 # don't edit anything below this line.
 ###########################################
 
+global has_time_stamps , time_stamp , time_increment
+has_time_stamps = False
+time_stamp = 0
+time_increment = 100
+
 curve_timer = 0
 
 roll_max = start_threshold
@@ -123,10 +128,11 @@ ZA_COL = 2
 YAW_COL = 3
 PITCH_COL = 4
 ROLL_COL = 5
+TIME_COL = 11
 
 global args
 
-global line_numbers , gxs, gys, gzs, yaws, pitches, rolls
+global line_numbers , gxs, gys, gzs, yaws, pitches, rolls , times
 line_numbers = []
 gxs = []
 gys = []
@@ -134,6 +140,7 @@ gzs = []
 yaws = []
 pitches = []
 rolls = []
+times = []
 
 # output_data = []
 
@@ -682,6 +689,7 @@ def read_markers(marker_file):
 global valid_run
 
 def read_data(file):
+    global has_time_stamps , time_stamp , time_increment , times
     global roll_threshold
     global line_numbers , gxs, gys, gzs, yaws, pitches, rolls
     global xa_in, ya_in, za_in , xa_out, ya_out, za_out
@@ -779,6 +787,8 @@ def read_data(file):
         for line in lines :
             columns = line.split(',')
             if ( len(columns) == NUM_COLS ) or  ( len(columns) == NUM_COLS +1 ) :
+                if ( len(columns) == NUM_COLS +1 ) :
+                    has_time_stamps = True
                 try:
                     roll_angle = float(columns[ROLL_COL])
                     if abs(roll_angle) > 45 :
@@ -1211,7 +1221,12 @@ def read_data(file):
                     yaw_in = float(columns[YAW_COL])
                     pitch_in = float(columns[PITCH_COL])
                     roll_in = float(columns[ROLL_COL])
-
+                    if ( has_time_stamps ) :
+                        time_stamp_in = int(columns[TIME_COL])
+                    else :
+                        time_stamp_in = time_stamp
+                        time_stamp = time_stamp + time_increment
+                    times.append(time_stamp_in)
                     line_nums.append(line_number)
 
                     line_number = line_number + 1
@@ -1290,7 +1305,7 @@ def read_data(file):
 
                         output_file.write(str(xa_out)+","+str(ya_out)+","+str(za_out)+",")
                         output_file.write(str(round(heading,2))+","+str(pitch_out)+","+str(roll_out)+",")
-                        output_file.write(columns[6]+","+columns[7]+","+columns[8]+","+columns[9]+","+columns[10]+"\r")
+                        output_file.write(columns[6]+","+columns[7]+","+columns[8]+","+columns[9]+","+columns[10]+","+str(int(time_stamp_in))+"\r")
                         # output_data.append([xa_out, ya_out, za_out, round(heading,2), pitch_out, roll_out])
 
                         compare_file.write(f"{xa_in},{xa_out},{ya_in},{ya_out},{za_in},{za_out},{yaw_in},{round(heading,2)},{pitch_in},{pitch_out},{roll_in},{roll_out}\r")
@@ -2196,7 +2211,8 @@ def run_passes():
             aero =  - aero_factor*gravity_value*(velocity[0,0]/100.0)**2
             friction = friction_factor*force_out[2,0] - splay_factor*gravity_value*((force_out[2,0]/gravity_value)**2) + aero
 
-            local_time = ( line_number -  line_origin )/100.0
+            #local_time = ( line_number -  line_origin )/100.0
+            local_time = times[line_number] - times[line_origin]
 
             if new_distance < table_end_distance:
 
@@ -2205,10 +2221,10 @@ def run_passes():
                     if args_strmlt:
 
                         if ( mark_state == 0 ) and (abs(previous_state) > 0 ) :
-                            finish_time = round( local_time , 2 )
+                            finish_time = round( float(local_time)/10000.0 , 4 )
                         previous_state = mark_state
 
-                        time_map_100_file.write(f"{round(( local_time   ), 2)}")
+                        time_map_100_file.write(f"{round( float(local_time)/10000.0 , 4 )}")
                         time_map_100_file.write(f",{mark_number},{mark_state}")
 
                         time_map_100_file.write(f" ,{round(( fx_filt_filt[line_number] ),2)}" )
@@ -2284,7 +2300,7 @@ def run_passes():
 
                         w_mag = sqrt( (wx_filt[line_number])**2 + (wy_filt[line_number])**2 + (wz_filt[line_number])**2 )
 
-                        time_map_100_file.write(f"{round(( local_time   ), 2)}")
+                        time_map_100_file.write(f"{round( float(local_time)/10000.0 , 4 )}")
                         time_map_100_file.write(f",{mark_number},{mark_state}")
 
                         time_map_100_file.write(f" ,{round(( fx_filt[line_number] ),2)}" )
