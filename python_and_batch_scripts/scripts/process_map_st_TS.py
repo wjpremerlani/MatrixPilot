@@ -56,7 +56,7 @@ yaw_rate_end = 3.0
 global int_dtpe
 int_dtpe = 180
 global distance_0
-distance_0 = 30.0
+distance_0 = 25.0
 #
 global z_force_plot_limit
 # z_force_plot_limit is used to clip the reported z force
@@ -1850,16 +1850,17 @@ def run_passes():
             
             new_distance = new_distance + velocity[0,0]/100.0
 
-            if (args.d0) :
-                if ( new_distance > distance_0/2.0 ) and (new_distance < distance_0) :
-                    time_0 = round(float( line_number - start_int)/100.0 + (distance_0 - new_distance)/velocity[0,0],3)
-                    velocity_0 = round(velocity[0,0] + velocity_dot[0,0]*(distance_0 - new_distance)/velocity[0,0],3)              
+            #if (args.d0) :
+            #use default if not specified
+            if ( new_distance > distance_0/2.0 ) and (new_distance < distance_0) :
+                time_0 = round(float( line_number - start_int)/100.0 + (distance_0 - new_distance)/velocity[0,0],3)
+                velocity_0 = round(velocity[0,0] + velocity_dot[0,0]*(distance_0 - new_distance)/velocity[0,0],3)              
 
-    if ( args.d0) :
-        print("t0:",time_0)
-        print("v0:",velocity_0)
-        log_file.write(f"\n\ntime from pull to first timing eye = {time_0} seconds.\n\n")
-        log_file.write(f"\n\nvelocity at first timing eye = {velocity_0} seconds.\n\n")
+    #if ( args.d0) :
+    print("t0:",time_0)
+    print("v0:",velocity_0)
+    log_file.write(f"\n\ntime from pull to first timing eye = {time_0} seconds.\n\n")
+    log_file.write(f"\n\nvelocity at first timing eye = {velocity_0} seconds.\n\n")
 
     aero_factor = 0
     friction_factor = 0
@@ -2269,12 +2270,16 @@ def run_passes():
                         time_map_100_file.write(f",{round(( x_ef   ), 2)}")
                         time_map_100_file.write(f",{round(( y_ef   ), 2)}")
 
-                        if ( args.d0 ) :
-                            te0_offset = int(100.0*time_0)
-                        else:
-                            te0_offset = start_int
                         
-                        if (( line_number - start_int - te0_offset ) in timing_eye_times) == True :
+                        te0_offset = time_0
+
+                        is_timing_eye = False
+                        
+                        for timing_eye_time in timing_eye_times :
+                            if abs ( float(local_time)/10000.0 - te0_offset - timing_eye_time ) < 0.006 :
+                                is_timing_eye = True                    
+                        
+                        if is_timing_eye == True :
                             time_map_100_file.write(f",1")
                         else :
                             time_map_100_file.write(f",0")
@@ -2926,7 +2931,7 @@ if __name__ == "__main__":
     if args.te :
         te_list = args.te.split(' ')
         for item in te_list :
-            timing_eye_times.append(int(100.0*float(item)))
+            timing_eye_times.append(float(item))
 
     log_file.write(f"raw timing eye time values.\r\n{timing_eye_times}\r\n")
 
