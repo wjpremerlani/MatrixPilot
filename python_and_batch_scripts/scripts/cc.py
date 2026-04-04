@@ -99,7 +99,7 @@ def read_data(run_file) :
     if dataStr:
         for line in lines:
             columns = line.split(',')
-            if len(columns) == NUM_COLS:
+            if (len(columns) == NUM_COLS) or (len(columns) == NUM_COLS+1):
                 try:
                     if seq_num_start is None:
                         seq_num_start = int(columns[SEQ_COL])
