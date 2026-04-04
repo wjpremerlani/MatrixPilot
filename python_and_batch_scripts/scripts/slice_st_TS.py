@@ -1100,7 +1100,8 @@ def align_run_buttons(reference_run, target_run , radius , spacing , quantity ) 
     for button_no in range(quantity) :
         target_index = target_index + spacing
         ref_index = align_one_button(reference_run , target_run  , ref_index + spacing , target_index , radius)
-        shift =  target_index - ref_index
+        shift = times[target_index][target_run]-times[ref_index][reference_run]
+        #shift =  target_index - ref_index
         shifts.append(shift)
     return shifts
 
@@ -1121,17 +1122,17 @@ def button_delta_time_no_interp(run,time_step) :
     global button_algnments , button_spacing , number_of_buttons
     time_index = int ( time_step / button_spacing )
     time_index = min ( time_index , number_of_buttons - 1 )
-    return round( 0.01* button_alignments [run][time_index] , 2 )
+    return round(  button_alignments [run][time_index] , 2 )
 
 def button_delta_time(run,time_step) :
     global button_algnments , button_spacing , number_of_buttons
     try :
         time_index = int ( time_step / button_spacing )
         #time_index = min ( time_index , number_of_buttons - 2 )
-        this_button_delta = float(button_alignments [run][time_index])
-        next_button_delta = float( button_alignments [run][time_index+1])
+        this_button_delta = (button_alignments [run][time_index])
+        next_button_delta = ( button_alignments [run][time_index+1])
         interpolation_factor = (float(time_step) - float(int(time_step/button_spacing))*float(button_spacing))/float(button_spacing)
-        return  round ( .01 * (this_button_delta+interpolation_factor*(next_button_delta-this_button_delta)) , 3 )
+        return  round ( (this_button_delta+interpolation_factor*(next_button_delta-this_button_delta)) , 3 )
     except :
         return 0.0
     
