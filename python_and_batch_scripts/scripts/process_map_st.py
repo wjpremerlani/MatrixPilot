@@ -414,9 +414,9 @@ def cross_t(a,b):
     return np.transpose(np.cross(np.transpose(a),np.transpose(b)))
 
 def extract_euler(input_matrix) :
-    yaw_angle = ((atan2(input_matrix[1,0],input_matrix[0,0])))
-    pitch_angle = ((atan2(-input_matrix[2,0], sqrt((input_matrix[2,1])**2+(input_matrix[2,2])**2))))
-    roll_angle = ((atan2(input_matrix[2,1],input_matrix[2,2])))
+    yaw_angle = degrees((atan2(input_matrix[1,0],input_matrix[0,0])))
+    pitch_angle = degrees((atan2(-input_matrix[2,0], sqrt((input_matrix[2,1])**2+(input_matrix[2,2])**2))))
+    roll_angle = degrees((atan2(input_matrix[2,1],input_matrix[2,2])))
     euler_angles = [ yaw_angle , pitch_angle , roll_angle ]
     return euler_angles
 
@@ -1560,9 +1560,19 @@ def run_passes():
     ATY = np.matmul(AT,Y)
 
     delta_angle_file = open(file_base_name+"_pp.csv" , 'w')
-    delta_angle_file.write(f"delta pitch radians , z force ft/sec/sec , delta velocity ft/sec\n")
+    #delta_angle_file.write(f"delta pitch radians , z force ft/sec/sec , delta velocity ft/sec\n")
     #delta_angle_file.write(f"yaw deg , pitch deg , roll deg , dyaw rad , dpitch rad , droll rad")
+    delta_angle_file.write("fz__"+file_base_name+",")
+    delta_angle_file.write("delta_yaw__"+file_base_name+",")
+    delta_angle_file.write("delta_pitch__"+file_base_name+",")
+    delta_angle_file.write("delta_roll__"+file_base_name+",")
+    delta_angle_file.write("delta_fx__"+file_base_name+",")
+    delta_angle_file.write("delta_fy__"+file_base_name+",")
+    delta_angle_file.write("delta_fz__"+file_base_name+",")
+    delta_angle_file.write("delta_velocity__"+file_base_name+"\n")
+    
 
+    
     delta_velocity = 0
 
     for line_number in line_nums :
@@ -1602,8 +1612,10 @@ def run_passes():
             
             delta_angles = extract_euler(delta_matrix)
             delta_velocity = delta_velocity + .01*delta_force_x
+
+            if int(100*start) + 20 <= line_number :
             
-            delta_angle_file.write(f"{round(delta_angles[1],4)},{round(fz_list[line_number],1)},{round(delta_velocity,4)}\n")
+                delta_angle_file.write(f"{round(fz_list[line_number],1)},{round(delta_angles[0],4)},{round(delta_angles[1],4)},{round(delta_angles[2],4)},{round(delta_force_x,4)},{round(delta_force_y,4)},{round(delta_force_z,4)},{round(delta_velocity,4)}\n")
             #delta_angle_file.write(f"{round(h_ref,2)},{round(p_ref,2)},{round(r_ref,2)},{round(delta_angles[0],4)},{round(delta_angles[1],4)},{round(delta_angles[2],4)}\n")
             
 

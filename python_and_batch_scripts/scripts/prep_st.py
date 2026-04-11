@@ -145,6 +145,7 @@ if __name__ == "__main__":
        
         bat_file = open(base_name+".bat" , "w" )
         merge_file = open(base_name+"_merge_list.txt" , "w" )
+        merge_file_pp = open(base_name+"_merge_list_pp.txt" , "w" )
         print("base name = " , base_name )
         log_file.write(f"base name = {base_name} \r")  
         try :
@@ -214,6 +215,7 @@ if __name__ == "__main__":
                         pass
                     bat_file.write(f"\n")
                     merge_file.write(f"{data_file_base_name}_time_map_100_HZ.csv\n")
+                    merge_file_pp.write(f"{data_file_base_name}_pp.csv\n")
                 else :
                     log_file.write(f"unable to determine start time for {data_file_name}, file will be skipped.\n")        
             
@@ -230,6 +232,8 @@ if __name__ == "__main__":
             except :
                 pass
             bat_file.write(f"\n")
+            
+            bat_file.write(f"merge_st.py -raw -f {base_name}_merge_list_pp.txt\n")
             
             bat_file.write(f"slice_st.py -f {base_name}_merge_list_plots.csv")
             if args.first_curve_number :

@@ -121,6 +121,23 @@ def preprocess():
     #print("row_numbers")
     #print(row_numbers)
 
+def get_file_names() :
+    global valid_file_names
+    opened_file_names = []
+    valid_file_names = []
+    dataStr = input_file.read()
+    file_names = dataStr.splitlines(keepends=False)
+    if dataStr:
+        for file_name in file_names:         
+            try :
+                plot_file = open(file_name)
+                opened_file_names.append(file_name)
+                valid_file_names.append(file_name)
+                plot_file.close()
+            except :
+                pass
+                
+
 def validate_curves() :
     global valid_file_names
     opened_file_names = []
@@ -220,6 +237,7 @@ if __name__ == "__main__":
     parser.add_argument('-skip', '--skip',help="not used but must be allowed.")
     parser.add_argument('-dtpe','--dtpe',help="not used but must be allowed.")
     parser.add_argument('-d0','--d0',help="not used but must be allowed.")
+    parser.add_argument('-raw','--raw',action='store_true',help="option to skip curve validation.")
 
     args = parser.parse_args()
 
@@ -243,7 +261,10 @@ if __name__ == "__main__":
             exit()
         output_file = open(base_name+"_plots.csv" , "w" )
         log_file = open(base_name+"_log.txt" , "w" )
-        validate_curves()
+        if args.raw :
+            get_file_names()
+        else :
+            validate_curves()
         input_file = open(list_of_files_file_name)
         open_files()
         preprocess()
