@@ -413,6 +413,13 @@ def mav_filter(raw_list,index_table):
 def cross_t(a,b):
     return np.transpose(np.cross(np.transpose(a),np.transpose(b)))
 
+def extract_euler(input_matrix) :
+    yaw_angle = ((atan2(input_matrix[1,0],input_matrix[0,0])))
+    pitch_angle = ((atan2(-input_matrix[2,0], sqrt((input_matrix[2,1])**2+(input_matrix[2,2])**2))))
+    roll_angle = ((atan2(input_matrix[2,1],input_matrix[2,2])))
+    euler_angles = [ yaw_angle , pitch_angle , roll_angle ]
+    return euler_angles
+
 def create_yaw_matrix(angle):
     global y_mat
     y_mat[0,0] = cos(radians(angle))
@@ -1399,7 +1406,7 @@ def run_passes():
     heading_filt = mav_filter(heading_list,indices(filter_size))
     pitch_filt = mav_filter(pitch_list,indices(filter_size))
     roll_filt = mav_filter(roll_list,indices(filter_size))
-
+    
     heading_hf = []
     pitch_hf = []
     roll_hf = []
@@ -1551,6 +1558,55 @@ def run_passes():
     ATA = np.matmul(AT,A)
     Y = np.zeros((1,1))
     ATY = np.matmul(AT,Y)
+
+    delta_angle_file = open(file_base_name+"_pp.csv" , 'w')
+    delta_angle_file.write(f"delta pitch radians , z force ft/sec/sec , delta velocity ft/sec\n")
+    #delta_angle_file.write(f"yaw deg , pitch deg , roll deg , dyaw rad , dpitch rad , droll rad")
+
+    delta_velocity = 0
+
+    for line_number in line_nums :
+        if int(100*start) <= line_number <= int(100*end):
+            h_ref = heading_filt[line_number]
+            p_ref = pitch_filt[line_number]
+            r_ref = roll_filt[line_number]
+            
+            create_ypr_matrix( h_ref,p_ref,r_ref)
+            reference_matrix = np.transpose(ypr_mat)
+            create_ypr_matrix( heading_list[line_number],pitch_list[line_number],roll_list[line_number])
+            actual_matrix = ypr_mat
+            delta_matrix = np.matmul(reference_matrix,actual_matrix)
+            
+            force_in[0,0]= fx_list[line_number]
+            force_in[1,0]= fy_list[line_number]
+            force_in[2,0]= fz_list[line_number]
+            force_out = np.matmul(delta_matrix,force_in)
+            
+            delta_force = force_out - force_in
+            delta_force_x = delta_force[0,0]
+            delta_force_y = delta_force[1,0]
+            delta_force_z = delta_force[2,0]
+
+            fx_list[line_number]= fx_list[line_number] + delta_force_x
+            fy_list[line_number]= fy_list[line_number] + delta_force_y
+            fz_list[line_number]= fz_list[line_number] + delta_force_z          
+
+            fx_filt[line_number]=fx_filt[line_number]+delta_force_x
+            fy_filt[line_number]=fy_filt[line_number]+delta_force_y
+            fz_filt[line_number]=fz_filt[line_number]+delta_force_z            
+
+            fx_filt_filt[line_number]=fx_filt_filt[line_number]+delta_force_x
+            fy_filt_filt[line_number]=fy_filt_filt[line_number]+delta_force_y
+            fz_filt_filt[line_number]=fz_filt_filt[line_number]+delta_force_z
+                     
+            
+            delta_angles = extract_euler(delta_matrix)
+            delta_velocity = delta_velocity + .01*delta_force_x
+            
+            delta_angle_file.write(f"{round(delta_angles[1],4)},{round(fz_list[line_number],1)},{round(delta_velocity,4)}\n")
+            #delta_angle_file.write(f"{round(h_ref,2)},{round(p_ref,2)},{round(r_ref,2)},{round(delta_angles[0],4)},{round(delta_angles[1],4)},{round(delta_angles[2],4)}\n")
+            
+
 
 
     for line_number in line_nums:
