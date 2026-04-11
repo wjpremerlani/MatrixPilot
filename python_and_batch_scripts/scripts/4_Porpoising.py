@@ -31,6 +31,8 @@ delta_fy_columns = []
 delta_fz_columns = []
 delta_velocity_columns = []
 
+st.set_page_config(layout="wide")
+
 
 st.markdown("""
     <style>
