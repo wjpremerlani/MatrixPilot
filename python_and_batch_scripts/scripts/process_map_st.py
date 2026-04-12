@@ -1562,6 +1562,8 @@ def run_passes():
     delta_angle_file = open(file_base_name+"_pp.csv" , 'w')
     #delta_angle_file.write(f"delta pitch radians , z force ft/sec/sec , delta velocity ft/sec\n")
     #delta_angle_file.write(f"yaw deg , pitch deg , roll deg , dyaw rad , dpitch rad , droll rad")
+    delta_angle_file.write("fx__"+file_base_name+",")
+    delta_angle_file.write("fy__"+file_base_name+",")
     delta_angle_file.write("fz__"+file_base_name+",")
     delta_angle_file.write("delta_yaw__"+file_base_name+",")
     delta_angle_file.write("delta_pitch__"+file_base_name+",")
@@ -1569,12 +1571,17 @@ def run_passes():
     delta_angle_file.write("delta_fx__"+file_base_name+",")
     delta_angle_file.write("delta_fy__"+file_base_name+",")
     delta_angle_file.write("delta_fz__"+file_base_name+",")
-    delta_angle_file.write("delta_velocity__"+file_base_name+"\n")
+    delta_angle_file.write("delta_vx__"+file_base_name+",")
+    delta_angle_file.write("delta_vy__"+file_base_name+",")
+    delta_angle_file.write("delta_vz__"+file_base_name+"\n")
+    
     
 
     
-    delta_velocity = 0
-
+    delta_vx = 0
+    delta_vy = 0
+    delta_vz = 0
+    
     for line_number in line_nums :
         if int(100*start) <= line_number <= int(100*end):
             h_ref = heading_filt[line_number]
@@ -1611,14 +1618,17 @@ def run_passes():
                      
             
             delta_angles = extract_euler(delta_matrix)
-            delta_velocity = delta_velocity + .01*delta_force_x
-
+            delta_vx = delta_vx + .01*delta_force_x
+            delta_vy = delta_vy + .01*delta_force_y
+            delta_vz = delta_vz + .01*delta_force_z
+            
             if int(100*start) + 20 <= line_number :
             
-                delta_angle_file.write(f"{round(fz_list[line_number],1)},{round(delta_angles[0],4)},{round(delta_angles[1],4)},{round(delta_angles[2],4)},{round(delta_force_x,4)},{round(delta_force_y,4)},{round(delta_force_z,4)},{round(delta_velocity,4)}\n")
-            #delta_angle_file.write(f"{round(h_ref,2)},{round(p_ref,2)},{round(r_ref,2)},{round(delta_angles[0],4)},{round(delta_angles[1],4)},{round(delta_angles[2],4)}\n")
+                delta_angle_file.write(f"{round(fx_list[line_number],1)},{round(fy_list[line_number],1)},{round(fz_list[line_number],1)},")                
+                delta_angle_file.write(f"{round(delta_angles[0],4)},{round(delta_angles[1],4)},{round(delta_angles[2],4)},")
+                delta_angle_file.write(f"{round(delta_force_x,4)},{round(delta_force_y,4)},{round(delta_force_z,4)},")
+                delta_angle_file.write(f"{round(delta_vx,4)},{round(delta_vy,4)},{round(delta_vz,4)}\n")
             
-
 
 
     for line_number in line_nums:

@@ -12,16 +12,24 @@ global args
 
 global signal_names, run_names
 global fz_columns
+global fx_columns
+global fy_columns
+global fz_columns
 global delta_yaw_columns
 global delta_pitch_columns
 global delta_roll_columns
 global delta_fx_columns
 global delta_fy_columns
 global delta_fz_columns
-global delta_velocity_columns
+global delta_vx_columns
+global delta_vy_columns
+global delta_vz_columns
+
 
 signal_names = []
 run_names = []
+fx_columns = []
+fy_columns = []
 fz_columns = []
 delta_yaw_columns = []
 delta_pitch_columns = []
@@ -29,7 +37,9 @@ delta_roll_columns = []
 delta_fx_columns = []
 delta_fy_columns = []
 delta_fz_columns = []
-delta_velocity_columns = []
+delta_vx_columns = []
+delta_vy_columns = []
+delta_vz_columns = []
 
 st.set_page_config(layout="wide")
 
@@ -56,17 +66,27 @@ global number_of_runs
 def build_frames():
     global signal_names, run_names
     global fz_columns
+    global fx_columns
+    global fy_columns
+    global fz_columns
     global delta_yaw_columns
     global delta_pitch_columns
     global delta_roll_columns
     global delta_fx_columns
     global delta_fy_columns
     global delta_fz_columns
-    global delta_velocity_columns
+    global delta_vx_columns
+    global delta_vy_columns
+    global delta_vz_columns
+    
 
     for run_name in run_names:
+        column_name = " fx__" + run_name
+        fx_columns.append(column_name)
+        column_name = " fy__" + run_name
+        fy_columns.append(column_name)
         column_name = " fz__" + run_name
-        fz_columns.append(column_name)
+        fz_columns.append(column_name)       
         column_name = " delta_yaw__" + run_name
         delta_yaw_columns.append(column_name)
         column_name = " delta_pitch__" + run_name
@@ -79,10 +99,14 @@ def build_frames():
         delta_fy_columns.append(column_name)
         column_name = " delta_fz__" + run_name
         delta_fz_columns.append(column_name)
-        column_name = " delta_velocity__" + run_name
-        delta_velocity_columns.append(column_name)
-  
-    number_of_runs = len(delta_velocity_columns)
+        column_name = " delta_vx__" + run_name
+        delta_vx_columns.append(column_name)
+        column_name = " delta_vy__" + run_name
+        delta_vy_columns.append(column_name)
+        column_name = " delta_vz__" + run_name
+        delta_vz_columns.append(column_name)
+        
+    number_of_runs = len(delta_vz_columns)
 
     # debug_file.write(f"\r\n***************** number of runs = {number_of_runs} *************\r\n")
 
@@ -108,10 +132,12 @@ alt.renderers.enable('svg')
 
 plotlet_file = st.sidebar.file_uploader("select a file")
 
-fz_tab, delta_angle_tab , delta_force_tab , delta_velocity_tab  = st.tabs(["   fz  ", "  delta angles " , "  delta_forces " , "  delta_velocity   "])
+force_tab, delta_angle_tab , delta_force_tab , delta_velocity_tab  = st.tabs(["   forces  ", "  delta angles " , "  delta_forces " , "  delta_velocities   "])
 
 # plotlet_file = sys.argv[1]
 
+global fx_chart
+global fy_chart
 global fz_chart
 global delta_yaw_chart
 global delta_pitch_chart
@@ -119,8 +145,12 @@ global delta_roll_chart
 global delta_fx_chart
 global delta_fy_chart
 global delta_fz_chart
-global delta_velocity_chart
+global delta_vx_chart
+global delta_vy_chart
+global delta_vz_chart
 
+fx_chart = None
+fy_chart = None
 fz_chart = None
 delta_yaw_chart = None
 delta_pitch_chart = None
@@ -128,7 +158,9 @@ delta_roll_chart = None
 delta_fx_chart = None
 delta_fy_chart = None
 delta_fz_chart = None
-delta_velocity_chart = None
+delta_vx_chart = None
+delta_vy_chart = None
+delta_vz_chart = None
 
 
 
@@ -147,10 +179,16 @@ if plotlet_file is not None:
     # debug_file.write(f"runs = \n {run_names}\n")
     build_frames()
 
-    with fz_tab :
+    with force_tab :
+        if fx_chart == None:
+            fx_chart = st.plotly_chart(plotlets_df[fx_columns].plot(render_mode='svg').update_layout(
+                yaxis_title="x specific force ft/sec/sec"),use_container_width = True )
+        if fy_chart == None:
+            fy_chart = st.plotly_chart(plotlets_df[fy_columns].plot(render_mode='svg').update_layout(
+                yaxis_title="y specific force ft/sec/sec"),use_container_width = True )
         if fz_chart == None:
             fz_chart = st.plotly_chart(plotlets_df[fz_columns].plot(render_mode='svg').update_layout(
-                yaxis_title="normal force ft/sec/sec"),use_container_width = True )
+                yaxis_title="z specific force ft/sec/sec"),use_container_width = True )
         
 
     with delta_angle_tab :
@@ -173,9 +211,15 @@ if plotlet_file is not None:
             
 
     with delta_velocity_tab :
-        if delta_velocity_chart == None:
-            delta_velocity_chart = st.plotly_chart(plotlets_df[delta_velocity_columns].plot(render_mode='svg').update_layout(
-                yaxis_title="delta velocity, ft/sec"),use_container_width = True )
+        if delta_vx_chart == None:
+            delta_vx_chart = st.plotly_chart(plotlets_df[delta_vx_columns].plot(render_mode='svg').update_layout(
+                yaxis_title="delta velocity x, ft/sec"),use_container_width = True )
+        if delta_vy_chart == None:
+            delta_vy_chart = st.plotly_chart(plotlets_df[delta_vy_columns].plot(render_mode='svg').update_layout(
+                yaxis_title="delta velocity y, ft/sec"),use_container_width = True )
+        if delta_vz_chart == None:
+            delta_vz_chart = st.plotly_chart(plotlets_df[delta_vz_columns].plot(render_mode='svg').update_layout(
+                yaxis_title="delta velocity z, ft/sec"),use_container_width = True )
             
 
     
