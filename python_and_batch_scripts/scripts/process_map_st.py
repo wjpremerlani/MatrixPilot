@@ -1245,30 +1245,32 @@ def read_data(file):
 
                             create_ypr_matrix(yaw_in,pitch_in,roll_in)
                             matrix_in = ypr_mat
-                            if first_line == 1 or line_number == int(100*start):
+                            
+                            if first_line == 1 :
                                 matrix_in_prev = matrix_in
-                                create_ypr_matrix(yaw_offset , pitch_in , roll_in )
-                                matrix_out  = ypr_mat
+                                matrix_out  = matrix_in
                                 matrix_out_prev = matrix_out
-                                #matrix_out = np.matmul(first_mat,ypr_o_mat)
-                                #matrix_in_prev = matrix_in
-                                #matrix_out_prev = matrix_out
-                            else:
-
-                                matrix_update = np.matmul(np.matmul(np.transpose(matrix_in_prev),matrix_in),drift_mat)
-                                matrix_out = np.matmul(matrix_out_prev,matrix_update)
+                            
+                            matrix_update = np.matmul(np.matmul(np.transpose(matrix_in_prev),matrix_in),drift_mat)
+                            matrix_out = np.matmul(matrix_out_prev,matrix_update)
+                            matrix_out_prev = matrix_out
+                            matrix_in_prev = matrix_in
+                                
+                            if line_number == int(100*start):
+                                angles_at_pull = extract_euler(matrix_out)
+                                create_ypr_matrix(yaw_offset,angles_at_pull[1],angles_at_pull[2])
+                                matrix_out = ypr_mat
                                 matrix_out_prev = matrix_out
-                                matrix_in_prev = matrix_in
 
-                                gyro_wp[0,0] = 50.0*degrees(matrix_update[2,1]-matrix_update[1,2])
-                                gyro_wp[1,0] = 50.0*degrees(matrix_update[0,2]-matrix_update[2,0])
-                                gyro_wp[2,0] = 50.0*degrees(matrix_update[1,0]-matrix_update[0,1])
+                            gyro_wp[0,0] = 50.0*degrees(matrix_update[2,1]-matrix_update[1,2])
+                            gyro_wp[1,0] = 50.0*degrees(matrix_update[0,2]-matrix_update[2,0])
+                            gyro_wp[2,0] = 50.0*degrees(matrix_update[1,0]-matrix_update[0,1])
 
-                                omega[0,0] = radians(gyro_wp[0,0])
-                                omega[1,0] = radians(gyro_wp[1,0])
-                                omega[2,0] = radians(gyro_wp[2,0])
+                            omega[0,0] = radians(gyro_wp[0,0])
+                            omega[1,0] = radians(gyro_wp[1,0])
+                            omega[2,0] = radians(gyro_wp[2,0])
 
-                                gyro_sled = np.matmul(ypr_o_mat,gyro_wp)
+                            gyro_sled = np.matmul(ypr_o_mat,gyro_wp)
 
 
                             deter = np.linalg.det(matrix_out)
