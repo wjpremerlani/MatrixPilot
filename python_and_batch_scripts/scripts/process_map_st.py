@@ -512,16 +512,27 @@ def write_new_mark():
     
 
 global heading_start
+global distance_at_efc
+global efd_recorded
+efd_recorded = False
+distance_at_efc = 50.0 #insurance against bugs
 
-def two_phase_roll_update_timing_marks(write_requests, roll_rate , roll_out , heading ):
+
+def two_phase_roll_update_timing_marks(write_requests, roll_rate , roll_out , heading , distance ):
     global mark_state, mark_number, new_distance , distance_origin , line_origin , velocity , line_number , yaw_rate_start , yaw_rate_end , number_of_marks
     global roll_max , roll_ratio , peak_threshold , end_threshold
     global minimum_curve , curve_timer , heading_start , yaw_threshold
+    global minimum_distance
+    global distance_at_efc , efd_recorded
+    minimum_distance = 75 
     if ( args.curves ):
         if mark_number == number_of_marks:
             return
     if mark_state == 0:
         if abs(roll_out) > start_threshold:
+            if ( efd_recorded == False ) :
+                distance_at_efc = distance
+                efd_recorded = True
             heading_start = heading
             mark_state = np.sign(roll_out)
             if ( write_requests ==1 ):
@@ -533,30 +544,34 @@ def two_phase_roll_update_timing_marks(write_requests, roll_rate , roll_out , he
     else:
         roll_max = max(abs(roll_out),roll_max)
         if (abs(roll_out) < roll_ratio*roll_max ):
-            roll_flag = 10.2
+            roll_flag = 10.1
         else:
             roll_flag = -.1
 
         if ( np.sign(roll_out) != np.sign(roll_rate)):
             roll_sign_flag = 10.2
         else:
-            roll_sign_flag = -.1
+            roll_sign_flag = -.2
 
         if ( roll_max > peak_threshold ):
-            roll_max_flag = 10.2
+            roll_max_flag = 10.3
         else:
-            roll_max_flag = -.1
+            roll_max_flag = -.3
 
         if (abs(heading - heading_start) > yaw_threshold ):
-            yaw_flag = 10.2
+            yaw_flag = 10.4
         else:
-            yaw_flag = -.1
+            yaw_flag = -.4
+        if ( distance - distance_at_efc > minimum_distance ) :
+            distance_flag = 10.5
+        else:
+            distance_flag = -10.5
         try:
-            debug_marks_file.write(f"{mark_number},{roll_flag},{roll_sign_flag},{roll_max_flag},{yaw_flag},,{round(roll_out,2)},{round(heading,2)}\n")
+            debug_marks_file.write(f"{mark_number},{roll_flag},{roll_sign_flag},{roll_max_flag},{yaw_flag},{distance_flag},,{round(roll_out,2)},{round(heading,2)}\n")
         except:
             pass
 
-        if (abs(roll_out) < roll_ratio*roll_max ) and ( np.sign(roll_out) != np.sign(roll_rate)) and ( roll_max > peak_threshold ) and (abs(heading - heading_start) > yaw_threshold ):
+        if (abs(roll_out) < roll_ratio*roll_max ) and ( np.sign(roll_out) != np.sign(roll_rate)) and ( roll_max > peak_threshold ) and (abs(heading - heading_start) > yaw_threshold ) and ( distance- distance_at_efc > minimum_distance ):
             mark_state = 0
             if ( write_requests ==1 ):
                 write_new_mark()
@@ -565,7 +580,7 @@ def two_phase_roll_update_timing_marks(write_requests, roll_rate , roll_out , he
             mark_number = mark_number+1
             roll_max = start_threshold
 
-def update_timing_mark(yaw_rate,roll_rate,roll_out,heading):
+def update_timing_mark(yaw_rate,roll_rate,roll_out,heading , distance ):
     global mark_state, mark_number, new_distance , distance_origin , line_origin , velocity , line_number , yaw_rate_start , yaw_rate_end , number_of_marks
     if ( args.curves ):
         if mark_number == number_of_marks:
@@ -584,7 +599,7 @@ def update_timing_mark(yaw_rate,roll_rate,roll_out,heading):
                 mark_state = 0
                 mark_number = mark_number + 1
     else:
-        two_phase_roll_update_timing_marks(0,roll_rate,roll_out,heading)
+        two_phase_roll_update_timing_marks(0,roll_rate,roll_out,heading , distance )
 
 def update_mark_state_no_tr_mdl(yaw_rate,roll_rate,roll_out,heading):
     global mark_state, mark_number, new_distance , distance_origin , line_origin , velocity , line_number , yaw_rate_start , yaw_rate_end , number_of_marks
@@ -1684,7 +1699,7 @@ def run_passes():
             omega[1,0]=wy_filt_filt[line_number]
             omega[2,0]=wz_filt_filt[line_number]
 
-            update_timing_mark(omega[2,0],omega[0,0],roll_out,heading)
+            update_timing_mark(omega[2,0],omega[0,0],roll_out,heading,new_distance)
 
             map_marks.append(mark_number)
             map_states.append(mark_state)
@@ -1760,6 +1775,7 @@ def run_passes():
                 ATY = ATY + np.matmul(AT,Y)
 
             velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0]  )*time_step
+            new_distance = new_distance + velocity[0,0]*time_step
 
     try :
         ATA_INVERSE = np.linalg.inv(ATA)
@@ -2954,7 +2970,7 @@ if __name__ == "__main__":
 
         debug_marks_file = open(file_base_name + "_debug_marks.csv", "w")
         debug_marks_file.write(
-            f"mark_number,roll_is_small,opposite_roll_n_rate,valid_roll_peak,minimum_yaw,,roll,yaw,,,minimum yaw = {yaw_threshold}\n")
+            f"mark_number,roll_is_small,opposite_roll_n_rate,valid_roll_peak,has_minimum_yaw,has_minimum_distance,roll,yaw,,,minimum yaw = {yaw_threshold}\n")
 
         variance_file = open(file_base_name + "_variance.csv", "w")
         output_file = open(file_base_name + "_adjusted.txt", "w")
