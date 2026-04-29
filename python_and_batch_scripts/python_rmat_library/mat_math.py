@@ -62,11 +62,11 @@ def create_ypr_matrix(yaw,pitch,roll):
     return ypr_mat
 
 def f1(phi_sqr):
-    result = 1.0 - phi_sqr/6.0 + phi_sqr*phi_sqr/120.0
+    result = 1.0 - phi_sqr/6.0 + phi_sqr*phi_sqr/120.0 - phi_sqr*phi_sqr*phi_sqr/5040.0
     return result
 
 def f2(phi_sqr):
-    result = 0.5 -phi_sqr/24.0
+    result = 0.5 -phi_sqr/24.0 + phi_sqr*phi_sqr/720.0 - phi_sqr*phi_sqr*phi_sqr/40320.0
     return result
 
 
@@ -91,14 +91,32 @@ def phi_to_matrix(phi) :
 
     return result
 
+def matrix_to_phi(matrix) :
+    result = np.zeros((3,1))
+    f1_phi = np.zeros((3,1))
+    f1_phi[0,0] = ( matrix[2,1] - matrix[1,2] )/2.0
+    f1_phi[1,0] = ( matrix[0,2] - matrix[2,0] )/2.0
+    f1_phi[2,0] = ( matrix[1,0] - matrix[0,1] )/2.0
+    sin_phi = sqrt(np.vdot(f1_phi,f1_phi))
+    cos_phi = (np.trace(matrix)-1.0)/2.0
+    phi = np.arctan2(sin_phi,cos_phi)
+    f1_val = f1 ( phi*phi )
+    result[0,0] = (f1_phi[0,0]/f1_val)
+    result[1,0] = (f1_phi[1,0]/f1_val)
+    result[2,0] = (f1_phi[2,0]/f1_val)        
+    return result
+
 def run_test():
     axis_angle = np.zeros((3,1))
-    axis_angle[0,0] = radians(20.0)
-    axis_angle[1,0] = radians(10.0)
-    axis_angle[2,0] = radians(5.0)
+    axis_angle[0,0] = 0.02
+    axis_angle[1,0] = 0.03
+    axis_angle[2,0] = 0.04
     test_matrix = phi_to_matrix(axis_angle)
     print("axis_angle = " , axis_angle )
     print("test_matrix = " , test_matrix )
+    proof = np.matmul(test_matrix, np.transpose(test_matrix))
+    print("proof = " , proof )
+    print("axis_angle extracted = " , matrix_to_phi ( test_matrix ))
     
 
 def build_arg_parser():
