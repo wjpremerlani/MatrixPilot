@@ -69,6 +69,35 @@ def f2(phi_sqr):
     result = 0.5 -phi_sqr/24.0 + phi_sqr*phi_sqr/720.0 - phi_sqr*phi_sqr*phi_sqr/40320.0
     return result
 
+def f3(phi_sqr):
+    result = 1.0/6.0 - phi_sqr/120.0 + phi_sqr*phi_sqr/5040.0 - phi_sqr*phi_sqr*phi_sqr/362880.0
+    return result
+
+def matrix_to_matrix_integral(matrix):
+    angle_axis = matrix_to_phi(matrix)
+    mat_integral = phi_to_matrix_integral(angle_axis)
+    return mat_integral
+
+def phi_to_matrix_integral(phi) :
+    result = np.zeros((3,3))
+    
+    phi_sqr = np.vdot(phi,phi)
+    f2_value = f2(phi_sqr)
+    f3_value = f3(phi_sqr)
+    
+    result[0,0] = 1.0  + f3_value*(phi[0,0]*phi[0,0]-phi_sqr)
+    result[0,1] = -f2_value*phi[2,0] + f3_value*(phi[0,0]*phi[1,0])
+    result[0,2] = f2_value*phi[1,0] + f3_value*(phi[0,0]*phi[2,0])
+
+    result[1,1] = 1.0  + f3_value*(phi[1,0]*phi[1,0]-phi_sqr)
+    result[1,2] = -f2_value*phi[0,0] + f3_value*(phi[1,0]*phi[2,0])
+    result[1,0] = f2_value*phi[2,0] + f3_value*(phi[1,0]*phi[0,0])
+
+    result[2,2] = 1.0  + f3_value*(phi[2,0]*phi[2,0]-phi_sqr)
+    result[2,0] = -f2_value*phi[1,0] + f3_value*(phi[2,0]*phi[0,0])
+    result[2,1] = f2_value*phi[0,0] + f3_value*(phi[2,0]*phi[1,0])
+
+    return result
 
 def phi_to_matrix(phi) :
     result = np.zeros((3,3))
@@ -108,15 +137,22 @@ def matrix_to_phi(matrix) :
 
 def run_test():
     axis_angle = np.zeros((3,1))
-    axis_angle[0,0] = 0.02
-    axis_angle[1,0] = 0.03
-    axis_angle[2,0] = 0.04
+    axis_angle[0,0] = radians(1.0)
+    axis_angle[1,0] = radians(-.8)
+    axis_angle[2,0] = radians(0.6)
     test_matrix = phi_to_matrix(axis_angle)
-    print("axis_angle = " , axis_angle )
+    integral_matrix = phi_to_matrix_integral(axis_angle)
+    #print("axis_angle = " , axis_angle )
+    print("axis_angle_input  = " , round(radians(1.0),18),round(radians(-.80),18),round(radians(0.6),18))
     print("test_matrix = " , test_matrix )
     proof = np.matmul(test_matrix, np.transpose(test_matrix))
     print("proof = " , proof )
-    print("axis_angle extracted = " , matrix_to_phi ( test_matrix ))
+    out_put_angle = matrix_to_phi ( test_matrix )
+    print("axis_angle_output = " , round(out_put_angle[0,0],18),round(out_put_angle[1,0],18),round(out_put_angle[2,0],18))
+    #print("axis_angle extracted = " , matrix_to_phi ( test_matrix ))
+    print("round trip cross error = " , cross_t(matrix_to_phi ( test_matrix ),axis_angle))
+    print("matrix integral = " , integral_matrix )
+    print("matrix to matrix =", matrix_to_matrix_integral(test_matrix))
     
 
 def build_arg_parser():
