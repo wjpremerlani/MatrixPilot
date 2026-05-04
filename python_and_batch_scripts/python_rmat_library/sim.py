@@ -6,6 +6,12 @@ import argparse
 def cross_t(a,b):
     return np.transpose(np.cross(np.transpose(a),np.transpose(b)))
 
+global y_mat , p_mat , r_mat
+y_mat = np.zeros((3,3))
+p_mat = np.zeros((3,3))
+r_mat = np.zeros((3,3))
+
+
 def extract_euler(input_matrix) :
     yaw_angle = degrees((atan2(input_matrix[1,0],input_matrix[0,0])))
     pitch_angle = degrees((atan2(-input_matrix[2,0], sqrt((input_matrix[2,1])**2+(input_matrix[2,2])**2))))
@@ -137,7 +143,7 @@ def matrix_to_phi(matrix) :
 
 def run_test():
     plot_file = open("plot_file.csv","w")
-    plot_file.write(f"time_secs , rotation_increment_radians , reported_force_ft/sec/sec, x_velocity_ft/sec , y_velocity_ft/sec , velocity_magnitude_ft/sec \n")
+    plot_file.write(f"time_secs , rotation_increment_radians , reported_force_ft/sec/sec, x_velocity_ft/sec , y_velocity_ft/sec , z_velocity_ft/sec ,velocity_magnitude_ft/sec \n")
     plot_file.write(f"0,0,0\n")
     force_vector = np.zeros((3,1))
     acceleration = np.zeros((3,1))
@@ -148,30 +154,58 @@ def run_test():
     orientation[1,1]= 1.0
     orientation[2,2]= 1.0
 
+    tilt_matrix = create_ypr_matrix(1.0,1.0,1.0)
+
+    drift_rate = radians(0.5/(100.0*60))
+    drift_angle = np.zeros((3,1))
+    drift_angle[0,0]=drift_rate
+    drift_angle[1,0]=1.2*drift_rate
+    drift_angle[2,0]=1.5*drift_rate
+    
+
+    use_gravity = True
+
     plot_counter = 0
     
-    for step_no in range(1000000):
+    for step_no in range(20000):
         time = float(step_no+1)*0.01
-        phi = 0.0001*time - ((0.0001)*(0.0001))/200.0
-        force =  (time*time/100.0 - (0.0001)*time + 0.0001 )
-        force_vector[0,0] = 1.0
-        force_vector[1,0] = force
+        if time < 100.0 :
+            phi = 0.0001*time - ((0.0001)*(0.0001))/200.0
+            force =  (time*time/100.0 - (0.0001)*time + 0.0001 )
+            force_vector[0,0] = 1.0
+            force_vector[1,0] = force
+            if use_gravity :
+                force_vector[2,0] = -32.2
+            else :
+                force_vector[2,0] = 0.0
+        else :
+            phi = 0.01
+            force_vector[0,0] = 0.0
+            force_vector[1,0] = 100.0
+            if use_gravity :
+                force_vector[2,0] = -32.2
+            else :
+                force_vector[2,0] = 0.0
         angle[2,0] = phi
-        update_mat = phi_to_matrix(angle)
+        force_bf = np.matmul(tilt_matrix,force_vector)
+        angle_bf = np.matmul(tilt_matrix,angle)+drift_angle
+        update_mat = phi_to_matrix(angle_bf)
         integral_mat = matrix_to_matrix_integral(update_mat)
-        acceleration = np.matmul(orientation,np.matmul(integral_mat,force_vector))
+        acceleration = np.matmul(orientation,np.matmul(integral_mat,force_bf))
         velocity[0,0] = velocity[0,0] + 0.01* acceleration[0,0]
         velocity[1,0] = velocity[1,0] + 0.01* acceleration[1,0]
-        velocity[2,0] = velocity[2,0] + 0.01* acceleration[2,0]
+        if use_gravity :
+            velocity[2,0] = velocity[2,0] + 0.01* acceleration[2,0]+0.322
+        else :
+            velocity[2,0] = velocity[2,0] + 0.01* acceleration[2,0]
         vel_mag = sqrt( np.vdot( velocity , velocity ))
+        force_mag = sqrt( np.vdot( force_bf , force_bf ))
         
         orientation = np.matmul(orientation,update_mat)
 
-        if plot_counter == 0 :       
-            plot_file.write(f"{round(time,2)},{round(phi,8)},{round(force,2)},{round(velocity[0,0],2)},{round(velocity[1,0],2)},{round(vel_mag,2)}\n")
-        plot_counter = plot_counter + 1
-        if plot_counter == 100 :
-            plot_counter = 0
+              
+        plot_file.write(f"{round(time,2)},{round(phi,8)},{round(force,2)},{round(velocity[0,0],2)},{round(velocity[1,0],2)},{round(velocity[2,0],2)},{round(vel_mag,2)}\n")
+        
         
     
 
