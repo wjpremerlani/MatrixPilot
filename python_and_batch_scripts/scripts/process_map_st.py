@@ -23,6 +23,16 @@ args_log_time = False
 args_no_kalman = False
 is_bill = True
 
+global xa_raws , ya_raws , za_raws , roll_raws , pitch_raws , yaw_raws
+xa_raws = []
+ya_raws = []
+za_raws = []
+roll_raws = []
+pitch_raws = []
+yaw_raws = []
+
+
+
 global skip_pass_7_and_8
 skip_pass_7_and_8 = True
 
@@ -764,17 +774,9 @@ def read_markers(marker_file):
 
 global valid_run
 
-global xa_raws , ya_raws , za_raws , roll_raws , pitch_raws , yaw_raws
-xa_raws = []
-ya_raws = []
-za_raws = []
-roll_raws = []
-pitch_raws = []
-yaw_raws = []
-
 
 def read_data(file):
-    global xa_ins , ya_ins , za_ins , roll_ins , pitch_ins , yaw_ins
+    global xa_raws , ya_raws , za_raws , roll_raws , pitch_raws , yaw_raws
     global has_time_stamps , time_stamp , time_increment , times
     global roll_threshold
     global line_numbers , gxs, gys, gzs, yaws, pitches, rolls
@@ -868,14 +870,27 @@ def read_data(file):
         ATA = np.matmul(AT,A)
         Y = np.zeros((1,1))
         ATY = np.matmul(AT,Y)
-
     
         for line in lines :
             columns = line.split(',')
             if ( len(columns) == NUM_COLS ) or  ( len(columns) == NUM_COLS +1 ) :
+                
                 if ( len(columns) == NUM_COLS +1 ) :
                     has_time_stamps = True
                 try:
+                    xa_in = float(columns[XA_COL])
+                    ya_in = float(columns[YA_COL])
+                    za_in = float(columns[ZA_COL])
+                    yaw_in = float(columns[YAW_COL])
+                    pitch_in = float(columns[PITCH_COL])
+                    roll_in = float(columns[ROLL_COL])
+                    xa_raws.append(xa_in)
+                    ya_raws.append(ya_in)
+                    za_raws.append(za_in)
+                    yaw_raws.append(yaw_in)
+                    pitch_raws.append(pitch_in)
+                    roll_raws.append(roll_in)
+
                     roll_angle = float(columns[ROLL_COL])
                     if abs(roll_angle) > 45 :
                         Y[0,0] = float(columns[PITCH_COL])
@@ -1310,12 +1325,6 @@ def read_data(file):
                         yaw_in = float(columns[YAW_COL])
                         pitch_in = float(columns[PITCH_COL])
                         roll_in = float(columns[ROLL_COL])
-                        xa_raws.append(xa_in)
-                        ya_raws.append(ya_in)
-                        za_raws.append(za_in)
-                        yaw_raws.append(yaw_in)
-                        pitch_raws.append(pitch_in)
-                        roll_raws.append(roll_in)
                         if ( has_time_stamps ) :
                             time_stamp_in = int(columns[TIME_COL])
                         else :
@@ -1443,18 +1452,20 @@ def write_data(column_names,column_data,log_file) :
     for column_name in column_names :
         log_file.write(f"{column_name}__{file_base_name},")
     log_file.write(f"\n")
-    for line_number in line_numbers :
+    for line_number in range ( int(100.0*start),len(column_data[0])):
         for data_column in column_data :
             log_file.write(f"{round(data_column[line_number],4)},")
         log_file.write(f"\n")
 
 def compute_earth_frame_velocity() :
     global xa_raws , ya_raws , za_raws , roll_raws , pitch_raws , yaw_raws
-    if is_bill :
+    #if is_bill :
+    if True :
         bill_file = open(file_base_name+".earth_frame.csv","w")
-        column_names = [ "fx" , "fy" , "fz" , "roll" , "pitch" , "yaw" ]
-        column_data = [ xa_raws , ya_raws , za_raws , roll_raws , pitch_raws , yaw_raws ]
+        column_names = [ "line_number", "fx" , "fy" , "fz" , "roll" , "pitch" , "yaw" ]
+        column_data = [ line_nums , xa_raws , ya_raws , za_raws , roll_raws , pitch_raws , yaw_raws ]
         write_data(column_names,column_data,bill_file)
+    return 0.0
     
         
 
