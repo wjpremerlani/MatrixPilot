@@ -459,6 +459,81 @@ def create_ypr_matrix(yaw,pitch,roll):
     create_roll_matrix(roll)
     yp_mat = np.matmul(y_mat,p_mat)
     ypr_mat = np.matmul(yp_mat,r_mat)
+    return ypr_mat
+
+def f1(phi_sqr):
+    result = 1.0 - phi_sqr/6.0 + phi_sqr*phi_sqr/120.0 - phi_sqr*phi_sqr*phi_sqr/5040.0
+    return result
+
+def f2(phi_sqr):
+    result = 0.5 -phi_sqr/24.0 + phi_sqr*phi_sqr/720.0 - phi_sqr*phi_sqr*phi_sqr/40320.0
+    return result
+
+def f3(phi_sqr):
+    result = 1.0/6.0 - phi_sqr/120.0 + phi_sqr*phi_sqr/5040.0 - phi_sqr*phi_sqr*phi_sqr/362880.0
+    return result
+
+def matrix_to_matrix_integral(matrix):
+    angle_axis = matrix_to_phi(matrix)
+    mat_integral = phi_to_matrix_integral(angle_axis)
+    return mat_integral
+
+def phi_to_matrix_integral(phi) :
+    result = np.zeros((3,3))
+    
+    phi_sqr = np.vdot(phi,phi)
+    f2_value = f2(phi_sqr)
+    f3_value = f3(phi_sqr)
+    
+    result[0,0] = 1.0  + f3_value*(phi[0,0]*phi[0,0]-phi_sqr)
+    result[0,1] = -f2_value*phi[2,0] + f3_value*(phi[0,0]*phi[1,0])
+    result[0,2] = f2_value*phi[1,0] + f3_value*(phi[0,0]*phi[2,0])
+
+    result[1,1] = 1.0  + f3_value*(phi[1,0]*phi[1,0]-phi_sqr)
+    result[1,2] = -f2_value*phi[0,0] + f3_value*(phi[1,0]*phi[2,0])
+    result[1,0] = f2_value*phi[2,0] + f3_value*(phi[1,0]*phi[0,0])
+
+    result[2,2] = 1.0  + f3_value*(phi[2,0]*phi[2,0]-phi_sqr)
+    result[2,0] = -f2_value*phi[1,0] + f3_value*(phi[2,0]*phi[0,0])
+    result[2,1] = f2_value*phi[0,0] + f3_value*(phi[2,0]*phi[1,0])
+
+    return result
+
+def phi_to_matrix(phi) :
+    result = np.zeros((3,3))
+    
+    phi_sqr = np.vdot(phi,phi)
+    f1_value = f1(phi_sqr)
+    f2_value = f2(phi_sqr)
+    
+    result[0,0] = 1.0  + f2_value*(phi[0,0]*phi[0,0]-phi_sqr)
+    result[0,1] = -f1_value*phi[2,0] + f2_value*(phi[0,0]*phi[1,0])
+    result[0,2] = f1_value*phi[1,0] + f2_value*(phi[0,0]*phi[2,0])
+
+    result[1,1] = 1.0  + f2_value*(phi[1,0]*phi[1,0]-phi_sqr)
+    result[1,2] = -f1_value*phi[0,0] + f2_value*(phi[1,0]*phi[2,0])
+    result[1,0] = f1_value*phi[2,0] + f2_value*(phi[1,0]*phi[0,0])
+
+    result[2,2] = 1.0  + f2_value*(phi[2,0]*phi[2,0]-phi_sqr)
+    result[2,0] = -f1_value*phi[1,0] + f2_value*(phi[2,0]*phi[0,0])
+    result[2,1] = f1_value*phi[0,0] + f2_value*(phi[2,0]*phi[1,0])
+
+    return result
+
+def matrix_to_phi(matrix) :
+    result = np.zeros((3,1))
+    f1_phi = np.zeros((3,1))
+    f1_phi[0,0] = ( matrix[2,1] - matrix[1,2] )/2.0
+    f1_phi[1,0] = ( matrix[0,2] - matrix[2,0] )/2.0
+    f1_phi[2,0] = ( matrix[1,0] - matrix[0,1] )/2.0
+    sin_phi = sqrt(np.vdot(f1_phi,f1_phi))
+    cos_phi = (np.trace(matrix)-1.0)/2.0
+    phi = np.arctan2(sin_phi,cos_phi)
+    f1_val = f1 ( phi*phi )
+    result[0,0] = (f1_phi[0,0]/f1_val)
+    result[1,0] = (f1_phi[1,0]/f1_val)
+    result[2,0] = (f1_phi[2,0]/f1_val)        
+    return result
 
 #corner_w is the pitch rate in radians per second at which the kalman gain is 0.5
 global corner_w
@@ -688,7 +763,17 @@ def read_markers(marker_file):
 
 global valid_run
 
+global xa_raws , ya_raws , za_raws , roll_raws , pitch_raws , yaw_raws
+xa_raws = []
+ya_raws = []
+za_raws = []
+roll_raws = []
+pitch_raws = []
+yaw_raws = []
+
+
 def read_data(file):
+    global xa_ins , ya_ins , za_ins , roll_ins , pitch_ins , yaw_ins
     global has_time_stamps , time_stamp , time_increment , times
     global roll_threshold
     global line_numbers , gxs, gys, gzs, yaws, pitches, rolls
@@ -1224,6 +1309,12 @@ def read_data(file):
                         yaw_in = float(columns[YAW_COL])
                         pitch_in = float(columns[PITCH_COL])
                         roll_in = float(columns[ROLL_COL])
+                        xa_raws.append(xa_in)
+                        ya_raws.append(ya_in)
+                        za_raws.append(za_in)
+                        yaw_raws.append(yaw_in)
+                        pitch_raws.append(pitch_in)
+                        roll_raws.append(roll_in)
                         if ( has_time_stamps ) :
                             time_stamp_in = int(columns[TIME_COL])
                         else :
@@ -1355,7 +1446,6 @@ def write_summary_header():
     summary_log_file.write(f"            pd,")
     summary_log_file.write(f"            rd\n")
 
-
 def run_passes():
     global skip_pass_7_and_8
     global velocity, z_x_cc, input_file, fx_list, fy_list, fz_list, wx_list, wy_list, wz_list
@@ -1400,30 +1490,34 @@ def run_passes():
     pitch_filt = mav_filter(pitch_list,indices(filter_size))
     roll_filt = mav_filter(roll_list,indices(filter_size))
 
-    heading_hf = []
-    pitch_hf = []
-    roll_hf = []
+    adjust_for_sculling = False
 
-    fz_hf = []
+    if adjust_for_sculling :
 
-    scull = []
+        heading_hf = []
+        pitch_hf = []
+        roll_hf = []
 
-    for list_index in range(len(heading_filt)):
-        heading_hf.append(heading_list[list_index] - heading_filt[list_index])
+        fz_hf = []
 
-    for list_index in range(len(pitch_filt)):
-        pitch_hf.append(pitch_list[list_index] - pitch_filt[list_index])
+        scull = []
 
-    for list_index in range(len(roll_filt)):
-        roll_hf.append(roll_list[list_index] - roll_filt[list_index])
+        for list_index in range(len(heading_filt)):
+            heading_hf.append(heading_list[list_index] - heading_filt[list_index])
 
-    for list_index in range(len(fz_filt)):
-        fz_hf.append(fz_list[list_index] - fz_filt[list_index])
-        scull.append(radians(fz_hf[list_index]*pitch_hf[list_index]))
+        for list_index in range(len(pitch_filt)):
+            pitch_hf.append(pitch_list[list_index] - pitch_filt[list_index])
 
-    for list_index in range(len(fx_filt)):
-        fx_list[list_index] = fx_list[list_index] - scull[list_index]
-        fx_filt[list_index] = fx_filt[list_index] - scull[list_index]
+        for list_index in range(len(roll_filt)):
+            roll_hf.append(roll_list[list_index] - roll_filt[list_index])
+
+        for list_index in range(len(fz_filt)):
+            fz_hf.append(fz_list[list_index] - fz_filt[list_index])
+            scull.append(radians(fz_hf[list_index]*pitch_hf[list_index]))
+
+        for list_index in range(len(fx_filt)):
+            fx_list[list_index] = fx_list[list_index] - scull[list_index]
+            fx_filt[list_index] = fx_filt[list_index] - scull[list_index]
 
 
     omegas_e_f_x = mav_filter(omegas_e_x,indices(filter_size))
@@ -2936,3 +3030,5 @@ if __name__ == "__main__":
     log_file.write(f"raw timing eye time values.\r\n{timing_eye_times}\r\n")
 
     run_passes()
+    for line_number in line_numbers :
+        print(xa_raws[line_number],ya_raws[line_number],za_raws[line_number],yaw_raws[line_number],pitch_raws[line_number],roll_raws[line_number])
