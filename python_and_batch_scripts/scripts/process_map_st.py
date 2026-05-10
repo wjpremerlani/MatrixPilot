@@ -21,6 +21,7 @@ args_yrs = False
 args_strmlt = True
 args_log_time = False
 args_no_kalman = False
+is_bill = True
 
 global skip_pass_7_and_8
 skip_pass_7_and_8 = True
@@ -1434,9 +1435,28 @@ def read_data(file):
                     except ValueError:
                         output_file.write("x_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,yaw_rate_xx,x_force_ns_xx,y_force_ns_xx,seq_no_xx,tmptur_xx,time_stamps_xx\r")
                 else:
-                    output_file.write(line+"\r")
-
+                    output_file.write(line+"\r")       
+    compute_earth_frame_velocity()
     return None
+
+def write_data(column_names,column_data,log_file) :
+    for column_name in column_names :
+        log_file.write(f"{column_name}__{file_base_name},")
+    log_file.write(f"\n")
+    for line_number in line_numbers :
+        for data_column in column_data :
+            log_file.write(f"{round(data_column[line_number],4)},")
+        log_file.write(f"\n")
+
+def compute_earth_frame_velocity() :
+    global xa_raws , ya_raws , za_raws , roll_raws , pitch_raws , yaw_raws
+    if is_bill :
+        bill_file = open(file_base_name+".earth_frame.csv","w")
+        column_names = [ "fx" , "fy" , "fz" , "roll" , "pitch" , "yaw" ]
+        column_data = [ xa_raws , ya_raws , za_raws , roll_raws , pitch_raws , yaw_raws ]
+        write_data(column_names,column_data,bill_file)
+    
+        
 
 def write_summary_header():
     summary_log_file.write(f"     file_name,")
@@ -3030,5 +3050,4 @@ if __name__ == "__main__":
     log_file.write(f"raw timing eye time values.\r\n{timing_eye_times}\r\n")
 
     run_passes()
-    for line_number in line_numbers :
-        print(xa_raws[line_number],ya_raws[line_number],za_raws[line_number],yaw_raws[line_number],pitch_raws[line_number],roll_raws[line_number])
+    
