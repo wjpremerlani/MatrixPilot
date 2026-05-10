@@ -222,7 +222,7 @@ elapsed = 70.
 end = 130.
 
 global ypr_o_mat , ypr_o_mat_trans, y_mat , p_mat , r_mat , yp_mat , ypr_mat
-global drift_mat
+global drift_mat , drift_angle
 global first_mat
 ypr_o_mat = np.zeros((3,3))
 ypr_o_mat_trans = np.zeros((3,3))
@@ -789,8 +789,14 @@ def column_name(signal):
     return str(signal+"__"+file_base_name)
 
 global valid_run
+global force_bs
+global force_es
+force_bs = []
+force_es = []
 
 def read_data(file):
+    global force_bs
+    global force_es
     global has_time_stamps , time_stamp , time_increment , times
     global roll_threshold
     global line_numbers , gxs, gys, gzs, yaws, pitches, rolls 
@@ -815,7 +821,7 @@ def read_data(file):
     global yaw_offset , pitch_offset , roll_offset
     global gx , gy , gz
     global acc_z_gain , gravity_value , z_x_cc
-    global drift_mat
+    global drift_mat , drift_angle
     global matrix_adjusted
     global matrix_update
     global pitch_zero , roll_zero
@@ -931,6 +937,8 @@ def read_data(file):
                         gravity[0,0] = - float(columns[XA_COL])
                         gravity[1,0] = - float(columns[YA_COL])
                         gravity[2,0] = - float(columns[ZA_COL])
+                        force_b = np.copy ( gravity )
+                        force_bs.append(force_b)
                         yaw_in = float(columns[YAW_COL])
                         pitch_in = float(columns[PITCH_COL])
                         roll_in = float(columns[ROLL_COL])
@@ -956,14 +964,14 @@ def read_data(file):
     except :
         pass
 
-    if is_bill :
-        
+    if False :
+
         bill_file.write(f"{column_name('gx')},")
         bill_file.write(f"{column_name('gy')},")
         bill_file.write(f"{column_name('gz')},")
         bill_file.write(f"{column_name('yaw')},")
         bill_file.write(f"{column_name('pitch')},")
-        bill_file.write(f"{column_name('roll')},")
+        bill_file.write(f"{column_name('roll')}\n")
         if ( False ):
             bill_file.write(f"{column_name('down_g_x')},")
             bill_file.write(f"{column_name('down_g_y')},")
@@ -971,9 +979,9 @@ def read_data(file):
             bill_file.write(f"{column_name('down_g_x')},")
             bill_file.write(f"{column_name('down_g_y')},")
             bill_file.write(f"{column_name('down_g_z')},")      
-        bill_file.write(f"{column_name('dev_x')},")
-        bill_file.write(f"{column_name('dev_y')},")
-        bill_file.write(f"{column_name('dev_z')}\n")
+            bill_file.write(f"{column_name('dev_x')},")
+            bill_file.write(f"{column_name('dev_y')},")
+            bill_file.write(f"{column_name('dev_z')}\n")
 
         
         is_first_line = True
@@ -1002,16 +1010,17 @@ def read_data(file):
             deviation = cross_t( down_g , down_m )
             deviation_magnitude = sqrt ( np.vdot( deviation , deviation ))
             
-            if deviation_magnitude < 0.02 :
-                sum_of_deviations = np.add(sum_of_deviations,deviation)
-                number_of_samples = number_of_samples + 1
+            if False :
+            #if deviation_magnitude < 0.02 :
+                #sum_of_deviations = np.add(sum_of_deviations,deviation)
+                #number_of_samples = number_of_samples + 1
             
                 bill_file.write(f"{round( gxs[line_number] , 2)},")
                 bill_file.write(f"{round( gys[line_number] , 2)},")
                 bill_file.write(f"{round( gzs[line_number] , 2)},")
                 bill_file.write(f"{round( yaws[line_number] , 2)},")
                 bill_file.write(f"{round( pitches[line_number] , 2)},")
-                bill_file.write(f"{round( rolls[line_number] , 2)},")
+                bill_file.write(f"{round( rolls[line_number] , 2)}\n")
                 if ( False ) :
                     bill_file.write(f"{round( down_g[0,0] , 10)},")
                     bill_file.write(f"{round( down_g[1,0] , 10)},")
@@ -1019,29 +1028,29 @@ def read_data(file):
                     bill_file.write(f"{round( down_m[0,0] , 10)},")
                     bill_file.write(f"{round( down_m[1,0] , 10)},")
                     bill_file.write(f"{round( down_m[2,0] , 10)},")                      
-                bill_file.write(f"{deviation[0,0]},")
-                bill_file.write(f"{deviation[1,0]},")
-                bill_file.write(f"{deviation[2,0]},")
-                bill_file.write(f"{deviation_magnitude}\n")
-                
+                    bill_file.write(f"{deviation[0,0]},")
+                    bill_file.write(f"{deviation[1,0]},")
+                    bill_file.write(f"{deviation[2,0]},")
+                    bill_file.write(f"{deviation_magnitude}\n")
+                    
                                          
-
-    if number_of_samples > 0 :
-        x_drift_rate = -(335.717*sum_of_deviations[0,0])/float(number_of_samples)
-        y_drift_rate = -(335.717*sum_of_deviations[1,0])/float(number_of_samples)
-        z_drift_rate = -(335.717*sum_of_deviations[2,0])/float(number_of_samples)
-        print( " drift rates computed with new method based on tilt locking ")
-        print( " number of samples = " , number_of_samples )
-        print ( "drift rates : " , x_drift_rate , y_drift_rate , z_drift_rate , " degrees per minute ")
-        log_file.write(f"\n\n\n")
-        log_file.write(f"gyro drift rates calculated using the behavior of tilt locking:\n")
-        log_file.write(f"x gyro drift rate = {round(x_drift_rate , 2 )}\n")
-        log_file.write(f"y gyro drift rate = {round(y_drift_rate , 2 )}\n")
-        log_file.write(f"z gyro drift rate = {round(z_drift_rate , 2 )}\n")
-        log_file.write(f"number of samples = {number_of_samples}\n")
-    else :
-        log_file.write(f"gyro drift not calculated using tilt locking, no samples.\n")
-        
+    if False :
+        if number_of_samples > 0 :
+            x_drift_rate = -(335.717*sum_of_deviations[0,0])/float(number_of_samples)
+            y_drift_rate = -(335.717*sum_of_deviations[1,0])/float(number_of_samples)
+            z_drift_rate = -(335.717*sum_of_deviations[2,0])/float(number_of_samples)
+            print( " drift rates computed with new method based on tilt locking ")
+            print( " number of samples = " , number_of_samples )
+            print ( "drift rates : " , x_drift_rate , y_drift_rate , z_drift_rate , " degrees per minute ")
+            log_file.write(f"\n\n\n")
+            log_file.write(f"gyro drift rates calculated using the behavior of tilt locking:\n")
+            log_file.write(f"x gyro drift rate = {round(x_drift_rate , 2 )}\n")
+            log_file.write(f"y gyro drift rate = {round(y_drift_rate , 2 )}\n")
+            log_file.write(f"z gyro drift rate = {round(z_drift_rate , 2 )}\n")
+            log_file.write(f"number of samples = {number_of_samples}\n")
+        else :
+            log_file.write(f"gyro drift not calculated using tilt locking, no samples.\n")
+            
         
         
 
@@ -1349,6 +1358,7 @@ def read_data(file):
     print(ypr_o_mat)
     create_ypr_matrix(-yaw_drift/6000.0, -pitch_drift/6000.0, -roll_drift/6000.0)
     drift_mat = ypr_mat
+    drift_angle = matrix_to_phi(ypr_mat)
     print("drift matrix")
     print (drift_mat)
     print("first record orientation matrix")
@@ -1412,6 +1422,10 @@ def read_data(file):
                         xa_in = float(columns[XA_COL])
                         ya_in = float(columns[YA_COL])
                         za_in = float(columns[ZA_COL])
+                        force_in[0,0] = xa_in
+                        force_in[1,0] = ya_in
+                        force_in[2,0] = za_in
+                        
                         yaw_in = float(columns[YAW_COL])
                         pitch_in = float(columns[PITCH_COL])
                         roll_in = float(columns[ROLL_COL])
@@ -1436,6 +1450,9 @@ def read_data(file):
                                 matrix_out_prev = matrix_out
                             
                             matrix_update = np.matmul(np.matmul(np.transpose(matrix_in_prev),matrix_in),drift_mat)
+                            matrix_update_integral = matrix_to_matrix_integral(matrix_update)
+                            force_e = np.matmul(matrix_out_prev,np.matmul(matrix_update_integral,force_in))
+                            force_es.append(force_e)
                             matrix_out = np.matmul(matrix_out_prev,matrix_update)
                             matrix_out_prev = matrix_out
                             matrix_in_prev = matrix_in
@@ -1465,9 +1482,7 @@ def read_data(file):
                             pitch_out = round(degrees(atan2(-matrix_adjusted[2,0], sqrt((matrix_adjusted[2,1])**2+(matrix_adjusted[2,2])**2))),2)
                             roll_out = round(degrees(atan2(matrix_adjusted[2,1],matrix_adjusted[2,2])),2)
 
-                            force_in[0,0] = xa_in
-                            force_in[1,0] = ya_in
-                            force_in[2,0] = za_in
+                            
 
                             force_out = np.matmul(ypr_o_mat,force_in)
 
@@ -1537,7 +1552,13 @@ def read_data(file):
                         output_file.write("x_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,yaw_rate_xx,x_force_ns_xx,y_force_ns_xx,seq_no_xx,tmptur_xx,time_stamps_xx\r")
                 else:
                     output_file.write(line+"\r")
-
+    if True :
+        bill_file.write(f"{column_name('earth_force_x')},")
+        bill_file.write(f"{column_name('earth_force_y')},")
+        bill_file.write(f"{column_name('earth_force_z')}\n")
+        for force_e in force_es :
+            bill_file.write(f"{force_e[0,0]},{force_e[1,0]},{force_e[2,0]}\n")
+        
     return None
 
 def write_summary_header():
