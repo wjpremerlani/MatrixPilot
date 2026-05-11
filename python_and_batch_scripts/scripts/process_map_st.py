@@ -1452,18 +1452,114 @@ def write_data(column_names,column_data,log_file) :
     for column_name in column_names :
         log_file.write(f"{column_name}__{file_base_name},")
     log_file.write(f"\n")
-    for line_number in range ( int(100.0*start),len(column_data[0])):
+    for line_number in range ( len(column_data[0])-2):
         for data_column in column_data :
             log_file.write(f"{round(data_column[line_number],4)},")
         log_file.write(f"\n")
 
 def compute_earth_frame_velocity() :
     global xa_raws , ya_raws , za_raws , roll_raws , pitch_raws , yaw_raws
-    #if is_bill :
-    if True :
+    global xa_bfs , ya_bfs , za_bfs , roll_bfs , pitch_bfs , yaw_bfs , xa_efs , ya_efs , za_efs 
+    global f3_efs , phis , vxs , vys , vzs , vmags , w_vxs , w_vys
+    xa_bfs = []
+    ya_bfs = []
+    za_bfs = []
+    
+    xa_efs = []
+    ya_efs = []
+    za_efs = []
+    
+    roll_bfs = []
+    pitch_bfs = []
+    yaw_bfs = []
+    f3_efs = []
+    phis = []
+
+    vxs = []
+    vys = []
+    vzs = []
+
+    vmags = []
+
+    w_vxs = []
+    w_vys = []
+
+    vx = 0.0
+    vy = 0.0
+    vz = 0.0
+
+
+    #copy all raw data starting from the pull
+    
+    for line_number in range ( int(100.0*start) -1 ,len(xa_raws)):
+        xa_bfs.append ( xa_raws[line_number])
+        ya_bfs.append ( ya_raws[line_number])
+        za_bfs.append ( za_raws[line_number])
+        roll_bfs.append ( roll_raws[line_number])
+        pitch_bfs.append ( pitch_raws[line_number])
+        yaw_bfs.append ( yaw_raws[line_number])
+
+    prev_mat = create_ypr_matrix(yaw_bfs[0],pitch_bfs[0],roll_bfs[0])
+    prev_yaw = yaw_bfs[0]
+
+    ######################################
+    #
+    #
+    #   reminder : might be misaligned by one sample for some parts of the computation
+
+    for line_number in range ( 1 , len(xa_bfs) ) :
+        new_yaw = yaw_bfs[line_number]
+        yaw_rate = radians((new_yaw-prev_yaw)*100.0)
+        prev_yaw = new_yaw
+        next_mat = create_ypr_matrix(yaw_bfs[line_number],pitch_bfs[line_number],roll_bfs[line_number])
+        update_mat = np.matmul(np.transpose(prev_mat),next_mat)
+        phi = matrix_to_phi(update_mat)
+        phis.append(phi)
+        f3_bf = np.zeros((3,1))
+        f3_bf[0,0] = xa_bfs[line_number]
+        f3_bf[1,0] = ya_bfs[line_number]
+        f3_bf[2,0] = za_bfs[line_number]
+        mat_integral = phi_to_matrix_integral(phi)
+        f3_ef = np.matmul(mat_integral,f3_bf)
+        f3_ef = np.matmul(next_mat,f3_ef)
+
+        xa_efs.append(f3_ef[0,0])
+        ya_efs.append(f3_ef[1,0])
+        za_efs.append(f3_ef[2,0])
+
+        w_vx = yaw_rate*vx
+        w_vy = yaw_rate*vy
+
+        w_vxs.append(w_vx)
+        w_vys.append(w_vy)
+        
+
+        ###############################
+        #
+        # note : the following will eventually need to be revised to use time stamps
+
+        vxs.append(vx)
+        vys.append(vy)
+        vzs.append(vz)
+
+        vx = vx + 0.01 * f3_ef[0,0]
+        vy = vy + 0.01 * f3_ef[1,0]
+        vz = vz + 0.01 * (f3_ef[2,0]+32.174)
+        vmag = sqrt(vx*vx+vy*vy+vz*vz)
+
+        vmags.append(vmag)
+
+        prev_mat = next_mat
+
+        
+        
+        
+        
+        
+    if is_bill :
         bill_file = open(file_base_name+".earth_frame.csv","w")
-        column_names = [ "line_number", "fx" , "fy" , "fz" , "roll" , "pitch" , "yaw" ]
-        column_data = [ line_nums , xa_raws , ya_raws , za_raws , roll_raws , pitch_raws , yaw_raws ]
+        column_names = [  "fxb" , "fyb" , "fzb" , "roll" , "pitch" , "yaw" , "fxe" , "fye" , "fze" , "vx" , "vy" , "vz" , "vmag" , "w_vx" , "w_vy" ]
+        column_data = [  xa_bfs , ya_bfs , za_bfs , roll_bfs , pitch_bfs , yaw_bfs , xa_efs , ya_efs , za_efs , vxs , vys , vzs , vmags , w_vxs , w_vys ]
         write_data(column_names,column_data,bill_file)
     return 0.0
     
