@@ -1461,6 +1461,7 @@ def compute_earth_frame_velocity() :
     global xa_raws , ya_raws , za_raws , roll_raws , pitch_raws , yaw_raws
     global xa_bfs , ya_bfs , za_bfs , roll_bfs , pitch_bfs , yaw_bfs , xa_efs , ya_efs , za_efs 
     global f3_efs , phis , vxs , vys , vzs , vmags , w_vxs , w_vys
+    global rmats , rmats_i , phis , rups , d_yaws , error_xs , error_ys , error_int_xs , error_int_ys
     xa_bfs = []
     ya_bfs = []
     za_bfs = []
@@ -1473,7 +1474,12 @@ def compute_earth_frame_velocity() :
     pitch_bfs = []
     yaw_bfs = []
     f3_efs = []
+    
+    rmats = []
+    rmats_i = []
     phis = []
+    rups = []
+    d_yaws = []
 
     vxs = []
     vys = []
@@ -1481,17 +1487,23 @@ def compute_earth_frame_velocity() :
 
     vmags = []
 
+    yaw_rates = []
+
     w_vxs = []
     w_vys = []
+
+    error_xs = []
+    error_ys = []
+    error_int_xs = []
+    error_int_ys = []
 
     vx = 0.0
     vy = 0.0
     vz = 0.0
 
+    #copy all raw data
 
-    #copy all raw data starting from the pull
-    
-    for line_number in range ( int(100.0*start) -1 ,len(xa_raws)):
+    for line_number in line_nums:
         xa_bfs.append ( xa_raws[line_number])
         ya_bfs.append ( ya_raws[line_number])
         za_bfs.append ( za_raws[line_number])
@@ -1499,68 +1511,108 @@ def compute_earth_frame_velocity() :
         pitch_bfs.append ( pitch_raws[line_number])
         yaw_bfs.append ( yaw_raws[line_number])
 
-    prev_mat = create_ypr_matrix(yaw_bfs[0],pitch_bfs[0],roll_bfs[0])
-    prev_yaw = yaw_bfs[0]
+    #compute and store matrices, update matrices, rodrequez angles , "smearing"  matrices and incremental yaw rotations
 
-    ######################################
-    #
-    #
-    #   reminder : might be misaligned by one sample for some parts of the computation
+    prev_yaw = radians ( yaw_bfs[0] )
+    
+    roll_1 = roll_bfs[0]
+    pitch_1 = pitch_bfs[0]
+    yaw_1 = yaw_bfs[0]
 
-    for line_number in range ( 1 , len(xa_bfs) ) :
-        new_yaw = yaw_bfs[line_number]
-        yaw_rate = radians((new_yaw-prev_yaw)*100.0)
-        prev_yaw = new_yaw
-        next_mat = create_ypr_matrix(yaw_bfs[line_number],pitch_bfs[line_number],roll_bfs[line_number])
-        update_mat = np.matmul(np.transpose(prev_mat),next_mat)
-        phi = matrix_to_phi(update_mat)
+    prev_rmat = create_ypr_matrix(yaw_1,pitch_1, roll_1)
+
+    for line_number in line_nums :
+        
+        new_rmat = create_ypr_matrix( yaw_bfs[line_number],pitch_bfs[line_number],roll_bfs[line_number])
+        rmats.append(new_rmat)
+        
+        update = np.matmul(np.transpose(prev_rmat),new_rmat)
+        rups.append(update)
+        prev_rmat = new_rmat
+        
+        phi = matrix_to_phi(update)
         phis.append(phi)
-        f3_bf = np.zeros((3,1))
-        f3_bf[0,0] = xa_bfs[line_number]
-        f3_bf[1,0] = ya_bfs[line_number]
-        f3_bf[2,0] = za_bfs[line_number]
-        mat_integral = phi_to_matrix_integral(phi)
-        f3_ef = np.matmul(mat_integral,f3_bf)
-        f3_ef = np.matmul(next_mat,f3_ef)
-
-        xa_efs.append(f3_ef[0,0])
-        ya_efs.append(f3_ef[1,0])
-        za_efs.append(f3_ef[2,0])
-
-        w_vx = yaw_rate*vx
-        w_vy = yaw_rate*vy
-
-        w_vxs.append(w_vx)
-        w_vys.append(w_vy)
         
+        rmat_i = phi_to_matrix_integral(phi)
+        rmats_i.append(rmat_i)
 
-        ###############################
-        #
-        # note : the following will eventually need to be revised to use time stamps
+        new_yaw = radians ( yaw_bfs[line_number ])
+        d_yaw = new_yaw - prev_yaw
+        d_yaws.append ( d_yaw )
+        prev_yaw = new_yaw
 
-        vxs.append(vx)
-        vys.append(vy)
-        vzs.append(vz)
+    
 
-        vx = vx + 0.01 * f3_ef[0,0]
-        vy = vy + 0.01 * f3_ef[1,0]
-        vz = vz + 0.01 * (f3_ef[2,0]+32.174)
-        vmag = sqrt(vx*vx+vy*vy+vz*vz)
 
-        vmags.append(vmag)
+    
+    if True :
 
-        prev_mat = next_mat
+        error_int_x = 0
+        error_int_y = 0
 
+        for line_number in range ( int(100.0*start) , len(line_nums) ) :
+            rmat = rmats[line_number]
+            mat_integral = rmats_i[line_number]
+            yaw_rate = 100.0 * d_yaws [ line_number ]
+            yaw_rates.append(yaw_rate)
+            f3_bf = np.zeros((3,1))
+            f3_bf[0,0] = xa_bfs[line_number]
+            f3_bf[1,0] = ya_bfs[line_number]
+            f3_bf[2,0] = za_bfs[line_number]
+            f3_ef = np.matmul(mat_integral,f3_bf)
+            f3_ef = np.matmul(rmat,f3_ef)
+
+            xa_efs.append(f3_ef[0,0])
+            ya_efs.append(f3_ef[1,0])
+            za_efs.append(f3_ef[2,0])
+
+            w_vx = yaw_rate*vx
+            w_vy = yaw_rate*vy
+
+            w_vxs.append(w_vx)
+            w_vys.append(w_vy)
+
+            error_x = ( w_vx - f3_ef[1,0])*d_yaws[line_number]
+            error_y = ( w_vy + f3_ef[0,0])*d_yaws[line_number]
+
+            error_int_x = error_int_x + 0.01*error_x
+            error_int_y = error_int_y + 0.01*error_y
+
+            error_xs.append(error_x)
+            error_ys.append(error_y)
+
+            error_int_xs.append(error_int_x)
+            error_int_ys.append(error_int_y)
+            
+
+            ###############################
+            #
+            # note : the following will eventually need to be revised to use time stamps
+
+            vxs.append(vx)
+            vys.append(vy)
+            vzs.append(vz)
+
+            vx = vx + 0.01 * f3_ef[0,0]
+            vy = vy + 0.01 * f3_ef[1,0]
+            vz = vz + 0.01 * (f3_ef[2,0]+32.174)
+            vmag = sqrt(vx*vx+vy*vy+vz*vz)
+
+            vmags.append(vmag)
+
+
+
+            
         
         
         
-        
-        
+    #if False :   
     if is_bill :
         bill_file = open(file_base_name+".earth_frame.csv","w")
-        column_names = [  "fxb" , "fyb" , "fzb" , "roll" , "pitch" , "yaw" , "fxe" , "fye" , "fze" , "vx" , "vy" , "vz" , "vmag" , "w_vx" , "w_vy" ]
-        column_data = [  xa_bfs , ya_bfs , za_bfs , roll_bfs , pitch_bfs , yaw_bfs , xa_efs , ya_efs , za_efs , vxs , vys , vzs , vmags , w_vxs , w_vys ]
+        column_names = [ "fxe" , "fye" , "fze" , "vx" , "vy" , "vz" , "vmag" , "yaw_rate" ,"w_vx" , "w_vy" , "error_x" , "error_y" ,"error_vx" ,"error_vy" , ]
+        column_data = [   xa_efs , ya_efs , za_efs , vxs , vys , vzs , vmags , yaw_rates , w_vxs , w_vys , error_xs , error_ys , error_int_xs , error_int_ys  ]            
         write_data(column_names,column_data,bill_file)
+
     return 0.0
     
         
