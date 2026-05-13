@@ -1529,22 +1529,11 @@ def compute_earth_frame_velocity() :
     pitch_1 = pitch_bfs[0]
     yaw_1 = yaw_bfs[0]
 
-    offsets = np.zeros((3,1))
-    #offsets[0,0] = .0036
-    #offsets[1,0] = .00488
-    #offsets[2,0] = 0.0
-    offsets[0,0] = 0.1
-    offsets[1,0] = 0.05
-    offsets[2,0] = 0.0
-
-
-    offset_correction = phi_to_matrix(offsets)
-
-    prev_rmat = np.matmul(offset_correction,create_ypr_matrix(yaw_1,pitch_1, roll_1))
+    prev_rmat = (create_ypr_matrix(yaw_1,pitch_1, roll_1))
 
     for line_number in line_nums :
         
-        new_rmat = np.matmul(offset_correction,create_ypr_matrix( yaw_bfs[line_number],pitch_bfs[line_number],roll_bfs[line_number]))
+        new_rmat = (create_ypr_matrix( yaw_bfs[line_number],pitch_bfs[line_number],roll_bfs[line_number]))
         rmats.append(new_rmat)
         
         update = np.matmul(np.transpose(prev_rmat),new_rmat)
@@ -1567,14 +1556,16 @@ def compute_earth_frame_velocity() :
         error_int_x = 0
         error_int_y = 0
 
-        correction = np.zeros((3,1))
+        offset_angle = np.zeros((3,1))
         #correction[0,0] = 0.0036
         #correction[1,0] = 0.00488
         #correction[2,0] = 0.0
 
-        #correction[0,0] = 0.1
-        #correction[1,0] = 0.05
-        #correction[2,0] = 0.0
+        offset_angle[0,0] = 0.00488
+        offset_angle[1,0] = -0.0036073
+        offset_angle[2,0] = 0.0
+
+        offset_mat = phi_to_matrix(offset_angle)
 
 
         for line_number in range ( int(100.0*start) , len(line_nums) ) :
@@ -1587,8 +1578,8 @@ def compute_earth_frame_velocity() :
             f3_bf[1,0] = ya_bfs[line_number]
             f3_bf[2,0] = za_bfs[line_number]
             f3_ef = np.matmul(mat_integral,f3_bf)
+            #f3_ef = np.matmul(np.matmul(offset_mat,rmat),f3_ef)
             f3_ef = np.matmul(rmat,f3_ef)
-
             xa_efs.append(f3_ef[0,0])
             ya_efs.append(f3_ef[1,0])
             za_efs.append(f3_ef[2,0])
@@ -1632,8 +1623,8 @@ def compute_earth_frame_velocity() :
             Y[0,0] = error_x
             Y[1,0] = error_y
 
-            A[0,0] = 32.174*time*0.01
-            A[1,1] = 32.174*time*0.01
+            A[0,1] = -32.174*time*0.01
+            A[1,0] = 32.174*time*0.01
 
             AT = np.transpose(A)
 
