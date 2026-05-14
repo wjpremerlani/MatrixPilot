@@ -1534,28 +1534,19 @@ def compute_earth_frame_velocity() :
 
     prev_rmat = (create_ypr_matrix(yaw_1,pitch_1, roll_1))
 
-    for line_number in line_nums :
-        
+    for line_number in line_nums :      
         new_rmat = (create_ypr_matrix( yaw_bfs[line_number],pitch_bfs[line_number],roll_bfs[line_number]))
-        rmats.append(new_rmat)
-        
+        rmats.append(new_rmat)      
         update = np.matmul(np.transpose(prev_rmat),new_rmat)
         rups.append(update)
-        prev_rmat = new_rmat
-        
+        prev_rmat = new_rmat        
         phi = matrix_to_phi(update)
         phis.append(phi)
-
         phi_e = np.matmul(new_rmat , phi )
-        phi_es.append(phi_e)
-
-             
-        
+        phi_es.append(phi_e)       
         rmat_i = phi_to_matrix_integral(phi)
         rmats_i.append(rmat_i)
-
-        
-    
+  
     if True :
 
         error_int_x = 0
@@ -1563,14 +1554,19 @@ def compute_earth_frame_velocity() :
 
         offset_angle = np.zeros((3,1))
 
-        offset_angle[0,0] = 0.001
-        offset_angle[1,0] = -0.0185
-        offset_angle[2,0] = 0.0
+        if False :
+            offset_angle[0,0] = 0.001
+            offset_angle[1,0] = -0.0185
+            offset_angle[2,0] = 0.0
+            offset_z = -0.295
 
-        offset_z = -0.295
-
+        if True :
+            offset_angle[0,0] = 0.1
+            offset_angle[1,0] = -0.2
+            offset_angle[2,0] = 0.0
+            offset_z = -0.295
+            
         offset_mat = phi_to_matrix(offset_angle)
-
 
         for line_number in range ( int(100.0*start) , len(line_nums) ) :
             rmat = rmats[line_number]
@@ -1587,19 +1583,17 @@ def compute_earth_frame_velocity() :
             za_efs.append(f3_ef[2,0])
 
             phi_e = phi_es[line_number]
+            w_mag = sqrt(np.vdot(phi_e,phi_e))
+            wx = (phi_e[0,0])
+            wy = (phi_e[1,0])
+            wz = (phi_e[2,0])
+            
+            wxs.append(wx)
+            wys.append(wy)
+            wzs.append(wz) 
 
-            wxs.append(100.0*phi_e[0,0])
-            wys.append(100.0*phi_e[1,0])
-            wzs.append(100.0*phi_e[2,0]) 
-
-            w_vx = 0.0
-            w_vy = 0.0
-
-            w_vxs.append(w_vx)
-            w_vys.append(w_vy)
-
-            error_x = ( w_vx - f3_ef[1,0])*0.0
-            error_y = ( w_vy + f3_ef[0,0])*0.0
+            error_x = w_mag*( wy*vz - wz*vy - 0.01* f3_ef[1,0])
+            error_y = w_mag*( wz*vx - wx*vz - 0.01 * f3_ef[0,0])
 
             error_int_x = error_int_x + 0.01*error_x
             error_int_y = error_int_y + 0.01*error_y
@@ -1628,13 +1622,13 @@ def compute_earth_frame_velocity() :
 
             time = time + 0.01
 
-            if False : 
+            if True : 
 
                 Y[0,0] = error_x
                 Y[1,0] = error_y
 
-                A[0,1] = -32.174*time*0.01
-                A[1,0] = 32.174*time*0.01
+                A[0,0] = -f3_ef[2,0]*w_mag
+                A[1,1] =  f3_ef[2,0]*w_mag
 
                 AT = np.transpose(A)
 
@@ -1642,7 +1636,7 @@ def compute_earth_frame_velocity() :
                 ATY = ATY + np.matmul(AT,Y)
 
                 sum_ysqr = sum_ysqr + np.matmul(np.transpose(Y),Y)
-        if False :
+        if True :
             ATA_INVERSE = np.linalg.inv(ATA)
             X = np.matmul(ATA_INVERSE,ATY)
             sigma_sqr = sum_ysqr - np.matmul(np.transpose(X),ATY)
@@ -1651,8 +1645,8 @@ def compute_earth_frame_velocity() :
         phiy = -vx/(time*32.174)
         offz = vz/time
 
-        #print("offsets = " , X )
-        #print(" sigma_sqr = " , sigma_sqr )
+        print("offsets = " , X )
+        print(" sigma_sqr = " , sigma_sqr )
 
         print("phix, phiy = " , phix , phiy )
         print(" offz " , offz)
@@ -1661,8 +1655,8 @@ def compute_earth_frame_velocity() :
     #if False :   
     if is_bill :
         bill_file = open(file_base_name+".earth_frame.csv","w")
-        column_names = [ "fxe" , "fye" , "fze" , "vx" , "vy" , "vz" , "vmag" , "wx" , "wy" , "wz" ]
-        column_data = [   xa_efs , ya_efs , za_efs , vxs , vys , vzs , vmags , wxs , wys , wzs ]            
+        column_names = [ "fxe" , "fye" , "fze" , "vx" , "vy" , "vz" , "vmag" , "wx" , "wy" , "wz" , "error_x" , "error_y","sum_error_x" , "sum_error_y" ]
+        column_data = [   xa_efs , ya_efs , za_efs , vxs , vys , vzs , vmags , wxs , wys , wzs , error_xs, error_ys , error_int_xs , error_int_ys]            
         write_data(column_names,column_data,bill_file)
 
     return 0.0
