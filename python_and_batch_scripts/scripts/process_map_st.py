@@ -1461,7 +1461,8 @@ def compute_earth_frame_velocity() :
     global xa_raws , ya_raws , za_raws , roll_raws , pitch_raws , yaw_raws
     global xa_bfs , ya_bfs , za_bfs , roll_bfs , pitch_bfs , yaw_bfs , xa_efs , ya_efs , za_efs 
     global f3_efs , phis , vxs , vys , vzs , vmags , w_vxs , w_vys
-    global rmats , rmats_i , phis , rups , d_yaws , error_xs , error_ys , error_int_xs , error_int_ys
+    global rmats , rmats_i , phis , rups , error_xs , error_ys , error_int_xs , error_int_ys
+    global phi_es , wxs , wys , wzs 
 
     Y = np.zeros((2,1))
     A = np.zeros((2,2))
@@ -1488,8 +1489,8 @@ def compute_earth_frame_velocity() :
     rmats = []
     rmats_i = []
     phis = []
+    phi_es = []
     rups = []
-    d_yaws = []
 
     vxs = []
     vys = []
@@ -1497,10 +1498,12 @@ def compute_earth_frame_velocity() :
 
     vmags = []
 
-    yaw_rates = []
-
     w_vxs = []
     w_vys = []
+
+    wxs = []
+    wys = []
+    wzs = []
 
     error_xs = []
     error_ys = []
@@ -1542,14 +1545,16 @@ def compute_earth_frame_velocity() :
         
         phi = matrix_to_phi(update)
         phis.append(phi)
+
+        phi_e = np.matmul(new_rmat , phi )
+        phi_es.append(phi_e)
+
+             
         
         rmat_i = phi_to_matrix_integral(phi)
         rmats_i.append(rmat_i)
 
-        new_yaw = radians ( yaw_bfs[line_number ])
-        d_yaw = new_yaw - prev_yaw
-        d_yaws.append ( d_yaw )
-        prev_yaw = new_yaw
+        
     
     if True :
 
@@ -1557,13 +1562,12 @@ def compute_earth_frame_velocity() :
         error_int_y = 0
 
         offset_angle = np.zeros((3,1))
-        #correction[0,0] = 0.0036
-        #correction[1,0] = 0.00488
-        #correction[2,0] = 0.0
 
-        offset_angle[0,0] = 0.00488
-        offset_angle[1,0] = -0.0036073
+        offset_angle[0,0] = 0.001
+        offset_angle[1,0] = -0.0185
         offset_angle[2,0] = 0.0
+
+        offset_z = -0.295
 
         offset_mat = phi_to_matrix(offset_angle)
 
@@ -1571,8 +1575,6 @@ def compute_earth_frame_velocity() :
         for line_number in range ( int(100.0*start) , len(line_nums) ) :
             rmat = rmats[line_number]
             mat_integral = rmats_i[line_number]
-            yaw_rate = 100.0 * d_yaws [ line_number ]
-            yaw_rates.append(yaw_rate)
             f3_bf = np.zeros((3,1))
             f3_bf[0,0] = xa_bfs[line_number]
             f3_bf[1,0] = ya_bfs[line_number]
@@ -1584,14 +1586,20 @@ def compute_earth_frame_velocity() :
             ya_efs.append(f3_ef[1,0])
             za_efs.append(f3_ef[2,0])
 
-            w_vx = yaw_rate*vx
-            w_vy = yaw_rate*vy
+            phi_e = phi_es[line_number]
+
+            wxs.append(100.0*phi_e[0,0])
+            wys.append(100.0*phi_e[1,0])
+            wzs.append(100.0*phi_e[2,0]) 
+
+            w_vx = 0.0
+            w_vy = 0.0
 
             w_vxs.append(w_vx)
             w_vys.append(w_vy)
 
-            error_x = ( w_vx - f3_ef[1,0])*d_yaws[line_number]
-            error_y = ( w_vy + f3_ef[0,0])*d_yaws[line_number]
+            error_x = ( w_vx - f3_ef[1,0])*0.0
+            error_y = ( w_vy + f3_ef[0,0])*0.0
 
             error_int_x = error_int_x + 0.01*error_x
             error_int_y = error_int_y + 0.01*error_y
@@ -1620,37 +1628,41 @@ def compute_earth_frame_velocity() :
 
             time = time + 0.01
 
-            Y[0,0] = error_x
-            Y[1,0] = error_y
+            if False : 
 
-            A[0,1] = -32.174*time*0.01
-            A[1,0] = 32.174*time*0.01
+                Y[0,0] = error_x
+                Y[1,0] = error_y
 
-            AT = np.transpose(A)
+                A[0,1] = -32.174*time*0.01
+                A[1,0] = 32.174*time*0.01
 
-            ATA = ATA + np.matmul(AT,A)
-            ATY = ATY + np.matmul(AT,Y)
+                AT = np.transpose(A)
 
-            sum_ysqr = sum_ysqr + np.matmul(np.transpose(Y),Y)
+                ATA = ATA + np.matmul(AT,A)
+                ATY = ATY + np.matmul(AT,Y)
 
-        ATA_INVERSE = np.linalg.inv(ATA)
-        X = np.matmul(ATA_INVERSE,ATY)
-        sigma_sqr = sum_ysqr - np.matmul(np.transpose(X),ATY)
+                sum_ysqr = sum_ysqr + np.matmul(np.transpose(Y),Y)
+        if False :
+            ATA_INVERSE = np.linalg.inv(ATA)
+            X = np.matmul(ATA_INVERSE,ATY)
+            sigma_sqr = sum_ysqr - np.matmul(np.transpose(X),ATY)
 
-        print("offsets = " , X )
-        print(" sigma_sqr = " , sigma_sqr )
+        phix = vy/(time*32.174)
+        phiy = -vx/(time*32.174)
+        offz = vz/time
 
+        #print("offsets = " , X )
+        #print(" sigma_sqr = " , sigma_sqr )
 
-
-            
-        
-        
-        
+        print("phix, phiy = " , phix , phiy )
+        print(" offz " , offz)
+       
+               
     #if False :   
     if is_bill :
         bill_file = open(file_base_name+".earth_frame.csv","w")
-        column_names = [ "fxe" , "fye" , "fze" , "vx" , "vy" , "vz" , "vmag" , "yaw_rate" ,"w_vx" , "w_vy" , "error_x" , "error_y" ,"error_vx" ,"error_vy" , ]
-        column_data = [   xa_efs , ya_efs , za_efs , vxs , vys , vzs , vmags , yaw_rates , w_vxs , w_vys , error_xs , error_ys , error_int_xs , error_int_ys  ]            
+        column_names = [ "fxe" , "fye" , "fze" , "vx" , "vy" , "vz" , "vmag" , "wx" , "wy" , "wz" ]
+        column_data = [   xa_efs , ya_efs , za_efs , vxs , vys , vzs , vmags , wxs , wys , wzs ]            
         write_data(column_names,column_data,bill_file)
 
     return 0.0
