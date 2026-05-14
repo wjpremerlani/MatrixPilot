@@ -1551,18 +1551,19 @@ def compute_earth_frame_velocity() :
 
         error_int_x = 0
         error_int_y = 0
+        offset_z = 0.0
 
         offset_angle = np.zeros((3,1))
 
-        if False :
+        if True :
             offset_angle[0,0] = 0.001
             offset_angle[1,0] = -0.0185
             offset_angle[2,0] = 0.0
             offset_z = -0.295
 
-        if True :
-            offset_angle[0,0] = 0.1
-            offset_angle[1,0] = -0.2
+        if False :
+            offset_angle[0,0] = 0.5
+            offset_angle[1,0] = -1.0
             offset_angle[2,0] = 0.0
             offset_z = -0.295
             
@@ -1576,8 +1577,8 @@ def compute_earth_frame_velocity() :
             f3_bf[1,0] = ya_bfs[line_number]
             f3_bf[2,0] = za_bfs[line_number]
             f3_ef = np.matmul(mat_integral,f3_bf)
-            #f3_ef = np.matmul(np.matmul(offset_mat,rmat),f3_ef)
-            f3_ef = np.matmul(rmat,f3_ef)
+            f3_ef = np.matmul(np.matmul(offset_mat,rmat),f3_ef)
+            #f3_ef = np.matmul(rmat,f3_ef)
             xa_efs.append(f3_ef[0,0])
             ya_efs.append(f3_ef[1,0])
             za_efs.append(f3_ef[2,0])
@@ -1590,10 +1591,16 @@ def compute_earth_frame_velocity() :
             
             wxs.append(wx)
             wys.append(wy)
-            wzs.append(wz) 
+            wzs.append(wz)
 
-            error_x = w_mag*( wy*vz - wz*vy - 0.01* f3_ef[1,0])
-            error_y = w_mag*( wz*vx - wx*vz - 0.01 * f3_ef[0,0])
+            w_vx = wy*vz -  wz*vy
+            w_vy = wz*vx  - wx*vz
+
+            w_vxs.append(100.0*w_vx)
+            w_vys.append(100.0*w_vy)
+
+            error_x = w_mag*( w_vx - 0.01* f3_ef[0,0])
+            error_y = w_mag*( w_vy - 0.01 * f3_ef[1,0])
 
             error_int_x = error_int_x + 0.01*error_x
             error_int_y = error_int_y + 0.01*error_y
@@ -1615,7 +1622,7 @@ def compute_earth_frame_velocity() :
 
             vx = vx + 0.01 * f3_ef[0,0]
             vy = vy + 0.01 * f3_ef[1,0]
-            vz = vz + 0.01 * (f3_ef[2,0]+32.174)
+            vz = vz + 0.01 * (f3_ef[2,0]+32.174) + 0.01*offset_z
             vmag = sqrt(vx*vx+vy*vy+vz*vz)
 
             vmags.append(vmag)
@@ -1655,8 +1662,8 @@ def compute_earth_frame_velocity() :
     #if False :   
     if is_bill :
         bill_file = open(file_base_name+".earth_frame.csv","w")
-        column_names = [ "fxe" , "fye" , "fze" , "vx" , "vy" , "vz" , "vmag" , "wx" , "wy" , "wz" , "error_x" , "error_y","sum_error_x" , "sum_error_y" ]
-        column_data = [   xa_efs , ya_efs , za_efs , vxs , vys , vzs , vmags , wxs , wys , wzs , error_xs, error_ys , error_int_xs , error_int_ys]            
+        column_names = [ "vx" , "vy" , "vz" , "vmag" , "wx" , "wy" , "wz" , "error_x" , "error_y","sum_error_x" , "sum_error_y" ,"fze" , "fxe" , "fye" , "wvx" , "wvy" ]
+        column_data = [  vxs , vys , vzs , vmags , wxs , wys , wzs , error_xs, error_ys , error_int_xs , error_int_ys , za_efs , xa_efs , ya_efs , w_vxs , w_vys ]            
         write_data(column_names,column_data,bill_file)
 
     return 0.0
