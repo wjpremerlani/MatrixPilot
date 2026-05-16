@@ -143,8 +143,10 @@ def matrix_to_phi(matrix) :
 
 def run_test():
     plot_file = open("plot_file.csv","w")
-    plot_file.write(f"time_secs , w_vx , w_vy, acc_x , acc_y , x_velocity_ft/sec , y_velocity_ft/sec , z_velocity_ft/sec ,velocity_magnitude_ft/sec \n")
-    plot_file.write(f"0,0,0\n")
+
+    plot_file.write(f"h accel mag , h vel mag , h omega mag , h error , h error sum\n")
+    #plot_file.write(f"time_secs , w_vx , w_vy, acc_x , acc_y , x_velocity_ft/sec , y_velocity_ft/sec , z_velocity_ft/sec ,velocity_magnitude_ft/sec \n")
+    #plot_file.write(f"0,0,0\n")
     force_vector = np.zeros((3,1))
     acceleration = np.zeros((3,1))
     velocity = np.zeros((3,1))
@@ -152,12 +154,21 @@ def run_test():
 
     if False :
     #base case
+        offset = create_ypr_matrix(0.0,0.0,0.0)
         use_gravity = False
+        orientation = create_ypr_matrix(0,0,0)
+        drift_angle = np.zeros((3,1))
+
+    if True :
+    #gravity only
+        offset = create_ypr_matrix(0.0,0.0,0.0)
+        use_gravity = True
         orientation = create_ypr_matrix(0,0,0)
         drift_angle = np.zeros((3,1))
 
     if False :
     #orientation offset
+        offset = create_ypr_matrix(0.0,0.0,0.0)
         use_gravity = False
         orientation = create_ypr_matrix(20.0,40.0,60.0)
         drift_angle = np.zeros((3,1))
@@ -165,15 +176,17 @@ def run_test():
     if False :
     #drift
         use_gravity = False
+        offset = create_ypr_matrix(0.0,0.0,0.0)
         orientation = create_ypr_matrix(0,0,0)
         drift_angle = np.zeros((3,1))
         drift_angle[0,0] = radians(1.0/6000.0)
         drift_angle[1,0] = radians(2.0/6000.0)
         drift_angle[2,0] = radians(3.0/6000.0)
 
-    if True :
+    if False :
     #drift and gravity
         use_gravity = True
+        offset = create_ypr_matrix(0.0,0.0,0.0)
         orientation = create_ypr_matrix(0,0,0)
         drift_angle = np.zeros((3,1))
         drift_angle[0,0] = radians(1.0/6000.0)
@@ -183,6 +196,7 @@ def run_test():
     if False :
     #everything
         use_gravity = True
+        offset = create_ypr_matrix(0.0,0.0,0.0)
         orientation = create_ypr_matrix(0.0,2.0,0.0)
         drift_angle = np.zeros((3,1))
         drift_angle[0,0] = radians(1.0/6000.0)
@@ -197,6 +211,17 @@ def run_test():
         drift_angle = np.zeros((3,1))
 
     plot_counter = 0
+
+    Y = np.zeros((2,1))
+    A = np.zeros((2,2))
+    ATA = np.zeros((2,2))
+    ATY = np.zeros((2,1))
+
+    error_int_x = 0.
+    error_int_y = 0.
+    sum_ysqr = 0
+
+    sum_h_error = 0.
     
     for step_no in range(20000):
         time = float(step_no+1)*0.01
@@ -224,8 +249,8 @@ def run_test():
         angle_bf = angle + drift_angle
         update_mat = phi_to_matrix(angle_bf)
         integral_mat = matrix_to_matrix_integral(update_mat)
-        #acceleration = np.matmul(np.transpose(offset),np.matmul(orientation,np.matmul(integral_mat,force_vector)))
-        acceleration = np.matmul(orientation,np.matmul(integral_mat,force_vector))
+        acceleration = np.matmul(np.transpose(offset),np.matmul(orientation,np.matmul(integral_mat,force_vector)))
+        #acceleration = np.matmul(orientation,np.matmul(integral_mat,force_vector))
         velocity[0,0] = velocity[0,0] + 0.01* acceleration[0,0]
         velocity[1,0] = velocity[1,0] + 0.01* acceleration[1,0]
         if use_gravity :
@@ -237,10 +262,71 @@ def run_test():
         
         orientation = np.matmul(orientation,update_mat)
 
-              
-        plot_file.write(f"{round(time,2)},{round(omega*velocity[0,0],2)},{round(omega*velocity[1,0],2)},{round(-acceleration[0,0],2)},{round(acceleration[1,0],2)},{round(velocity[0,0],2)},{round(velocity[1,0],2)},{round(velocity[2,0],2)},{round(vel_mag,2)}\n")
+        vx = velocity[0,0]
+        vy = velocity[1,0]
+        vz = velocity[2,0]
+        wx = 0
+        wy = 0
+        wz = omega
+        weight = sqrt(omega*omega)
+        w_vx = wy*vz - wz*vy
+        w_vy = wz*vx - wx*vz
+        f3_ef = np.copy(force_vector)
+        error_x = weight*( w_vx - f3_ef[0,0])
+        error_y =  weight*( w_vy - f3_ef[1,0])
+        error_int_x = error_int_x + error_x
+        error_int_y = error_int_y + error_y
+
+        h_acc_mag = sqrt(force_vector[0,0]*force_vector[0,0]+force_vector[1,0]*force_vector[1,0])
+
+        #h_acc_mag = sqrt(acceleration[0,0]*acceleration[0,0]+acceleration[1,0]*acceleration[1,0])
+        h_vel_mag = sqrt(velocity[0,0]*velocity[0,0]+velocity[1,0]*velocity[1,0])
+        h_w_mag = weight
+
+        h_error = weight*h_vel_mag - h_acc_mag
+        sum_h_error = sum_h_error + h_error
         
+
         
+        if False : 
+
+            Y[0,0] = error_x
+            Y[1,0] = error_y
+
+            if use_gravity :
+                A[0,0] = weight*(wy*vy+wz*vz-time*32.2*wz)
+                A[0,1] = -weight*vx*wy
+                A[1,0] = -weight*vy*wx
+                A[1,1] = weight*(wx*vx+wz*vz-time*32.2*wz)
+            else :
+                A[0,0] = weight*(wy*vy+wz*vz)
+                A[0,1] = -weight*vx*wy
+                A[1,0] = -weight*vy*wx
+                A[1,1] = weight*(wx*vx+wz*vz)     
+
+            AT = np.transpose(A)
+
+            ATA = ATA + np.matmul(AT,A)
+            ATY = ATY + np.matmul(AT,Y)
+
+            sum_ysqr = sum_ysqr + np.matmul(np.transpose(Y),Y)
+
+       
+        plot_file.write(f"{round(h_acc_mag,2)},{round(h_vel_mag,2)},{round(h_w_mag,2)},{round(h_error,2)},{round(sum_h_error,2)}\n")
+        #plot_file.write(f"{round(time,2)},{round(omega*velocity[0,0],2)},{round(omega*velocity[1,0],2)},{round(-acceleration[0,0],2)},{round(acceleration[1,0],2)},{round(velocity[0,0],2)},{round(velocity[1,0],2)},{round(velocity[2,0],2)},{round(vel_mag,2)}\n")
+        
+    if False :
+        ATA_INVERSE = np.linalg.inv(ATA)
+        X = np.matmul(ATA_INVERSE,ATY)
+        sigma_sqr = sum_ysqr - np.matmul(np.transpose(X),ATY)
+        print("offsets = " , X )
+        print(" sigma_sqr = " , sigma_sqr )
+        print("ATA = " , ATA )
+        print("ATY = " , ATY )
+        print("ATA_INVERSE = " , ATA_INVERSE )
+        print("sum of errors x = " , error_int_x )
+        print("sum of errors y = " , error_int_y )
+       
     
 
 def build_arg_parser():
