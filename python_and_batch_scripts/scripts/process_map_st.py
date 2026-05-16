@@ -1555,11 +1555,11 @@ def compute_earth_frame_velocity() :
 
         offset_angle = np.zeros((3,1))
 
-        if True :
+        if False:
             offset_angle[0,0] = 0.001
             offset_angle[1,0] = -0.0185
             offset_angle[2,0] = 0.0
-            offset_z = -0.295
+            offset_z = -0.295*0.0
 
         if False :
             offset_angle[0,0] = 0.5
@@ -1584,26 +1584,28 @@ def compute_earth_frame_velocity() :
             za_efs.append(f3_ef[2,0])
 
             phi_e = phi_es[line_number]
-            w_mag = sqrt(np.vdot(phi_e,phi_e))
-            wx = (phi_e[0,0])
-            wy = (phi_e[1,0])
-            wz = (phi_e[2,0])
+            w_mag = 100.0*sqrt(np.vdot(phi_e,phi_e))
+            wx = 100.0*(phi_e[0,0])
+            wy = 100.0*(phi_e[1,0])
+            wz = 100.0*(phi_e[2,0])
+
+            weight = w_mag
             
             wxs.append(wx)
             wys.append(wy)
             wzs.append(wz)
 
-            w_vx = wy*vz -  wz*vy
-            w_vy = wz*vx  - wx*vz
+            w_vx = wy*vz - wz*vy
+            w_vy = wz*vx - wx*vz
 
-            w_vxs.append(100.0*w_vx)
-            w_vys.append(100.0*w_vy)
+            w_vxs.append(w_vx)
+            w_vys.append(w_vy)
 
-            error_x = w_mag*( w_vx - 0.01* f3_ef[0,0])
-            error_y = w_mag*( w_vy - 0.01 * f3_ef[1,0])
+            error_x = weight*( w_vx - f3_ef[0,0])
+            error_y =  weight*( w_vy - f3_ef[1,0])
 
-            error_int_x = error_int_x + 0.01*error_x
-            error_int_y = error_int_y + 0.01*error_y
+            error_int_x = error_int_x + error_x
+            error_int_y = error_int_y + error_y
 
             error_xs.append(error_x)
             error_ys.append(error_y)
@@ -1634,8 +1636,11 @@ def compute_earth_frame_velocity() :
                 Y[0,0] = error_x
                 Y[1,0] = error_y
 
-                A[0,0] = -f3_ef[2,0]*w_mag
-                A[1,1] =  f3_ef[2,0]*w_mag
+                A[0,0] = weight*(wy*vy+wz*vz-time*32.174*wz)
+                A[0,1] = -weight*vx*wy
+                A[1,0] = -weight*vy*wx
+                A[1,1] = weight*(wx*vx+wz*vz-time*32.174*wz)
+                 
 
                 AT = np.transpose(A)
 
@@ -1647,13 +1652,17 @@ def compute_earth_frame_velocity() :
             ATA_INVERSE = np.linalg.inv(ATA)
             X = np.matmul(ATA_INVERSE,ATY)
             sigma_sqr = sum_ysqr - np.matmul(np.transpose(X),ATY)
+            print("offsets = " , X )
+            print(" sigma_sqr = " , sigma_sqr )
+            print("ATA = " , ATA )
+            print("ATY = " , ATY )
+            print("ATA_INVERSE = " , ATA_INVERSE )
 
         phix = vy/(time*32.174)
         phiy = -vx/(time*32.174)
         offz = vz/time
 
-        print("offsets = " , X )
-        print(" sigma_sqr = " , sigma_sqr )
+        
 
         print("phix, phiy = " , phix , phiy )
         print(" offz " , offz)
