@@ -141,10 +141,37 @@ def matrix_to_phi(matrix) :
     result[2,0] = (f1_phi[2,0]/f1_val)        
     return result
 
-def run_test():
-    plot_file = open("plot_file.csv","w")
+def write_column_names(column_names):
+    global plot_file , suffix
+    for column_name in column_names :
+        plot_file.write(f"{column_name}{suffix},")
+    plot_file.write(f"\n")
 
-    plot_file.write(f"h accel mag , h vel mag , h omega mag , h error , h error sum\n")
+def write_columns(plot_file , column_values ) :
+    for value in column_values :
+        plot_file.write(f"{round(value,2)},")
+    plot_file.write(f"\n")
+
+global plot_file , suffix
+global labels_have_been_written
+labels_have_been_written = False
+def run_test():
+    global plot_file , suffix
+    global labels_have_been_written
+    global args
+    if args.base :
+        plot_file = open("base_case.csv","w")
+        suffix = "_b"
+    elif args.drift :
+        plot_file = open("drift_case.csv","w")
+        suffix = "_d"
+    else :
+        args.base = True
+        plot_flie = open("base_case.csv","w")
+        suffix = "_b"
+        
+
+    #plot_file.write(f"h accel mag , h vel mag , h omega mag , h error , h error sum\n")
     #plot_file.write(f"time_secs , w_vx , w_vy, acc_x , acc_y , x_velocity_ft/sec , y_velocity_ft/sec , z_velocity_ft/sec ,velocity_magnitude_ft/sec \n")
     #plot_file.write(f"0,0,0\n")
     force_vector = np.zeros((3,1))
@@ -152,14 +179,14 @@ def run_test():
     velocity = np.zeros((3,1))
     angle = np.zeros((3,1))
 
-    if False :
+    if args.base :
     #base case
         offset = create_ypr_matrix(0.0,0.0,0.0)
-        use_gravity = False
+        use_gravity = True
         orientation = create_ypr_matrix(0,0,0)
         drift_angle = np.zeros((3,1))
 
-    if True :
+    if False :
     #gravity only
         offset = create_ypr_matrix(0.0,0.0,0.0)
         use_gravity = True
@@ -203,11 +230,11 @@ def run_test():
         drift_angle[1,0] = radians(2.0/6000.0)
         drift_angle[2,0] = radians(3.0/6000.0)
 
-    if False :
-    #gravity and offset
+    if args.drift :
+    #gravity and orientation
         use_gravity = True
-        offset = create_ypr_matrix(0.0,2.0,0.0)
-        orientation = np.copy ( offset )
+        offset = create_ypr_matrix(0.0,0.0,0.0)
+        orientation = create_ypr_matrix(0.0,2.0,0.0)
         drift_angle = np.zeros((3,1))
 
     plot_counter = 0
@@ -265,39 +292,43 @@ def run_test():
         vx = velocity[0,0]
         vy = velocity[1,0]
         vz = velocity[2,0]
-        wx = 0
-        wy = 0
+        wx = 0.0
+        wy = 0.0
         wz = omega
         weight = sqrt(omega*omega)
         w_vx = wy*vz - wz*vy
         w_vy = wz*vx - wx*vz
         f3_ef = np.copy(force_vector)
-        error_x = weight*( w_vx - f3_ef[0,0])
-        error_y =  weight*( w_vy - f3_ef[1,0])
+        error_x = ( w_vx - acceleration[0,0])
+        error_y =  ( w_vy - acceleration[1,0])
         error_int_x = error_int_x + error_x
         error_int_y = error_int_y + error_y
 
-        h_acc_mag = sqrt(force_vector[0,0]*force_vector[0,0]+force_vector[1,0]*force_vector[1,0])
+        #h_acc_mag = sqrt(force_vector[0,0]*force_vector[0,0]+force_vector[1,0]*force_vector[1,0])
 
-        #h_acc_mag = sqrt(acceleration[0,0]*acceleration[0,0]+acceleration[1,0]*acceleration[1,0])
+        h_acc_mag = sqrt(acceleration[0,0]*acceleration[0,0]+acceleration[1,0]*acceleration[1,0])
         h_vel_mag = sqrt(velocity[0,0]*velocity[0,0]+velocity[1,0]*velocity[1,0])
         h_w_mag = weight
 
-        h_error = weight*h_vel_mag - h_acc_mag
+        WV = h_w_mag*h_vel_mag
+
+        h_error = WV - h_acc_mag
         sum_h_error = sum_h_error + h_error
         
 
         
-        if False : 
+        if True : 
 
             Y[0,0] = error_x
             Y[1,0] = error_y
 
             if use_gravity :
-                A[0,0] = weight*(wy*vy+wz*vz-time*32.2*wz)
-                A[0,1] = -weight*vx*wy
-                A[1,0] = -weight*vy*wx
-                A[1,1] = weight*(wx*vx+wz*vz-time*32.2*wz)
+                A[0,0] = 1.0
+                A[1,1] = 1.0
+                #A[0,0] = weight*(wy*vy+wz*vz-time*32.2*wz)
+                #A[0,1] = -weight*vx*wy
+                #A[1,0] = -weight*vy*wx
+                #A[1,1] = weight*(wx*vx+wz*vz-time*32.2*wz)
             else :
                 A[0,0] = weight*(wy*vy+wz*vz)
                 A[0,1] = -weight*vx*wy
@@ -311,11 +342,23 @@ def run_test():
 
             sum_ysqr = sum_ysqr + np.matmul(np.transpose(Y),Y)
 
-       
-        plot_file.write(f"{round(h_acc_mag,2)},{round(h_vel_mag,2)},{round(h_w_mag,2)},{round(h_error,2)},{round(sum_h_error,2)}\n")
-        #plot_file.write(f"{round(time,2)},{round(omega*velocity[0,0],2)},{round(omega*velocity[1,0],2)},{round(-acceleration[0,0],2)},{round(acceleration[1,0],2)},{round(velocity[0,0],2)},{round(velocity[1,0],2)},{round(velocity[2,0],2)},{round(vel_mag,2)}\n")
+        if labels_have_been_written == False :
+            if False :
+                column_names = [ "h_accel_mag" , "h_vel mag" , "h_omega_mag" , "WV"  ]
+            if True :
+                column_names = [ "v_x", "v_y", "w_v_x" , "w_v_y" , "acc_x " , "acc_y" , "frc_x" , "frc_y" , "err_x_a" , "err_y_a" , "err_x_f" , "err_y_f" , "err_int_x_f" , "err_int_y_f" ]
+            write_column_names(column_names)
+            labels_have_been_written = True
+
+        if False :
+            column_values = [ h_acc_mag,h_vel_mag, h_w_mag, WV , h_error, sum_h_error ]
+        if True :
+            column_values = [ velocity[0,0] , velocity[1,0] , w_vx , w_vy , acceleration[0,0] , acceleration[1,0] , error_x , error_y , error_int_x , error_int_y  ] 
+        write_columns(plot_file , column_values )
+
         
-    if False :
+        
+    if True :
         ATA_INVERSE = np.linalg.inv(ATA)
         X = np.matmul(ATA_INVERSE,ATY)
         sigma_sqr = sum_ysqr - np.matmul(np.transpose(X),ATY)
@@ -328,13 +371,19 @@ def run_test():
         print("sum of errors y = " , error_int_y )
        
     
-
+global args
 def build_arg_parser():
+    global args
     parser = argparse.ArgumentParser(
         prog='simulation.py',
         description='tests matrix math routines')
+    parser.add_argument('-d', '--drift', action='store_true', help="simulate with drift")
+    parser.add_argument('-b', '--base', action='store_true', help="normal")
+    
     return parser
 
 if __name__ == "__main__":
+    global args
     parser = build_arg_parser()
+    args = parser.parse_args()
     run_test()
