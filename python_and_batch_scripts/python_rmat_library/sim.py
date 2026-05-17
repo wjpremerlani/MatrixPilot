@@ -239,13 +239,15 @@ def run_test():
 
     plot_counter = 0
 
-    Y = np.zeros((2,1))
-    A = np.zeros((2,2))
+    Y = np.zeros((3,1))
+    A = np.zeros((3,2))
     ATA = np.zeros((2,2))
     ATY = np.zeros((2,1))
 
     error_int_x = 0.
     error_int_y = 0.
+    error_int_z = 0.
+    
     sum_ysqr = 0
 
     sum_h_error = 0.
@@ -298,9 +300,11 @@ def run_test():
         weight = sqrt(omega*omega)
         w_vx = wy*vz - wz*vy
         w_vy = wz*vx - wx*vz
+        w_vz = wx*vy - wy*vx
         f3_ef = np.copy(force_vector)
         error_x = weight*( w_vx - acceleration[0,0])
         error_y =  weight*( w_vy - acceleration[1,0])
+        error_z = weight*( w_vz - acceleration[2,0])
         error_int_x = error_int_x + error_x
         error_int_y = error_int_y + error_y
 
@@ -321,17 +325,23 @@ def run_test():
 
             Y[0,0] = error_x
             Y[1,0] = error_y
+            Y[2,0] = error_z
 
             if use_gravity :
                 A[0,0] = weight*(wy*vy+wz*vz-time*32.2*wz)
                 A[0,1] = -weight*vx*wy
                 A[1,0] = -weight*vy*wx
                 A[1,1] = weight*(wx*vx+wz*vz-time*32.2*wz)
+                A[2,0] = -weight*vz*wx
+                A[2,1] = -weight*vz*wy
+                
             else :
                 A[0,0] = weight*(wy*vy+wz*vz)
                 A[0,1] = -weight*vx*wy
                 A[1,0] = -weight*vy*wx
-                A[1,1] = weight*(wx*vx+wz*vz)     
+                A[1,1] = weight*(wx*vx+wz*vz)
+                A[2,0] = -weight*vz*wx
+                A[2,1] = -weight*vz*wy
 
             AT = np.transpose(A)
 
