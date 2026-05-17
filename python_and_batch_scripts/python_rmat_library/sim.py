@@ -299,8 +299,8 @@ def run_test():
         w_vx = wy*vz - wz*vy
         w_vy = wz*vx - wx*vz
         f3_ef = np.copy(force_vector)
-        error_x = ( w_vx - acceleration[0,0])
-        error_y =  ( w_vy - acceleration[1,0])
+        error_x = weight*( w_vx - acceleration[0,0])
+        error_y =  weight*( w_vy - acceleration[1,0])
         error_int_x = error_int_x + error_x
         error_int_y = error_int_y + error_y
 
@@ -323,12 +323,10 @@ def run_test():
             Y[1,0] = error_y
 
             if use_gravity :
-                A[0,0] = 1.0
-                A[1,1] = 1.0
-                #A[0,0] = weight*(wy*vy+wz*vz-time*32.2*wz)
-                #A[0,1] = -weight*vx*wy
-                #A[1,0] = -weight*vy*wx
-                #A[1,1] = weight*(wx*vx+wz*vz-time*32.2*wz)
+                A[0,0] = weight*(wy*vy+wz*vz-time*32.2*wz)
+                A[0,1] = -weight*vx*wy
+                A[1,0] = -weight*vy*wx
+                A[1,1] = weight*(wx*vx+wz*vz-time*32.2*wz)
             else :
                 A[0,0] = weight*(wy*vy+wz*vz)
                 A[0,1] = -weight*vx*wy
