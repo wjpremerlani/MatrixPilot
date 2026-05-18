@@ -307,7 +307,8 @@ def run_test():
         error_z = weight*( w_vz - acceleration[2,0])
         error_int_x = error_int_x + error_x
         error_int_y = error_int_y + error_y
-
+        error_int_z = error_int_z + error_z
+        
         #h_acc_mag = sqrt(force_vector[0,0]*force_vector[0,0]+force_vector[1,0]*force_vector[1,0])
 
         h_acc_mag = sqrt(acceleration[0,0]*acceleration[0,0]+acceleration[1,0]*acceleration[1,0])
@@ -354,14 +355,14 @@ def run_test():
             if False :
                 column_names = [ "h_accel_mag" , "h_vel mag" , "h_omega_mag" , "WV"  ]
             if True :
-                column_names = [ "v_x", "v_y", "w_v_x" , "w_v_y" , "acc_x " , "acc_y" , "frc_x" , "frc_y" , "err_x_a" , "err_y_a" , "err_x_f" , "err_y_f" , "err_int_x_f" , "err_int_y_f" ]
+                column_names = [ "v_x", "v_y", "v_z", "w_v_x" , "w_v_y" , "w_v_z" ,  "acc_x " , "acc_y" , "acc_z" , "err_x" , "err_y" , "err_z" ,  "err_int_x" , "err_int_y" , "err_int_z" ]
             write_column_names(column_names)
             labels_have_been_written = True
 
         if False :
             column_values = [ h_acc_mag,h_vel_mag, h_w_mag, WV , h_error, sum_h_error ]
         if True :
-            column_values = [ velocity[0,0] , velocity[1,0] , w_vx , w_vy , acceleration[0,0] , acceleration[1,0] , error_x , error_y , error_int_x , error_int_y  ] 
+            column_values = [ velocity[0,0] , velocity[1,0] , velocity[2,0] ,  w_vx , w_vy , w_vz , acceleration[0,0] , acceleration[1,0] , acceleration[2,0] , error_x , error_y , error_z , error_int_x , error_int_y , error_int_z  ] 
         write_columns(plot_file , column_values )
 
         
