@@ -178,6 +178,7 @@ def run_test():
     acceleration = np.zeros((3,1))
     velocity = np.zeros((3,1))
     angle = np.zeros((3,1))
+    FS = np.zeros((3,1))
 
     if args.adjust :
         offset = create_ypr_matrix(degrees(-0.00024003),degrees(.0349206),0.0)
@@ -295,6 +296,7 @@ def run_test():
         orientation = np.matmul(orientation,update_mat)
 
         W[2,0] = omega
+        FS = FS + np.multiply(acceleration,0.01)
 
         vx = velocity[0,0]
         vy = velocity[1,0]
@@ -326,25 +328,25 @@ def run_test():
         sum_h_error = sum_h_error + h_error
 
         if True :
+            
             Y[:,0] = np.transpose(np.cross(W[:,0],velocity[:,0]))
             Y[:,0] = Y[:,0] - np.transpose(acceleration)
+            
             Y = np.multiply(Y,weight)
             
-            wv_twg = np.vdot(W,velocity) - time*np.vdot(W,gravity)
-            tg_v = np.multiply(gravity,time) -velocity
-
-            wx_tg_v = np.multiply(tg_v ,W[0,0] )
-            wy_tg_v = np.multiply(tg_v ,W[1,0] )         
-            A[0,0] = wv_twg
-            A[1,1] = wv_twg        
-            A[:,0] = A[:,0] + np.transpose(wx_tg_v)
-            A[:,1] = A[:,1] + np.transpose(wy_tg_v)
+            w_f = np.matmul(np.transpose(W),FS)
+            f_w = np.matmul(FS,np.transpose(W))
+            
+            A[0,0] = w_f[0,0]
+            A[1,1] = w_f[0,0]
+            A = A + f_w[:,0:2]
+            
             A = np.multiply(A,weight)
             
             AT = np.transpose(A)
             ATA = ATA + np.matmul(AT,A)
             ATY = ATY + np.matmul(AT,Y)
-
+            
             sum_ysqr = sum_ysqr + np.matmul(np.transpose(Y),Y)
     
         if labels_have_been_written == False :
