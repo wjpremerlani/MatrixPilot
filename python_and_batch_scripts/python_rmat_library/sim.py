@@ -11,6 +11,26 @@ y_mat = np.zeros((3,3))
 p_mat = np.zeros((3,3))
 r_mat = np.zeros((3,3))
 
+global yaw_offset , pitch_offset , roll_offset
+yaw_offset = 0.0
+pitch_offset = 0.0
+roll_offset = 0.0
+
+global yaw_bias , pitch_bias , roll_bias
+yaw_bias = 0.0 
+pitch_bias = 0.0
+roll_bias = 0.0
+
+global yaw_drift , pitch_drift , roll_drift
+yaw_drift = 0.0 
+pitch_drift = 0.0
+roll_drift = 0.0
+
+global column_suffix
+column_suffix = "_truth"
+
+global use_gravity
+use_gravity = True
 
 def extract_euler(input_matrix) :
     yaw_angle = degrees((atan2(input_matrix[1,0],input_matrix[0,0])))
@@ -42,7 +62,6 @@ def create_pitch_matrix(angle):
     p_mat[2,0] = -sin(radians(angle))
     p_mat[2,1] = 0.0
     p_mat[2,2] = cos(radians(angle))
-
 
 def create_roll_matrix(angle):
     global r_mat
@@ -156,22 +175,29 @@ global plot_file , suffix
 global labels_have_been_written
 labels_have_been_written = False
 def run_test():
-    global plot_file , suffix
+    global plot_file , suffix , column_suffix
     global labels_have_been_written
     global args
+    
     if args.base :
         plot_file = open("base_case.csv","w")
-        suffix = "_base"
-    elif args.drift and args.adjust :
+        if args.cs :
+            suffix = str("_base_"+column_suffix)
+        else:
+            suffix = "_base"       
+    elif args.adjust :
         plot_file = open("adjusted_case.csv","w")
-        suffix = "_adjusted"
-    elif args.drift :
-        plot_file = open("drift_case.csv","w")
-        suffix = "_drift"      
+        if args.cs :
+            suffix = str("_adjusted_"+column_suffix)
+        else:
+            suffix = "_adjusted"
     else :
-        args.base = True
-        plot_flie = open("base_case.csv","w")
-        suffix = "_b"
+        
+        if args.cs :
+            suffix = str(column_suffix)
+        else:
+            suffix = "_drift"
+        plot_file = open(suffix+".csv","w")
         
 
     force_vector = np.zeros((3,1))
@@ -181,60 +207,21 @@ def run_test():
     FS = np.zeros((3,1))
 
     if args.adjust :
-        offset = create_ypr_matrix(degrees(-0.00024003),degrees(.0349206),0.0)
+        offset = create_ypr_matrix(degrees(0.0),degrees(.02),0.0)
     else :
         offset = create_ypr_matrix(0.0,0.0,0.0)
 
     if args.base :
     #base case
         orientation = create_ypr_matrix(0.0,0.0,0.0)
-        use_gravity = True
         drift_angle = np.zeros((3,1))
-
-    if False :
-    #gravity only
-        orientation = create_ypr_matrix(0.0,0.0,0.0)
-        use_gravity = True
+    else:
+        orientation = create_ypr_matrix(degrees(yaw_offset),degrees(pitch_offset),degrees(roll_offset))
         drift_angle = np.zeros((3,1))
-
-    if False :
-    #orientation offset
-        orientation = create_ypr_matrix(0.0,2.0,0.0)
-        use_gravity = False
-        drift_angle = np.zeros((3,1))
-
-    if False :
-    #drift
-        orientation = create_ypr_matrix(0.0,0.0,0.0)
-        use_gravity = False
-        drift_angle = np.zeros((3,1))
-        drift_angle[0,0] = radians(1.0/6000.0)
-        drift_angle[1,0] = radians(2.0/6000.0)
-        drift_angle[2,0] = radians(3.0/6000.0)
-
-    if False :
-    #drift and gravity
-        orientation = create_ypr_matrix(0.0,0.0,0.0)
-        use_gravity = True
-        drift_angle = np.zeros((3,1))
-        drift_angle[0,0] = radians(1.0/6000.0)
-        drift_angle[1,0] = radians(2.0/6000.0)
-        drift_angle[2,0] = radians(3.0/6000.0)
-
-    if False :
-    #everything
-        use_gravity = True
-        orientation = create_ypr_matrix(0.0,2.0,0.0)
-        drift_angle = np.zeros((3,1))
-        drift_angle[0,0] = radians(1.0/6000.0)
-        drift_angle[1,0] = radians(2.0/6000.0)
-        drift_angle[2,0] = radians(3.0/6000.0)
-
-    if args.drift :
-    #gravity and orientation
-        orientation = create_ypr_matrix(0.0,2.0,0.0)
-        use_gravity = True
-        drift_angle = np.zeros((3,1))
+        drift_angle[0,0]=roll_bias/6000.0
+        drift_angle[1,0]=pitch_bias/6000.0
+        drift_angle[2,0]=yaw_bias/6000.0
+        
 
     plot_counter = 0
 
@@ -387,14 +374,50 @@ def build_arg_parser():
     parser = argparse.ArgumentParser(
         prog='simulation.py',
         description='tests matrix math routines')
-    parser.add_argument('-d', '--drift', action='store_true', help="simulate with drift")
     parser.add_argument('-b', '--base', action='store_true', help="normal")
     parser.add_argument('-a', '--adjust', action='store_true', help="apply adjustments")
-    
+    parser.add_argument('-yo ', '--yo',  help="yaw offset, radians")
+    parser.add_argument('-po ', '--po',  help="pitch offset, radians")
+    parser.add_argument('-ro ', '--ro',  help="roll offset, radians")
+    parser.add_argument('-yb ', '--yb',  help="yaw offset, radians per minute")
+    parser.add_argument('-pb ', '--pb',  help="pitch offset, radians per minute")
+    parser.add_argument('-rb ', '--rb',  help="roll offset, radians per minute")
+    parser.add_argument('-yd ', '--yd',  help="yaw drift, radians per minute per minute")
+    parser.add_argument('-pd ', '--pd',  help="pitch drift, radians per minute per minute")
+    parser.add_argument('-rd ', '--rd',  help="roll drift, radians per minute per minute")
+    parser.add_argument('-cs ', '--cs',  help="column name suffix")
+    parser.add_argument('-ng ', '--ng',  help='no gravity', action='store_true')
+       
     return parser
 
 if __name__ == "__main__":
-    global args
+
+
     parser = build_arg_parser()
     args = parser.parse_args()
+    if args.yo:
+        yaw_offset = float(args.yo)
+    if args.po:
+        pitch_offset = float(args.po)
+    if args.ro:
+        roll_offset = float(args.ro)
+    if args.yb:
+        yaw_bias = float(args.yb)
+    if args.pb:
+        pitch_bias = float(args.pb)
+    if args.rb:
+        roll_bias = float(args.rb)
+    if args.yd:
+        yaw_drift = float(args.yd)
+    if args.pd:
+        pitch_drift = float(args.pd)
+    if args.rd:
+        roll_drift = float(args.rd)
+    if args.cs:
+        column_suffix = str(args.cs)
+    if args.ng:
+        use_gravity = False
+                        
+
+    
     run_test()
