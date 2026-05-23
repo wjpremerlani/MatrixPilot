@@ -160,16 +160,19 @@ def matrix_to_phi(matrix) :
     result[2,0] = (f1_phi[2,0]/f1_val)        
     return result
 
+def write_matrix(matrix_values):
+    for column in range(3):
+        for row in range(3):
+            plot_file.write(f"{round(matrix_values[row,column],3)},")
+
 def write_column_names(column_names):
     global plot_file , suffix
     for column_name in column_names :
         plot_file.write(f"{column_name}{suffix},")
-    plot_file.write(f"\n")
 
 def write_columns(plot_file , column_values ) :
     for value in column_values :
         plot_file.write(f"{round(value,2)},")
-    plot_file.write(f"\n")
 
 global plot_file , suffix
 global labels_have_been_written
@@ -205,6 +208,7 @@ def run_test():
     velocity = np.zeros((3,1))
     angle = np.zeros((3,1))
     FS = np.zeros((3,1))
+    RS = np.zeros((3,3))
 
     if args.adjust :
         offset = create_ypr_matrix(degrees(0.0),degrees(.02),0.0)
@@ -281,6 +285,7 @@ def run_test():
         force_mag = sqrt( np.vdot( force_vector , force_vector ))
         
         orientation = np.matmul(orientation,update_mat)
+        RS = RS + np.multiply(orientation , 0.01 )
 
         W[2,0] = omega
         FS = FS + np.multiply(acceleration,0.01)
@@ -314,7 +319,7 @@ def run_test():
         h_error = WV - h_acc_mag
         sum_h_error = sum_h_error + h_error
 
-        if True :
+        if False :
             
             Y[:,0] = np.transpose(np.cross(W[:,0],velocity[:,0]))
             Y[:,0] = Y[:,0] - np.transpose(acceleration)
@@ -328,7 +333,8 @@ def run_test():
             A[1,1] = w_f[0,0]
             A = A + f_w[:,0:2]
             
-            A = np.multiply(A,weight)
+            #A = np.multiply(A,weight*0.01*time)
+            np.multiply(A,weight)
             
             AT = np.transpose(A)
             ATA = ATA + np.matmul(AT,A)
@@ -339,20 +345,28 @@ def run_test():
         if labels_have_been_written == False :
             if False :
                 column_names = [ "h_accel_mag" , "h_vel mag" , "h_omega_mag" , "WV"  ]
-            if True :
+            if False :
                 column_names = [ "x_velocity ft/sec", "y_velocity ft/sec", "z_velocity ft/sec" , "velocity magnitude ft/sec" , "acc_x " , "acc_y" , "acc_z" , "err_x" , "err_y" , "err_z" ,  "err_int_x" , "err_int_y" , "err_int_z" ]
+            if True :
+                column_names = [ "v_mag " , "rxx" ,  "ryx" ,  "rzx" ,  "rxy" , "ryy" ,  "rzy" ,   "rxz" ,  "ryz" ,  "rzz"  ]
             write_column_names(column_names)
+            plot_file.write(f"\n")
             labels_have_been_written = True
 
         if False :
             column_values = [ h_acc_mag,h_vel_mag, h_w_mag, WV , h_error, sum_h_error ]
+        if False :
+            column_values = [ velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag , acceleration[0,0] , acceleration[1,0] , acceleration[2,0] , error_x , error_y , error_z , error_int_x , error_int_y , error_int_z  ]
         if True :
-            column_values = [ velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag , acceleration[0,0] , acceleration[1,0] , acceleration[2,0] , error_x , error_y , error_z , error_int_x , error_int_y , error_int_z  ] 
-        write_columns(plot_file , column_values )
+            column_values = [ vel_mag ]
+            write_columns(plot_file , column_values )
+            write_matrix(RS)
+        
+        plot_file.write(f"\n")
 
         
         
-    if True :
+    if False :
         ATA_INVERSE = np.linalg.inv(ATA)
         X = np.matmul(ATA_INVERSE,ATY)
         sigma_sqr = sum_ysqr - np.matmul(np.transpose(X),ATY)
