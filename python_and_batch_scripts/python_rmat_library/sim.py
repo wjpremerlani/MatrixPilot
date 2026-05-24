@@ -172,7 +172,7 @@ def write_column_names(column_names):
 
 def write_columns(plot_file , column_values ) :
     for value in column_values :
-        plot_file.write(f"{round(value,2)},")
+        plot_file.write(f"{round(value,4)},")
 
 global plot_file , suffix
 global labels_have_been_written
@@ -229,26 +229,43 @@ def run_test():
     angle = np.zeros((3,1))
     
     FS = np.zeros((3,1))
+    FST = np.zeros((3,1))
+    
     RS = np.zeros((3,3))
+    RSt = np.zeros((3,3))
 
     CX = np.zeros((3,1))
     CY = np.zeros((3,1))
     CZ = np.zeros((3,1))
 
+    CXt = np.zeros((3,1))
+    CYt = np.zeros((3,1))
+    CZt = np.zeros((3,1))
+
+
     CW = np.zeros((3,1))
-    
+    CWt = np.zeros((3,1))
+   
     CXF = np.zeros((3,3))
     CYF = np.zeros((3,3))
     CZF = np.zeros((3,3))
     
+    CXFt = np.zeros((3,3))
+    CYFt = np.zeros((3,3))
+    CZFt = np.zeros((3,3))
+    
     CXFS = np.zeros((3,3))
     CYFS = np.zeros((3,3))
     CZFS = np.zeros((3,3))
-    
+
+    CXFSt = np.zeros((3,3))
+    CYFSt = np.zeros((3,3))
+    CZFSt = np.zeros((3,3))
+  
     Y = np.zeros((3,1))
-    A = np.zeros((3,3))
-    ATA = np.zeros((3,3))
-    ATY = np.zeros((3,1))
+    A = np.zeros((3,2))
+    ATA = np.zeros((2,2))
+    ATY = np.zeros((2,1))
 
     gravity = np.zeros((3,1))
     if use_gravity :
@@ -265,6 +282,11 @@ def run_test():
     
     for step_no in range(20000):
         time = float(step_no+1)*0.01
+
+        drift_angle[0,0]=roll_bias/6000.0 + time*(roll_drift/(6000.0*60.0))
+        drift_angle[1,0]=pitch_bias/6000.0 + time*(pitch_drift/(6000.0*60.0))
+        drift_angle[2,0]=yaw_bias/6000.0 + time*(yaw_drift/(6000.0*60.0))
+        
         if time < 100.0 :
             phi = 0.0001*time - ((0.0001)*(0.0001))/200.0
             force =  (time*time/100.0 - (0.0001)*time + 0.0001 )
@@ -312,7 +334,20 @@ def run_test():
         
         CXFS = CXFS + CXF - np.transpose(CXF)
         CYFS = CYFS + CYF - np.transpose(CYF)
-        CZFS = CZFS + CZF - np.transpose(CZF)      
+        CZFS = CZFS + CZF - np.transpose(CZF)
+
+        RSt = RSt + np.multiply(orientation , (time/60.0)/6000.0 )
+        CXt[:,0] = RSt[:,0]
+        CYt[:,0] = RSt[:,1]
+        CZt[:,0] = RSt[:,2]
+
+        CXFt = np.multiply(np.matmul(CXt,np.transpose(acceleration)), 0.01)
+        CYFt = np.multiply(np.matmul(CYt,np.transpose(acceleration)), 0.01)
+        CZFt = np.multiply(np.matmul(CZt,np.transpose(acceleration)), 0.01)       
+        
+        CXFSt = CXFSt + CXFt - np.transpose(CXF)
+        CYFSt = CYFSt + CYFt - np.transpose(CYF)
+        CZFSt = CZFSt + CZFt - np.transpose(CZF)   
 
         W[2,0] = omega
         FS = FS + np.multiply(acceleration,0.01)
@@ -351,7 +386,7 @@ def run_test():
             
         Y = np.multiply(Y,weight)
 
-        if True :
+        if False :
             CW = np.multiply(np.matmul(CXFS,W),weight)
             A[:,0] = CW[:,0]
             
@@ -365,6 +400,23 @@ def run_test():
             ATA = ATA + np.matmul(AT,A)
             ATY = ATY + np.matmul(AT,Y)         
             sum_ysqr = sum_ysqr + np.matmul(np.transpose(Y),Y)          
+
+        if True :
+            CWt = np.multiply(np.matmul(CXFSt,W),weight)
+            A[:,0] = CWt[:,0]
+            
+            CWt = np.multiply(np.matmul(CYFSt,W),weight)
+            A[:,1] = CWt[:,0]
+
+            #CWt = np.multiply(np.matmul(CZFSt,W),weight)
+            #A[:,2] = CW[:,0]        
+            
+            AT = np.transpose(A)
+            ATA = ATA + np.matmul(AT,A)
+            ATY = ATY + np.matmul(AT,Y)         
+            sum_ysqr = sum_ysqr + np.matmul(np.transpose(Y),Y)          
+
+        
 
         if False :
             
@@ -394,8 +446,10 @@ def run_test():
                 column_names = [ "h_accel_mag" , "h_vel mag" , "h_omega_mag" , "WV"  ]
             if False :
                 column_names = [ "x_velocity ft/sec", "y_velocity ft/sec", "z_velocity ft/sec" , "velocity magnitude ft/sec" , "acc_x " , "acc_y" , "acc_z" , "err_x" , "err_y" , "err_z" ,  "err_int_x" , "err_int_y" , "err_int_z" ]
-            if True :
+            if False :
                 column_names = [ "v_mag " , "rxx" ,  "ryx" ,  "rzx" ,  "rxy" , "ryy" ,  "rzy" ,   "rxz" ,  "ryz" ,  "rzz"  ]
+            if True :
+                column_names = [ "vx" , "vy" , "vz" , "vmag" ]
             write_column_names(column_names)
             plot_file.write(f"\n")
             labels_have_been_written = True
@@ -404,29 +458,33 @@ def run_test():
             column_values = [ h_acc_mag,h_vel_mag, h_w_mag, WV , h_error, sum_h_error ]
         if False :
             column_values = [ velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag , acceleration[0,0] , acceleration[1,0] , acceleration[2,0] , error_x , error_y , error_z , error_int_x , error_int_y , error_int_z  ]
-        if True :
+        if False :
             column_values = [ vel_mag ]
             write_columns(plot_file , column_values )
             write_matrix(CXFS)
-        
+        if True :
+            column_values = [ velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]
+            write_columns(plot_file , column_values )
         plot_file.write(f"\n")
 
         
         
     if True :
-        ATA_INVERSE = np.linalg.inv(ATA)
-        X = np.matmul(ATA_INVERSE,ATY)
-        sigma_sqr = sum_ysqr - np.matmul(np.transpose(X),ATY)
-        print("x gyro bias = " , X[0] , " radians per minute . ")
-        print("y gyro bias = " , X[1] , " radians per minute . ")
-        print("z gyro bias = " , X[2] , " radians per minute . ")
-        
+        if True :
+            ATA_INVERSE = np.linalg.inv(ATA)
+            X = np.matmul(ATA_INVERSE,ATY)
+            sigma_sqr = sum_ysqr - np.matmul(np.transpose(X),ATY)
+            print("x gyro drift = " , X[0] , " radians per minute per minute. ")
+            print("y gyro drift = " , X[1] , " radians per minute per minute. ")
+            #print("z gyro bias = " , X[2] , " radians per minute . ")
+            
         if False :
             print("offsets = " , X )
             print(" sigma_sqr = " , sigma_sqr )
-            print("ATA = " , ATA )
-            print("ATY = " , ATY )
             print("ATA_INVERSE = " , ATA_INVERSE )
+        if False :
+            print("ATA = " , ATA )
+            print("ATY = " , ATY )   
             print("sum of errors x = " , error_int_x )
             print("sum of errors y = " , error_int_y )
             print("last A = " , A )
