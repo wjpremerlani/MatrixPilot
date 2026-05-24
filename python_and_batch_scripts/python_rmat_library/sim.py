@@ -203,13 +203,7 @@ def run_test():
         plot_file = open(suffix+".csv","w")
         
 
-    force_vector = np.zeros((3,1))
-    acceleration = np.zeros((3,1))
-    velocity = np.zeros((3,1))
-    angle = np.zeros((3,1))
-    FS = np.zeros((3,1))
-    RS = np.zeros((3,3))
-
+    
     if args.adjust :
         offset = create_ypr_matrix(degrees(0.0),degrees(.02),0.0)
     else :
@@ -229,10 +223,32 @@ def run_test():
 
     plot_counter = 0
 
+    force_vector = np.zeros((3,1))
+    acceleration = np.zeros((3,1))
+    velocity = np.zeros((3,1))
+    angle = np.zeros((3,1))
+    
+    FS = np.zeros((3,1))
+    RS = np.zeros((3,3))
+
+    CX = np.zeros((3,1))
+    CY = np.zeros((3,1))
+    CZ = np.zeros((3,1))
+
+    CW = np.zeros((3,1))
+    
+    CXF = np.zeros((3,3))
+    CYF = np.zeros((3,3))
+    CZF = np.zeros((3,3))
+    
+    CXFS = np.zeros((3,3))
+    CYFS = np.zeros((3,3))
+    CZFS = np.zeros((3,3))
+    
     Y = np.zeros((3,1))
-    A = np.zeros((3,2))
-    ATA = np.zeros((2,2))
-    ATY = np.zeros((2,1))
+    A = np.zeros((3,3))
+    ATA = np.zeros((3,3))
+    ATY = np.zeros((3,1))
 
     gravity = np.zeros((3,1))
     if use_gravity :
@@ -285,7 +301,18 @@ def run_test():
         force_mag = sqrt( np.vdot( force_vector , force_vector ))
         
         orientation = np.matmul(orientation,update_mat)
-        RS = RS + np.multiply(orientation , 0.01 )
+        RS = RS + np.multiply(orientation , 1.0/6000.0 )
+        CX[:,0] = RS[:,0]
+        CY[:,0] = RS[:,1]
+        CZ[:,0] = RS[:,2]
+
+        CXF = np.multiply(np.matmul(CX,np.transpose(acceleration)), 0.01)
+        CYF = np.multiply(np.matmul(CY,np.transpose(acceleration)), 0.01)
+        CZF = np.multiply(np.matmul(CZ,np.transpose(acceleration)), 0.01)       
+        
+        CXFS = CXFS + CXF - np.transpose(CXF)
+        CYFS = CYFS + CYF - np.transpose(CYF)
+        CZFS = CZFS + CZF - np.transpose(CZF)      
 
         W[2,0] = omega
         FS = FS + np.multiply(acceleration,0.01)
@@ -318,6 +345,26 @@ def run_test():
 
         h_error = WV - h_acc_mag
         sum_h_error = sum_h_error + h_error
+
+        Y[:,0] = np.transpose(np.cross(W[:,0],velocity[:,0]))
+        Y[:,0] = Y[:,0] - np.transpose(acceleration)
+            
+        Y = np.multiply(Y,weight)
+
+        if True :
+            CW = np.multiply(np.matmul(CXFS,W),weight)
+            A[:,0] = CW[:,0]
+            
+            CW = np.multiply(np.matmul(CYFS,W),weight)
+            A[:,1] = CW[:,0]
+
+            CW = np.multiply(np.matmul(CZFS,W),weight)
+            A[:,2] = CW[:,0]        
+            
+            AT = np.transpose(A)
+            ATA = ATA + np.matmul(AT,A)
+            ATY = ATY + np.matmul(AT,Y)         
+            sum_ysqr = sum_ysqr + np.matmul(np.transpose(Y),Y)          
 
         if False :
             
@@ -360,25 +407,30 @@ def run_test():
         if True :
             column_values = [ vel_mag ]
             write_columns(plot_file , column_values )
-            write_matrix(RS)
+            write_matrix(CXFS)
         
         plot_file.write(f"\n")
 
         
         
-    if False :
+    if True :
         ATA_INVERSE = np.linalg.inv(ATA)
         X = np.matmul(ATA_INVERSE,ATY)
         sigma_sqr = sum_ysqr - np.matmul(np.transpose(X),ATY)
-        print("offsets = " , X )
-        print(" sigma_sqr = " , sigma_sqr )
-        print("ATA = " , ATA )
-        print("ATY = " , ATY )
-        print("ATA_INVERSE = " , ATA_INVERSE )
-        print("sum of errors x = " , error_int_x )
-        print("sum of errors y = " , error_int_y )
-        print("last A = " , A )
-        print("last Y = " , Y )
+        print("x gyro bias = " , X[0] , " radians per minute . ")
+        print("y gyro bias = " , X[1] , " radians per minute . ")
+        print("z gyro bias = " , X[2] , " radians per minute . ")
+        
+        if False :
+            print("offsets = " , X )
+            print(" sigma_sqr = " , sigma_sqr )
+            print("ATA = " , ATA )
+            print("ATY = " , ATY )
+            print("ATA_INVERSE = " , ATA_INVERSE )
+            print("sum of errors x = " , error_int_x )
+            print("sum of errors y = " , error_int_y )
+            print("last A = " , A )
+            print("last Y = " , Y )
         
        
     
