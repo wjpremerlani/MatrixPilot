@@ -26,6 +26,25 @@ yaw_drift = 0.0
 pitch_drift = 0.0
 roll_drift = 0.0
 
+global cross_coupling
+cross_coupling = 0.0
+
+global acc_cal_x , acc_cal_y , acc_cal_z
+acc_cal_x = 1.0
+acc_cal_y = 1.0
+acc_cal_z = 1.0
+
+global acc_off_x , acc_off_y , acc_off_z
+acc_off_x = 0.0
+acc_off_y = 0.0
+acc_off_z = 0.0
+
+global gyro_cal_x , gyro_cal_y , gyro_cal_z
+gyro_cal_x = 1.0
+gyro_cal_y = 1.0
+gyro_cal_z = 1.0
+
+
 global column_suffix
 column_suffix = "_truth"
 
@@ -184,12 +203,16 @@ def run_test():
     
     if args.base :
         plot_file = open("base_case.csv","w")
+        file_list = open("cases.txt","a")
+        file_list.write(f"base_case.csv\n")
         if args.cs :
             suffix = str("_base_"+column_suffix)
         else:
             suffix = "_base"       
     elif args.adjust :
         plot_file = open("adjusted_case.csv","w")
+        file_list = open("cases.txt","a")
+        file_list.write(f"adjusted_case.csv\n")                         
         if args.cs :
             suffix = str("_adjusted_"+column_suffix)
         else:
@@ -201,8 +224,8 @@ def run_test():
         else:
             suffix = "_drift"
         plot_file = open(suffix+".csv","w")
-        
-
+        file_list = open("cases.txt","a")
+        file_list.write(f"{suffix}.csv\n")
     
     if args.adjust :
         offset = create_ypr_matrix(degrees(0.0),degrees(.02),0.0)
@@ -233,7 +256,9 @@ def run_test():
     
     RS = np.zeros((3,3))
     RSt = np.zeros((3,3))
-
+    RScc = np.zeros((3,3))
+    
+    
     CX = np.zeros((3,1))
     CY = np.zeros((3,1))
     CZ = np.zeros((3,1))
@@ -241,11 +266,13 @@ def run_test():
     CXt = np.zeros((3,1))
     CYt = np.zeros((3,1))
     CZt = np.zeros((3,1))
-
+    CXcc = np.zeros((3,1))
+    
 
     CW = np.zeros((3,1))
     CWt = np.zeros((3,1))
-   
+    CWcc = np.zeros((3,1))
+    
     CXF = np.zeros((3,3))
     CYF = np.zeros((3,3))
     CZF = np.zeros((3,3))
@@ -253,6 +280,7 @@ def run_test():
     CXFt = np.zeros((3,3))
     CYFt = np.zeros((3,3))
     CZFt = np.zeros((3,3))
+    CXFcc = np.zeros((3,3))
     
     CXFS = np.zeros((3,3))
     CYFS = np.zeros((3,3))
@@ -261,11 +289,12 @@ def run_test():
     CXFSt = np.zeros((3,3))
     CYFSt = np.zeros((3,3))
     CZFSt = np.zeros((3,3))
-  
+    CXFScc = np.zeros((3,3))
+    
     Y = np.zeros((3,1))
-    A = np.zeros((3,2))
-    ATA = np.zeros((2,2))
-    ATY = np.zeros((2,1))
+    A = np.zeros((3,1))
+    ATA = np.zeros((1,1))
+    ATY = np.zeros((1,1))
 
     gravity = np.zeros((3,1))
     if use_gravity :
@@ -304,8 +333,17 @@ def run_test():
                 force_vector[2,0] = -32.2
             else :
                 force_vector[2,0] = 0.0
-        angle[2,0] = phi
 
+        force_vector[0,0] = (force_vector[0,0]+acc_off_x*32.2)*acc_cal_x
+        force_vector[1,0] = (force_vector[1,0]+acc_off_y*32.2)*acc_cal_y
+        force_vector[2,0] = (force_vector[2,0]+acc_off_z*32.2)*acc_cal_z
+        
+        angle[2,0] = phi
+        angle[0,0] = cross_coupling*force_vector[1,0]/(6000.0*32.2)
+        angle[0,0] = angle[0,0]*gyro_cal_x
+        angle[1,0] = angle[1,0]*gyro_cal_y
+        angle[2,0] = angle[2,0]*gyro_cal_z
+        
         omega = 100.0 * phi
         
         angle_bf = angle + drift_angle
@@ -341,13 +379,20 @@ def run_test():
         CYt[:,0] = RSt[:,1]
         CZt[:,0] = RSt[:,2]
 
+        RScc = RScc + np.multiply(orientation , (force_vector[1,0]/32.2)/6000.0 )
+        CXcc[:,0] = RScc[:,0]
+
         CXFt = np.multiply(np.matmul(CXt,np.transpose(acceleration)), 0.01)
         CYFt = np.multiply(np.matmul(CYt,np.transpose(acceleration)), 0.01)
-        CZFt = np.multiply(np.matmul(CZt,np.transpose(acceleration)), 0.01)       
+        CZFt = np.multiply(np.matmul(CZt,np.transpose(acceleration)), 0.01)
+        CXFcc = np.multiply(np.matmul(CXcc,np.transpose(acceleration)), 0.01)
         
-        CXFSt = CXFSt + CXFt - np.transpose(CXF)
-        CYFSt = CYFSt + CYFt - np.transpose(CYF)
-        CZFSt = CZFSt + CZFt - np.transpose(CZF)   
+        
+        CXFSt = CXFSt + CXFt - np.transpose(CXFt)
+        CYFSt = CYFSt + CYFt - np.transpose(CYFt)
+        CZFSt = CZFSt + CZFt - np.transpose(CZFt)
+        CXFScc = CXFScc + CXFcc - np.transpose(CXFcc)
+        
 
         W[2,0] = omega
         FS = FS + np.multiply(acceleration,0.01)
@@ -401,7 +446,7 @@ def run_test():
             ATY = ATY + np.matmul(AT,Y)         
             sum_ysqr = sum_ysqr + np.matmul(np.transpose(Y),Y)          
 
-        if True :
+        if False :
             CWt = np.multiply(np.matmul(CXFSt,W),weight)
             A[:,0] = CWt[:,0]
             
@@ -416,7 +461,17 @@ def run_test():
             ATY = ATY + np.matmul(AT,Y)         
             sum_ysqr = sum_ysqr + np.matmul(np.transpose(Y),Y)          
 
-        
+        if True :
+            CWcc = np.multiply(np.matmul(CXFScc,W),weight)
+            A[:,0] = CWcc[:,0]
+
+            #CWt = np.multiply(np.matmul(CZFSt,W),weight)
+            #A[:,2] = CW[:,0]        
+            
+            AT = np.transpose(A)
+            ATA = ATA + np.matmul(AT,A)
+            ATY = ATY + np.matmul(AT,Y)         
+            sum_ysqr = sum_ysqr + np.matmul(np.transpose(Y),Y) 
 
         if False :
             
@@ -474,6 +529,14 @@ def run_test():
             ATA_INVERSE = np.linalg.inv(ATA)
             X = np.matmul(ATA_INVERSE,ATY)
             sigma_sqr = sum_ysqr - np.matmul(np.transpose(X),ATY)
+            print("cross coupling =" , X[0] , "radians per minute per g.")
+            print("sum_ysqr = " , sum_ysqr )
+            print("X*ATY = " , X[0]*ATY[0])
+            print("sigma_sqr = " , sigma_sqr )
+        if False :
+            ATA_INVERSE = np.linalg.inv(ATA)
+            X = np.matmul(ATA_INVERSE,ATY)
+            sigma_sqr = sum_ysqr - np.matmul(np.transpose(X),ATY)
             print("x gyro drift = " , X[0] , " radians per minute per minute. ")
             print("y gyro drift = " , X[1] , " radians per minute per minute. ")
             #print("z gyro bias = " , X[2] , " radians per minute . ")
@@ -482,7 +545,7 @@ def run_test():
             print("offsets = " , X )
             print(" sigma_sqr = " , sigma_sqr )
             print("ATA_INVERSE = " , ATA_INVERSE )
-        if False :
+        if True :
             print("ATA = " , ATA )
             print("ATY = " , ATY )   
             print("sum of errors x = " , error_int_x )
@@ -499,18 +562,38 @@ def build_arg_parser():
         prog='simulation.py',
         description='tests matrix math routines')
     parser.add_argument('-b', '--base', action='store_true', help="normal")
-    parser.add_argument('-a', '--adjust', action='store_true', help="apply adjustments")
+    parser.add_argument('-adjust', '--adjust', action='store_true', help="apply adjustments")
+
     parser.add_argument('-yo ', '--yo',  help="yaw offset, radians")
     parser.add_argument('-po ', '--po',  help="pitch offset, radians")
     parser.add_argument('-ro ', '--ro',  help="roll offset, radians")
+
     parser.add_argument('-yb ', '--yb',  help="yaw offset, radians per minute")
     parser.add_argument('-pb ', '--pb',  help="pitch offset, radians per minute")
     parser.add_argument('-rb ', '--rb',  help="roll offset, radians per minute")
+
     parser.add_argument('-yd ', '--yd',  help="yaw drift, radians per minute per minute")
     parser.add_argument('-pd ', '--pd',  help="pitch drift, radians per minute per minute")
     parser.add_argument('-rd ', '--rd',  help="roll drift, radians per minute per minute")
+
     parser.add_argument('-cs ', '--cs',  help="column name suffix")
     parser.add_argument('-ng ', '--ng',  help='no gravity', action='store_true')
+
+    parser.add_argument('-cc ', '--cc',  help='cross coupling, radians per minute per g')
+
+    parser.add_argument('-gc_x ', '--gc_x',  help='gyro calibration factor x')
+    parser.add_argument('-gc_y ', '--gc_y',  help='gyro calibration factor y')
+    parser.add_argument('-gc_z ', '--gc_z',  help='gyro calibration factor z')
+
+    parser.add_argument('-ac_x ', '--ac_x',  help='accel calibration factor x')
+    parser.add_argument('-ac_y ', '--ac_y',  help='accel calibration factor y')
+    parser.add_argument('-ac_z ', '--ac_z',  help='accel calibration factor z')
+
+    parser.add_argument('-ao_x ', '--ao_x',  help='accelerometer offset, gs, x')
+    parser.add_argument('-ao_y ', '--ao_y',  help='accelerometer offset, gs, y')
+    parser.add_argument('-ao_z ', '--ao_z',  help='accelerometer offset, gs, z')
+
+    
        
     return parser
 
@@ -525,23 +608,48 @@ if __name__ == "__main__":
         pitch_offset = float(args.po)
     if args.ro:
         roll_offset = float(args.ro)
+
     if args.yb:
         yaw_bias = float(args.yb)
     if args.pb:
         pitch_bias = float(args.pb)
     if args.rb:
         roll_bias = float(args.rb)
+
     if args.yd:
         yaw_drift = float(args.yd)
     if args.pd:
         pitch_drift = float(args.pd)
     if args.rd:
         roll_drift = float(args.rd)
+
     if args.cs:
         column_suffix = str(args.cs)
     if args.ng:
         use_gravity = False
-                        
+    if args.cc :
+        cross_coupling = float(args.cc)
 
+    if args.gc_x :
+        gyro_cal_x = float(args.gc_x)
+    if args.gc_y :
+        gyro_cal_y = float(args.gc_y)
+    if args.gc_z :
+        gyro_cal_z = float(args.gc_z)
+
+    if args.ac_x :
+        acc_cal_x = float(args.ac_x)
+    if args.ac_y :
+        acc_cal_y = float(args.ac_y)
+    if args.ac_z :
+        acc_cal_z = float(args.ac_z)
+
+    if args.ao_x :
+        acc_off_x = float(args.ao_x)
+    if args.ao_y :
+        acc_off_y = float(args.ao_y)
+    if args.ao_z :
+        acc_off_z = float(args.ao_z)
+    
     
     run_test()
