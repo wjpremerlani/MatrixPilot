@@ -16,10 +16,20 @@ yaw_offset = 0.0
 pitch_offset = 0.0
 roll_offset = 0.0
 
+global yaw_offset_a , pitch_offset_a , roll_offset_a
+yaw_offset_a = 0.0
+pitch_offset_a = 0.0
+roll_offset_a = 0.0
+
 global yaw_bias , pitch_bias , roll_bias
 yaw_bias = 0.0 
 pitch_bias = 0.0
 roll_bias = 0.0
+
+global yaw_bias_a , pitch_bias_a , roll_bias_a
+yaw_bias_a = 0.0 
+pitch_bias_a = 0.0
+roll_bias_a = 0.0
 
 global yaw_drift , pitch_drift , roll_drift
 yaw_drift = 0.0 
@@ -184,14 +194,13 @@ def write_matrix(matrix_values):
         for row in range(3):
             plot_file.write(f"{round(matrix_values[row,column],3)},")
 
-def write_column_names(column_names):
-    global plot_file , suffix
+def write_column_names(data_file , column_names , suffix ):
     for column_name in column_names :
-        plot_file.write(f"{column_name}{suffix},")
+        data_file.write(f"{column_name}{suffix},")
 
-def write_columns(plot_file , column_values ) :
+def write_columns(data_file , column_values ) :
     for value in column_values :
-        plot_file.write(f"{round(value,4)},")
+        data_file.write(f"{round(value,4)},")
 
 global plot_file , suffix
 global labels_have_been_written
@@ -200,23 +209,33 @@ def run_test():
     global plot_file , suffix , column_suffix
     global labels_have_been_written
     global args
+    global yaw_offset_a , pitch_offset_a , roll_offset_a
+    global yaw_bias_a , pitch_bias_a , roll_bias_a
+
+    file_list = open("cases.txt","a")
+
+    if args.adjust :
+        if args.cs :
+            suffix_a = str(column_suffix)
+        else :
+            suffix_a = "_drift"
+        adj_file = open(suffix_a+".adj.csv","w")
+        file_list.write(f"{suffix_a}.adj.csv\n")
     
     if args.base :
-        plot_file = open("base_case.csv","w")
-        file_list = open("cases.txt","a")
-        file_list.write(f"base_case.csv\n")
+        plot_file = open("truth.csv","w")
+        file_list.write(f"truth.csv\n")
         if args.cs :
-            suffix = str("_base_"+column_suffix)
+            suffix = str("_truth_"+column_suffix)
         else:
-            suffix = "_base"       
+            suffix = "_truth"       
     elif args.adjust :
-        plot_file = open("adjusted_case.csv","w")
-        file_list = open("cases.txt","a")
-        file_list.write(f"adjusted_case.csv\n")                         
+        plot_file = open("test_case.csv","w")     
+        file_list.write(f"test_case.csv\n")                         
         if args.cs :
-            suffix = str("_adjusted_"+column_suffix)
+            suffix = str("_test_"+column_suffix)
         else:
-            suffix = "_adjusted"
+            suffix = "_test"
     else :
         
         if args.cs :
@@ -224,24 +243,19 @@ def run_test():
         else:
             suffix = "_drift"
         plot_file = open(suffix+".csv","w")
-        file_list = open("cases.txt","a")
         file_list.write(f"{suffix}.csv\n")
-    
-    if args.adjust :
-        offset = create_ypr_matrix(degrees(0.0),degrees(.02),0.0)
-    else :
-        offset = create_ypr_matrix(0.0,0.0,0.0)
+
 
     if args.base :
     #base case
         orientation = create_ypr_matrix(0.0,0.0,0.0)
         drift_angle = np.zeros((3,1))
     else:
-        orientation = create_ypr_matrix(degrees(yaw_offset),degrees(pitch_offset),degrees(roll_offset))
+        orientation = create_ypr_matrix(degrees(yaw_offset+yaw_offset_a),degrees(pitch_offset+pitch_offset_a),degrees(roll_offset+roll_offset_a))
         drift_angle = np.zeros((3,1))
-        drift_angle[0,0]=roll_bias/6000.0
-        drift_angle[1,0]=pitch_bias/6000.0
-        drift_angle[2,0]=yaw_bias/6000.0
+        drift_angle[0,0]=(roll_bias+roll_bias_a)/6000.0
+        drift_angle[1,0]=(pitch_bias+pitch_bias_a)/6000.0
+        drift_angle[2,0]=(yaw_bias+yaw_bias_a)/6000.0
         
 
     plot_counter = 0
@@ -292,9 +306,9 @@ def run_test():
     CXFScc = np.zeros((3,3))
     
     Y = np.zeros((2,1))
-    A = np.zeros((2,7))
-    ATA = np.zeros((7,7))
-    ATY = np.zeros((7,1))
+    A = np.zeros((2,4))
+    ATA = np.zeros((4,4))
+    ATY = np.zeros((4,1))
 
     E = np.zeros((3,1))
     AO = np.zeros((3,3))
@@ -361,8 +375,7 @@ def run_test():
         angle_bf = angle + drift_angle
         update_mat = phi_to_matrix(angle_bf)
         integral_mat = matrix_to_matrix_integral(update_mat)
-        acceleration = np.matmul(np.transpose(offset),np.matmul(orientation,np.matmul(integral_mat,force_vector)))
-        #acceleration = np.matmul(orientation,np.matmul(integral_mat,force_vector))
+        acceleration = np.matmul(orientation,np.matmul(integral_mat,force_vector))
         velocity[0,0] = velocity[0,0] + 0.01* acceleration[0,0]
         velocity[1,0] = velocity[1,0] + 0.01* acceleration[1,0]
         if use_gravity :
@@ -485,10 +498,7 @@ def run_test():
             Y[:] = E[0:2]
             A[0:2,0:2] = AO[0:2,0:2]
             A[0:2,2:4] = AB[0:2,0:2]
-            A[0:2,4:6] = AD[0:2,0:2]
-            A[0:2,6] = ACC[0:2,0]
-            
-            
+                   
             AT = np.transpose(A)
             ATA = ATA + np.matmul(AT,A)
             ATY = ATY + np.matmul(AT,Y)         
@@ -503,7 +513,7 @@ def run_test():
                 column_names = [ "v_mag " , "rxx" ,  "ryx" ,  "rzx" ,  "rxy" , "ryy" ,  "rzy" ,   "rxz" ,  "ryz" ,  "rzz"  ]
             if True :
                 column_names = [ "vx" , "vy" , "vz" , "vmag" ]
-            write_column_names(column_names)
+            write_column_names(plot_file , column_names , suffix )
             plot_file.write(f"\n")
             labels_have_been_written = True
 
@@ -526,6 +536,10 @@ def run_test():
         if True :
             ATA_INVERSE = np.linalg.inv(ATA)
             X = np.matmul(ATA_INVERSE,ATY)
+            roll_offset_a = - X[0,0]
+            pitch_offset_a = - X[1,0]
+            roll_bias_a = -X[2,0]
+            pitch_bias_a = -X[3,0]
             sigma_sqr = sum_ysqr - np.matmul(np.transpose(X),ATY)
             std = sqrt( sigma_sqr[0,0]/N)
             print("X = " , X )
@@ -540,7 +554,92 @@ def run_test():
             print("last A = " , A )
             print("last Y = " , Y )
         
-       
+    if args.adjust :
+        labels_have_been_written = False  
+        orientation = create_ypr_matrix(degrees(yaw_offset+yaw_offset_a),degrees(pitch_offset+pitch_offset_a),degrees(roll_offset+roll_offset_a))
+        drift_angle = np.zeros((3,1))
+        print("roll_bias = " , roll_bias )
+        print("roll_bias sdjusted = " , roll_bias_a )
+        print("pitch_bias = " , pitch_bias )
+        print("pitch_bias adjusted = " , pitch_bias_a )
+        
+        drift_angle[0,0]=(roll_bias+roll_bias_a)/6000.0
+        drift_angle[1,0]=(pitch_bias+pitch_bias_a)/6000.0
+        drift_angle[2,0]=(yaw_bias+yaw_bias_a)/6000.0   
+        plot_counter = 0
+        force_vector = np.zeros((3,1))
+        acceleration = np.zeros((3,1))
+        velocity = np.zeros((3,1))
+        angle = np.zeros((3,1))  
+        gravity = np.zeros((3,1))
+        if use_gravity :
+            gravity[2,0] = 32.2
+        W = np.zeros((3,1))  
+        for step_no in range(20000):       
+            time = float(step_no+1)*0.01
+            drift_angle[0,0]=(roll_bias+roll_bias_a)/6000.0 + time*(roll_drift/(6000.0*60.0))
+            drift_angle[1,0]=(pitch_bias+pitch_bias_a)/6000.0 + time*(pitch_drift/(6000.0*60.0))
+            drift_angle[2,0]=(yaw_bias+yaw_bias_a)/6000.0 + time*(yaw_drift/(6000.0*60.0))       
+            if time < 100.0 :
+                phi = 0.0001*time - ((0.0001)*(0.0001))/200.0
+                force =  (time*time/100.0 - (0.0001)*time + 0.0001 )
+                force_vector[0,0] = 1.0
+                force_vector[1,0] = force
+                if use_gravity :
+                    force_vector[2,0] = -32.2
+                else :
+                    force_vector[2,0] = 0.0
+            else :
+                phi = 0.01
+                force_vector[0,0] = 0.0
+                force_vector[1,0] = 100.0
+                if use_gravity :
+                    force_vector[2,0] = -32.2
+                else :
+                    force_vector[2,0] = 0.0
+            force_vector[0,0] = (force_vector[0,0]+acc_off_x*32.2)*acc_cal_x
+            force_vector[1,0] = (force_vector[1,0]+acc_off_y*32.2)*acc_cal_y
+            force_vector[2,0] = (force_vector[2,0]+acc_off_z*32.2)*acc_cal_z       
+            angle[2,0] = phi
+            angle[0,0] = cross_coupling*force_vector[1,0]/(6000.0*32.2)
+            angle[0,0] = angle[0,0]*gyro_cal_x
+            angle[1,0] = angle[1,0]*gyro_cal_y
+            angle[2,0] = angle[2,0]*gyro_cal_z       
+            omega = 100.0 * phi       
+            angle_bf = angle + drift_angle
+            update_mat = phi_to_matrix(angle_bf)
+            integral_mat = matrix_to_matrix_integral(update_mat)
+            acceleration = np.matmul(orientation,np.matmul(integral_mat,force_vector))
+            velocity[0,0] = velocity[0,0] + 0.01* acceleration[0,0]
+            velocity[1,0] = velocity[1,0] + 0.01* acceleration[1,0]
+            if use_gravity :
+                velocity[2,0] = velocity[2,0] + 0.01* acceleration[2,0]+0.322
+            else :
+                velocity[2,0] = velocity[2,0] + 0.01* acceleration[2,0]
+            vel_mag = sqrt( np.vdot( velocity , velocity ))       
+            orientation = np.matmul(orientation,update_mat)       
+            vx = velocity[0,0]
+            vy = velocity[1,0]
+            vz = velocity[2,0]
+            wx = 0.0
+            wy = 0.0
+            wz = omega
+            w_vx = wy*vz - wz*vy
+            w_vy = wz*vx - wx*vz
+            w_vz = wx*vy - wy*vx
+            f3_ef = np.copy(force_vector)       
+            if labels_have_been_written == False :
+                if True :
+                    column_names = [ "vx" , "vy" , "vz" , "vmag" ]
+                write_column_names(adj_file , column_names , "adj")
+                adj_file.write(f"\n")
+                labels_have_been_written = True
+            if True :
+                column_values = [ velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]     
+                write_columns(adj_file , column_values )
+            adj_file.write(f"\n")
+
+            
     
 global args
 def build_arg_parser():
