@@ -291,10 +291,19 @@ def run_test():
     CZFSt = np.zeros((3,3))
     CXFScc = np.zeros((3,3))
     
-    Y = np.zeros((3,1))
-    A = np.zeros((3,1))
-    ATA = np.zeros((1,1))
-    ATY = np.zeros((1,1))
+    Y = np.zeros((2,1))
+    A = np.zeros((2,7))
+    ATA = np.zeros((7,7))
+    ATY = np.zeros((7,1))
+
+    E = np.zeros((3,1))
+    AO = np.zeros((3,3))
+    AB = np.zeros((3,3))
+    AD = np.zeros((3,3))
+    ACC = np.zeros((3,1))
+
+    N = 0
+    
 
     gravity = np.zeros((3,1))
     if use_gravity :
@@ -310,6 +319,9 @@ def run_test():
     sum_h_error = 0.
     
     for step_no in range(20000):
+
+        N = N + 1
+        
         time = float(step_no+1)*0.01
 
         drift_angle[0,0]=roll_bias/6000.0 + time*(roll_drift/(6000.0*60.0))
@@ -426,75 +438,61 @@ def run_test():
         h_error = WV - h_acc_mag
         sum_h_error = sum_h_error + h_error
 
-        Y[:,0] = np.transpose(np.cross(W[:,0],velocity[:,0]))
-        Y[:,0] = Y[:,0] - np.transpose(acceleration)
-            
-        Y = np.multiply(Y,weight)
+        E[:,0] = np.transpose(np.cross(W[:,0],velocity[:,0]))
+        E[:,0] = E[:,0] - np.transpose(acceleration)           
+        E = np.multiply(E,weight)
 
-        if False :
+        if True :
             CW = np.multiply(np.matmul(CXFS,W),weight)
-            A[:,0] = CW[:,0]
+            AB[:,0] = CW[:,0]
             
             CW = np.multiply(np.matmul(CYFS,W),weight)
-            A[:,1] = CW[:,0]
+            AB[:,1] = CW[:,0]
 
             CW = np.multiply(np.matmul(CZFS,W),weight)
-            A[:,2] = CW[:,0]        
+            AB[:,2] = CW[:,0]        
             
-            AT = np.transpose(A)
-            ATA = ATA + np.matmul(AT,A)
-            ATY = ATY + np.matmul(AT,Y)         
-            sum_ysqr = sum_ysqr + np.matmul(np.transpose(Y),Y)          
+                    
 
-        if False :
+        if True :
             CWt = np.multiply(np.matmul(CXFSt,W),weight)
-            A[:,0] = CWt[:,0]
+            AD[:,0] = CWt[:,0]
             
             CWt = np.multiply(np.matmul(CYFSt,W),weight)
-            A[:,1] = CWt[:,0]
+            AD[:,1] = CWt[:,0]
 
-            #CWt = np.multiply(np.matmul(CZFSt,W),weight)
-            #A[:,2] = CW[:,0]        
-            
-            AT = np.transpose(A)
-            ATA = ATA + np.matmul(AT,A)
-            ATY = ATY + np.matmul(AT,Y)         
-            sum_ysqr = sum_ysqr + np.matmul(np.transpose(Y),Y)          
+            CWt = np.multiply(np.matmul(CZFSt,W),weight)
+            AD[:,2] = CW[:,0]        
+                      
 
         if True :
             CWcc = np.multiply(np.matmul(CXFScc,W),weight)
-            A[:,0] = CWcc[:,0]
+            ACC[:,0] = CWcc[:,0]
+        
 
-            #CWt = np.multiply(np.matmul(CZFSt,W),weight)
-            #A[:,2] = CW[:,0]        
+        if True :
+            
+            w_f = np.matmul(np.transpose(W),FS)
+            f_w = np.matmul(FS,np.transpose(W))
+            
+            AO[0,0] = w_f[0,0]
+            AO[1,1] = w_f[0,0]
+            AO = AO + f_w[:,:]
+            
+            #A = np.multiply(A,weight*0.01*time)
+            np.multiply(AO,weight)
+            
+            Y[:] = E[0:2]
+            A[0:2,0:2] = AO[0:2,0:2]
+            A[0:2,2:4] = AB[0:2,0:2]
+            A[0:2,4:6] = AD[0:2,0:2]
+            A[0:2,6] = ACC[0:2,0]
+            
             
             AT = np.transpose(A)
             ATA = ATA + np.matmul(AT,A)
             ATY = ATY + np.matmul(AT,Y)         
             sum_ysqr = sum_ysqr + np.matmul(np.transpose(Y),Y) 
-
-        if False :
-            
-            Y[:,0] = np.transpose(np.cross(W[:,0],velocity[:,0]))
-            Y[:,0] = Y[:,0] - np.transpose(acceleration)
-            
-            Y = np.multiply(Y,weight)
-            
-            w_f = np.matmul(np.transpose(W),FS)
-            f_w = np.matmul(FS,np.transpose(W))
-            
-            A[0,0] = w_f[0,0]
-            A[1,1] = w_f[0,0]
-            A = A + f_w[:,0:2]
-            
-            #A = np.multiply(A,weight*0.01*time)
-            np.multiply(A,weight)
-            
-            AT = np.transpose(A)
-            ATA = ATA + np.matmul(AT,A)
-            ATY = ATY + np.matmul(AT,Y)
-            
-            sum_ysqr = sum_ysqr + np.matmul(np.transpose(Y),Y)
     
         if labels_have_been_written == False :
             if False :
@@ -529,23 +527,12 @@ def run_test():
             ATA_INVERSE = np.linalg.inv(ATA)
             X = np.matmul(ATA_INVERSE,ATY)
             sigma_sqr = sum_ysqr - np.matmul(np.transpose(X),ATY)
-            print("cross coupling =" , X[0] , "radians per minute per g.")
+            std = sqrt( sigma_sqr[0,0]/N)
+            print("X = " , X )
             print("sum_ysqr = " , sum_ysqr )
-            print("X*ATY = " , X[0]*ATY[0])
             print("sigma_sqr = " , sigma_sqr )
+            print("standard deviation = " , std )
         if False :
-            ATA_INVERSE = np.linalg.inv(ATA)
-            X = np.matmul(ATA_INVERSE,ATY)
-            sigma_sqr = sum_ysqr - np.matmul(np.transpose(X),ATY)
-            print("x gyro drift = " , X[0] , " radians per minute per minute. ")
-            print("y gyro drift = " , X[1] , " radians per minute per minute. ")
-            #print("z gyro bias = " , X[2] , " radians per minute . ")
-            
-        if False :
-            print("offsets = " , X )
-            print(" sigma_sqr = " , sigma_sqr )
-            print("ATA_INVERSE = " , ATA_INVERSE )
-        if True :
             print("ATA = " , ATA )
             print("ATY = " , ATY )   
             print("sum of errors x = " , error_int_x )
