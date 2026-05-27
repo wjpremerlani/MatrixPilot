@@ -332,7 +332,7 @@ def run_test():
 
     sum_h_error = 0.
     
-    for step_no in range(20000):
+    for step_no in range(25000):
 
         N = N + 1
         
@@ -351,10 +351,20 @@ def run_test():
                 force_vector[2,0] = -32.2
             else :
                 force_vector[2,0] = 0.0
-        else :
+        elif 100.0 <=  time < 150.0 :
             phi = 0.01
             force_vector[0,0] = 0.0
             force_vector[1,0] = 100.0
+            if use_gravity :
+                force_vector[2,0] = -32.2
+            else :
+                force_vector[2,0] = 0.0
+        else :
+            tt = time - 150.0
+            phi = 0.01 - 0.0001*tt + (.0001)*(.0001)/200.0
+            force = 100.0 + 0.0001/300 - tt*(2.0+0.0001) + tt*tt/100.0
+            force_vector[0,0] = -1.0
+            force_vector[1,0] = force
             if use_gravity :
                 force_vector[2,0] = -32.2
             else :
