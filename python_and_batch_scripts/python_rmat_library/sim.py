@@ -189,6 +189,22 @@ def matrix_to_phi(matrix) :
     result[2,0] = (f1_phi[2,0]/f1_val)        
     return result
 
+def mat_x_vec(amat,avec):
+    aresult = np.zeros((3,3))
+    for aindex in range(3) :
+        vec2 = np.transpose(amat[:,aindex])
+        rcol = np.transpose(np.cross(vec2,np.transpose(avec)))
+        aresult[:,aindex]= rcol[:,0]
+    return aresult
+
+def vec_x_mat(avec,amat):
+    aresult = np.zeros((3,3))
+    for aindex in range(3) :
+        vec2 = np.transpose(amat[:,aindex])
+        rcol = np.transpose(np.cross(np.transpose(avec),vec2))
+        aresult[:,aindex]=rcol[:,0]
+    return aresult
+
 def write_matrix(matrix_values):
     for column in range(3):
         for row in range(3):
@@ -271,6 +287,7 @@ def run_test():
     RS = np.zeros((3,3))
     RSt = np.zeros((3,3))
     RScc = np.zeros((3,3))
+    RXFS = np.zeros((3,3))
     
     
     CX = np.zeros((3,1))
@@ -315,6 +332,7 @@ def run_test():
     AB = np.zeros((3,3))
     AD = np.zeros((3,3))
     ACC = np.zeros((3,1))
+    AV = np.zeros((2,2))
 
     N = 0
     
@@ -403,7 +421,9 @@ def run_test():
 
         CXF = np.multiply(np.matmul(CX,np.transpose(acceleration)), 0.01)
         CYF = np.multiply(np.matmul(CY,np.transpose(acceleration)), 0.01)
-        CZF = np.multiply(np.matmul(CZ,np.transpose(acceleration)), 0.01)       
+        CZF = np.multiply(np.matmul(CZ,np.transpose(acceleration)), 0.01)
+
+        RXFS = RXFS + np.multiply( mat_x_vec(RS,acceleration) , 0.01 )
         
         CXFS = CXFS + CXF - np.transpose(CXF)
         CYFS = CYFS + CYF - np.transpose(CYF)
@@ -493,7 +513,7 @@ def run_test():
             ACC[:,0] = CWcc[:,0]
         
 
-        if True :
+        if False :
             
             w_f = np.matmul(np.transpose(W),FS)
             f_w = np.matmul(FS,np.transpose(W))
@@ -544,6 +564,23 @@ def run_test():
         
     if True :
         if True :
+            Y[0:2,0]= velocity[0:2,0]
+            A = np.zeros((2,2))
+            A[0:2,0:2] = RXFS[0:2,0:2]
+            A_INVERSE = np.linalg.inv(A)
+            X = np.matmul(A_INVERSE,Y)
+            print("estimated offsets = " , X )
+        
+        if False :
+            Y[0:2,0]= velocity[0:2,0]
+            A = np.zeros((2,2))
+            A[0,1]=FS[2,0]
+            A[1,0]= -FS[2,0]
+            A_INVERSE = np.linalg.inv(A)
+            X = np.matmul(A_INVERSE,Y)
+            print("estimated offsets = " , X )
+            
+        if False :
             ATA_INVERSE = np.linalg.inv(ATA)
             X = np.matmul(ATA_INVERSE,ATY)
             roll_offset_a = - X[0,0]
