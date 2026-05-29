@@ -567,18 +567,27 @@ def run_test():
             Y[0:2,0]= velocity[0:2,0]
             A = np.zeros((2,2))
             A[0:2,0:2] = RXFS[0:2,0:2]
-            A_INVERSE = np.linalg.inv(A)
-            X = np.matmul(A_INVERSE,Y)
+            AT = np.transpose(A)
+            ATA = np.multiply(np.matmul(AT,A),float(N))
+            ATY = np.multiply(np.matmul(AT,Y),float(N))
+            A_INVERSE = np.linalg.inv(ATA)
+            X = np.matmul(A_INVERSE,ATY)
             print("estimated offsets = " , X )
-        
+            print("ATA = " , ATA )
+            print("ATY = " , ATY )
+            
         if False :
             Y[0:2,0]= velocity[0:2,0]
             A = np.zeros((2,2))
             A[0,1]=FS[2,0]
             A[1,0]= -FS[2,0]
-            A_INVERSE = np.linalg.inv(A)
+            AT = np.transpose(A)
+            ATA = np.multiply(np.matmul(AT,A),float(N))
+            ATY = np.multiply(np.matmul(AT,Y),float(N))
+            A_INVERSE = np.linalg.inv(ATA)
             X = np.matmul(A_INVERSE,Y)
             print("estimated offsets = " , X )
+            print("ATY = " , ATY )
             
         if False :
             ATA_INVERSE = np.linalg.inv(ATA)
@@ -593,7 +602,7 @@ def run_test():
             print("sum_ysqr = " , sum_ysqr )
             print("sigma_sqr = " , sigma_sqr )
             print("standard deviation = " , std )
-        if False :
+        if True :
             print("ATA = " , ATA )
             print("ATY = " , ATY )   
             print("sum of errors x = " , error_int_x )
