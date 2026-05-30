@@ -322,8 +322,8 @@ def run_test():
     CZFSt = np.zeros((3,3))
     CXFScc = np.zeros((3,3))
     
-    Y = np.zeros((2,1))
-    A = np.zeros((2,4))
+    Y = np.zeros((3,1))
+    A = np.zeros((3,4))
     ATA = np.zeros((4,4))
     ATY = np.zeros((4,1))
 
@@ -332,7 +332,7 @@ def run_test():
     AB = np.zeros((3,3))
     AD = np.zeros((3,3))
     ACC = np.zeros((3,1))
-    AV = np.zeros((2,2))
+    #AV = np.zeros((3,2))
 
     N = 0
     
@@ -493,9 +493,7 @@ def run_test():
             AB[:,1] = CW[:,0]
 
             CW = np.multiply(np.matmul(CZFS,W),weight)
-            AB[:,2] = CW[:,0]        
-            
-                    
+            AB[:,2] = CW[:,0]                        
 
         if True :
             CWt = np.multiply(np.matmul(CXFSt,W),weight)
@@ -505,14 +503,12 @@ def run_test():
             AD[:,1] = CWt[:,0]
 
             CWt = np.multiply(np.matmul(CZFSt,W),weight)
-            AD[:,2] = CW[:,0]        
-                      
+            AD[:,2] = CW[:,0]                         
 
         if True :
             CWcc = np.multiply(np.matmul(CXFScc,W),weight)
             ACC[:,0] = CWcc[:,0]
         
-
         if True :
             
             w_f = np.matmul(np.transpose(W),FS)
@@ -525,9 +521,9 @@ def run_test():
             #A = np.multiply(A,weight*0.01*time)
             np.multiply(AO,weight)
             
-            Y[:] = E[0:2]
-            A[0:2,0:2] = AO[0:2,0:2]
-            A[0:2,2:4] = AB[0:2,0:2]
+            Y[:] = E[0:3]
+            A[0:3,0:2] = AO[0:3,0:2]
+            A[0:3,2:4] = AB[0:3,0:2]
                    
             AT = np.transpose(A)
             ATA = ATA + np.matmul(AT,A)
@@ -559,53 +555,53 @@ def run_test():
             column_values = [ velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]
             write_columns(plot_file , column_values )
         plot_file.write(f"\n")
-
-        
-        
+     
     if True :
         if True :
-            Yv = np.zeros((2,1))
-            Yv[0:2,0]= velocity[0:2,0]
-            Av = np.zeros((2,4))
-            Av[0:2,2:4] = RXFS[0:2,0:2]
+            Yv = np.zeros((3,1))
+            Yv[0:3,0]= velocity[0:3,0]
+            sum_ysqrv = np.matmul(np.transpose(Yv),Yv)
+            Av = np.zeros((3,4))
+            Av[0:3,2:4] = RXFS[0:3,0:2]
             Av[0,1]=FS[2,0]
             Av[1,0]= -FS[2,0]
             ATv = np.transpose(Av)
             ATAv = np.multiply(np.matmul(ATv,Av),float(N))
             ATYv = np.multiply(np.matmul(ATv,Yv),float(N))
-            ATA = ATA + ATAv
-            ATY = ATY + ATYv
-            
-            
+                       
         if True :
-            ATA_INVERSE = np.linalg.inv(ATA)
-            X = np.matmul(ATA_INVERSE,ATY)
+            ATA_INVERSE = np.linalg.inv(ATA + ATAv)
+            X = np.matmul(ATA_INVERSE,ATY+ATYv)
             roll_offset_a = - X[0,0]
             pitch_offset_a = - X[1,0]
             roll_bias_a = -X[2,0]
             pitch_bias_a = -X[3,0]
-            sigma_sqr = sum_ysqr - np.matmul(np.transpose(X),ATY)
-            #std = sqrt( sigma_sqr[0,0]/N)
+            sigma_sqr = sum_ysqr +  np.multiply( sum_ysqrv , float(N))- np.matmul(np.transpose(X),ATY) - np.matmul(np.transpose(X),ATYv)
+            std = sqrt( sigma_sqr[0,0]/N)
             print("X = " , X )
             print("sum_ysqr = " , sum_ysqr )
             print("sigma_sqr = " , sigma_sqr )
-            #print("standard deviation = " , std )
-        if True :
+            print("standard deviation = " , std )
+        if False :
             print("ATA = " , ATA )
             print("ATY = " , ATY )   
-            #print("sum of errors x = " , error_int_x )
-            #print("sum of errors y = " , error_int_y )
-            #print("last A = " , A )
-            #print("last Y = " , Y )
+            print("sum of errors x = " , error_int_x )
+            print("sum of errors y = " , error_int_y )
+            print("last A = " , A )
+            print("last Y = " , Y )
         
     if args.adjust :
         labels_have_been_written = False  
         orientation = create_ypr_matrix(degrees(yaw_offset+yaw_offset_a),degrees(pitch_offset+pitch_offset_a),degrees(roll_offset+roll_offset_a))
         drift_angle = np.zeros((3,1))
-        print("roll_bias = " , roll_bias )
-        print("roll_bias sdjusted = " , roll_bias_a )
-        print("pitch_bias = " , pitch_bias )
-        print("pitch_bias adjusted = " , pitch_bias_a )
+        print("roll offset = " , roll_offset )
+        print("roll_offset adjustment = " , roll_offset_a )
+        print("pitch offset = " , pitch_offset )
+        print("pitch offset_adjustment = " , pitch_offset_a )  
+        print("roll bias = " , roll_bias )
+        print("roll bias adjustment = " , roll_bias_a )
+        print("pitch bias = " , pitch_bias )
+        print("pitch bias adjustment = " , pitch_bias_a )
         
         drift_angle[0,0]=(roll_bias+roll_bias_a)/6000.0
         drift_angle[1,0]=(pitch_bias+pitch_bias_a)/6000.0
