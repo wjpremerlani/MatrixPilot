@@ -513,7 +513,7 @@ def run_test():
             ACC[:,0] = CWcc[:,0]
         
 
-        if False :
+        if True :
             
             w_f = np.matmul(np.transpose(W),FS)
             f_w = np.matmul(FS,np.transpose(W))
@@ -564,32 +564,20 @@ def run_test():
         
     if True :
         if True :
-            Y[0:2,0]= velocity[0:2,0]
-            A = np.zeros((2,2))
-            A[0:2,0:2] = RXFS[0:2,0:2]
-            AT = np.transpose(A)
-            ATA = np.multiply(np.matmul(AT,A),float(N))
-            ATY = np.multiply(np.matmul(AT,Y),float(N))
-            A_INVERSE = np.linalg.inv(ATA)
-            X = np.matmul(A_INVERSE,ATY)
-            print("estimated offsets = " , X )
-            print("ATA = " , ATA )
-            print("ATY = " , ATY )
+            Yv = np.zeros((2,1))
+            Yv[0:2,0]= velocity[0:2,0]
+            Av = np.zeros((2,4))
+            Av[0:2,2:4] = RXFS[0:2,0:2]
+            Av[0,1]=FS[2,0]
+            Av[1,0]= -FS[2,0]
+            ATv = np.transpose(Av)
+            ATAv = np.multiply(np.matmul(ATv,Av),float(N))
+            ATYv = np.multiply(np.matmul(ATv,Yv),float(N))
+            ATA = ATA + ATAv
+            ATY = ATY + ATYv
             
-        if False :
-            Y[0:2,0]= velocity[0:2,0]
-            A = np.zeros((2,2))
-            A[0,1]=FS[2,0]
-            A[1,0]= -FS[2,0]
-            AT = np.transpose(A)
-            ATA = np.multiply(np.matmul(AT,A),float(N))
-            ATY = np.multiply(np.matmul(AT,Y),float(N))
-            A_INVERSE = np.linalg.inv(ATA)
-            X = np.matmul(A_INVERSE,Y)
-            print("estimated offsets = " , X )
-            print("ATY = " , ATY )
             
-        if False :
+        if True :
             ATA_INVERSE = np.linalg.inv(ATA)
             X = np.matmul(ATA_INVERSE,ATY)
             roll_offset_a = - X[0,0]
@@ -597,18 +585,18 @@ def run_test():
             roll_bias_a = -X[2,0]
             pitch_bias_a = -X[3,0]
             sigma_sqr = sum_ysqr - np.matmul(np.transpose(X),ATY)
-            std = sqrt( sigma_sqr[0,0]/N)
+            #std = sqrt( sigma_sqr[0,0]/N)
             print("X = " , X )
             print("sum_ysqr = " , sum_ysqr )
             print("sigma_sqr = " , sigma_sqr )
-            print("standard deviation = " , std )
+            #print("standard deviation = " , std )
         if True :
             print("ATA = " , ATA )
             print("ATY = " , ATY )   
-            print("sum of errors x = " , error_int_x )
-            print("sum of errors y = " , error_int_y )
-            print("last A = " , A )
-            print("last Y = " , Y )
+            #print("sum of errors x = " , error_int_x )
+            #print("sum of errors y = " , error_int_y )
+            #print("last A = " , A )
+            #print("last Y = " , Y )
         
     if args.adjust :
         labels_have_been_written = False  
@@ -631,11 +619,12 @@ def run_test():
         if use_gravity :
             gravity[2,0] = 32.2
         W = np.zeros((3,1))  
-        for step_no in range(20000):       
+        for step_no in range(25000):       
             time = float(step_no+1)*0.01
             drift_angle[0,0]=(roll_bias+roll_bias_a)/6000.0 + time*(roll_drift/(6000.0*60.0))
             drift_angle[1,0]=(pitch_bias+pitch_bias_a)/6000.0 + time*(pitch_drift/(6000.0*60.0))
-            drift_angle[2,0]=(yaw_bias+yaw_bias_a)/6000.0 + time*(yaw_drift/(6000.0*60.0))       
+            drift_angle[2,0]=(yaw_bias+yaw_bias_a)/6000.0 + time*(yaw_drift/(6000.0*60.0))
+             
             if time < 100.0 :
                 phi = 0.0001*time - ((0.0001)*(0.0001))/200.0
                 force =  (time*time/100.0 - (0.0001)*time + 0.0001 )
@@ -645,7 +634,7 @@ def run_test():
                     force_vector[2,0] = -32.2
                 else :
                     force_vector[2,0] = 0.0
-            else :
+            elif 100.0 <=  time < 150.0 :
                 phi = 0.01
                 force_vector[0,0] = 0.0
                 force_vector[1,0] = 100.0
@@ -653,6 +642,17 @@ def run_test():
                     force_vector[2,0] = -32.2
                 else :
                     force_vector[2,0] = 0.0
+            else :
+                tt = time - 150.0
+                phi = 0.01 - 0.0001*tt + (.0001)*(.0001)/200.0
+                force = 100.0 + 0.0001/300 - tt*(2.0+0.0001) + tt*tt/100.0
+                force_vector[0,0] = -1.0
+                force_vector[1,0] = force
+                if use_gravity :
+                    force_vector[2,0] = -32.2
+                else :
+                    force_vector[2,0] = 0.0
+                        
             force_vector[0,0] = (force_vector[0,0]+acc_off_x*32.2)*acc_cal_x
             force_vector[1,0] = (force_vector[1,0]+acc_off_y*32.2)*acc_cal_y
             force_vector[2,0] = (force_vector[2,0]+acc_off_z*32.2)*acc_cal_z       
