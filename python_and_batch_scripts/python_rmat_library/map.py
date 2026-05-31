@@ -228,52 +228,11 @@ def run_test():
     global args
     global yaw_offset_a , pitch_offset_a , roll_offset_a
     global yaw_bias_a , pitch_bias_a , roll_bias_a
-
-    file_list = open("cases.txt","a")
-
-    if args.adjust :
-        if args.cs :
-            suffix_a = str(column_suffix)
-        else :
-            suffix_a = "_drift"
-        adj_file = open(suffix_a+".adj.csv","w")
-        file_list.write(f"{suffix_a}.adj.csv\n")
     
-    if args.base :
-        output_file = open("truth.csv","w")
-        file_list.write(f"truth.csv\n")
-        if args.cs :
-            suffix = str("_truth_"+column_suffix)
-        else:
-            suffix = "_truth"       
-    elif args.adjust :
-        output_file = open("test_case.csv","w")     
-        file_list.write(f"test_case.csv\n")                         
-        if args.cs :
-            suffix = str("_test_"+column_suffix)
-        else:
-            suffix = "_test"
-    else :
-        
-        if args.cs :
-            suffix = str(column_suffix)
-        else:
-            suffix = "_drift"
-        output_file = open(suffix+".csv","w")
-        file_list.write(f"{suffix}.csv\n")
-
-
     if True :
     #base case
         orientation = input_matrices[0]
-        drift_angle = np.zeros((3,1))
-    else:
-        orientation = create_ypr_matrix(degrees(yaw_offset+yaw_offset_a),degrees(pitch_offset+pitch_offset_a),degrees(roll_offset+roll_offset_a))
-        drift_angle = np.zeros((3,1))
-        drift_angle[0,0]=(roll_bias+roll_bias_a)/6000.0
-        drift_angle[1,0]=(pitch_bias+pitch_bias_a)/6000.0
-        drift_angle[2,0]=(yaw_bias+yaw_bias_a)/6000.0
-        
+        drift_angle = np.zeros((3,1))    
 
     plot_counter = 0
 
@@ -371,8 +330,7 @@ def run_test():
         integral_mat = matrix_to_matrix_integral(update_mat)
         acceleration = np.matmul(orientation,np.matmul(integral_mat,force_vector))
         velocity = velocity + np.multiply ( acceleration , 0.01 )
-        #velocity[2,0] = velocity[2,0] + 0.01* acceleration[2,0]+0.32174
-        velocity[2,0] = velocity[2,0] + 0.01* acceleration[2,0]+0.54211
+        velocity[2,0] = velocity[2,0] +0.32174
         
         vel_mag = sqrt( np.vdot( velocity , velocity ))
         acc_mag = sqrt( np.vdot( acceleration , acceleration ))
@@ -414,35 +372,6 @@ def run_test():
 
         
         FS = FS + np.multiply(acceleration,0.01)
-        if False : 
-            vx = velocity[0,0]
-            vy = velocity[1,0]
-            vz = velocity[2,0]
-            wx = 0.0
-            wy = 0.0
-            wz = omega
-            weight = sqrt(omega*omega)
-            w_vx = wy*vz - wz*vy
-            w_vy = wz*vx - wx*vz
-            w_vz = wx*vy - wy*vx
-            f3_ef = np.copy(force_vector)
-            error_x = weight*( w_vx - acceleration[0,0])
-            error_y =  weight*( w_vy - acceleration[1,0])
-            error_z = weight*( w_vz - acceleration[2,0])
-            error_int_x = error_int_x + error_x
-            error_int_y = error_int_y + error_y
-            error_int_z = error_int_z + error_z
-            
-        #h_acc_mag = sqrt(force_vector[0,0]*force_vector[0,0]+force_vector[1,0]*force_vector[1,0])
-
-        #h_acc_mag = sqrt(acceleration[0,0]*acceleration[0,0]+acceleration[1,0]*acceleration[1,0])
-        #h_vel_mag = sqrt(velocity[0,0]*velocity[0,0]+velocity[1,0]*velocity[1,0])
-        #h_w_mag = weight
-
-        #WV = h_w_mag*h_vel_mag
-
-        #h_error = WV - h_acc_mag
-        #sum_h_error = sum_h_error + h_error
 
         E[:,0] = np.transpose(np.cross(W[:,0],velocity[:,0]))
         E[:,0] = E[:,0] - np.transpose(acceleration)
@@ -496,29 +425,21 @@ def run_test():
     
         if labels_have_been_written == False :
             if False :
-                column_names = [ "h_accel_mag" , "h_vel mag" , "h_omega_mag" , "WV"  ]
-            if False :
-                column_names = [ "x_velocity ft/sec", "y_velocity ft/sec", "z_velocity ft/sec" , "velocity magnitude ft/sec" , "acc_x " , "acc_y" , "acc_z" , "err_x" , "err_y" , "err_z" ,  "err_int_x" , "err_int_y" , "err_int_z" ]
-            if False :
-                column_names = [ "v_mag " , "rxx" ,  "ryx" ,  "rzx" ,  "rxy" , "ryy" ,  "rzy" ,   "rxz" ,  "ryz" ,  "rzz"  ]
+                column_names = [ "acc_x" ,"acc_y" , "acc_z" ,  "acc_mag" ]
             if True :
                 column_names = [ "acc_x" ,"acc_y" , "acc_z" ,  "acc_mag" , "vx" , "vy" , "vz" , "vmag" ]
-            write_column_names(output_file , column_names , suffix )
+            write_column_names(output_file , column_names , "_raw" )
             output_file.write(f"\n")
             labels_have_been_written = True
 
         if False :
-            column_values = [ h_acc_mag,h_vel_mag, h_w_mag, WV , h_error, sum_h_error ]
-        if False :
-            column_values = [ velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag , acceleration[0,0] , acceleration[1,0] , acceleration[2,0] , error_x , error_y , error_z , error_int_x , error_int_y , error_int_z  ]
-        if False :
-            column_values = [ vel_mag ]
-            write_columns(output_file , column_values )
-            write_matrix(CXFS)
+            column_values = [ acceleration[0,0] ,acceleration[1,0] ,acceleration[2,0] , acc_mag ]
         if True :
-            column_values = [ acceleration[0,0] ,acceleration[1,0] ,acceleration[2,0] , acc_mag , velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]
-            write_columns(output_file , column_values )
+            column_values = [ acceleration[0,0] ,acceleration[1,0] ,acceleration[2,0] , acc_mag , velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]      
+        write_columns(output_file , column_values )
         output_file.write(f"\n")
+
+        
      
     if True :
         if True :
@@ -553,109 +474,71 @@ def run_test():
             print("sum of errors y = " , error_int_y )
             print("last A = " , A )
             print("last Y = " , Y )
-        
-    if args.adjust :
-        labels_have_been_written = False  
-        orientation = create_ypr_matrix(degrees(yaw_offset+yaw_offset_a),degrees(pitch_offset+pitch_offset_a),degrees(roll_offset+roll_offset_a))
-        drift_angle = np.zeros((3,1))
-        print("roll offset = " , roll_offset )
-        print("roll_offset adjustment = " , roll_offset_a )
-        print("pitch offset = " , pitch_offset )
-        print("pitch offset_adjustment = " , pitch_offset_a )  
-        print("roll bias = " , roll_bias )
-        print("roll bias adjustment = " , roll_bias_a )
-        print("pitch bias = " , pitch_bias )
-        print("pitch bias adjustment = " , pitch_bias_a )
-        
-        drift_angle[0,0]=(roll_bias+roll_bias_a)/6000.0
-        drift_angle[1,0]=(pitch_bias+pitch_bias_a)/6000.0
-        drift_angle[2,0]=(yaw_bias+yaw_bias_a)/6000.0   
-        plot_counter = 0
-        force_vector = np.zeros((3,1))
-        acceleration = np.zeros((3,1))
-        velocity = np.zeros((3,1))
-        angle = np.zeros((3,1))  
-        gravity = np.zeros((3,1))
-        if use_gravity :
-            gravity[2,0] = 32.2
-        W = np.zeros((3,1))  
-        for step_no in range(25000):       
-            time = float(step_no+1)*0.01
-            drift_angle[0,0]=(roll_bias+roll_bias_a)/6000.0 + time*(roll_drift/(6000.0*60.0))
-            drift_angle[1,0]=(pitch_bias+pitch_bias_a)/6000.0 + time*(pitch_drift/(6000.0*60.0))
-            drift_angle[2,0]=(yaw_bias+yaw_bias_a)/6000.0 + time*(yaw_drift/(6000.0*60.0))
-             
-            if time < 100.0 :
-                phi = 0.0001*time - ((0.0001)*(0.0001))/200.0
-                force =  (time*time/100.0 - (0.0001)*time + 0.0001 )
-                force_vector[0,0] = 1.0
-                force_vector[1,0] = force
-                if use_gravity :
-                    force_vector[2,0] = -32.2
-                else :
-                    force_vector[2,0] = 0.0
-            elif 100.0 <=  time < 150.0 :
-                phi = 0.01
-                force_vector[0,0] = 0.0
-                force_vector[1,0] = 100.0
-                if use_gravity :
-                    force_vector[2,0] = -32.2
-                else :
-                    force_vector[2,0] = 0.0
-            else :
-                tt = time - 150.0
-                phi = 0.01 - 0.0001*tt + (.0001)*(.0001)/200.0
-                force = 100.0 + 0.0001/300 - tt*(2.0+0.0001) + tt*tt/100.0
-                force_vector[0,0] = -1.0
-                force_vector[1,0] = force
-                if use_gravity :
-                    force_vector[2,0] = -32.2
-                else :
-                    force_vector[2,0] = 0.0
-                        
-            force_vector[0,0] = (force_vector[0,0]+acc_off_x*32.2)*acc_cal_x
-            force_vector[1,0] = (force_vector[1,0]+acc_off_y*32.2)*acc_cal_y
-            force_vector[2,0] = (force_vector[2,0]+acc_off_z*32.2)*acc_cal_z       
-            angle[2,0] = phi
-            angle[0,0] = cross_coupling*force_vector[1,0]/(6000.0*32.2)
-            angle[0,0] = angle[0,0]*gyro_cal_x
-            angle[1,0] = angle[1,0]*gyro_cal_y
-            angle[2,0] = angle[2,0]*gyro_cal_z       
-            omega = 100.0 * phi       
-            angle_bf = angle + drift_angle
-            update_mat = phi_to_matrix(angle_bf)
-            integral_mat = matrix_to_matrix_integral(update_mat)
-            acceleration = np.matmul(orientation,np.matmul(integral_mat,force_vector))
-            velocity[0,0] = velocity[0,0] + 0.01* acceleration[0,0]
-            velocity[1,0] = velocity[1,0] + 0.01* acceleration[1,0]
-            if use_gravity :
-                velocity[2,0] = velocity[2,0] + 0.01* acceleration[2,0]+0.322
-            else :
-                velocity[2,0] = velocity[2,0] + 0.01* acceleration[2,0]
-            vel_mag = sqrt( np.vdot( velocity , velocity ))       
-            orientation = np.matmul(orientation,update_mat)       
-            vx = velocity[0,0]
-            vy = velocity[1,0]
-            vz = velocity[2,0]
-            wx = 0.0
-            wy = 0.0
-            wz = omega
-            w_vx = wy*vz - wz*vy
-            w_vy = wz*vx - wx*vz
-            w_vz = wx*vy - wy*vx
-            f3_ef = np.copy(force_vector)       
-            if labels_have_been_written == False :
-                if True :
-                    column_names = [ "vx" , "vy" , "vz" , "vmag" ]
-                write_column_names(adj_file , column_names , "adj")
-                adj_file.write(f"\n")
-                labels_have_been_written = True
-            if True :
-                column_values = [ velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]     
-                write_columns(adj_file , column_values )
-            adj_file.write(f"\n")
 
             
+    orientation = input_matrices[0]
+    orientation_angles = extract_euler(orientation)
+    orientation_angles[1] = orientation_angles[1] + pitch_offset_a
+    orientation_angles[2] = orientation_angles[2] + roll_offset_a
+    orientation = create_ypr_matrix(orientation_angles[0],orientation_angles[1],orientation_angles[2])
+    
+    
+    drift_angle = np.zeros((3,1))
+    drift_angle[0] = roll_bias_a
+    drift_angle[1] = pitch_bias_a
+
+    drift_angle = np.multiply(drift_angle , 1.0/6000.0)
+
+    print("original orientation = " , input_matrices[0] )
+    print("adjusted orientation = " , orientation )
+    print("drift_angle = " , drift_angle )
+
+    previous_raw_mat = orientation
+    previous_adj_mat = orientation
+    velocity = np.zeros((3,1))
+
+    labels_have_been_written = False
+    
+    for step_no in range(len(body_forces)):
+
+        N = N + 1
+        
+        time = float(step_no+1)*0.01
+
+        force_vector = body_forces[step_no]
+        raw_mat = input_matrices[step_no]
+        update_mat = np.matmul(np.transpose(previous_raw_mat),raw_mat)
+        previous_raw_mat = raw_mat
+        update_angles = matrix_to_phi(update_mat)
+        update_angles = update_angles + drift_angle
+        update_mat = phi_to_matrix(update_angles)
+        rmat = np.matmul( previous_adj_mat, update_mat )
+        previous_adj_mat = rmat 
+        integral_mat = matrix_to_matrix_integral(update_mat)
+        rotation_angle_bf = matrix_to_phi(update_mat)
+        rotation_angle_ef = np.matmul(rmat,rotation_angle_bf)
+        acceleration = np.matmul(rmat,np.matmul(integral_mat,force_vector))
+        velocity = velocity + np.multiply ( acceleration , 0.01 )
+        velocity[2,0] = velocity[2,0] +0.32174
+        vel_mag = sqrt(np.vdot(velocity,velocity))
+        acc_mag = sqrt(np.vdot(acceleration,acceleration))
+        if labels_have_been_written == False :
+            if False :
+                column_names = [ "acc_x" ,"acc_y" , "acc_z" ,  "acc_mag" ]
+            if True :
+                column_names = [ "acc_x" ,"acc_y" , "acc_z" ,  "acc_mag" , "vx" , "vy" , "vz" , "vmag" ]
+            write_column_names(adjusted_file , column_names , "_adj" )
+            adjusted_file.write(f"\n")
+            labels_have_been_written = True
+
+        if False :
+            column_values = [ acceleration[0,0] ,acceleration[1,0] ,acceleration[2,0] , acc_mag ]
+        if True :
+            column_values = [ acceleration[0,0] ,acceleration[1,0] ,acceleration[2,0] , acc_mag , velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]      
+        write_columns(adjusted_file , column_values )
+        adjusted_file.write(f"\n")
+
+                  
     
 global args
 def build_arg_parser():
@@ -696,9 +579,7 @@ def build_arg_parser():
     parser.add_argument('-ao_z ', '--ao_z',  help='accelerometer offset, gs, z')
 
     parser.add_argument('-f' , '--f' , help='file to be processed')
-    parser.add_argument('-s' , '--s' , help='starting time')
-
-    
+    parser.add_argument('-s' , '--s' , help='starting time')  
        
     return parser
 
@@ -800,7 +681,8 @@ if __name__ == "__main__":
         print("file name = " , file_name )
         try :
             input_file = open(file_name,'r')
-            #output_file = open(file_name+".out.csv",'w')
+            output_file = open(file_name+".raw.csv",'w')
+            adjusted_file = open(file_name+".adj.csv",'w')
         except :
             print("either unable to open input file or output file is in use.")
             exit()
