@@ -283,9 +283,9 @@ def run_test():
     CXFScc = np.zeros((3,3))
     
     Y = np.zeros((3,1))
-    A = np.zeros((3,4))
-    ATA = np.zeros((4,4))
-    ATY = np.zeros((4,1))
+    A = np.zeros((3,5))
+    ATA = np.zeros((5,5))
+    ATY = np.zeros((5,1))
 
     E = np.zeros((3,1))
     AO = np.zeros((3,3))
@@ -311,6 +311,8 @@ def run_test():
     sum_h_error = 0.
 
     previous_matrix = orientation
+
+    previous_vmag = 0 
     
     for step_no in range(len(body_forces)):
 
@@ -331,7 +333,7 @@ def run_test():
         acceleration = np.matmul(orientation,np.matmul(integral_mat,force_vector))
         velocity = velocity + np.multiply ( acceleration , 0.01 )
         velocity[2,0] = velocity[2,0] +0.32174
-        
+
         vel_mag = sqrt( np.vdot( velocity , velocity ))
         acc_mag = sqrt( np.vdot( acceleration , acceleration ))
         
@@ -416,7 +418,7 @@ def run_test():
             
             Y[:] = E[0:3]
             A[0:3,0:2] = AO[0:3,0:2]
-            A[0:3,2:4] = AB[0:3,0:2]
+            A[0:3,2:5] = AB[0:3,0:3]
                    
             AT = np.transpose(A)
             ATA = ATA + np.matmul(AT,A)
@@ -442,12 +444,14 @@ def run_test():
         
      
     if True :
+        acc_off_z = 0.0
+        print("acc_off_z = " , acc_off_z )
         if True :
             Yv = np.zeros((3,1))
             Yv[0:3,0]= velocity[0:3,0]
             sum_ysqrv = np.matmul(np.transpose(Yv),Yv)
-            Av = np.zeros((3,4))
-            Av[0:3,2:4] = RXFS[0:3,0:2]
+            Av = np.zeros((3,5))
+            Av[0:3,2:5] = RXFS[0:3,0:3]
             Av[0,1]=FS[2,0]
             Av[1,0]= -FS[2,0]
             ATv = np.transpose(Av)
@@ -461,6 +465,7 @@ def run_test():
             pitch_offset_a = - X[1,0]
             roll_bias_a = -X[2,0]
             pitch_bias_a = -X[3,0]
+            yaw_bias_a = -X[4,0]
             sigma_sqr = sum_ysqr +  np.multiply( sum_ysqrv , float(N))- np.matmul(np.transpose(X),ATY) - np.matmul(np.transpose(X),ATYv)
             std = sqrt( sigma_sqr[0,0]/N)
             print("X = " , X )
@@ -486,7 +491,9 @@ def run_test():
     drift_angle = np.zeros((3,1))
     drift_angle[0] = roll_bias_a
     drift_angle[1] = pitch_bias_a
+    drift_angle[2] = yaw_bias_a
 
+    
     drift_angle = np.multiply(drift_angle , 1.0/6000.0)
 
     print("original orientation = " , input_matrices[0] )
@@ -498,6 +505,10 @@ def run_test():
     velocity = np.zeros((3,1))
 
     labels_have_been_written = False
+
+    energy = 0.0
+
+    previous_vmag = 0
     
     for step_no in range(len(body_forces)):
 
@@ -518,15 +529,21 @@ def run_test():
         rotation_angle_bf = matrix_to_phi(update_mat)
         rotation_angle_ef = np.matmul(rmat,rotation_angle_bf)
         acceleration = np.matmul(rmat,np.matmul(integral_mat,force_vector))
-        velocity = velocity + np.multiply ( acceleration , 0.01 )
-        velocity[2,0] = velocity[2,0] +0.32174
+        velocity_dot = acceleration
+        velocity_dot[2,0] = velocity_dot[2,0]+32.174 + acc_off_z
+        velocity = velocity + np.multiply ( velocity_dot , 0.01 )
+        power = np.vdot(velocity,velocity_dot) - velocity[2,0]*( 32.174 + acc_off_z ) 
+        energy = energy + power*0.01
         vel_mag = sqrt(np.vdot(velocity,velocity))
+        #vel_mag = sqrt(velocity[0,0]*velocity[0,0]+velocity[1,0]*velocity[1,0])
+        dvdt = 100.0 * ( vel_mag - previous_vmag )
+        previous_vmag = vel_mag 
         acc_mag = sqrt(np.vdot(acceleration,acceleration))
         if labels_have_been_written == False :
             if False :
                 column_names = [ "acc_x" ,"acc_y" , "acc_z" ,  "acc_mag" ]
             if True :
-                column_names = [ "acc_x" ,"acc_y" , "acc_z" ,  "acc_mag" , "vx" , "vy" , "vz" , "vmag" ]
+                column_names = [ "energy" , "dvdt" ,"acc_x" ,"acc_y" , "acc_z" ,  "acc_mag" , "vx" , "vy" , "vz" , "vmag" ]
             write_column_names(adjusted_file , column_names , "_adj" )
             adjusted_file.write(f"\n")
             labels_have_been_written = True
@@ -534,7 +551,7 @@ def run_test():
         if False :
             column_values = [ acceleration[0,0] ,acceleration[1,0] ,acceleration[2,0] , acc_mag ]
         if True :
-            column_values = [ acceleration[0,0] ,acceleration[1,0] ,acceleration[2,0] , acc_mag , velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]      
+            column_values = [ energy , dvdt, acceleration[0,0] ,acceleration[1,0] ,acceleration[2,0] , acc_mag , velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]      
         write_columns(adjusted_file , column_values )
         adjusted_file.write(f"\n")
 
