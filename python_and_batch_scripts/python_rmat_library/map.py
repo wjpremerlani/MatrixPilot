@@ -3,6 +3,9 @@ from math import sin, cos, atan2, sqrt, radians, degrees
 from datetime import datetime
 import argparse
 
+global use_drift
+use_drift = False
+
 def cross_t(a,b):
     return np.transpose(np.cross(np.transpose(a),np.transpose(b)))
 
@@ -35,6 +38,11 @@ global yaw_drift , pitch_drift , roll_drift
 yaw_drift = 0.0 
 pitch_drift = 0.0
 roll_drift = 0.0
+
+global yaw_drift_a , pitch_drift_a , roll_drift_a
+yaw_drift_a = 0.0 
+pitch_drift_a = 0.0
+roll_drift_a = 0.0
 
 global cross_coupling
 cross_coupling = 0.0
@@ -228,6 +236,8 @@ def run_test():
     global args
     global yaw_offset_a , pitch_offset_a , roll_offset_a
     global yaw_bias_a , pitch_bias_a , roll_bias_a
+    global yaw_drift_a , pitch_drift_a , roll_drift_a
+    global use_drift
     
     if True :
     #base case
@@ -248,6 +258,7 @@ def run_test():
     RSt = np.zeros((3,3))
     RScc = np.zeros((3,3))
     RXFS = np.zeros((3,3))
+    RXFSt = np.zeros((3,3))
     
     
     CX = np.zeros((3,1))
@@ -281,11 +292,17 @@ def run_test():
     CYFSt = np.zeros((3,3))
     CZFSt = np.zeros((3,3))
     CXFScc = np.zeros((3,3))
-    
-    Y = np.zeros((3,1))
-    A = np.zeros((3,5))
-    ATA = np.zeros((5,5))
-    ATY = np.zeros((5,1))
+
+    if use_drift :
+        Y = np.zeros((2,1))
+        A = np.zeros((2,8))
+        ATA = np.zeros((8,8))
+        ATY = np.zeros((8,1))
+    else :       
+        Y = np.zeros((2,1))
+        A = np.zeros((2,5))
+        ATA = np.zeros((5,5))
+        ATY = np.zeros((5,1))
 
     E = np.zeros((3,1))
     AO = np.zeros((3,3))
@@ -353,6 +370,9 @@ def run_test():
         CZFS = CZFS + CZF - np.transpose(CZF)
 
         RSt = RSt + np.multiply(orientation , (time/60.0)/6000.0 )
+
+        RXFSt = RXFSt + np.multiply( mat_x_vec(RSt,acceleration) , 0.01 )
+        
         CXt[:,0] = RSt[:,0]
         CYt[:,0] = RSt[:,1]
         CZt[:,0] = RSt[:,2]
@@ -415,10 +435,19 @@ def run_test():
             
             #A = np.multiply(A,weight*0.01*time)
             np.multiply(AO,weight)
+
+            if use_drift :
+                Y[0:2,0] = E[0:2,0]
+                A[0:2,0:2] = AO[0:2,0:2]
+                A[0:2,2:5] = AB[0:2,0:3]
+                A[0:2,5:8] = AD[0:2,0:3]
+                   
+
+            else :
             
-            Y[:] = E[0:3]
-            A[0:3,0:2] = AO[0:3,0:2]
-            A[0:3,2:5] = AB[0:3,0:3]
+                Y[0:2,0] = E[0:2,0]
+                A[0:2,0:2] = AO[0:2,0:2]
+                A[0:2,2:5] = AB[0:2,0:3]
                    
             AT = np.transpose(A)
             ATA = ATA + np.matmul(AT,A)
@@ -447,13 +476,23 @@ def run_test():
         acc_off_z = 0.0
         print("acc_off_z = " , acc_off_z )
         if True :
-            Yv = np.zeros((3,1))
-            Yv[0:3,0]= velocity[0:3,0]
+            Yv = np.zeros((2,1))
+            Yv[0:2,0]= velocity[0:2,0]
             sum_ysqrv = np.matmul(np.transpose(Yv),Yv)
-            Av = np.zeros((3,5))
-            Av[0:3,2:5] = RXFS[0:3,0:3]
-            Av[0,1]=FS[2,0]
-            Av[1,0]= -FS[2,0]
+            if use_drift :
+                Av = np.zeros((2,8))
+                Av[0:2,2:5] = RXFS[0:2,0:3]
+                Av[0:2,5:8] = RXFSt[0:2,0:3]              
+                Av[0,1]=FS[2,0]
+                Av[1,0]= -FS[2,0]
+
+            else :
+                
+                Av = np.zeros((2,5))
+                Av[0:2,2:5] = RXFS[0:2,0:3]
+                Av[0,1]=FS[2,0]
+                Av[1,0]= -FS[2,0]
+            
             ATv = np.transpose(Av)
             ATAv = np.multiply(np.matmul(ATv,Av),float(N))
             ATYv = np.multiply(np.matmul(ATv,Yv),float(N))
@@ -461,17 +500,34 @@ def run_test():
         if True :
             ATA_INVERSE = np.linalg.inv(ATA + ATAv)
             X = np.matmul(ATA_INVERSE,ATY+ATYv)
-            roll_offset_a = - X[0,0]
-            pitch_offset_a = - X[1,0]
-            roll_bias_a = -X[2,0]
-            pitch_bias_a = -X[3,0]
-            yaw_bias_a = -X[4,0]
-            sigma_sqr = sum_ysqr +  np.multiply( sum_ysqrv , float(N))- np.matmul(np.transpose(X),ATY) - np.matmul(np.transpose(X),ATYv)
-            std = sqrt( sigma_sqr[0,0]/N)
-            print("X = " , X )
-            print("sum_ysqr = " , sum_ysqr )
-            print("sigma_sqr = " , sigma_sqr )
-            print("standard deviation = " , std )
+            if use_drift :
+                roll_offset_a = - X[0,0]
+                pitch_offset_a = - X[1,0]
+                roll_bias_a = -X[2,0]
+                pitch_bias_a = -X[3,0]
+                yaw_bias_a = -X[4,0]
+                roll_drift_a = -X[5,0]
+                pitch_drift_a = -X[6,0]
+                yaw_drift_a = -X[7,0]
+                sigma_sqr = sum_ysqr +  np.multiply( sum_ysqrv , float(N))- np.matmul(np.transpose(X),ATY) - np.matmul(np.transpose(X),ATYv)
+                std = sqrt( sigma_sqr[0,0]/N)
+                print("X = " , X )
+                print("sum_ysqr = " , sum_ysqr )
+                print("sigma_sqr = " , sigma_sqr )
+                print("standard deviation = " , std )
+                
+            else :
+                roll_offset_a = - X[0,0]
+                pitch_offset_a = - X[1,0]
+                roll_bias_a = -X[2,0]
+                pitch_bias_a = -X[3,0]
+                yaw_bias_a = -X[4,0]
+                sigma_sqr = sum_ysqr +  np.multiply( sum_ysqrv , float(N))- np.matmul(np.transpose(X),ATY) - np.matmul(np.transpose(X),ATYv)
+                std = sqrt( sigma_sqr[0,0]/N)
+                print("X = " , X )
+                print("sum_ysqr = " , sum_ysqr )
+                print("sigma_sqr = " , sigma_sqr )
+                print("standard deviation = " , std )
         if False :
             print("ATA = " , ATA )
             print("ATY = " , ATY )   
@@ -515,6 +571,13 @@ def run_test():
         N = N + 1
         
         time = float(step_no+1)*0.01
+
+        drift_angle[0] = roll_bias_a + roll_drift_a*(time/60.0)
+        drift_angle[1] = pitch_bias_a + pitch_drift_a*(time/60.0)
+        drift_angle[2] = yaw_bias_a + yaw_drift_a*(time/60.0)
+
+    
+        drift_angle = np.multiply(drift_angle , 1.0/6000.0)
 
         force_vector = body_forces[step_no]
         raw_mat = input_matrices[step_no]
