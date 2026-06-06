@@ -36,6 +36,13 @@ yaw_drift = 0.0
 pitch_drift = 0.0
 roll_drift = 0.0
 
+global yaw_drift_a , pitch_drift_a , roll_drift_a
+yaw_drift_a = 0.0 
+pitch_drift_a = 0.0
+roll_drift_a = 0.0
+
+
+
 global cross_coupling
 cross_coupling = 0.0
 
@@ -227,6 +234,7 @@ def run_test():
     global args
     global yaw_offset_a , pitch_offset_a , roll_offset_a
     global yaw_bias_a , pitch_bias_a , roll_bias_a
+    global yaw_drift_a , pitch_drift_a , roll_drift_a
 
     file_list = open("cases.txt","a")
 
@@ -280,6 +288,7 @@ def run_test():
     acceleration = np.zeros((3,1))
     velocity = np.zeros((3,1))
     angle = np.zeros((3,1))
+    f3_ef =  np.zeros((3,1))
     
     FS = np.zeros((3,1))
     FST = np.zeros((3,1))
@@ -288,6 +297,7 @@ def run_test():
     RSt = np.zeros((3,3))
     RScc = np.zeros((3,3))
     RXFS = np.zeros((3,3))
+    RXFSt = np.zeros((3,3))
     
     
     CX = np.zeros((3,1))
@@ -323,9 +333,9 @@ def run_test():
     CXFScc = np.zeros((3,3))
     
     Y = np.zeros((3,1))
-    A = np.zeros((3,4))
-    ATA = np.zeros((4,4))
-    ATY = np.zeros((4,1))
+    A = np.zeros((3,6))
+    ATA = np.zeros((6,6))
+    ATY = np.zeros((6,1))
 
     E = np.zeros((3,1))
     AO = np.zeros((3,3))
@@ -404,12 +414,14 @@ def run_test():
         update_mat = phi_to_matrix(angle_bf)
         integral_mat = matrix_to_matrix_integral(update_mat)
         acceleration = np.matmul(orientation,np.matmul(integral_mat,force_vector))
-        velocity[0,0] = velocity[0,0] + 0.01* acceleration[0,0]
-        velocity[1,0] = velocity[1,0] + 0.01* acceleration[1,0]
+        velocity_dot = np.copy(acceleration)
         if use_gravity :
-            velocity[2,0] = velocity[2,0] + 0.01* acceleration[2,0]+0.322
-        else :
-            velocity[2,0] = velocity[2,0] + 0.01* acceleration[2,0]
+            velocity_dot[2,0] = velocity_dot[2,0] + 32.2
+        
+        velocity[0,0] = velocity[0,0] + 0.01* velocity_dot[0,0]
+        velocity[1,0] = velocity[1,0] + 0.01* velocity_dot[1,0]
+        velocity[2,0] = velocity[2,0] + 0.01* velocity_dot[2,0]
+        
         vel_mag = sqrt( np.vdot( velocity , velocity ))
         force_mag = sqrt( np.vdot( force_vector , force_vector ))
         
@@ -433,6 +445,8 @@ def run_test():
         CXt[:,0] = RSt[:,0]
         CYt[:,0] = RSt[:,1]
         CZt[:,0] = RSt[:,2]
+
+        RXFSt = RXFSt + np.multiply( mat_x_vec(RSt,acceleration) , 0.01 )
 
         RScc = RScc + np.multiply(orientation , (force_vector[1,0]/32.2)/6000.0 )
         CXcc[:,0] = RScc[:,0]
@@ -462,7 +476,7 @@ def run_test():
         w_vx = wy*vz - wz*vy
         w_vy = wz*vx - wx*vz
         w_vz = wx*vy - wy*vx
-        f3_ef = np.copy(force_vector)
+        f3_ef = force_vector
         error_x = weight*( w_vx - acceleration[0,0])
         error_y =  weight*( w_vy - acceleration[1,0])
         error_z = weight*( w_vz - acceleration[2,0])
@@ -482,7 +496,7 @@ def run_test():
         sum_h_error = sum_h_error + h_error
 
         E[:,0] = np.transpose(np.cross(W[:,0],velocity[:,0]))
-        E[:,0] = E[:,0] - np.transpose(acceleration)           
+        E[:,0] = E[:,0] - np.transpose(velocity_dot)           
         E = np.multiply(E,weight)
 
         if True :
@@ -518,12 +532,12 @@ def run_test():
             AO[1,1] = w_f[0,0]
             AO = AO + f_w[:,:]
             
-            #A = np.multiply(A,weight*0.01*time)
-            np.multiply(AO,weight)
+            AO = np.multiply(AO,weight)
             
             Y[:] = E[0:3]
             A[0:3,0:2] = AO[0:3,0:2]
             A[0:3,2:4] = AB[0:3,0:2]
+            A[0:3,4:6] = AD[0:3,0:2]
                    
             AT = np.transpose(A)
             ATA = ATA + np.matmul(AT,A)
@@ -560,9 +574,34 @@ def run_test():
         if True :
             Yv = np.zeros((3,1))
             Yv[0:3,0]= velocity[0:3,0]
+            AvO = np.zeros((3,2))
+            AvB = np.zeros((3,2))
+            AvO[0,1]=FS[2,0]
+            AvO[1,0]= -FS[2,0]
+            AvB = RXFS[0:3,0:2]
+            AvOT = np.transpose(AvO)
+            AvBT = np.transpose(AvB)
+            ATAvO = np.matmul(AvOT,AvO)
+            ATAvB = np.matmul(AvBT,AvB)
+            ATYvO = np.matmul(AvOT,Yv)
+            ATYvB = np.matmul(AvBT,Yv)
+
+            ATAO_INV = np.linalg.inv(ATAvO)
+            ATAB_INV = np.linalg.inv(ATAvB)
+            XO = np.matmul(ATAO_INV, ATYvO)
+            XB = np.matmul(ATAB_INV, ATYvB)
+            print (" ")
+            print ("final velocity XO = " , XO )
+            print ("final velocity XB = " , XB )
+            
+            
+        if True :
+            Yv = np.zeros((3,1))
+            Yv[0:3,0]= velocity[0:3,0]
             sum_ysqrv = np.matmul(np.transpose(Yv),Yv)
-            Av = np.zeros((3,4))
+            Av = np.zeros((3,6))
             Av[0:3,2:4] = RXFS[0:3,0:2]
+            Av[0:3,4:6] = RXFSt[0:3,0:2]
             Av[0,1]=FS[2,0]
             Av[1,0]= -FS[2,0]
             ATv = np.transpose(Av)
@@ -576,8 +615,12 @@ def run_test():
             pitch_offset_a = - X[1,0]
             roll_bias_a = -X[2,0]
             pitch_bias_a = -X[3,0]
+            roll_drift_a = -X[4,0]
+            pitch_drift_a = -X[5,0]
             sigma_sqr = sum_ysqr +  np.multiply( sum_ysqrv , float(N))- np.matmul(np.transpose(X),ATY) - np.matmul(np.transpose(X),ATYv)
             std = sqrt( sigma_sqr[0,0]/N)
+            print(" ")
+            print("combined regression and constraint")
             print("X = " , X )
             print("sum_ysqr = " , sum_ysqr )
             print("sigma_sqr = " , sigma_sqr )
@@ -601,7 +644,12 @@ def run_test():
         print("roll bias = " , roll_bias )
         print("roll bias adjustment = " , roll_bias_a )
         print("pitch bias = " , pitch_bias )
-        print("pitch bias adjustment = " , pitch_bias_a )
+        print("pitch bias adjustment = " , pitch_bias_a)
+        print("roll drift = " , roll_drift )
+        print("roll drift adjustment = " , roll_drift_a )
+        print("pitch drift = " , pitch_drift )
+        print("pitch drift adjustment = " , pitch_drift_a)
+        
         
         drift_angle[0,0]=(roll_bias+roll_bias_a)/6000.0
         drift_angle[1,0]=(pitch_bias+pitch_bias_a)/6000.0
@@ -617,9 +665,9 @@ def run_test():
         W = np.zeros((3,1))  
         for step_no in range(25000):       
             time = float(step_no+1)*0.01
-            drift_angle[0,0]=(roll_bias+roll_bias_a)/6000.0 + time*(roll_drift/(6000.0*60.0))
-            drift_angle[1,0]=(pitch_bias+pitch_bias_a)/6000.0 + time*(pitch_drift/(6000.0*60.0))
-            drift_angle[2,0]=(yaw_bias+yaw_bias_a)/6000.0 + time*(yaw_drift/(6000.0*60.0))
+            drift_angle[0,0]=(roll_bias+roll_bias_a)/6000.0 + time*((roll_drift+roll_drift_a)/(6000.0*60.0))
+            drift_angle[1,0]=(pitch_bias+pitch_bias_a)/6000.0 + time*((pitch_drift+pitch_drift_a)/(6000.0*60.0))
+            drift_angle[2,0]=(yaw_bias+yaw_bias_a)/6000.0 + time*((yaw_drift+yaw_drift_a)/(6000.0*60.0))
              
             if time < 100.0 :
                 phi = 0.0001*time - ((0.0001)*(0.0001))/200.0
