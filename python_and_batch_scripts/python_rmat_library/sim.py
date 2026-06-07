@@ -337,6 +337,14 @@ def run_test():
     ATA = np.zeros((6,6))
     ATY = np.zeros((6,1))
 
+    ATAO = np.zeros((3,3))
+    ATAB = np.zeros((3,3))
+    ATAD = np.zeros((3,3))
+
+    ATYO = np.zeros((3,1))
+    ATYB = np.zeros((3,1))
+    ATYD = np.zeros((3,1))
+
     E = np.zeros((3,1))
     AO = np.zeros((3,3))
     AB = np.zeros((3,3))
@@ -538,6 +546,18 @@ def run_test():
             A[0:3,0:2] = AO[0:3,0:2]
             A[0:3,2:4] = AB[0:3,0:2]
             A[0:3,4:6] = AD[0:3,0:2]
+
+            ATO = np.transpose(AO)
+            ATAO = ATAO + np.matmul(ATO,AO)
+            ATYO = ATYO + np.matmul(ATO,Y)
+
+            ATB = np.transpose(AB)
+            ATAB = ATAB + np.matmul(ATB,AB)
+            ATYB = ATYB + np.matmul(ATB,Y)
+
+            ATD = np.transpose(AD)
+            ATAD = ATAD + np.matmul(ATD,AD)
+            ATYD = ATYD + np.matmul(ATD,Y)      
                    
             AT = np.transpose(A)
             ATA = ATA + np.matmul(AT,A)
@@ -560,7 +580,7 @@ def run_test():
         if False :
             column_values = [ h_acc_mag,h_vel_mag, h_w_mag, WV , h_error, sum_h_error ]
         if False :
-            column_values = [ velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag , acceleration[0,0] , acceleration[1,0] , acceleration[2,0] , error_x , error_y , error_z , error_int_x , error_int_y , error_int_z  ]
+            column_values = [  velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag , acceleration[0,0] , acceleration[1,0] , acceleration[2,0] , error_x , error_y , error_z , error_int_x , error_int_y , error_int_z  ]
         if False :
             column_values = [ vel_mag ]
             write_columns(plot_file , column_values )
@@ -571,28 +591,46 @@ def run_test():
         plot_file.write(f"\n")
      
     if True :
-        if True :
+        if False :
             Yv = np.zeros((3,1))
             Yv[0:3,0]= velocity[0:3,0]
+            
             AvO = np.zeros((3,2))
             AvB = np.zeros((3,2))
+            AvD = np.zeros((3,2))
+                           
             AvO[0,1]=FS[2,0]
             AvO[1,0]= -FS[2,0]
+            
             AvB = RXFS[0:3,0:2]
+            AvD = RXFSt[0:3,0:2]
+            
             AvOT = np.transpose(AvO)
             AvBT = np.transpose(AvB)
+            AvDT = np.transpose(AvD)
+            
             ATAvO = np.matmul(AvOT,AvO)
             ATAvB = np.matmul(AvBT,AvB)
+            ATAvD = np.matmul(AvDT,AvD)
+            
             ATYvO = np.matmul(AvOT,Yv)
             ATYvB = np.matmul(AvBT,Yv)
+            ATYvD = np.matmul(AvDT,Yv)
+            
 
             ATAO_INV = np.linalg.inv(ATAvO)
             ATAB_INV = np.linalg.inv(ATAvB)
+            ATAD_INV = np.linalg.inv(ATAvD)
+            
+            
             XO = np.matmul(ATAO_INV, ATYvO)
             XB = np.matmul(ATAB_INV, ATYvB)
+            XD = np.matmul(ATAD_INV, ATYvD)
+            
             print (" ")
             print ("final velocity XO = " , XO )
             print ("final velocity XB = " , XB )
+            print ("final velocity XD = " , XD )
             
             
         if True :
@@ -605,9 +643,13 @@ def run_test():
             Av[0,1]=FS[2,0]
             Av[1,0]= -FS[2,0]
             ATv = np.transpose(Av)
-            ATAv = np.multiply(np.matmul(ATv,Av),float(N))
-            ATYv = np.multiply(np.matmul(ATv,Yv),float(N))
-                       
+            if False :
+                ATAv = np.multiply(np.matmul(ATv,Av),float(N))
+                ATYv = np.multiply(np.matmul(ATv,Yv),float(N))
+            else :
+                ATAv = np.matmul(ATv,Av)
+                ATYv = np.matmul(ATv,Yv)
+                           
         if True :
             ATA_INVERSE = np.linalg.inv(ATA + ATAv)
             X = np.matmul(ATA_INVERSE,ATY+ATYv)
@@ -617,8 +659,12 @@ def run_test():
             pitch_bias_a = -X[3,0]
             roll_drift_a = -X[4,0]
             pitch_drift_a = -X[5,0]
-            sigma_sqr = sum_ysqr +  np.multiply( sum_ysqrv , float(N))- np.matmul(np.transpose(X),ATY) - np.matmul(np.transpose(X),ATYv)
-            std = sqrt( sigma_sqr[0,0]/N)
+            if False :
+                sigma_sqr = sum_ysqr +  np.multiply( sum_ysqrv , float(N))- np.matmul(np.transpose(X),ATY) - np.matmul(np.transpose(X),ATYv)
+                std = sqrt( sigma_sqr[0,0]/N)
+            else :
+                sigma_sqr = sum_ysqr +   sum_ysqrv  - np.matmul(np.transpose(X),ATY) - np.matmul(np.transpose(X),ATYv)
+                std = sqrt( sigma_sqr[0,0] )
             print(" ")
             print("combined regression and constraint")
             print("X = " , X )
