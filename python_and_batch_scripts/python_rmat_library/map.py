@@ -353,6 +353,9 @@ def run_test():
 
         vel_mag = sqrt( np.vdot( velocity , velocity ))
         acc_mag = sqrt( np.vdot( acceleration , acceleration ))
+
+        velocity_bf = np.matmul(np.transpose(orientation),velocity)
+        vel_mag_bf = sqrt(np.vdot(velocity_bf,velocity_bf))
         
         RS = RS + np.multiply(orientation , 1.0/6000.0 )
         CX[:,0] = RS[:,0]
@@ -433,8 +436,7 @@ def run_test():
             AO[1,1] = w_f[0,0]
             AO = AO + f_w[:,:]
             
-            #A = np.multiply(A,weight*0.01*time)
-            np.multiply(AO,weight)
+            AO = np.multiply(AO,weight)
 
             if use_drift :
                 Y[0:2,0] = E[0:2,0]
@@ -457,16 +459,21 @@ def run_test():
         if labels_have_been_written == False :
             if False :
                 column_names = [ "acc_x" ,"acc_y" , "acc_z" ,  "acc_mag" ]
+            if False :
+                column_names = [  "acc_x" ,"acc_y" , "acc_z" ,  "acc_mag" , "vx" , "vy" , "vz" , "vmag" ]
             if True :
-                column_names = [ "acc_x" ,"acc_y" , "acc_z" ,  "acc_mag" , "vx" , "vy" , "vz" , "vmag" ]
+                column_names = [  "vx_b" , "vy_b" , "vz_b" ,  "vmag_b" , "vx_e" , "vy_e" , "vz_e" , "vmag_e" ]
             write_column_names(output_file , column_names , "_raw" )
             output_file.write(f"\n")
             labels_have_been_written = True
 
         if False :
             column_values = [ acceleration[0,0] ,acceleration[1,0] ,acceleration[2,0] , acc_mag ]
-        if True :
+        if False :
             column_values = [ acceleration[0,0] ,acceleration[1,0] ,acceleration[2,0] , acc_mag , velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]      
+        if True :
+            column_values = [ velocity_bf[0,0] , velocity_bf[1,0] , velocity_bf[2,0] , vel_mag_bf ,velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]      
+        
         write_columns(output_file , column_values )
         output_file.write(f"\n")
 
@@ -490,8 +497,10 @@ def run_test():
                 
                 Av = np.zeros((2,5))
                 Av[0:2,2:5] = RXFS[0:2,0:3]
-                Av[0,1]=FS[2,0]
-                Av[1,0]= -FS[2,0]
+                Av[0,1] = -time*32.174
+                Av[1,0] = time*32.174
+                #Av[0,1]=FS[2,0]
+                #Av[1,0]= -FS[2,0]
             
             ATv = np.transpose(Av)
             ATAv = np.multiply(np.matmul(ATv,Av),float(N))
@@ -595,9 +604,11 @@ def run_test():
         velocity_dot = acceleration
         velocity_dot[2,0] = velocity_dot[2,0]+32.174 + acc_off_z
         velocity = velocity + np.multiply ( velocity_dot , 0.01 )
+        velocity_bf = np.matmul(np.transpose(rmat),velocity)
+        vel_mag_bf = sqrt(np.vdot(velocity_bf,velocity_bf))
         power = np.vdot(velocity,velocity_dot) - velocity[2,0]*( 32.174 + acc_off_z ) 
         energy = energy + power*0.01
-        vel_mag = sqrt(np.vdot(velocity,velocity))
+        vel_mag = sqrt(np.vdot(velocity,velocity))     
         #vel_mag = sqrt(velocity[0,0]*velocity[0,0]+velocity[1,0]*velocity[1,0])
         dvdt = 100.0 * ( vel_mag - previous_vmag )
         previous_vmag = vel_mag 
@@ -605,16 +616,21 @@ def run_test():
         if labels_have_been_written == False :
             if False :
                 column_names = [ "acc_x" ,"acc_y" , "acc_z" ,  "acc_mag" ]
-            if True :
+            if False :
                 column_names = [ "energy" , "dvdt" ,"acc_x" ,"acc_y" , "acc_z" ,  "acc_mag" , "vx" , "vy" , "vz" , "vmag" ]
+            if True :
+                column_names = [ "energy" , "vx_b" , "vy_b" , "vz_b" ,  "vmag_b" , "vx_e" , "vy_e" , "vz_e" , "vmag_e" ]
             write_column_names(adjusted_file , column_names , "_adj" )
             adjusted_file.write(f"\n")
             labels_have_been_written = True
 
         if False :
             column_values = [ acceleration[0,0] ,acceleration[1,0] ,acceleration[2,0] , acc_mag ]
-        if True :
+        if False :
             column_values = [ energy , dvdt, acceleration[0,0] ,acceleration[1,0] ,acceleration[2,0] , acc_mag , velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]      
+        if True :
+            column_values = [ energy , velocity_bf[0,0] , velocity_bf[1,0] , velocity_bf[2,0] , vel_mag_bf ,velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]      
+        
         write_columns(adjusted_file , column_values )
         adjusted_file.write(f"\n")
 

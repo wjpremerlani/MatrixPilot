@@ -429,6 +429,8 @@ def run_test():
         velocity[0,0] = velocity[0,0] + 0.01* velocity_dot[0,0]
         velocity[1,0] = velocity[1,0] + 0.01* velocity_dot[1,0]
         velocity[2,0] = velocity[2,0] + 0.01* velocity_dot[2,0]
+
+        velocity_bf = np.matmul(np.transpose(orientation),velocity)
         
         vel_mag = sqrt( np.vdot( velocity , velocity ))
         force_mag = sqrt( np.vdot( force_vector , force_vector ))
@@ -572,7 +574,7 @@ def run_test():
             if False :
                 column_names = [ "v_mag " , "rxx" ,  "ryx" ,  "rzx" ,  "rxy" , "ryy" ,  "rzy" ,   "rxz" ,  "ryz" ,  "rzz"  ]
             if True :
-                column_names = [ "vx" , "vy" , "vz" , "vmag" ]
+                column_names = [ "vx_b" , "vy_b" , "vz_b" , "vx_e" , "vy_e" , "vz_e" , "vmag" ]
             write_column_names(plot_file , column_names , suffix )
             plot_file.write(f"\n")
             labels_have_been_written = True
@@ -586,7 +588,7 @@ def run_test():
             write_columns(plot_file , column_values )
             write_matrix(CXFS)
         if True :
-            column_values = [ velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]
+            column_values = [ velocity_bf[0,0] , velocity_bf[1,0] , velocity_bf[2,0] ,velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]
             write_columns(plot_file , column_values )
         plot_file.write(f"\n")
      
@@ -762,6 +764,7 @@ def run_test():
                 velocity[2,0] = velocity[2,0] + 0.01* acceleration[2,0]+0.322
             else :
                 velocity[2,0] = velocity[2,0] + 0.01* acceleration[2,0]
+            velocity_bf = np.matmul(np.transpose(orientation),velocity)
             vel_mag = sqrt( np.vdot( velocity , velocity ))       
             orientation = np.matmul(orientation,update_mat)       
             vx = velocity[0,0]
@@ -776,12 +779,12 @@ def run_test():
             f3_ef = np.copy(force_vector)       
             if labels_have_been_written == False :
                 if True :
-                    column_names = [ "vx" , "vy" , "vz" , "vmag" ]
+                    column_names = ["vx_b" , "vy_b" , "vz_b" ,  "vx_e" , "vy_e" , "vz_e" , "vmag" ]
                 write_column_names(adj_file , column_names , "adj")
                 adj_file.write(f"\n")
                 labels_have_been_written = True
             if True :
-                column_values = [ velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]     
+                column_values = [ velocity_bf[0,0] , velocity_bf[1,0] , velocity_bf[2,0] , velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]     
                 write_columns(adj_file , column_values )
             adj_file.write(f"\n")
 
