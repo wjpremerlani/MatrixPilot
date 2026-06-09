@@ -227,6 +227,7 @@ def write_columns(data_file , column_values ) :
 
 global plot_file , suffix
 global labels_have_been_written
+global log_file
 labels_have_been_written = False
 def run_test():
     global plot_file , suffix , column_suffix
@@ -235,8 +236,10 @@ def run_test():
     global yaw_offset_a , pitch_offset_a , roll_offset_a
     global yaw_bias_a , pitch_bias_a , roll_bias_a
     global yaw_drift_a , pitch_drift_a , roll_drift_a
+    global log_file
 
     file_list = open("cases.txt","a")
+    log_file = open("results_log.txt" , "a")
 
     if args.adjust :
         if args.cs :
@@ -620,19 +623,45 @@ def run_test():
             ATYvD = np.matmul(AvDT,Yv)
             
 
-            ATAO_INV = np.linalg.inv(ATAvO)
-            ATAB_INV = np.linalg.inv(ATAvB)
-            ATAD_INV = np.linalg.inv(ATAvD)
+            ATAOv_INV = np.linalg.inv(ATAvO)
+            ATABv_INV = np.linalg.inv(ATAvB)
+            ATADv_INV = np.linalg.inv(ATAvD)
             
             
-            XO = np.matmul(ATAO_INV, ATYvO)
-            XB = np.matmul(ATAB_INV, ATYvB)
-            XD = np.matmul(ATAD_INV, ATYvD)
+            XOv = np.matmul(ATAOv_INV, ATYvO)
+            XBv = np.matmul(ATABv_INV, ATYvB)
+            XDv = np.matmul(ATADv_INV, ATYvD)
+
+            ATAO_INV = np.linalg.inv(ATAO)
+            ATAB_INV = np.linalg.inv(ATAB)
+            ATAD_INV = np.linalg.inv(ATAD)
             
-            print (" ")
-            print ("final velocity XO = " , XO )
-            print ("final velocity XB = " , XB )
-            print ("final velocity XD = " , XD )
+            
+            XO = np.matmul(ATAO_INV, ATYO)
+            XB = np.matmul(ATAB_INV, ATYB)
+            XD = np.matmul(ATAD_INV, ATYD)
+
+            
+
+            log_file.write(f"\n\n\nNext run.\n\n")
+
+            log_file.write(f"roll offset =  , {roll_offset}\n" )
+            log_file.write(f"pitch offset =  , {pitch_offset}\n" )
+            log_file.write(f"roll bias =  , {roll_bias}\n" )
+            log_file.write(f"pitch bias =  , {pitch_bias}\n" )
+            log_file.write(f"roll drift =  , {roll_drift}\n" )
+            log_file.write(f"pitch drift =  , {pitch_drift}\n" )
+                
+            log_file.write (f"\n")
+
+            
+            log_file.write (f"final velocity XO =  , {XO}\n" )
+            log_file.write (f"final velocity XB =  , {XB}\n" )
+            log_file.write (f"final velocity XD =  , {XD}\n" )
+            
+            log_file.write (f"final velocity XOv =  , {XOv}\n" )
+            log_file.write (f"final velocity XBv =  , {XBv}\n" )
+            log_file.write (f"final velocity XDv =  , {XDv}\n" )
             
             
         if True :
@@ -653,6 +682,50 @@ def run_test():
                 ATYv = np.matmul(ATv,Yv)
                            
         if True :
+
+            log_file.write(f"roll_offset = {roll_offset}\n")
+            log_file.write(f"pitch_offset = {pitch_offset}\n")
+            log_file.write(f"roll_bias = {roll_bias}\n")
+            log_file.write(f"pitch_bias = {pitch_bias}\n")
+            log_file.write(f"roll_drift = {roll_drift}\n")
+            log_file.write(f"pitch_drift = {pitch_drift}\n")
+            
+            
+            ATA_INVERSE = np.linalg.inv(ATA)
+            X = np.matmul(ATA_INVERSE,ATY)
+            roll_offset_a = - X[0,0]
+            pitch_offset_a = - X[1,0]
+            roll_bias_a = -X[2,0]
+            pitch_bias_a = -X[3,0]
+            roll_drift_a = -X[4,0]
+            pitch_drift_a = -X[5,0]
+
+            log_file.write(f"\n\nadjustments using only centrifugal estimators:\n")
+            log_file.write(f"roll_offset_a = {roll_offset_a}\n")
+            log_file.write(f"pitch_offset_a = {pitch_offset_a}\n")
+            log_file.write(f"roll_bias_a = {roll_bias_a}\n")
+            log_file.write(f"pitch_bias_a = {pitch_bias_a}\n")
+            log_file.write(f"roll_drift_a = {roll_drift_a}\n")
+            log_file.write(f"pitch_drift_a = {pitch_drift_a}\n")                                                          
+
+            ATA_INVERSE = np.linalg.inv(ATAv)
+            X = np.matmul(ATA_INVERSE,ATYv)
+            roll_offset_a = - X[0,0]
+            pitch_offset_a = - X[1,0]
+            roll_bias_a = -X[2,0]
+            pitch_bias_a = -X[3,0]
+            roll_drift_a = -X[4,0]
+            pitch_drift_a = -X[5,0]
+
+            log_file.write(f"\n\nadjustments using only velocity estimators:\n")
+            log_file.write(f"roll_offset_a = {roll_offset_a}\n")
+            log_file.write(f"pitch_offset_a = {pitch_offset_a}\n")
+            log_file.write(f"roll_bias_a = {roll_bias_a}\n")
+            log_file.write(f"pitch_bias_a = {pitch_bias_a}\n")
+            log_file.write(f"roll_drift_a = {roll_drift_a}\n")
+            log_file.write(f"pitch_drift_a = {pitch_drift_a}\n")   
+
+            
             ATA_INVERSE = np.linalg.inv(ATA + ATAv)
             X = np.matmul(ATA_INVERSE,ATY+ATYv)
             roll_offset_a = - X[0,0]
@@ -661,6 +734,16 @@ def run_test():
             pitch_bias_a = -X[3,0]
             roll_drift_a = -X[4,0]
             pitch_drift_a = -X[5,0]
+            
+            log_file.write(f"\n\nadjustments using combined estimators:\n")
+            
+            log_file.write(f"roll_offset_a = {roll_offset_a}\n")
+            log_file.write(f"pitch_offset_a = {pitch_offset_a}\n")
+            log_file.write(f"roll_bias_a = {roll_bias_a}\n")
+            log_file.write(f"pitch_bias_a = {pitch_bias_a}\n")
+            log_file.write(f"roll_drift_a = {roll_drift_a}\n")
+            log_file.write(f"pitch_drift_a = {pitch_drift_a}\n")
+                                                   
             if False :
                 sigma_sqr = sum_ysqr +  np.multiply( sum_ysqrv , float(N))- np.matmul(np.transpose(X),ATY) - np.matmul(np.transpose(X),ATYv)
                 std = sqrt( sigma_sqr[0,0]/N)
