@@ -663,25 +663,7 @@ def run_test():
             log_file.write (f"final velocity XBv =  , {XBv}\n" )
             log_file.write (f"final velocity XDv =  , {XDv}\n" )
             
-            
-        if True :
-            Yv = np.zeros((3,1))
-            Yv[0:3,0]= velocity[0:3,0]
-            sum_ysqrv = np.matmul(np.transpose(Yv),Yv)
-            Av = np.zeros((3,6))
-            Av[0:3,2:4] = RXFS[0:3,0:2]
-            Av[0:3,4:6] = RXFSt[0:3,0:2]
-            Av[0,1]=FS[2,0]
-            Av[1,0]= -FS[2,0]
-            ATv = np.transpose(Av)
-            if False :
-                ATAv = np.multiply(np.matmul(ATv,Av),float(N))
-                ATYv = np.multiply(np.matmul(ATv,Yv),float(N))
-            else :
-                ATAv = np.matmul(ATv,Av)
-                ATYv = np.matmul(ATv,Yv)
-                           
-        if True :
+        if args.constrain :
 
             log_file.write(f"roll_offset = {roll_offset}\n")
             log_file.write(f"pitch_offset = {pitch_offset}\n")
@@ -689,10 +671,9 @@ def run_test():
             log_file.write(f"pitch_bias = {pitch_bias}\n")
             log_file.write(f"roll_drift = {roll_drift}\n")
             log_file.write(f"pitch_drift = {pitch_drift}\n")
-            
-            
-            ATA_INVERSE = np.linalg.inv(ATA)
-            X = np.matmul(ATA_INVERSE,ATY)
+
+            ATAI = np.linalg.inv(ATA)
+            X = np.matmul(ATAI,ATY)
             roll_offset_a = - X[0,0]
             pitch_offset_a = - X[1,0]
             roll_bias_a = -X[2,0]
@@ -700,24 +681,8 @@ def run_test():
             roll_drift_a = -X[4,0]
             pitch_drift_a = -X[5,0]
 
+            print("first pass, constrained, adjustments = " , X )
             log_file.write(f"\n\nadjustments using only centrifugal estimators:\n")
-            log_file.write(f"roll_offset_a = {roll_offset_a}\n")
-            log_file.write(f"pitch_offset_a = {pitch_offset_a}\n")
-            log_file.write(f"roll_bias_a = {roll_bias_a}\n")
-            log_file.write(f"pitch_bias_a = {pitch_bias_a}\n")
-            log_file.write(f"roll_drift_a = {roll_drift_a}\n")
-            log_file.write(f"pitch_drift_a = {pitch_drift_a}\n")                                                          
-
-            ATA_INVERSE = np.linalg.inv(ATAv)
-            X = np.matmul(ATA_INVERSE,ATYv)
-            roll_offset_a = - X[0,0]
-            pitch_offset_a = - X[1,0]
-            roll_bias_a = -X[2,0]
-            pitch_bias_a = -X[3,0]
-            roll_drift_a = -X[4,0]
-            pitch_drift_a = -X[5,0]
-
-            log_file.write(f"\n\nadjustments using only velocity estimators:\n")
             log_file.write(f"roll_offset_a = {roll_offset_a}\n")
             log_file.write(f"pitch_offset_a = {pitch_offset_a}\n")
             log_file.write(f"roll_bias_a = {roll_bias_a}\n")
@@ -725,6 +690,60 @@ def run_test():
             log_file.write(f"roll_drift_a = {roll_drift_a}\n")
             log_file.write(f"pitch_drift_a = {pitch_drift_a}\n")   
 
+            
+            Yv = np.zeros((2,1))
+            Yv[0:2,0]= velocity[0:2,0]
+            sum_ysqrv = np.matmul(np.transpose(Yv),Yv)
+            Av = np.zeros((2,6))
+            Av[0:2,2:4] = RXFS[0:2,0:2]
+            Av[0:2,4:6] = RXFSt[0:2,0:2]
+            Av[0,1]=FS[2,0]
+            Av[1,0]= -FS[2,0]
+            ATv = np.transpose(Av)
+            
+            ATAv = np.matmul(ATv,Av)
+            ATYv = np.matmul(ATv,Yv)
+
+            cons_error = np.matmul(Av,X)-Yv
+            print("first pass constraint error = " , cons_error )
+            log_file.write(f"first pass constraint error =  , {cons_error}\n")
+            
+            AvATAIAvT = np.matmul(np.matmul(Av,ATAI),ATv)
+            print("AvATAIAvT = " , AvATAIAvT )
+            log_file.write(f"AvATAIAvT = , {AvATAIAvT}\n")
+            
+            AvATAIAvTI = np.linalg.inv(AvATAIAvT)
+            print("AvATAIAvTI = " , AvATAIAvTI )
+            log_file.write(f"AvATAIAvTI = , {AvATAIAvTI}\n")
+
+            X = X - np.matmul(ATAI,np.matmul(ATv,np.matmul(AvATAIAvTI,cons_error)))
+            print("constrained X = " , X )
+            log_file.write(f"constrained X = {X}\n")
+            roll_offset_a = - X[0,0]
+            pitch_offset_a = - X[1,0]
+            roll_bias_a = -X[2,0]
+            pitch_bias_a = -X[3,0]
+            roll_drift_a = -X[4,0]
+            pitch_drift_a = -X[5,0]
+
+            
+            
+            
+            #sigma_sqr = sum_ysqr +   sum_ysqrv  - np.matmul(np.transpose(X),ATY) - np.matmul(np.transpose(X),ATYv)
+            #std = sqrt( sigma_sqr[0,0] )
+            
+        else :
+            Yv = np.zeros((2,1))
+            Yv[0:2,0]= velocity[0:2,0]
+            sum_ysqrv = np.matmul(np.transpose(Yv),Yv)
+            Av = np.zeros((2,6))
+            Av[0:2,2:4] = RXFS[0:2,0:2]
+            Av[0:2,4:6] = RXFSt[0:2,0:2]
+            Av[0,1]=FS[2,0]
+            Av[1,0]= -FS[2,0]
+            ATv = np.transpose(Av)
+            ATAv = np.matmul(ATv,Av)
+            ATYv = np.matmul(ATv,Yv)
             
             ATA_INVERSE = np.linalg.inv(ATA + ATAv)
             X = np.matmul(ATA_INVERSE,ATY+ATYv)
@@ -735,8 +754,15 @@ def run_test():
             roll_drift_a = -X[4,0]
             pitch_drift_a = -X[5,0]
             
-            log_file.write(f"\n\nadjustments using combined estimators:\n")
-            
+            log_file.write(f"\n\nadjustments using combined unconstrained estimators:\n")
+
+            log_file.write(f"roll_offset = {roll_offset}\n")
+            log_file.write(f"pitch_offset = {pitch_offset}\n")
+            log_file.write(f"roll_bias = {roll_bias}\n")
+            log_file.write(f"pitch_bias = {pitch_bias}\n")
+            log_file.write(f"roll_drift = {roll_drift}\n")
+            log_file.write(f"pitch_drift = {pitch_drift}\n")          
+                      
             log_file.write(f"roll_offset_a = {roll_offset_a}\n")
             log_file.write(f"pitch_offset_a = {pitch_offset_a}\n")
             log_file.write(f"roll_bias_a = {roll_bias_a}\n")
@@ -744,25 +770,9 @@ def run_test():
             log_file.write(f"roll_drift_a = {roll_drift_a}\n")
             log_file.write(f"pitch_drift_a = {pitch_drift_a}\n")
                                                    
-            if False :
-                sigma_sqr = sum_ysqr +  np.multiply( sum_ysqrv , float(N))- np.matmul(np.transpose(X),ATY) - np.matmul(np.transpose(X),ATYv)
-                std = sqrt( sigma_sqr[0,0]/N)
-            else :
-                sigma_sqr = sum_ysqr +   sum_ysqrv  - np.matmul(np.transpose(X),ATY) - np.matmul(np.transpose(X),ATYv)
-                std = sqrt( sigma_sqr[0,0] )
-            print(" ")
-            print("combined regression and constraint")
-            print("X = " , X )
-            print("sum_ysqr = " , sum_ysqr )
-            print("sigma_sqr = " , sigma_sqr )
-            print("standard deviation = " , std )
-        if False :
-            print("ATA = " , ATA )
-            print("ATY = " , ATY )   
-            print("sum of errors x = " , error_int_x )
-            print("sum of errors y = " , error_int_y )
-            print("last A = " , A )
-            print("last Y = " , Y )
+            
+            #sigma_sqr = sum_ysqr +   sum_ysqrv  - np.matmul(np.transpose(X),ATY) - np.matmul(np.transpose(X),ATYv)
+            #std = sqrt( sigma_sqr[0,0] )
         
     if args.adjust :
         labels_have_been_written = False  
@@ -911,6 +921,8 @@ def build_arg_parser():
     parser.add_argument('-ao_y ', '--ao_y',  help='accelerometer offset, gs, y')
     parser.add_argument('-ao_z ', '--ao_z',  help='accelerometer offset, gs, z')
 
+    parser.add_argument('-constrain ', '--constrain',  action='store_true', help='use constrained regression')
+    
     
        
     return parser
