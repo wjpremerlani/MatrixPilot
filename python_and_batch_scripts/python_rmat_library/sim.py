@@ -6,6 +6,9 @@ import argparse
 def cross_t(a,b):
     return np.transpose(np.cross(np.transpose(a),np.transpose(b)))
 
+global nvrws
+nvrws = 3
+
 global y_mat , p_mat , r_mat
 y_mat = np.zeros((3,3))
 p_mat = np.zeros((3,3))
@@ -237,12 +240,14 @@ def run_test():
     global yaw_bias_a , pitch_bias_a , roll_bias_a
     global yaw_drift_a , pitch_drift_a , roll_drift_a
     global log_file
+    global nvrws
 
     file_list = open("cases.txt","a")
     log_file = open("results_log.txt" , "a")
 
     if args.adjust :
         if args.cs :
+            suffix = str(column_suffix)
             suffix_a = str(column_suffix)
         else :
             suffix_a = "_drift"
@@ -578,7 +583,7 @@ def run_test():
                 column_names = [ "v_mag " , "rxx" ,  "ryx" ,  "rzx" ,  "rxy" , "ryy" ,  "rzy" ,   "rxz" ,  "ryz" ,  "rzz"  ]
             if True :
                 column_names = [ "vx_b" , "vy_b" , "vz_b" , "vx_e" , "vy_e" , "vz_e" , "vmag" ]
-            write_column_names(plot_file , column_names , suffix )
+            write_column_names(plot_file , column_names , "_gyro_corrupted" )
             plot_file.write(f"\n")
             labels_have_been_written = True
 
@@ -691,12 +696,12 @@ def run_test():
             log_file.write(f"pitch_drift_a = {pitch_drift_a}\n")   
 
             
-            Yv = np.zeros((2,1))
-            Yv[0:2,0]= velocity[0:2,0]
+            Yv = np.zeros((nvrws,1))
+            Yv[0:nvrws,0]= velocity[0:nvrws,0]
             sum_ysqrv = np.matmul(np.transpose(Yv),Yv)
-            Av = np.zeros((2,6))
-            Av[0:2,2:4] = RXFS[0:2,0:2]
-            Av[0:2,4:6] = RXFSt[0:2,0:2]
+            Av = np.zeros((nvrws,6))
+            Av[0:nvrws,2:4] = RXFS[0:nvrws,0:2]
+            Av[0:nvrws,4:6] = RXFSt[0:nvrws,0:2]
             Av[0,1]=FS[2,0]
             Av[1,0]= -FS[2,0]
             ATv = np.transpose(Av)
@@ -733,12 +738,12 @@ def run_test():
             #std = sqrt( sigma_sqr[0,0] )
             
         else :
-            Yv = np.zeros((2,1))
-            Yv[0:2,0]= velocity[0:2,0]
+            Yv = np.zeros((nvrws,1))
+            Yv[0:nvrws,0]= velocity[0:nvrws,0]
             sum_ysqrv = np.matmul(np.transpose(Yv),Yv)
-            Av = np.zeros((2,6))
-            Av[0:2,2:4] = RXFS[0:2,0:2]
-            Av[0:2,4:6] = RXFSt[0:2,0:2]
+            Av = np.zeros((nvrws,6))
+            Av[0:nvrws,2:4] = RXFS[0:nvrws,0:2]
+            Av[0:nvrws,4:6] = RXFSt[0:nvrws,0:2]
             Av[0,1]=FS[2,0]
             Av[1,0]= -FS[2,0]
             ATv = np.transpose(Av)
@@ -873,7 +878,7 @@ def run_test():
             if labels_have_been_written == False :
                 if True :
                     column_names = ["vx_b" , "vy_b" , "vz_b" ,  "vx_e" , "vy_e" , "vz_e" , "vmag" ]
-                write_column_names(adj_file , column_names , "adj")
+                write_column_names(adj_file , column_names , "adj."+suffix)
                 adj_file.write(f"\n")
                 labels_have_been_written = True
             if True :
@@ -921,6 +926,8 @@ def build_arg_parser():
     parser.add_argument('-ao_y ', '--ao_y',  help='accelerometer offset, gs, y')
     parser.add_argument('-ao_z ', '--ao_z',  help='accelerometer offset, gs, z')
 
+    parser.add_argument('-rws ' , '--rws', help = 'number of rows to be used in velocity contstraint')
+
     parser.add_argument('-constrain ', '--constrain',  action='store_true', help='use constrained regression')
     
     
@@ -955,6 +962,7 @@ if __name__ == "__main__":
 
     if args.cs:
         column_suffix = str(args.cs)
+        suffix = column_suffix
     if args.ng:
         use_gravity = False
     if args.cc :
@@ -980,6 +988,10 @@ if __name__ == "__main__":
         acc_off_y = float(args.ao_y)
     if args.ao_z :
         acc_off_z = float(args.ao_z)
+    if args.rws :
+        nvrws = int(args.rws)
+    else :
+        nvrws = 3
     
     
     run_test()
