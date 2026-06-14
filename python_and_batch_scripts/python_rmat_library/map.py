@@ -464,7 +464,8 @@ def run_test():
             
             w_f = np.matmul(np.transpose(W),FS)
             f_w = np.matmul(FS,np.transpose(W))
-            
+            AO = np.zeros((3,2))
+ 
             AO[0,0] = np.multiply(w_f[0,0],weight)
             AO[1,1] = np.multiply(w_f[0,0],weight)
             AO = AO + np.multiply(f_w[:,0:2],weight)
