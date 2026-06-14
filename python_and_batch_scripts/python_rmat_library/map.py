@@ -523,7 +523,8 @@ def run_test():
      
     if True :
 
-        if True :
+        if False :
+            #test each type of error separately
             Yv = np.zeros((3,1))
             Yv[0:3,0]= velocity[0:3,0]
             
@@ -592,6 +593,74 @@ def run_test():
         acc_off_z = 0.0
         print("acc_off_z = " , acc_off_z )
         if True :
+            #constrained regression
+            ATAI = np.linalg.inv(ATA)
+            X = np.matmul(ATAI,ATY)
+            roll_offset_a = - X[0,0]
+            pitch_offset_a = - X[1,0]
+            roll_bias_a = -X[2,0]
+            pitch_bias_a = -X[3,0]
+            yaw_bias_a = -X[4,0]
+            
+            print("first pass, constrained, adjustments = " , X )
+            log_file.write(f"\n\nadjustments using only centrifugal estimators:\n")
+            log_file.write(f"roll_offset_a = {roll_offset_a}\n")
+            log_file.write(f"pitch_offset_a = {pitch_offset_a}\n")
+            log_file.write(f"roll_bias_a = {roll_bias_a}\n")
+            log_file.write(f"pitch_bias_a = {pitch_bias_a}\n")
+            log_file.write(f"yaw_bias_a = {yaw_bias_a}\n")
+
+            Yv = np.zeros((3,1))
+            Yv[0:3,0]= velocity[0:3,0]
+            sum_ysqrv = np.matmul(np.transpose(Yv),Yv)
+            Av = np.zeros((3,5))
+            Av[0:3,2:5] = RXFS[0:3,0:3]
+            Av[0,1]=FS[2,0]
+            Av[1,0]= -FS[2,0]
+            ATv = np.transpose(Av)
+            
+            ATAv = np.matmul(ATv,Av)
+            ATYv = np.matmul(ATv,Yv)
+
+            log_file.write(f"Yv = {Yv}\n")
+
+
+            cons_error = np.matmul(Av,X)-Yv
+            print("first pass constraint error = " , cons_error )
+            log_file.write(f"first pass constraint error =  , {cons_error}\n")   
+             
+            AvATAIAvT = np.matmul(np.matmul(Av,ATAI),ATv)
+            print("AvATAIAvT = " , AvATAIAvT )
+            log_file.write(f"AvATAIAvT = , {AvATAIAvT}\n")
+            
+            AvATAIAvTI = np.linalg.inv(AvATAIAvT)
+            print("AvATAIAvTI = " , AvATAIAvTI )
+            log_file.write(f"AvATAIAvTI = , {AvATAIAvTI}\n")
+
+            X = X - np.matmul(ATAI,np.matmul(ATv,np.matmul(AvATAIAvTI,cons_error)))
+            print("constrained X = " , X )
+            log_file.write(f"constrained X = {X}\n")
+            roll_offset_a = - X[0,0]
+            pitch_offset_a = - X[1,0]
+            roll_bias_a = -X[2,0]
+            pitch_bias_a = -X[3,0]
+            yaw_bias_a = -X[4,0]
+         
+            log_file.write(f"sim.py -adjust -constrain ")
+            log_file.write(f"-ro {round(roll_offset+roll_offset_a,8)} ")
+            log_file.write(f"-po {round(pitch_offset+pitch_offset_a,8)} ")
+            log_file.write(f"-rb {round(roll_bias+roll_bias_a,8)} ")
+            log_file.write(f"-pb {round(pitch_bias+pitch_bias_a,8)} ")
+            log_file.write(f"-yb {round(yaw_bias+yaw_bias_a,8)} ")
+
+            cons_error = np.matmul(Av,X) - Yv
+
+            log_file.write(f"\nconstrained error = {cons_error}\n")
+    
+
+
+        if False :
+            #combined regression
             Yv = np.zeros((3,1))
             Yv[0:3,0]= velocity[0:3,0]
             sum_ysqrv = np.matmul(np.transpose(Yv),Yv)
