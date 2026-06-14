@@ -730,7 +730,15 @@ def run_test():
             pitch_bias_a = -X[3,0]
             roll_drift_a = -X[4,0]
             pitch_drift_a = -X[5,0]
-
+            log_file.write(f"\n\n")
+            log_file.write(f"sim.py -adjust -constrain ")
+            log_file.write(f"-ro {round(roll_offset+roll_offset_a,8)} ")
+            log_file.write(f"-po {round(pitch_offset+pitch_offset_a,8)} ")
+            log_file.write(f"-rb {round(roll_bias+roll_bias_a,8)} ")
+            log_file.write(f"-pb {round(pitch_bias+pitch_bias_a,8)} ")
+            log_file.write(f"-rd {round(roll_drift+roll_drift_a,8)} ")
+            log_file.write(f"-pd {round(pitch_drift+pitch_drift_a,8)}\n\n")
+            
             
             
             
