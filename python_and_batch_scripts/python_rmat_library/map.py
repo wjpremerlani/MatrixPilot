@@ -239,20 +239,38 @@ def run_test():
     global yaw_bias_a , pitch_bias_a , roll_bias_a
     global yaw_drift_a , pitch_drift_a , roll_drift_a
     global use_drift , log_file
+    global acc_off_x , acc_off_y , acc_off_z
 
-    log_file = open("log.txt","w")
+    log_file = open(file_name+".log.txt","w")
     
-    if True :
-        orientation = input_matrices[0]
-        euler_angles = extract_euler(orientation)
-        yaw = euler_angles[0]
-        pitch = euler_angles[1]
-        roll = euler_angles[2]
-        
-        drift_angle = np.zeros((3,1))
-        drift_angle[0,0]=(roll_bias+roll_bias_a)/6000.0
-        drift_angle[1,0]=(pitch_bias+pitch_bias_a)/6000.0
-        drift_angle[2,0]=(yaw_bias+yaw_bias_a)/6000.0
+                
+    orientation = input_matrices[0]
+    orientation_angles = extract_euler(orientation)
+    orientation_angles[1] = orientation_angles[1] + pitch_offset_a + pitch_offset
+    orientation_angles[2] = orientation_angles[2] + roll_offset_a + roll_offset
+    orientation = create_ypr_matrix(orientation_angles[0],orientation_angles[1],orientation_angles[2])
+    
+    
+    drift_angle = np.zeros((3,1))
+    drift_angle[0] = roll_bias_a + roll_bias
+    drift_angle[1] = pitch_bias_a + pitch_bias
+    drift_angle[2] = yaw_bias_a + yaw_bias
+    
+    drift_angle = np.multiply(drift_angle , 1.0/6000.0)
+
+    print("original orientation = " , input_matrices[0] )
+    print("adjusted orientation = " , orientation )
+    print("drift_angle = " , drift_angle )
+
+    previous_raw_mat = orientation
+    previous_adj_mat = orientation
+    velocity = np.zeros((3,1))
+
+    labels_have_been_written = False
+
+    energy = 0.0
+
+    previous_vmag = 0
 
     plot_counter = 0
 
@@ -350,6 +368,8 @@ def run_test():
     sum_h_error = 0.
 
     previous_matrix = orientation
+    previous_raw_mat = orientation
+    previous_adj_mat = orientation
 
     previous_vmag = 0 
     
@@ -358,37 +378,41 @@ def run_test():
         N = N + 1
         
         time = float(step_no+1)*0.01
+        
+        drift_angle[0] = roll_bias_a + roll_bias + ( roll_drift_a + roll_drift )*(time/60.0)
+        drift_angle[1] = pitch_bias_a + pitch_bias + ( pitch_drift_a + pitch_drift )*(time/60.0)
+        drift_angle[2] = yaw_bias_a + yaw_bias + ( yaw_drift_a + yaw_drift )*(time/60.0)
 
-        drift_angle[0,0]=roll_bias/6000.0 + time*(roll_drift/(6000.0*60.0))
-        drift_angle[1,0]=pitch_bias/6000.0 + time*(pitch_drift/(6000.0*60.0))
-        drift_angle[2,0]=yaw_bias/6000.0 + time*(yaw_drift/(6000.0*60.0))
+    
+        drift_angle = np.multiply(drift_angle , 1.0/6000.0)
 
         force_vector = body_forces[step_no]
-        orientation = input_matrices[step_no]
-        update_mat = np.matmul(np.transpose(previous_matrix),orientation)
+        raw_mat = input_matrices[step_no]
+        update_mat = np.matmul(np.transpose(previous_raw_mat),raw_mat)
+        previous_raw_mat = raw_mat
+        update_angles = matrix_to_phi(update_mat)
+        update_angles = update_angles + drift_angle
+        update_mat = phi_to_matrix(update_angles)
+        rmat = np.matmul( previous_adj_mat, update_mat )
+        previous_adj_mat = rmat 
+        integral_mat = matrix_to_matrix_integral(update_mat)
         rotation_angle_bf = matrix_to_phi(update_mat)
-        rotation_angle_ef = np.matmul(orientation,rotation_angle_bf)
+        rotation_angle_ef = np.matmul(rmat,rotation_angle_bf)
+        acceleration = np.matmul(rmat,np.matmul(integral_mat,force_vector))
+        velocity_dot = acceleration
+        velocity_dot[2,0] = velocity_dot[2,0]+32.174 + acc_off_z
+        velocity = velocity + np.multiply ( velocity_dot , 0.01 )
+        velocity_bf = np.matmul(np.transpose(rmat),velocity)
+        vel_mag_bf = sqrt(np.vdot(velocity_bf,velocity_bf))
+        power = np.vdot(velocity,velocity_dot) - velocity[2,0]*( 32.174 + acc_off_z ) 
+        energy = energy + power*0.01
+        vel_mag = sqrt(np.vdot(velocity,velocity))     
+        dvdt = 100.0 * ( vel_mag - previous_vmag )
+        previous_vmag = vel_mag 
+        acc_mag = sqrt(np.vdot(acceleration,acceleration))
+
         W = np.multiply(rotation_angle_ef , 100.0)
         
-        
-        previous_matrix = orientation
-        integral_mat = matrix_to_matrix_integral(update_mat)
-        acceleration = np.matmul(orientation,np.matmul(integral_mat,force_vector))
-        velocity_dot = np.copy(acceleration)
-        velocity_dot[2,0]=velocity_dot[2,0]+32.174
-
-        velocity[0,0] = velocity[0,0] + 0.01* velocity_dot[0,0]
-        velocity[1,0] = velocity[1,0] + 0.01* velocity_dot[1,0]
-        velocity[2,0] = velocity[2,0] + 0.01* velocity_dot[2,0]
-
-        velocity_bf = np.matmul(np.transpose(orientation),velocity)
-        
-
-        vel_mag = sqrt( np.vdot( velocity , velocity ))
-        acc_mag = sqrt( np.vdot( acceleration , acceleration ))
-
-        velocity_bf = np.matmul(np.transpose(orientation),velocity)
-        vel_mag_bf = sqrt(np.vdot(velocity_bf,velocity_bf))
         
         RS = RS + np.multiply(orientation , 1.0/6000.0 )
         CX[:,0] = RS[:,0]
@@ -504,7 +528,7 @@ def run_test():
             if False :
                 column_names = [  "acc_x" ,"acc_y" , "acc_z" ,  "acc_mag" , "vx" , "vy" , "vz" , "vmag" ]
             if True :
-                column_names = [  "Wx", "Wy" , "Wz" , "vx_b" , "vy_b" , "vz_b" ,  "vmag_b" , "vx_e" , "vy_e" , "vz_e" , "vmag_e" ]
+                column_names = [ "vx_b" , "vy_b" , "vz_b" ,  "vmag_b" , "vx_e" , "vy_e" , "vz_e" , "vmag_e" ]
             write_column_names(output_file , column_names , "_raw" )
             output_file.write(f"\n")
             labels_have_been_written = True
@@ -514,7 +538,7 @@ def run_test():
         if False :
             column_values = [ acceleration[0,0] ,acceleration[1,0] ,acceleration[2,0] , acc_mag , velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]      
         if True :
-            column_values = [ W[0,0], W[1,0] , W[2,0], velocity_bf[0,0] , velocity_bf[1,0] , velocity_bf[2,0] , vel_mag_bf ,velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]      
+            column_values = [ velocity_bf[0,0] , velocity_bf[1,0] , velocity_bf[2,0] , vel_mag_bf ,velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]      
         
         write_columns(output_file , column_values )
         output_file.write(f"\n")
@@ -646,7 +670,7 @@ def run_test():
             pitch_bias_a = -X[3,0]
             yaw_bias_a = -X[4,0]
          
-            log_file.write(f"sim.py -adjust -constrain ")
+            log_file.write(f"map.py -f {file_name+'.txt'} ")
             log_file.write(f"-ro {round(roll_offset+roll_offset_a,8)} ")
             log_file.write(f"-po {round(pitch_offset+pitch_offset_a,8)} ")
             log_file.write(f"-rb {round(roll_bias+roll_bias_a,8)} ")
@@ -726,15 +750,15 @@ def run_test():
             
     orientation = input_matrices[0]
     orientation_angles = extract_euler(orientation)
-    orientation_angles[1] = orientation_angles[1] + pitch_offset_a
-    orientation_angles[2] = orientation_angles[2] + roll_offset_a
+    orientation_angles[1] = orientation_angles[1] + pitch_offset_a + pitch_offset
+    orientation_angles[2] = orientation_angles[2] + roll_offset_a + roll_offset
     orientation = create_ypr_matrix(orientation_angles[0],orientation_angles[1],orientation_angles[2])
     
     
     drift_angle = np.zeros((3,1))
-    drift_angle[0] = roll_bias_a
-    drift_angle[1] = pitch_bias_a
-    drift_angle[2] = yaw_bias_a
+    drift_angle[0] = roll_bias_a + roll_bias
+    drift_angle[1] = pitch_bias_a + pitch_bias
+    drift_angle[2] = yaw_bias_a + yaw_bias
 
     
     drift_angle = np.multiply(drift_angle , 1.0/6000.0)
@@ -759,9 +783,9 @@ def run_test():
         
         time = float(step_no+1)*0.01
 
-        drift_angle[0] = roll_bias_a + roll_drift_a*(time/60.0)
-        drift_angle[1] = pitch_bias_a + pitch_drift_a*(time/60.0)
-        drift_angle[2] = yaw_bias_a + yaw_drift_a*(time/60.0)
+        drift_angle[0] = roll_bias_a + roll_bias + ( roll_drift_a + roll_drift )*(time/60.0)
+        drift_angle[1] = pitch_bias_a + pitch_bias + ( pitch_drift_a + pitch_drift )*(time/60.0)
+        drift_angle[2] = yaw_bias_a + yaw_bias + ( yaw_drift_a + yaw_drift )*(time/60.0)
 
     
         drift_angle = np.multiply(drift_angle , 1.0/6000.0)
