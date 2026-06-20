@@ -331,16 +331,16 @@ def run_test():
 
     
     else :       
-        Y = np.zeros((3,1))
-        A = np.zeros((3,5))
+        Y = np.zeros((2,1))
+        A = np.zeros((2,5))
         ATA = np.zeros((5,5))
         ATY = np.zeros((5,1))
 
     E = np.zeros((3,1))
-    AO = np.zeros((3,2))
-    AB = np.zeros((3,3))
-    AD = np.zeros((3,3))
-    ACC = np.zeros((3,1))
+    AO = np.zeros((2,2))
+    AB = np.zeros((2,3))
+    AD = np.zeros((2,3))
+    ACC = np.zeros((2,1))
     #AV = np.zeros((3,2))
 
     ATAO = np.zeros((2,2))
@@ -371,7 +371,9 @@ def run_test():
     previous_raw_mat = orientation
     previous_adj_mat = orientation
 
-    previous_vmag = 0 
+    previous_vmag = 0
+
+    energy = 0.0
     
     for step_no in range(len(body_forces)):
 
@@ -462,50 +464,55 @@ def run_test():
 
         if True :
             CW = np.multiply(np.matmul(CXFS,W),weight)
-            AB[:,0] = CW[:,0]
+            AB[0:2,0] = CW[0:2,0]
             
             CW = np.multiply(np.matmul(CYFS,W),weight)
-            AB[:,1] = CW[:,0]
+            AB[0:2,1] = CW[0:2,0]
 
             CW = np.multiply(np.matmul(CZFS,W),weight)
-            AB[:,2] = CW[:,0]                        
+            AB[0:2,2] = CW[0:2,0]                        
 
         if True :
             CWt = np.multiply(np.matmul(CXFSt,W),weight)
-            AD[:,0] = CWt[:,0]
+            AD[0:2,0] = CWt[0:2,0]
             
             CWt = np.multiply(np.matmul(CYFSt,W),weight)
-            AD[:,1] = CWt[:,0]
+            AD[0:2,1] = CWt[0:2,0]
 
             CWt = np.multiply(np.matmul(CZFSt,W),weight)
-            AD[:,2] = CW[:,0]                         
+            AD[0:2,2] = CW[0:2,0]                         
 
         if True :
             CWcc = np.multiply(np.matmul(CXFScc,W),weight)
-            ACC[:,0] = CWcc[:,0]
+            ACC[0:2,0] = CWcc[0:2,0]
         
         if True :
             
             w_f = np.matmul(np.transpose(W),FS)
             f_w = np.matmul(FS,np.transpose(W))
-            AO = np.zeros((3,2))
+            AO = np.zeros((2,2))
  
             AO[0,0] = np.multiply(w_f[0,0],weight)
             AO[1,1] = np.multiply(w_f[0,0],weight)
-            AO = AO + np.multiply(f_w[:,0:2],weight)
+            AO = AO + np.multiply(f_w[0:2,0:2],weight)
 
             if use_drift :
                 Y[:] = E[0:3]
-                A[0:3,0:2] = AO[0:3,0:2]
-                A[0:3,2:5] = AB[0:3,0:3]
-                A[0:3,5:8] = AD[0:3,0:3]
+                A[0:2,0:2] = AO[0:2,0:2]
+                A[0:2,2:5] = AB[0:2,0:3]
+                A[0:2,5:8] = AD[0:2,0:3]
             else :
-                Y[0:3,0] = E[0:3,0]
-                A[0:3,0:2] = AO[0:3,0:2]
-                A[0:3,2:5] = AB[0:3,0:3]
+                Y[0:2,0] = E[0:2,0]
+                A[0:2,0:2] = AO[0:2,0:2]
+                A[0:2,2:5] = AB[0:2,0:3]
+
+            #print("AO = " , AO )
 
             ATO = np.transpose(AO)
             ATAO = ATAO + np.matmul(ATO,AO)
+            #print("ATYO = " , ATYO )
+            #print("ATO = " , ATO )
+            #print("ATO*Y = ", np.matmul(ATO,Y))
             ATYO = ATYO + np.matmul(ATO,Y)
 
             ATB = np.transpose(AB)
@@ -528,7 +535,7 @@ def run_test():
             if False :
                 column_names = [  "acc_x" ,"acc_y" , "acc_z" ,  "acc_mag" , "vx" , "vy" , "vz" , "vmag" ]
             if True :
-                column_names = [ "vx_b" , "vy_b" , "vz_b" ,  "vmag_b" , "vx_e" , "vy_e" , "vz_e" , "vmag_e" ]
+                column_names = [ "energy","vx_b" , "vy_b" , "vz_b" ,  "vmag_b" , "vx_e" , "vy_e" , "vz_e" , "vmag_e" ]
             write_column_names(output_file , column_names , "_raw" )
             output_file.write(f"\n")
             labels_have_been_written = True
@@ -538,7 +545,7 @@ def run_test():
         if False :
             column_values = [ acceleration[0,0] ,acceleration[1,0] ,acceleration[2,0] , acc_mag , velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]      
         if True :
-            column_values = [ velocity_bf[0,0] , velocity_bf[1,0] , velocity_bf[2,0] , vel_mag_bf ,velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]      
+            column_values = [ energy, velocity_bf[0,0] , velocity_bf[1,0] , velocity_bf[2,0] , vel_mag_bf ,velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]      
         
         write_columns(output_file , column_values )
         output_file.write(f"\n")
@@ -634,11 +641,11 @@ def run_test():
             log_file.write(f"pitch_bias_a = {pitch_bias_a}\n")
             log_file.write(f"yaw_bias_a = {yaw_bias_a}\n")
 
-            Yv = np.zeros((3,1))
-            Yv[0:3,0]= velocity[0:3,0]
+            Yv = np.zeros((2,1))
+            Yv[0:2,0]= velocity[0:2,0]
             sum_ysqrv = np.matmul(np.transpose(Yv),Yv)
-            Av = np.zeros((3,5))
-            Av[0:3,2:5] = RXFS[0:3,0:3]
+            Av = np.zeros((2,5))
+            Av[0:2,2:5] = RXFS[0:2,0:3]
             Av[0,1]=FS[2,0]
             Av[1,0]= -FS[2,0]
             ATv = np.transpose(Av)
