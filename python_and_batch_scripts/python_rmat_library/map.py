@@ -401,7 +401,7 @@ def run_test():
         rotation_angle_bf = matrix_to_phi(update_mat)
         rotation_angle_ef = np.matmul(rmat,rotation_angle_bf)
         acceleration = np.matmul(rmat,np.matmul(integral_mat,force_vector))
-        velocity_dot = acceleration
+        velocity_dot = np.copy(acceleration)
         velocity_dot[2,0] = velocity_dot[2,0]+32.174 + acc_off_z
         velocity = velocity + np.multiply ( velocity_dot , 0.01 )
         velocity_bf = np.matmul(np.transpose(rmat),velocity)
@@ -535,7 +535,7 @@ def run_test():
             if False :
                 column_names = [  "acc_x" ,"acc_y" , "acc_z" ,  "acc_mag" , "vx" , "vy" , "vz" , "vmag" ]
             if True :
-                column_names = [ "FS0" , "FS1" , "FS2" , "energy","vx_b" , "vy_b" , "vz_b" ,  "vmag_b" , "vx_e" , "vy_e" , "vz_e" , "vmag_e" ]
+                column_names = [ "FS0" , "FS1" , "FS2" , "Vz" , "AccZ" , "energy","vx_b" , "vy_b" , "vz_b" ,  "vmag_b" , "vx_e" , "vy_e" , "vz_e" , "vmag_e" ]
             write_column_names(output_file , column_names , "_raw" )
             output_file.write(f"\n")
             labels_have_been_written = True
@@ -545,7 +545,7 @@ def run_test():
         if False :
             column_values = [ acceleration[0,0] ,acceleration[1,0] ,acceleration[2,0] , acc_mag , velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]      
         if True :
-            column_values = [ FS[0,0] ,FS[1,0] , FS[2,0] , energy, velocity_bf[0,0] , velocity_bf[1,0] , velocity_bf[2,0] , vel_mag_bf ,velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]      
+            column_values = [ FS[0,0] ,FS[1,0] , FS[2,0] , velocity[2,0] , acceleration[2,0] , energy, velocity_bf[0,0] , velocity_bf[1,0] , velocity_bf[2,0] , vel_mag_bf ,velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]      
         
         write_columns(output_file , column_values )
         output_file.write(f"\n")
@@ -562,9 +562,14 @@ def run_test():
             AvO = np.zeros((2,2))
             AvB = np.zeros((2,3))
             AvD = np.zeros((2,3))
+
+            GT = 32.174*time
                            
-            AvO[0,1]=FS[2,0]
-            AvO[1,0]= -FS[2,0]
+            #AvO[0,1]=FS[2,0]
+            #AvO[1,0]= -FS[2,0]
+            
+            AvO[0,1]= -GT
+            AvO[1,0]= GT
 
             log_file.write(f" AvO =  {AvO}\n")
             
@@ -591,7 +596,7 @@ def run_test():
             
             XOv = np.matmul(ATAOv_INV, ATYvO)
 
-            GT = 32.174*time
+           
 
             log_file.write(f" GT = {GT}\n")
 
@@ -602,6 +607,11 @@ def run_test():
             log_file.write(f" ATYvO = {ATYvO}\n")
 
             log_file.write(f" XOv =  {XOv}\n")
+
+            xox = Yv[1,0]/GT
+            xoy = -Yv[0,0]/GT
+
+            log_file.write(f" XOv simple = {xox} , {xoy} \n")
 
             roll_offset_a = -XOv[0,0]
             pitch_offset_a = -XOv[1,0]
@@ -832,7 +842,7 @@ def run_test():
         rotation_angle_bf = matrix_to_phi(update_mat)
         rotation_angle_ef = np.matmul(rmat,rotation_angle_bf)
         acceleration = np.matmul(rmat,np.matmul(integral_mat,force_vector))
-        velocity_dot = acceleration
+        velocity_dot = np.copy(acceleration)
         velocity_dot[2,0] = velocity_dot[2,0]+32.174 + acc_off_z
         velocity = velocity + np.multiply ( velocity_dot , 0.01 )
         velocity_bf = np.matmul(np.transpose(rmat),velocity)
