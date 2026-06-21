@@ -246,8 +246,8 @@ def run_test():
                 
     orientation = input_matrices[0]
     orientation_angles = extract_euler(orientation)
-    orientation_angles[1] = orientation_angles[1] + pitch_offset_a + pitch_offset
-    orientation_angles[2] = orientation_angles[2] + roll_offset_a + roll_offset
+    orientation_angles[1] = orientation_angles[1] + degrees(pitch_offset_a + pitch_offset)
+    orientation_angles[2] = orientation_angles[2] + degrees(roll_offset_a + roll_offset)
     orientation = create_ypr_matrix(orientation_angles[0],orientation_angles[1],orientation_angles[2])
     
     
@@ -535,7 +535,7 @@ def run_test():
             if False :
                 column_names = [  "acc_x" ,"acc_y" , "acc_z" ,  "acc_mag" , "vx" , "vy" , "vz" , "vmag" ]
             if True :
-                column_names = [ "energy","vx_b" , "vy_b" , "vz_b" ,  "vmag_b" , "vx_e" , "vy_e" , "vz_e" , "vmag_e" ]
+                column_names = [ "FS0" , "FS1" , "FS2" , "energy","vx_b" , "vy_b" , "vz_b" ,  "vmag_b" , "vx_e" , "vy_e" , "vz_e" , "vmag_e" ]
             write_column_names(output_file , column_names , "_raw" )
             output_file.write(f"\n")
             labels_have_been_written = True
@@ -545,7 +545,7 @@ def run_test():
         if False :
             column_values = [ acceleration[0,0] ,acceleration[1,0] ,acceleration[2,0] , acc_mag , velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]      
         if True :
-            column_values = [ energy, velocity_bf[0,0] , velocity_bf[1,0] , velocity_bf[2,0] , vel_mag_bf ,velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]      
+            column_values = [ FS[0,0] ,FS[1,0] , FS[2,0] , energy, velocity_bf[0,0] , velocity_bf[1,0] , velocity_bf[2,0] , vel_mag_bf ,velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]      
         
         write_columns(output_file , column_values )
         output_file.write(f"\n")
@@ -554,20 +554,22 @@ def run_test():
      
     if True :
 
-        if False :
+        if True :
             #test each type of error separately
-            Yv = np.zeros((3,1))
-            Yv[0:3,0]= velocity[0:3,0]
+            Yv = np.zeros((2,1))
+            Yv[0:2,0]= velocity[0:2,0]
             
-            AvO = np.zeros((3,2))
-            AvB = np.zeros((3,3))
-            AvD = np.zeros((3,3))
+            AvO = np.zeros((2,2))
+            AvB = np.zeros((2,3))
+            AvD = np.zeros((2,3))
                            
             AvO[0,1]=FS[2,0]
             AvO[1,0]= -FS[2,0]
+
+            log_file.write(f" AvO =  {AvO}\n")
             
-            AvB = RXFS[0:3,0:3]
-            AvD = RXFSt[0:3,0:3]
+            AvB = RXFS[0:2,0:3]
+            AvD = RXFSt[0:2,0:3]
             
             AvOT = np.transpose(AvO)
             AvBT = np.transpose(AvB)
@@ -588,6 +590,22 @@ def run_test():
             
             
             XOv = np.matmul(ATAOv_INV, ATYvO)
+
+            GT = 32.174*time
+
+            log_file.write(f" GT = {GT}\n")
+
+            log_file.write(f" Yv = {Yv}\n")
+
+            log_file.write(f" ATAOv_INV = {ATAOv_INV}\n")
+
+            log_file.write(f" ATYvO = {ATYvO}\n")
+
+            log_file.write(f" XOv =  {XOv}\n")
+
+            roll_offset_a = -XOv[0,0]
+            pitch_offset_a = -XOv[1,0]
+            
             XBv = np.matmul(ATABv_INV, ATYvB)
             XDv = np.matmul(ATADv_INV, ATYvD)
 
@@ -600,30 +618,32 @@ def run_test():
             XB = np.matmul(ATAB_INV, ATYB)
             XD = np.matmul(ATAD_INV, ATYD)
 
-            log_file.write(f"ATAO = , {ATAO}\n" )
-            log_file.write(f"ATAB = , {ATAB}\n" )
-            log_file.write(f"ATAD = , {ATAD}\n" )
+            if False :
 
-            log_file.write(f"ATYO = , {ATYO}\n" )
-            log_file.write(f"ATYB = , {ATYB}\n" )
-            log_file.write(f"ATYD = , {ATYD}\n" )
+                log_file.write(f"ATAO = , {ATAO}\n" )
+                log_file.write(f"ATAB = , {ATAB}\n" )
+                log_file.write(f"ATAD = , {ATAD}\n" )
 
-            log_file.write(f"ATAO_INV = , {ATAO_INV}\n")
-            log_file.write(f"ATAB_INV = , {ATAB_INV}\n")
-            log_file.write(f"ATAD_INV = , {ATAD_INV}\n")
-            
-            
-            log_file.write (f" XO =  , {XO}\n" )
-            log_file.write (f" XB =  , {XB}\n" )
-            log_file.write (f" XD =  , {XD}\n" )
-            
-            log_file.write (f"final velocity XOv =  , {XOv}\n" )
-            log_file.write (f"final velocity XBv =  , {XBv}\n" )
-            log_file.write (f"final velocity XDv =  , {XDv}\n" )
+                log_file.write(f"ATYO = , {ATYO}\n" )
+                log_file.write(f"ATYB = , {ATYB}\n" )
+                log_file.write(f"ATYD = , {ATYD}\n" )
+
+                log_file.write(f"ATAO_INV = , {ATAO_INV}\n")
+                log_file.write(f"ATAB_INV = , {ATAB_INV}\n")
+                log_file.write(f"ATAD_INV = , {ATAD_INV}\n")
+                
+                
+                log_file.write (f" XO =  , {XO}\n" )
+                log_file.write (f" XB =  , {XB}\n" )
+                log_file.write (f" XD =  , {XD}\n" )
+                
+                log_file.write (f"final velocity XOv =  , {XOv}\n" )
+                log_file.write (f"final velocity XBv =  , {XBv}\n" )
+                log_file.write (f"final velocity XDv =  , {XDv}\n" )
          
         acc_off_z = 0.0
         print("acc_off_z = " , acc_off_z )
-        if True :
+        if False :
             #constrained regression
             ATAI = np.linalg.inv(ATA)
             X = np.matmul(ATAI,ATY)
@@ -714,7 +734,7 @@ def run_test():
             ATAv = np.matmul(ATv,Av)
             ATYv = np.matmul(ATv,Yv)
                        
-        if True :
+        if False :
             ATA_INVERSE = np.linalg.inv(ATA + ATAv)
             X = np.matmul(ATA_INVERSE,ATY+ATYv)
             if use_drift :
@@ -756,9 +776,11 @@ def run_test():
 
             
     orientation = input_matrices[0]
+    previous_raw_mat = orientation
+    
     orientation_angles = extract_euler(orientation)
-    orientation_angles[1] = orientation_angles[1] + pitch_offset_a + pitch_offset
-    orientation_angles[2] = orientation_angles[2] + roll_offset_a + roll_offset
+    orientation_angles[1] = orientation_angles[1] + degrees(pitch_offset_a + pitch_offset)
+    orientation_angles[2] = orientation_angles[2] + degrees(roll_offset_a + roll_offset)
     orientation = create_ypr_matrix(orientation_angles[0],orientation_angles[1],orientation_angles[2])
     
     
@@ -774,7 +796,7 @@ def run_test():
     print("adjusted orientation = " , orientation )
     print("drift_angle = " , drift_angle )
 
-    previous_raw_mat = orientation
+    
     previous_adj_mat = orientation
     velocity = np.zeros((3,1))
 
