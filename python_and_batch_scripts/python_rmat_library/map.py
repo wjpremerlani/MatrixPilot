@@ -277,6 +277,7 @@ def run_test():
     force_vector = np.zeros((3,1))
     acceleration = np.zeros((3,1))
     velocity = np.zeros((3,1))
+    velocity_dot = np.zeros((3,1))
     angle = np.zeros((3,1))
     f3_ef =  np.zeros((3,1))
     
@@ -401,7 +402,8 @@ def run_test():
         rotation_angle_bf = matrix_to_phi(update_mat)
         rotation_angle_ef = np.matmul(rmat,rotation_angle_bf)
         acceleration = np.matmul(rmat,np.matmul(integral_mat,force_vector))
-        velocity_dot = np.copy(acceleration)
+        velocity_dot = acceleration
+        #velocity_dot = np.copy(acceleration)
         velocity_dot[2,0] = velocity_dot[2,0]+32.174 + acc_off_z
         velocity = velocity + np.multiply ( velocity_dot , 0.01 )
         velocity_bf = np.matmul(np.transpose(rmat),velocity)
@@ -842,7 +844,8 @@ def run_test():
         rotation_angle_bf = matrix_to_phi(update_mat)
         rotation_angle_ef = np.matmul(rmat,rotation_angle_bf)
         acceleration = np.matmul(rmat,np.matmul(integral_mat,force_vector))
-        velocity_dot = np.copy(acceleration)
+        velocity_dot = acceleration
+        #velocity_dot = np.copy(acceleration)
         velocity_dot[2,0] = velocity_dot[2,0]+32.174 + acc_off_z
         velocity = velocity + np.multiply ( velocity_dot , 0.01 )
         velocity_bf = np.matmul(np.transpose(rmat),velocity)
