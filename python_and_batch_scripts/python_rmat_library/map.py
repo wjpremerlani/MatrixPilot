@@ -235,6 +235,11 @@ def run_test():
     global output_file , suffix , column_suffix
     global labels_have_been_written
     global args
+    
+    global yaw_offset , pitch_offset , roll_offset
+    global yaw_bias , pitch_bias , roll_bias
+    global yaw_drift , pitch_drift , roll_drift
+    
     global yaw_offset_a , pitch_offset_a , roll_offset_a
     global yaw_bias_a , pitch_bias_a , roll_bias_a
     global yaw_drift_a , pitch_drift_a , roll_drift_a
@@ -402,8 +407,8 @@ def run_test():
         rotation_angle_bf = matrix_to_phi(update_mat)
         rotation_angle_ef = np.matmul(rmat,rotation_angle_bf)
         acceleration = np.matmul(rmat,np.matmul(integral_mat,force_vector))
-        velocity_dot = acceleration
-        #velocity_dot = np.copy(acceleration)
+        #velocity_dot = acceleration
+        velocity_dot = np.copy(acceleration)
         velocity_dot[2,0] = velocity_dot[2,0]+32.174 + acc_off_z
         velocity = velocity + np.multiply ( velocity_dot , 0.01 )
         velocity_bf = np.matmul(np.transpose(rmat),velocity)
@@ -562,53 +567,87 @@ def run_test():
             Yv[0:2,0]= velocity[0:2,0]
             
             AvO = np.zeros((2,2))
+            AvOFS = np.zeros((2,2))
             AvB = np.zeros((2,3))
             AvD = np.zeros((2,3))
 
             GT = 32.174*time
                            
-            #AvO[0,1]=FS[2,0]
-            #AvO[1,0]= -FS[2,0]
+            AvOFS[0,1]=FS[2,0]
+            AvOFS[1,0]= -FS[2,0]
             
             AvO[0,1]= -GT
             AvO[1,0]= GT
 
             log_file.write(f" AvO =  {AvO}\n")
+
+            log_file.write(f" FS[2,0] = {FS[2,0]}\n")
             
             AvB = RXFS[0:2,0:3]
             AvD = RXFSt[0:2,0:3]
             
             AvOT = np.transpose(AvO)
+            AvOFST = np.transpose(AvOFS)
             AvBT = np.transpose(AvB)
             AvDT = np.transpose(AvD)
             
             ATAvO = np.matmul(AvOT,AvO)
+            ATAvOFS = np.matmul(AvOFST,AvOFS)
             ATAvB = np.matmul(AvBT,AvB)
             ATAvD = np.matmul(AvDT,AvD)
             
             ATYvO = np.matmul(AvOT,Yv)
+            ATYvOFS = np.matmul(AvOFST,Yv)
             ATYvB = np.matmul(AvBT,Yv)
             ATYvD = np.matmul(AvDT,Yv)
             
+            try :
+                ATAOv_INV = np.linalg.inv(ATAvO)
+                log_file.write(f" ATAOv_INV = {ATAOv_INV}\n")
+            except :
+                print("\n ATAOv_INV not found\n")
+                log_file.write(f" ATAOv_INV not found\n")
 
-            ATAOv_INV = np.linalg.inv(ATAvO)
-            ATABv_INV = np.linalg.inv(ATAvB)
-            ATADv_INV = np.linalg.inv(ATAvD)
-            
-            
-            XOv = np.matmul(ATAOv_INV, ATYvO)
+            try :
+                ATAOvFS_INV = np.linalg.inv(ATAvOFS)
+                log_file.write(f" ATAOvFS_INV = {ATAOvFS_INV}\n")
+            except :
+                print("\n ATAOvFS_INV not found\n")
+                log_file.write(f" ATAOvFS_INV not found\n")
 
+            try :
+                ATABv_INV = np.linalg.inv(ATAvB)
+            except :
+                print("\nATABv_INV not found\n")
+                log_file.write(f"ATABv_INV not found\n")
+
+            try :
+                ATADv_INV = np.linalg.inv(ATAvD)
+            except :
+                print("\nATADv_INV not found\n")
+                log_file.write(f"ATADv_INV not found\n")
+
+            try :
+            
+                XOv = np.matmul(ATAOv_INV, ATYvO)
+                XOvFS = np.matmul(ATAOvFS_INV, ATYvOFS)
+                
+                log_file.write(f" ATYvO = {ATYvO}\n")
+                log_file.write(f" XOv =  {XOv}\n")
+                log_file.write(f" ATYvOFS = {ATYvOFS}\n")
+                log_file.write(f" XOvFS =  {XOvFS}\n")
+            except :
+                print("\nATAOv_INV or ATAOvFS_INV not found\n")
+                log_file.write(f"ATAOv_INV or ATAOvFS_INV not found\n")
            
+
 
             log_file.write(f" GT = {GT}\n")
 
             log_file.write(f" Yv = {Yv}\n")
 
-            log_file.write(f" ATAOv_INV = {ATAOv_INV}\n")
-
-            log_file.write(f" ATYvO = {ATYvO}\n")
-
-            log_file.write(f" XOv =  {XOv}\n")
+            
+            
 
             xox = Yv[1,0]/GT
             xoy = -Yv[0,0]/GT
@@ -617,18 +656,22 @@ def run_test():
 
             roll_offset_a = -XOv[0,0]
             pitch_offset_a = -XOv[1,0]
-            
-            XBv = np.matmul(ATABv_INV, ATYvB)
-            XDv = np.matmul(ATADv_INV, ATYvD)
 
-            ATAO_INV = np.linalg.inv(ATAO)
-            ATAB_INV = np.linalg.inv(ATAB)
-            ATAD_INV = np.linalg.inv(ATAD)
-            
-            
-            XO = np.matmul(ATAO_INV, ATYO)
-            XB = np.matmul(ATAB_INV, ATYB)
-            XD = np.matmul(ATAD_INV, ATYD)
+            try :
+
+                XBv = np.matmul(ATABv_INV, ATYvB)
+                XDv = np.matmul(ATADv_INV, ATYvD)
+
+                ATAO_INV = np.linalg.inv(ATAO)
+                ATAB_INV = np.linalg.inv(ATAB)
+                ATAD_INV = np.linalg.inv(ATAD)
+                
+                
+                XO = np.matmul(ATAO_INV, ATYO)
+                XB = np.matmul(ATAB_INV, ATYB)
+                XD = np.matmul(ATAD_INV, ATYD)
+            except :
+                print("ATABv, ATADv, ATAO, ATAB or ATAD were not invertible\n")
 
             if False :
 
@@ -794,12 +837,21 @@ def run_test():
     orientation_angles[1] = orientation_angles[1] + degrees(pitch_offset_a + pitch_offset)
     orientation_angles[2] = orientation_angles[2] + degrees(roll_offset_a + roll_offset)
     orientation = create_ypr_matrix(orientation_angles[0],orientation_angles[1],orientation_angles[2])
+
+    log_file.write(f"\n\nSecond pass\n\n")
+
+    log_file.write(f"pitch_offset_a = {pitch_offset_a}\n")
+    log_file.write(f"pitch_offset = {pitch_offset}\n")
+    log_file.write(f"roll_offset_a = {roll_offset_a}\n")
+    log_file.write(f"roll_offset = {roll_offset}\n")
     
     
     drift_angle = np.zeros((3,1))
     drift_angle[0] = roll_bias_a + roll_bias
     drift_angle[1] = pitch_bias_a + pitch_bias
     drift_angle[2] = yaw_bias_a + yaw_bias
+
+    log_file.write(f"drift bias angle, degrees per minute = {drift_angle}\n")
 
     
     drift_angle = np.multiply(drift_angle , 1.0/6000.0)
@@ -844,8 +896,8 @@ def run_test():
         rotation_angle_bf = matrix_to_phi(update_mat)
         rotation_angle_ef = np.matmul(rmat,rotation_angle_bf)
         acceleration = np.matmul(rmat,np.matmul(integral_mat,force_vector))
-        velocity_dot = acceleration
-        #velocity_dot = np.copy(acceleration)
+        #velocity_dot = acceleration
+        velocity_dot = np.copy(acceleration)
         velocity_dot[2,0] = velocity_dot[2,0]+32.174 + acc_off_z
         velocity = velocity + np.multiply ( velocity_dot , 0.01 )
         velocity_bf = np.matmul(np.transpose(rmat),velocity)
