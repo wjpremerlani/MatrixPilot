@@ -250,6 +250,7 @@ def run_test():
     
                 
     orientation = input_matrices[0]
+    previous_raw_mat = np.copy(orientation)
     orientation_angles = extract_euler(orientation)
     orientation_angles[1] = orientation_angles[1] + degrees(pitch_offset_a + pitch_offset)
     orientation_angles[2] = orientation_angles[2] + degrees(roll_offset_a + roll_offset)
@@ -267,7 +268,6 @@ def run_test():
     print("adjusted orientation = " , orientation )
     print("drift_angle = " , drift_angle )
 
-    previous_raw_mat = orientation
     previous_adj_mat = orientation
     velocity = np.zeros((3,1))
 
@@ -372,10 +372,6 @@ def run_test():
     sum_ysqr = 0
 
     sum_h_error = 0.
-
-    previous_matrix = orientation
-    previous_raw_mat = orientation
-    previous_adj_mat = orientation
 
     previous_vmag = 0
 
