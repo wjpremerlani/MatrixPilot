@@ -53,9 +53,15 @@ acc_cal_y = 1.0
 acc_cal_z = 1.0
 
 global acc_off_x , acc_off_y , acc_off_z
+global acc_off_x_a , acc_off_y_a , acc_off_z_a
+
 acc_off_x = 0.0
 acc_off_y = 0.0
 acc_off_z = 0.0
+
+acc_off_x_a = 0.0
+acc_off_y_a = 0.0
+acc_off_z_a = 0.0
 
 global gyro_cal_x , gyro_cal_y , gyro_cal_z
 gyro_cal_x = 1.0
@@ -245,6 +251,9 @@ def run_test():
     global yaw_drift_a , pitch_drift_a , roll_drift_a
     global use_drift , log_file
     global acc_off_x , acc_off_y , acc_off_z
+    global acc_off_x , acc_off_y , acc_off_z
+    global acc_off_x_a , acc_off_y_a , acc_off_z_a
+
 
     log_file = open(file_name+".log.txt","w")
     
@@ -405,11 +414,11 @@ def run_test():
         acceleration = np.matmul(rmat,np.matmul(integral_mat,force_vector))
         #velocity_dot = acceleration
         velocity_dot = np.copy(acceleration)
-        velocity_dot[2,0] = velocity_dot[2,0]+32.174 + acc_off_z
+        velocity_dot[2,0] = velocity_dot[2,0]+32.174 + acc_off_z +  acc_off_z_a
         velocity = velocity + np.multiply ( velocity_dot , 0.01 )
         velocity_bf = np.matmul(np.transpose(rmat),velocity)
         vel_mag_bf = sqrt(np.vdot(velocity_bf,velocity_bf))
-        power = np.vdot(velocity,velocity_dot) - velocity[2,0]*( 32.174 + acc_off_z ) 
+        power = np.vdot(velocity,velocity_dot) - velocity[2,0]*( 32.174 + acc_off_z + acc_off_z_a ) 
         energy = energy + power*0.01
         vel_mag = sqrt(np.vdot(velocity,velocity))     
         dvdt = 100.0 * ( vel_mag - previous_vmag )
@@ -596,6 +605,7 @@ def run_test():
             ATYvOFS = np.matmul(AvOFST,Yv)
             ATYvB = np.matmul(AvBT,Yv)
             ATYvD = np.matmul(AvDT,Yv)
+
             
             try :
                 ATAOv_INV = np.linalg.inv(ATAvO)
@@ -650,8 +660,22 @@ def run_test():
 
             log_file.write(f" XOv simple = {xox} , {xoy} \n")
 
+            #acc_off_z_a = -velocity[2,0]/time 
+
+            log_file.write(f"acc_off_z_a = {acc_off_z_a} \n")
+
             roll_offset_a = -XOv[0,0]
             pitch_offset_a = -XOv[1,0]
+
+            log_file.write(f"\n\nmap.py -f {file_name+'.txt'} ")
+            log_file.write(f"-ro {round(roll_offset+roll_offset_a,8)} ")
+            log_file.write(f"-po {round(pitch_offset+pitch_offset_a,8)} ")
+            #log_file.write(f"-rb {round(roll_bias+roll_bias_a,8)} ")
+            #log_file.write(f"-pb {round(pitch_bias+pitch_bias_a,8)} ")
+            #log_file.write(f"-yb {round(yaw_bias+yaw_bias_a,8)} ")
+            #log_file.write(f"-ao_z {round(acc_off_z+acc_off_z_a,8)} \n\n")
+            log_file.write(f"\n\n\n")
+
 
             try :
 
@@ -712,6 +736,7 @@ def run_test():
             log_file.write(f"pitch_bias_a = {pitch_bias_a}\n")
             log_file.write(f"yaw_bias_a = {yaw_bias_a}\n")
 
+            
             Yv = np.zeros((2,1))
             Yv[0:2,0]= velocity[0:2,0]
             sum_ysqrv = np.matmul(np.transpose(Yv),Yv)
@@ -754,6 +779,8 @@ def run_test():
             log_file.write(f"-rb {round(roll_bias+roll_bias_a,8)} ")
             log_file.write(f"-pb {round(pitch_bias+pitch_bias_a,8)} ")
             log_file.write(f"-yb {round(yaw_bias+yaw_bias_a,8)} ")
+            log_file.write(f"-ao_z {round(acc_off_z+acc_off_z_a,8)} ")
+            
 
             cons_error = np.matmul(Av,X) - Yv
 
@@ -840,6 +867,8 @@ def run_test():
     log_file.write(f"pitch_offset = {pitch_offset}\n")
     log_file.write(f"roll_offset_a = {roll_offset_a}\n")
     log_file.write(f"roll_offset = {roll_offset}\n")
+    log_file.write(f"acc_off_z = {acc_off_z}\n")
+    log_file.write(f"acc_off_z_a = {acc_off_z_a}\n")
     
     
     drift_angle = np.zeros((3,1))
@@ -894,11 +923,11 @@ def run_test():
         acceleration = np.matmul(rmat,np.matmul(integral_mat,force_vector))
         #velocity_dot = acceleration
         velocity_dot = np.copy(acceleration)
-        velocity_dot[2,0] = velocity_dot[2,0]+32.174 + acc_off_z
+        velocity_dot[2,0] = velocity_dot[2,0]+32.174 + acc_off_z + acc_off_z_a
         velocity = velocity + np.multiply ( velocity_dot , 0.01 )
         velocity_bf = np.matmul(np.transpose(rmat),velocity)
         vel_mag_bf = sqrt(np.vdot(velocity_bf,velocity_bf))
-        power = np.vdot(velocity,velocity_dot) - velocity[2,0]*( 32.174 + acc_off_z ) 
+        power = np.vdot(velocity,velocity_dot) - velocity[2,0]*( 32.174 + acc_off_z + acc_off_z_a) 
         energy = energy + power*0.01
         vel_mag = sqrt(np.vdot(velocity,velocity))     
         #vel_mag = sqrt(velocity[0,0]*velocity[0,0]+velocity[1,0]*velocity[1,0])
