@@ -256,6 +256,15 @@ def run_test():
 
 
     log_file = open(file_name+".log.txt","w")
+
+    log_file.write(f"\n\nFirst pass\n\n")
+
+    log_file.write(f"pitch_offset_a = {pitch_offset_a}\n")
+    log_file.write(f"pitch_offset = {pitch_offset}\n")
+    log_file.write(f"roll_offset_a = {roll_offset_a}\n")
+    log_file.write(f"roll_offset = {roll_offset}\n")
+    log_file.write(f"acc_off_z = {acc_off_z}\n")
+    log_file.write(f"acc_off_z_a = {acc_off_z_a}\n\n\n")
     
                 
     orientation = input_matrices[0]
@@ -660,16 +669,20 @@ def run_test():
 
             log_file.write(f" XOv simple = {xox} , {xoy} \n")
 
-            #acc_off_z_a = -velocity[2,0]/time 
+            acc_off_z_a = -velocity[2,0]/time
 
-            log_file.write(f"acc_off_z_a = {acc_off_z_a} \n")
+            log_file.write(f"\n\nvz = {velocity[2,0]} , time = {time}\n")
+
+            log_file.write(f"acc_off_z_a = {acc_off_z_a} \n\n\n")
 
             roll_offset_a = -XOv[0,0]
             pitch_offset_a = -XOv[1,0]
 
-            log_file.write(f"\n\nmap.py -f {file_name+'.txt'} ")
+            log_file.write(f"\n\nmap.py -f {file_name} ")
+            log_file.write(f"-s {float(args.s)} ")
             log_file.write(f"-ro {round(roll_offset+roll_offset_a,8)} ")
             log_file.write(f"-po {round(pitch_offset+pitch_offset_a,8)} ")
+            log_file.write(f"-ao_z {round(acc_off_z+acc_off_z_a,8)} \n\n")
             #log_file.write(f"-rb {round(roll_bias+roll_bias_a,8)} ")
             #log_file.write(f"-pb {round(pitch_bias+pitch_bias_a,8)} ")
             #log_file.write(f"-yb {round(yaw_bias+yaw_bias_a,8)} ")
@@ -716,7 +729,6 @@ def run_test():
                 log_file.write (f"final velocity XBv =  , {XBv}\n" )
                 log_file.write (f"final velocity XDv =  , {XDv}\n" )
          
-        acc_off_z = 0.0
         print("acc_off_z = " , acc_off_z )
         if False :
             #constrained regression
@@ -773,7 +785,8 @@ def run_test():
             pitch_bias_a = -X[3,0]
             yaw_bias_a = -X[4,0]
          
-            log_file.write(f"map.py -f {file_name+'.txt'} ")
+            log_file.write(f"map.py -f {file_name} ")
+            log_file.write(f"-s {float(args.s)} ")
             log_file.write(f"-ro {round(roll_offset+roll_offset_a,8)} ")
             log_file.write(f"-po {round(pitch_offset+pitch_offset_a,8)} ")
             log_file.write(f"-rb {round(roll_bias+roll_bias_a,8)} ")
