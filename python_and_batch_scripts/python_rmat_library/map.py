@@ -575,7 +575,7 @@ def run_test():
      
     if True :
 
-        if True :
+        if False :
             #test each type of error separately
             Yv = np.zeros((2,1))
             Yv[0:2,0]= velocity[0:2,0]
@@ -801,7 +801,7 @@ def run_test():
     
 
 
-        if False :
+        if True :
             #combined regression
             Yv = np.zeros((3,1))
             Yv[0:3,0]= velocity[0:3,0]
@@ -825,7 +825,7 @@ def run_test():
             ATAv = np.matmul(ATv,Av)
             ATYv = np.matmul(ATv,Yv)
                        
-        if False :
+        if True :
             ATA_INVERSE = np.linalg.inv(ATA + ATAv)
             X = np.matmul(ATA_INVERSE,ATY+ATYv)
             if use_drift :
