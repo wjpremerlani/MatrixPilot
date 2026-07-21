@@ -38,9 +38,12 @@
 // 6.8 : bug fix regarding reporting of the number of pending uploads
 // "6.8.1" , 5/23/2025, also pings the data manager when first turned on
 
-#define DATE "Wolf_pac_2 , firmware 7.0, 3/27/2026\r\n"
+//#define DATE "Wolf_pac_2 , firmware 7.0, 3/27/2026\r\n"
 // 7.0 : implementation of time stamping in the ESP32 to improve time accuracy
 // including the use of SERIAL_PRIORITY option
+
+#define DATE "Wolf_pac_2 , firmware 7.1, 7/21/2026\r\n"
+// 7.1 : ESP32 bug fix for an issue with special characters in the password at Park City
 
 #define CONING_CORRECTION
 #define CONING_CORRECTION_IN_RMAT
@@ -144,11 +147,11 @@
 //#define LUGE7_SN088
 //#define LUGE7_SN089
 
-//#define LUGE7_SN101
+#define LUGE7_SN101
 //#define LUGE7_SN102
 //#define LUGE7_SN103
 //#define LUGE7_SN104
-#define LUGE7_SN105
+//#define LUGE7_SN105
 //#define LUGE7_SN106
 //#define LUGE7_SN107
 //#define LUGE7_SN108 
