@@ -52,7 +52,8 @@ const int max_tilt = 0 ;  // maximum tilt in byte cicular
 int commanded_tilt_gain ;
 
 //#define BLINK_PERIOD 100
-#define FAST_BLINK_PERIOD 160
+//#define FAST_BLINK_PERIOD 160
+#define FAST_BLINK_PERIOD 100
 #define SLOW_BLINK_PERIOD 400
 #define BLINK_ON_TIME 20 
 boolean led_red_run = 0 ;

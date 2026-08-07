@@ -42,8 +42,11 @@
 // 7.0 : implementation of time stamping in the ESP32 to improve time accuracy
 // including the use of SERIAL_PRIORITY option
 
-#define DATE "Wolf_pac_2 , firmware 7.1, 7/21/2026\r\n"
+//#define DATE "Wolf_pac_2 , firmware 7.1, 7/21/2026\r\n"
 // 7.1 : ESP32 bug fix for an issue with special characters in the password at Park City
+
+#define DATE "Wolf_pac_2 , firmware 7.2, 8/07/2026\r\n"
+// 7.2 : fast blink ; 2 hz blinking with nothing pending, 1/2 Hz with pending
 
 #define CONING_CORRECTION
 #define CONING_CORRECTION_IN_RMAT
