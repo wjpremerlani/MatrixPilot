@@ -1208,6 +1208,9 @@ def read_data(file):
         pass
     first_line = 1
     line_number = 0
+    previous_stamp = 0
+    minimum_delta = 50
+    nominal_delta = 100
 
     # lines = dataStr.splitlines(keepends=False)
     if dataStr:
@@ -1226,6 +1229,11 @@ def read_data(file):
                         roll_in = float(columns[ROLL_COL])
                         if ( has_time_stamps ) :
                             time_stamp_in = int(columns[TIME_COL])
+                            if time_stamp_in - previous_stamp > minimum_delta :
+                                previous_stamp = time_stamp_in
+                            else :
+                                time_stamp_in = previous_stamp + nominal_delta
+                                previous_stamp = time_stamp_in
                         else :
                             time_stamp_in = time_stamp
                             time_stamp = time_stamp + time_increment
