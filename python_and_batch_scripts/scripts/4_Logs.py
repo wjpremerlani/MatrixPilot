@@ -1,7 +1,8 @@
 import django_integration as di
-from LugeServer.settings import SERVER_SPORT_NAME
+from LugeServer.settings import SERVER_SPORT_NAME, RUN_DATA_ROOT
 import streamlit as st
 import luge.models as models
+import os
 
 st.set_page_config(page_title=f"WolfPac {SERVER_SPORT_NAME} Data Manager", layout="wide")
 st.markdown("""
@@ -48,16 +49,16 @@ with st.sidebar:
     col1, col2, = st.columns(2, gap=None)
     col3, col4 = st.columns(2, gap=None)
     with col1:
-        if st.button("⬅Colls", use_container_width=True):
+        if st.button("⬅Colls", width='stretch'):
             di.go_to_collections()
     with col2:
-        if st.button("⬅Runs", use_container_width=True):
+        if st.button("⬅Runs", width='stretch'):
             di.go_to_runs()
     with col3:
-        if st.button("⟳Refresh", use_container_width=True):
+        if st.button("⟳Refresh", width='stretch'):
             di.refresh()
     with col4:
-        if st.button("⟳Reproc.", use_container_width=True):
+        if st.button("⟳Reproc.", width='stretch'):
             di.reprocess()
 
 # Show Logs
@@ -65,14 +66,18 @@ if run_coll:
     coll = run_coll.get_collection()
     if coll:
         coll_id = coll.pk
-        log_path = f"../../run_data/collections/{coll_id}/filelist_merge_list_log.txt"
-        log_file = open(log_path)
-        if log_file:
-            st.write("<b>filelist_merge_list_log.txt</b>", unsafe_allow_html=True)
-            st.code(log_file.read())
+        log_path = os.path.join(RUN_DATA_ROOT, f"collections/{coll_id}/filelist_merge_list_log.txt")
+        try:
+            with open(log_path) as log_file:
+                st.write("<b>filelist_merge_list_log.txt</b>", unsafe_allow_html=True)
+                st.code(log_file.read())
+        except FileNotFoundError:
+            pass
 
-        plots_log_path = f"../../run_data/collections/{coll_id}/filelist_merge_list_plots_log.txt"
-        plots_log_file = open(plots_log_path)
-        if plots_log_file:
-            st.write("<b>filelist_merge_list_plots_log.txt</b>", unsafe_allow_html=True)
-            st.code(plots_log_file.read())
+        plots_log_path = os.path.join(RUN_DATA_ROOT, f"collections/{coll_id}/filelist_merge_list_plots_log.txt")
+        try:
+            with open(plots_log_path) as plots_log_file:
+                st.write("<b>filelist_merge_list_plots_log.txt</b>", unsafe_allow_html=True)
+                st.code(plots_log_file.read())
+        except FileNotFoundError:
+            pass

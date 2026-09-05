@@ -1,6 +1,6 @@
 try:
     import django_integration as di
-    from LugeServer.settings import SERVER_SPORT_NAME
+    from LugeServer.settings import SERVER_SPORT_NAME, BASE_DIR, RUN_DATA_ROOT
     import os
     import luge.models as models
 except ImportError:
@@ -307,7 +307,7 @@ global num_tes_list
 num_tes_list = []
 
 
-def generate_coloring(signal_name, signal_column_name, type_of_coloring):
+def generate_coloring(signal_name, signal_column_name, type_of_coloring, max_value, active_run=None):
     global ABSOLUTE_MAP, SIGNED_MAP, Z_FORCE_MAP, plotlets_df
     global FIRST_MAP, num_tes_list
     gap = 8
@@ -357,30 +357,31 @@ def generate_coloring(signal_name, signal_column_name, type_of_coloring):
 
     run_index = 0
     for run_name in run_names:
+        if active_run is not None and run_name != active_run:
+            run_index += 1
+            continue
         col = str(signal_column_name + '__' + run_name)
         color_list = []
-        prev_curve_number = plotlets_df["curve_number "][0]
-        gap_count = 0
-        for row_index in plotlets_df[col].index:
-            this_curve_number = plotlets_df["curve_number "][row_index]
-            if this_curve_number != prev_curve_number:
-                gap_count = gap
-                prev_curve_number = this_curve_number
-            if gap_count > 0:
-                gap_count = gap_count - 1
-                # color_list.append('#00A0C6')
-                color_list.append('#FFFFFF')
+        s_curve = plotlets_df["curve_number "]
+        curve_changed = s_curve != s_curve.shift(1).fillna(s_curve.iloc[0])
+        in_gap = curve_changed.copy()
+        for i in range(1, gap):
+            in_gap = in_gap | curve_changed.shift(i).fillna(False)
+            
+        s_val = plotlets_df[col]
+        
+        if type_of_coloring == Z_FORCE_MAP:
+            s_colors = s_val.apply(lambda x: str(zf_color(-x, -value_min, -value_max)))
+        elif type_of_coloring == ABSOLUTE_MAP:
+            s_colors = s_val.apply(lambda x: str(abs_color(x, value_range)))
+        else:
+            if type_of_coloring > 0:
+                s_colors = s_val.apply(lambda x: str(signed_color(x, value_range)))
             else:
-                row = plotlets_df[col][row_index]
-                if type_of_coloring == Z_FORCE_MAP:
-                    color_list.append(str(zf_color(-row, -value_min, -value_max)))
-                elif type_of_coloring == ABSOLUTE_MAP:
-                    color_list.append(str(abs_color(row, value_range)))
-                else:
-                    if type_of_coloring > 0:
-                        color_list.append(str(signed_color(row, value_range)))
-                    else:
-                        color_list.append(str(signed_color(-row, value_range)))
+                s_colors = s_val.apply(lambda x: str(signed_color(-x, value_range)))
+                
+        s_colors[in_gap] = '#FFFFFF'
+        color_list = s_colors.tolist()
 
         list_size = len(color_list)
 
@@ -448,38 +449,7 @@ def generate_coloring(signal_name, signal_column_name, type_of_coloring):
     return legend_df
 
 
-def generate_distance_coloring():
-    global distance_columns, plotlets_df, run_names, map_coloring_df
-    first_color_map = True
-    d_max_list = []
-    d_min_list = []
-    series_list = []
-    run_index = 0
-    for d_col in distance_columns:
-        d_max = max(plotlets_df[d_col])
-        d_max_list.append(d_max)
-        d_min = min(plotlets_df[d_col])
-        d_min_list.append(d_min)
-        color_list = []
-        for row in plotlets_df[d_col]:
-            color_list.append(str(distance_color(row, d_min, d_max)))
-        list_size = len(color_list)
-        list_index = list(range(list_size))
-        d_c_series = pd.Series(color_list, name=str("distance_color__" + run_names[run_index]))
-        new_color_df = pd.DataFrame(d_c_series)
-        new_color_df.index = list_index
-        # debug_file.write(f" new df = {new_color_df}\r\n")
-        if first_color_map == True:
-            map_coloring_df = new_color_df
-            first_color_map = False
-        else:
-            map_coloring_df = map_coloring_df.join(new_color_df)
-        run_index = run_index + 1
-    plotlets_df = plotlets_df.join(map_coloring_df)
-    # debug_file.write(f"d_max_list = {d_max_list}\r\n")
-    # debug_file.write(f"d_min_list = {d_min_list}\r\n")
-    # debug_file.write(f"distance coloring data frame = {map_coloring_df}\r\n")
-    ##debug_file.write(f"plotlets_df = {plotlets_df}\r\n")
+
 
 
 pd.options.plotting.backend = "plotly"
@@ -492,7 +462,7 @@ if di:
         coll = run_coll.get_collection()
         if coll:
             coll_id = coll.pk
-            plotlet_file = f"../../run_data/collections/{coll_id}/filelist_merge_list_plots_plotlets.csv"
+            plotlet_file = os.path.join(RUN_DATA_ROOT, f"collections/{coll_id}/filelist_merge_list_plots_plotlets.csv")
             if not os.path.exists(plotlet_file) or os.path.getsize(plotlet_file) == 0:
                 st.write("--- Plot data file not found ---")
                 st.stop()
@@ -502,9 +472,8 @@ if di:
             st.session_state["did_redirect"] = True
             st.switch_page("pages/4_Logs.py")
 else:
-    plotlet_file = st.sidebar.file_uploader("select a file")
+    plotlet_file = st.sidebar.file_uploader("select a file", key="plotlet_file")
 
-friction_tab, friction_scatter_tab = st.tabs(["   friction+aero  ", "  friction+aero_scatter "])
 
 # plotlet_file = sys.argv[1]
 
@@ -530,7 +499,11 @@ friction_scatter_chart = None
 
 global colors_df
 
-colors_df = pd.read_csv("palettes.txt")
+if di:
+    colors_df = pd.read_csv(os.path.join(BASE_DIR, "luge/streamlit/palettes.txt"))
+else:
+    colors_df = pd.read_csv("palettes.txt")
+
 color_index = list(range(512))
 colors_df.index = color_index
 
@@ -562,8 +535,27 @@ if di:
                              key='run_coll_id',
                              on_change=coll_changed)
 
+@st.cache_data
+def load_and_preprocess_data(file, g_fpsps, f_kph, f_meter):
+    df = pd.read_csv(file)
+    aero = [c for c in df.columns if c.startswith(" aero__")]
+    xforce = [c for c in df.columns if c.startswith(" friction+aero__")]
+    accel = [c for c in df.columns if c.startswith(" x-acceleration__")]
+    fric = [c for c in df.columns if c.startswith(" friction__")]
+    vel = [c for c in df.columns if c.startswith(" velocity__")]
+    dist = [c for c in df.columns if c.startswith(" distance__")]
+    
+    for c in aero + xforce + accel + fric:
+        df[c] = df[c] / g_fpsps
+    for c in vel:
+        df[c] = df[c] * f_kph
+    for c in dist:
+        df[c] = df[c] * f_meter
+        
+    return df
+
 if plotlet_file is not None:
-    plotlets_df = pd.read_csv(plotlet_file)
+    plotlets_df = load_and_preprocess_data(plotlet_file, g_to_fpsps, ftps_to_kph, ft_to_meter)
     # debug_file.write(f"first row = \n {plotlets_df.columns}\n")
     factor_labels(plotlets_df.columns)
     # debug_file.write(f"signals = \n {signal_names}\n")
@@ -571,18 +563,12 @@ if plotlet_file is not None:
     build_frames()
     log_column_names()
 
-    plotlets_df[aero_columns] = plotlets_df[aero_columns].div(g_to_fpsps)
-    plotlets_df[x_force_columns] = plotlets_df[x_force_columns].div(g_to_fpsps)
-    plotlets_df[acceleration_columns] = plotlets_df[acceleration_columns].div(g_to_fpsps)
-    plotlets_df[friction_columns] = plotlets_df[friction_columns].div(g_to_fpsps)
-    plotlets_df[velocity_columns] = plotlets_df[velocity_columns].mul(ftps_to_kph)
-    plotlets_df[distance_columns] = plotlets_df[distance_columns].mul(ft_to_meter)
+
 
     # debug_file.write(f"generating color, pass number {ngen} \r\n")
     # debug_file.flush()
     ngen = ngen + 1
 
-    distance_df = generate_coloring("distance", " distance", ABSOLUTE_MAP)
     # yaw_rate_df = generate_coloring("yaw_rate", " yaw_rate" , ABSOLUTE_MAP )
     # roll_rate_df = generate_coloring("roll_rate", " roll_rate" , ABSOLUTE_MAP )
     # pivot_df = generate_coloring("pivot", " degs_pivot" , SIGNED_MAP )
@@ -623,16 +609,16 @@ if plotlet_file is not None:
             col1, col2, = st.columns(2, gap=None)
             col3, col4 = st.columns(2, gap=None)
             with col1:
-                if st.button("⬅Colls", use_container_width=True):
+                if st.button("⬅Colls", width='stretch'):
                     di.go_to_collections()
             with col2:
-                if st.button("⬅Runs", use_container_width=True):
+                if st.button("⬅Runs", width='stretch'):
                     di.go_to_runs()
             with col3:
-                if st.button("⟳Refresh", use_container_width=True):
+                if st.button("⟳Refresh", width='stretch'):
                     di.refresh()
             with col4:
-                if st.button("⟳Reproc.", use_container_width=True):
+                if st.button("⟳Reproc.", width='stretch'):
                     di.reprocess()
 
     s_yaw_columns = []
@@ -692,7 +678,11 @@ if plotlet_file is not None:
     # if curve_number is not None :
     # curvelet_df = plotlets_df[plotlets_df["curve_number "] == curve_number ]
 
-    with friction_scatter_tab:
+
+    view_mode = st.pills("Select View", ["Friction + Aero", "Friction + Aero Scatter"], default="Friction + Aero")
+
+    if view_mode == "Friction + Aero Scatter":
+        distance_df = generate_coloring("distance", " distance", ABSOLUTE_MAP, 0, run_number)
         fs_map_left, fs_map_right = st.columns(fs_column_ratios)
 
         with fs_map_right:
@@ -711,7 +701,7 @@ if plotlet_file is not None:
                     height=map_height,
                 )
             )
-            st.altair_chart(fs_legend_chart, use_container_width=True)
+            st.altair_chart(fs_legend_chart, width='stretch')
 
         with fs_map_left:
             if run_number is not None:
@@ -733,21 +723,21 @@ if plotlet_file is not None:
                         height=map_height,
                     )
                 )
-                st.altair_chart(friction_scatter_chart, use_container_width=True)
+                st.altair_chart(friction_scatter_chart, width='stretch')
 
             else:
                 st.stop()
 
-    with friction_tab:
+    elif view_mode == "Friction + Aero":
         if friction_chart == None:
-            aero_friction_chart = st.plotly_chart(plotlets_df[s_x_force_columns].plot(render_mode='svg').update_layout(
+            aero_friction_chart = st.plotly_chart(plotlets_df[s_x_force_columns].plot().update_layout(
                 yaxis_title="filtered pull, paddle, friction and aero, g's"))
             aero_chart = st.plotly_chart(
-                plotlets_df[s_aero_columns].plot(render_mode='svg').update_layout(yaxis_title="estimated aero, g's"))
-            friction_chart = st.plotly_chart(plotlets_df[s_friction_columns].plot(render_mode='svg').update_layout(
+                plotlets_df[s_aero_columns].plot().update_layout(yaxis_title="estimated aero, g's"))
+            friction_chart = st.plotly_chart(plotlets_df[s_friction_columns].plot().update_layout(
                 yaxis_title="estimated friction, g's"))
             acceleration_chart = st.plotly_chart(
-                plotlets_df[s_acceleration_columns].plot(render_mode='svg').update_layout(
+                plotlets_df[s_acceleration_columns].plot().update_layout(
                     yaxis_title="estimated acceleration, g's"))
-            velocity_chart = st.plotly_chart(plotlets_df[s_velocity_columns].plot(render_mode='svg').update_layout(
+            velocity_chart = st.plotly_chart(plotlets_df[s_velocity_columns].plot().update_layout(
                 yaxis_title="estimated velocity, kilometers per hour"))

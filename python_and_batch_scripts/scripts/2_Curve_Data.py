@@ -1,6 +1,6 @@
 try:
     import django_integration as di
-    from LugeServer.settings import SERVER_SPORT_NAME
+    from LugeServer.settings import SERVER_SPORT_NAME, BASE_DIR, RUN_DATA_ROOT
     import os
     import luge.models as models
 except ImportError:
@@ -465,8 +465,7 @@ def generate_distance_coloring():
         d_min = min(plotlets_df[d_col])
         d_min_list.append(d_min)
         color_list = []
-        for row in plotlets_df[d_col]:
-            color_list.append(str(distance_color(row, d_min, d_max)))
+        color_list = plotlets_df[d_col].apply(lambda row: str(distance_color(row, d_min, d_max))).tolist()
         list_size = len(color_list)
         list_index = list(range(list_size))
         d_c_series = pd.Series(color_list, name=str("distance_color__" + run_names[run_index]))
@@ -496,7 +495,7 @@ if di:
         coll = run_coll.get_collection()
         if coll:
             coll_id = coll.pk
-            plotlet_file = f"../../run_data/collections/{coll_id}/filelist_merge_list_plots_plotlets.csv"
+            plotlet_file = os.path.join(RUN_DATA_ROOT, f"collections/{coll_id}/filelist_merge_list_plots_plotlets.csv")
             if not os.path.exists(plotlet_file) or os.path.getsize(plotlet_file) == 0:
                 st.write("--- Plot data file not found ---")
                 st.stop()
@@ -506,9 +505,7 @@ if di:
             st.session_state["did_redirect"] = True
             st.switch_page("pages/4_Logs.py")
 else:
-    plotlet_file = st.sidebar.file_uploader("select a file")
-
-curve_data_tab, all_data_tab = st.tabs(["   curve_data  ", "  all_data  "])
+    plotlet_file = st.sidebar.file_uploader("select a file", key="plotlet_file")
 
 # plotlet_file = sys.argv[1]
 
@@ -534,7 +531,11 @@ friction_scatter_chart = None
 
 global colors_df
 
-colors_df = pd.read_csv("palettes.txt")
+if di:
+    colors_df = pd.read_csv(os.path.join(BASE_DIR, "luge/streamlit/palettes.txt"))
+else:
+    colors_df = pd.read_csv("palettes.txt")
+
 color_index = list(range(512))
 colors_df.index = color_index
 
@@ -566,8 +567,27 @@ if di:
                              key='run_coll_id',
                              on_change=coll_changed)
 
+@st.cache_data
+def load_and_preprocess_data(file, g_fpsps, f_kph, f_meter):
+    df = pd.read_csv(file)
+    aero = [c for c in df.columns if c.startswith(" aero__")]
+    xforce = [c for c in df.columns if c.startswith(" friction+aero__")]
+    accel = [c for c in df.columns if c.startswith(" x-acceleration__")]
+    fric = [c for c in df.columns if c.startswith(" friction__")]
+    vel = [c for c in df.columns if c.startswith(" velocity__")]
+    dist = [c for c in df.columns if c.startswith(" distance__")]
+    
+    for c in aero + xforce + accel + fric:
+        df[c] = df[c] / g_fpsps
+    for c in vel:
+        df[c] = df[c] * f_kph
+    for c in dist:
+        df[c] = df[c] * f_meter
+        
+    return df
+
 if plotlet_file is not None:
-    plotlets_df = pd.read_csv(plotlet_file)
+    plotlets_df = load_and_preprocess_data(plotlet_file, g_to_fpsps, ftps_to_kph, ft_to_meter)
     # debug_file.write(f"first row = \n {plotlets_df.columns}\n")
     factor_labels(plotlets_df.columns)
     # debug_file.write(f"signals = \n {signal_names}\n")
@@ -575,18 +595,14 @@ if plotlet_file is not None:
     build_frames()
     log_column_names()
 
-    plotlets_df[aero_columns] = plotlets_df[aero_columns].div(g_to_fpsps)
-    plotlets_df[x_force_columns] = plotlets_df[x_force_columns].div(g_to_fpsps)
-    plotlets_df[acceleration_columns] = plotlets_df[acceleration_columns].div(g_to_fpsps)
-    plotlets_df[friction_columns] = plotlets_df[friction_columns].div(g_to_fpsps)
-    plotlets_df[velocity_columns] = plotlets_df[velocity_columns].mul(ftps_to_kph)
-    plotlets_df[distance_columns] = plotlets_df[distance_columns].mul(ft_to_meter)
+
 
     # debug_file.write(f"generating color, pass number {ngen} \r\n")
     # debug_file.flush()
     ngen = ngen + 1
 
-    curve_list = plotlets_df["curve_number "].unique()
+    curve_list = list(plotlets_df["curve_number "].unique())
+    curve_list.append("All")
     # debug_file.write(f"curve number list = \n{curve_list}\n")
     # debug_file.write(f"run names list = \n{run_names}\n")
 
@@ -605,7 +621,10 @@ if plotlet_file is not None:
     st.sidebar.multiselect("select a set of runs for plotting", options=run_names, on_change=on_s_run_names_changed,
                            key='s_run_names_val', default=st.session_state['s_run_names'])
 
-    if not st.session_state.get('curve_number'): st.session_state['curve_number'] = curve_list[0]
+    if not st.session_state.get('curve_number') or st.session_state['curve_number'] not in curve_list:
+        st.session_state['curve_number'] = curve_list[0]
+    if 'curve_number_val' in st.session_state and st.session_state['curve_number_val'] not in curve_list:
+        st.session_state['curve_number_val'] = curve_list[0]
     curve_number = st.session_state['curve_number']
     def on_curve_number_changed():
         global curve_number
@@ -622,16 +641,16 @@ if plotlet_file is not None:
             col1, col2, = st.columns(2, gap=None)
             col3, col4 = st.columns(2, gap=None)
             with col1:
-                if st.button("⬅Colls", use_container_width=True):
+                if st.button("⬅Colls", width='stretch'):
                     di.go_to_collections()
             with col2:
-                if st.button("⬅Runs", use_container_width=True):
+                if st.button("⬅Runs", width='stretch'):
                     di.go_to_runs()
             with col3:
-                if st.button("⟳Refresh", use_container_width=True):
+                if st.button("⟳Refresh", width='stretch'):
                     di.refresh()
             with col4:
-                if st.button("⟳Reproc.", use_container_width=True):
+                if st.button("⟳Reproc.", width='stretch'):
                     di.reprocess()
 
     s_yaw_columns = []
@@ -697,51 +716,39 @@ if plotlet_file is not None:
     if curve_number is not None:
         curvelet_df = plotlets_df[plotlets_df["curve_number "] == curve_number]
 
-    with all_data_tab:
-        all_left, all_right = st.columns(2)
+    crv_left, crv_right = st.columns(2)
 
-        with all_left:
-            if yaw_chart == None:
-                # debug_file.write(f"plot all, pass number {nall}\r\n")
-                # debug_file.flush()
-                nall = nall + 1
-                yaw_chart = st.plotly_chart(plotlets_df[s_yaw_columns].plot( render_mode = 'svg').update_layout( yaxis_title = "yaw, deg") )
-                roll_chart = st.plotly_chart(plotlets_df[s_roll_columns].plot(render_mode = 'svg' ).update_layout( yaxis_title = "roll, deg") )
-                pitch_chart = st.plotly_chart(plotlets_df[s_pitch_columns].plot(render_mode = 'svg' ).update_layout( yaxis_title = "pitch, deg") )
-                z_force_chart = st.plotly_chart(plotlets_df[s_z_force_columns].plot(render_mode = 'svg' ).update_layout( yaxis_title = "z force, g's") )
-                delta_time_chart = st.plotly_chart(plotlets_df[s_all_delta_time_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " dt, sec "))
-            else:
-                st.stop()
+    with crv_left:
+        if curve_number == "All":
+            # debug_file.write(f"plot all, pass number {nall}\r\n")
+            # debug_file.flush()
+            nall = nall + 1
+            yaw_chart = st.plotly_chart(plotlets_df[s_yaw_columns].plot( render_mode = 'svg' ).update_layout( yaxis_title = "yaw, deg") )
+            roll_chart = st.plotly_chart(plotlets_df[s_roll_columns].plot( render_mode = 'svg' ).update_layout( yaxis_title = "roll, deg") )
+            pitch_chart = st.plotly_chart(plotlets_df[s_pitch_columns].plot( render_mode = 'svg' ).update_layout( yaxis_title = "pitch, deg") )
+            z_force_chart = st.plotly_chart(plotlets_df[s_z_force_columns].plot( render_mode = 'svg' ).update_layout( yaxis_title = "z force, g's") )
+            delta_time_chart = st.plotly_chart(plotlets_df[s_all_delta_time_columns].plot( render_mode = 'svg' ).update_layout( yaxis_title = " dt, sec "))
+        elif curve_number is not None:
+            curvelet_yaw_chart = st.plotly_chart(curvelet_df[s_yaw_columns].plot( render_mode = 'svg' ).update_layout( yaxis_title = "yaw, deg, crv"+str(curve_number)) )
+            curvelet_roll_chart = st.plotly_chart(curvelet_df[s_roll_columns].plot( render_mode = 'svg' ).update_layout( yaxis_title = "roll, deg, crv"+str(curve_number)) )
+            curvelet_pitch_chart = st.plotly_chart(curvelet_df[s_pitch_columns].plot( render_mode = 'svg' ).update_layout( yaxis_title = "pitch, deg, crv"+str(curve_number)) )
+            curvelet_z_force_chart = st.plotly_chart(curvelet_df[s_z_force_columns].plot( render_mode = 'svg' ).update_layout( yaxis_title = " z force, g's, crv"+str(curve_number)) )
+            curvelet_delta_time_chart = st.plotly_chart(curvelet_df[s_delta_time_columns].plot( render_mode = 'svg' ).update_layout( yaxis_title = " dt, sec, crv"+str(curve_number))  )
+        else:
+            st.stop()
 
-        with all_right:
-            if yaw_rate_chart == None:
-                yaw_rate_chart = st.plotly_chart(plotlets_df[s_yaw_rate_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " yaw rate, d/s ") )
-                roll_rate_chart = st.plotly_chart(plotlets_df[s_roll_rate_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = " roll rate, d/s  ") )
-                acceleration_chart = st.plotly_chart(plotlets_df[s_acceleration_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = " acceleration, g's") )
-                y_force_chart = st.plotly_chart(plotlets_df[s_y_force_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = " y force, g's") )
-                pivot_chart = st.plotly_chart(plotlets_df[s_pivot_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = " pivot, deg ") )
-            else:
-                st.stop()
-
-    with curve_data_tab:
-        crv_left, crv_right = st.columns(2)
-
-        with crv_left:
-            if curve_number is not None:
-                curvelet_yaw_chart = st.plotly_chart(curvelet_df[s_yaw_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = "yaw, deg, crv"+str(curve_number)) )
-                curvelet_roll_chart = st.plotly_chart(curvelet_df[s_roll_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = "roll, deg, crv"+str(curve_number)) )
-                curvelet_pitch_chart = st.plotly_chart(curvelet_df[s_pitch_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = "pitch, deg, crv"+str(curve_number)) )
-                curvelet_z_force_chart = st.plotly_chart(curvelet_df[s_z_force_columns].plot( render_mode = 'svg'  ).update_layout( yaxis_title = " z force, g's, crv"+str(curve_number)) )
-                curvelet_delta_time_chart = st.plotly_chart(curvelet_df[s_delta_time_columns].plot(render_mode = 'svg').update_layout( yaxis_title = " dt, sec, crv"+str(curve_number))  )
-            else:
-                st.stop()
-
-        with crv_right:
-            if curve_number is not None:
-                curvelet_yaw_rate_chart = st.plotly_chart(curvelet_df[s_yaw_rate_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " yaw rate, d/s, crv"+str(curve_number)) )
-                curvelet_roll_rate_chart = st.plotly_chart(curvelet_df[s_roll_rate_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " roll rate, d/s, crv"+str(curve_number)) )
-                curvelet_acceleration_chart = st.plotly_chart(curvelet_df[s_acceleration_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " acceleration, g's, crv"+str(curve_number)) )
-                curvelet_y_force_chart = st.plotly_chart(curvelet_df[ s_y_force_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " y force, g's, curv"+str(curve_number)) )
-                curvelet_pivot_chart = st.plotly_chart(curvelet_df[ s_pivot_columns].plot(render_mode = 'svg'  ).update_layout( yaxis_title = " pivot, deg, crv"+str(curve_number)) )
-            else:
-                st.stop()
+    with crv_right:
+        if curve_number == "All":
+            yaw_rate_chart = st.plotly_chart(plotlets_df[s_yaw_rate_columns].plot( render_mode = 'svg' ).update_layout( yaxis_title = " yaw rate, d/s ") )
+            roll_rate_chart = st.plotly_chart(plotlets_df[s_roll_rate_columns].plot( render_mode = 'svg' ).update_layout( yaxis_title = " roll rate, d/s  ") )
+            acceleration_chart = st.plotly_chart(plotlets_df[s_acceleration_columns].plot( render_mode = 'svg' ).update_layout( yaxis_title = " acceleration, g's") )
+            y_force_chart = st.plotly_chart(plotlets_df[s_y_force_columns].plot( render_mode = 'svg' ).update_layout( yaxis_title = " y force, g's") )
+            pivot_chart = st.plotly_chart(plotlets_df[s_pivot_columns].plot( render_mode = 'svg' ).update_layout( yaxis_title = " pivot, deg ") )
+        elif curve_number is not None:
+            curvelet_yaw_rate_chart = st.plotly_chart(curvelet_df[s_yaw_rate_columns].plot( render_mode = 'svg' ).update_layout( yaxis_title = " yaw rate, d/s, crv"+str(curve_number)) )
+            curvelet_roll_rate_chart = st.plotly_chart(curvelet_df[s_roll_rate_columns].plot( render_mode = 'svg' ).update_layout( yaxis_title = " roll rate, d/s, crv"+str(curve_number)) )
+            curvelet_acceleration_chart = st.plotly_chart(curvelet_df[s_acceleration_columns].plot( render_mode = 'svg' ).update_layout( yaxis_title = " acceleration, g's, crv"+str(curve_number)) )
+            curvelet_y_force_chart = st.plotly_chart(curvelet_df[ s_y_force_columns].plot( render_mode = 'svg' ).update_layout( yaxis_title = " y force, g's, curv"+str(curve_number)) )
+            curvelet_pivot_chart = st.plotly_chart(curvelet_df[ s_pivot_columns].plot( render_mode = 'svg' ).update_layout( yaxis_title = " pivot, deg, crv"+str(curve_number)) )
+        else:
+            st.stop()
