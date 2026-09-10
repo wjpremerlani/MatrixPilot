@@ -413,6 +413,13 @@ def mav_filter(raw_list,index_table):
 def cross_t(a,b):
     return np.transpose(np.cross(np.transpose(a),np.transpose(b)))
 
+def extract_euler(input_matrix) :
+    yaw_angle = degrees((atan2(input_matrix[1,0],input_matrix[0,0])))
+    pitch_angle = degrees((atan2(-input_matrix[2,0], sqrt((input_matrix[2,1])**2+(input_matrix[2,2])**2))))
+    roll_angle = degrees((atan2(input_matrix[2,1],input_matrix[2,2])))
+    euler_angles = [ yaw_angle , pitch_angle , roll_angle ]
+    return euler_angles
+
 def create_yaw_matrix(angle):
     global y_mat
     y_mat[0,0] = cos(radians(angle))
@@ -505,16 +512,27 @@ def write_new_mark():
     
 
 global heading_start
+global distance_at_efc
+global efd_recorded
+efd_recorded = False
+distance_at_efc = 50.0 #insurance against bugs
 
-def two_phase_roll_update_timing_marks(write_requests, roll_rate , roll_out , heading ):
+
+def two_phase_roll_update_timing_marks(write_requests, roll_rate , roll_out , heading , distance ):
     global mark_state, mark_number, new_distance , distance_origin , line_origin , velocity , line_number , yaw_rate_start , yaw_rate_end , number_of_marks
     global roll_max , roll_ratio , peak_threshold , end_threshold
     global minimum_curve , curve_timer , heading_start , yaw_threshold
+    global minimum_distance
+    global distance_at_efc , efd_recorded
+    minimum_distance = 75.0 
     if ( args.curves ):
         if mark_number == number_of_marks:
             return
     if mark_state == 0:
         if abs(roll_out) > start_threshold:
+            if ( efd_recorded == False ) :
+                distance_at_efc = distance
+                efd_recorded = True
             heading_start = heading
             mark_state = np.sign(roll_out)
             if ( write_requests ==1 ):
@@ -526,30 +544,34 @@ def two_phase_roll_update_timing_marks(write_requests, roll_rate , roll_out , he
     else:
         roll_max = max(abs(roll_out),roll_max)
         if (abs(roll_out) < roll_ratio*roll_max ):
-            roll_flag = 10.2
+            roll_flag = 10.1
         else:
             roll_flag = -.1
 
         if ( np.sign(roll_out) != np.sign(roll_rate)):
             roll_sign_flag = 10.2
         else:
-            roll_sign_flag = -.1
+            roll_sign_flag = -.2
 
         if ( roll_max > peak_threshold ):
-            roll_max_flag = 10.2
+            roll_max_flag = 10.3
         else:
-            roll_max_flag = -.1
+            roll_max_flag = -.3
 
         if (abs(heading - heading_start) > yaw_threshold ):
-            yaw_flag = 10.2
+            yaw_flag = 10.4
         else:
-            yaw_flag = -.1
+            yaw_flag = -.4
+        if ( distance - distance_at_efc > minimum_distance ) :
+            distance_flag = 10.5
+        else:
+            distance_flag = -10.5
         try:
-            debug_marks_file.write(f"{mark_number},{roll_flag},{roll_sign_flag},{roll_max_flag},{yaw_flag},,{round(roll_out,2)},{round(heading,2)}\n")
+            debug_marks_file.write(f"{mark_number},{roll_flag},{roll_sign_flag},{roll_max_flag},{yaw_flag},{distance_flag},,{round(roll_out,2)},{round(heading,2)}\n")
         except:
             pass
 
-        if (abs(roll_out) < roll_ratio*roll_max ) and ( np.sign(roll_out) != np.sign(roll_rate)) and ( roll_max > peak_threshold ) and (abs(heading - heading_start) > yaw_threshold ):
+        if (abs(roll_out) < roll_ratio*roll_max ) and ( np.sign(roll_out) != np.sign(roll_rate)) and ( roll_max > peak_threshold ) and (abs(heading - heading_start) > yaw_threshold ) and ( distance- distance_at_efc > minimum_distance ):
             mark_state = 0
             if ( write_requests ==1 ):
                 write_new_mark()
@@ -558,7 +580,7 @@ def two_phase_roll_update_timing_marks(write_requests, roll_rate , roll_out , he
             mark_number = mark_number+1
             roll_max = start_threshold
 
-def update_timing_mark(yaw_rate,roll_rate,roll_out,heading):
+def update_timing_mark(yaw_rate,roll_rate,roll_out,heading , distance ):
     global mark_state, mark_number, new_distance , distance_origin , line_origin , velocity , line_number , yaw_rate_start , yaw_rate_end , number_of_marks
     if ( args.curves ):
         if mark_number == number_of_marks:
@@ -577,7 +599,7 @@ def update_timing_mark(yaw_rate,roll_rate,roll_out,heading):
                 mark_state = 0
                 mark_number = mark_number + 1
     else:
-        two_phase_roll_update_timing_marks(0,roll_rate,roll_out,heading)
+        two_phase_roll_update_timing_marks(0,roll_rate,roll_out,heading , distance )
 
 def update_mark_state_no_tr_mdl(yaw_rate,roll_rate,roll_out,heading):
     global mark_state, mark_number, new_distance , distance_origin , line_origin , velocity , line_number , yaw_rate_start , yaw_rate_end , number_of_marks
@@ -1246,30 +1268,32 @@ def read_data(file):
 
                             create_ypr_matrix(yaw_in,pitch_in,roll_in)
                             matrix_in = ypr_mat
-                            if first_line == 1 or line_number == int(100*start):
+                            
+                            if first_line == 1 :
                                 matrix_in_prev = matrix_in
-                                create_ypr_matrix(yaw_offset , pitch_in , roll_in )
-                                matrix_out  = ypr_mat
+                                matrix_out  = matrix_in
                                 matrix_out_prev = matrix_out
-                                #matrix_out = np.matmul(first_mat,ypr_o_mat)
-                                #matrix_in_prev = matrix_in
-                                #matrix_out_prev = matrix_out
-                            else:
-
-                                matrix_update = np.matmul(np.matmul(np.transpose(matrix_in_prev),matrix_in),drift_mat)
-                                matrix_out = np.matmul(matrix_out_prev,matrix_update)
+                            
+                            matrix_update = np.matmul(np.matmul(np.transpose(matrix_in_prev),matrix_in),drift_mat)
+                            matrix_out = np.matmul(matrix_out_prev,matrix_update)
+                            matrix_out_prev = matrix_out
+                            matrix_in_prev = matrix_in
+                                
+                            if line_number == int(100*start):
+                                angles_at_pull = extract_euler(matrix_out)
+                                create_ypr_matrix(yaw_offset,angles_at_pull[1],angles_at_pull[2])
+                                matrix_out = ypr_mat
                                 matrix_out_prev = matrix_out
-                                matrix_in_prev = matrix_in
 
-                                gyro_wp[0,0] = 50.0*degrees(matrix_update[2,1]-matrix_update[1,2])
-                                gyro_wp[1,0] = 50.0*degrees(matrix_update[0,2]-matrix_update[2,0])
-                                gyro_wp[2,0] = 50.0*degrees(matrix_update[1,0]-matrix_update[0,1])
+                            gyro_wp[0,0] = 50.0*degrees(matrix_update[2,1]-matrix_update[1,2])
+                            gyro_wp[1,0] = 50.0*degrees(matrix_update[0,2]-matrix_update[2,0])
+                            gyro_wp[2,0] = 50.0*degrees(matrix_update[1,0]-matrix_update[0,1])
 
-                                omega[0,0] = radians(gyro_wp[0,0])
-                                omega[1,0] = radians(gyro_wp[1,0])
-                                omega[2,0] = radians(gyro_wp[2,0])
+                            omega[0,0] = radians(gyro_wp[0,0])
+                            omega[1,0] = radians(gyro_wp[1,0])
+                            omega[2,0] = radians(gyro_wp[2,0])
 
-                                gyro_sled = np.matmul(ypr_o_mat,gyro_wp)
+                            gyro_sled = np.matmul(ypr_o_mat,gyro_wp)
 
 
                             deter = np.linalg.det(matrix_out)
@@ -1407,7 +1431,7 @@ def run_passes():
     heading_filt = mav_filter(heading_list,indices(filter_size))
     pitch_filt = mav_filter(pitch_list,indices(filter_size))
     roll_filt = mav_filter(roll_list,indices(filter_size))
-
+    
     heading_hf = []
     pitch_hf = []
     roll_hf = []
@@ -1560,6 +1584,22 @@ def run_passes():
     Y = np.zeros((1,1))
     ATY = np.matmul(AT,Y)
 
+    
+
+    number_of_lines = len(line_nums)
+    if number_of_lines > 1 :
+        time_step = ((times[number_of_lines-1] - times[0] ) / float(number_of_lines-1)) / 10000.0
+        time_calibration = 100.0 * time_step
+    else :
+        time_step = 0.01
+        time_calibration = 1.0
+
+    log_file.write(f"\n\ntime step = {round(time_step,6)}\n")
+    log_file.write(f"time calibration = {round(time_calibration,4)}\n")
+    print("time step = " , time_step)
+    print("time calibration = " , time_calibration )
+    
+
 
     for line_number in line_nums:
         try:
@@ -1602,7 +1642,7 @@ def run_passes():
             omega[1,0]=wy_filt_filt[line_number]
             omega[2,0]=wz_filt_filt[line_number]
 
-            update_timing_mark(omega[2,0],omega[0,0],roll_out,heading)
+            update_timing_mark(omega[2,0],omega[0,0],roll_out,heading,new_distance)
 
             map_marks.append(mark_number)
             map_states.append(mark_state)
@@ -1671,13 +1711,14 @@ def run_passes():
                 v_error_sum = v_error_sum + v_error
                 weight_sum = weight_sum + correction_gain
                 
-                A[0,0] = A[0,0]-correction_gain*(((force_out[2,0]/32.1741)+1.0)*force_out[2,0] + (force_out[2,0]+32.1714)*cos(radians(roll_out) ))/100.0
+                A[0,0] = A[0,0]-correction_gain*(((force_out[2,0]/32.1741)+1.0)*force_out[2,0] + (force_out[2,0]+32.1714)*cos(radians(roll_out) ))*time_step
              
                 AT = np.transpose(A)
                 ATA = ATA + np.matmul(AT,A)
                 ATY = ATY + np.matmul(AT,Y)
 
-            velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0]  )/100.0
+            velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0]  )*time_step
+            new_distance = new_distance + velocity[0,0]*time_step
 
     try :
         ATA_INVERSE = np.linalg.inv(ATA)
@@ -1810,8 +1851,8 @@ def run_passes():
             ax = gx+fx
             az = gz+fz
             pitch_rate = omega[1,0]
-            vg = vg + gx/100.0
-            vf = vf + fx/100.0
+            vg = vg + gx*time_step
+            vf = vf + fx*time_step
             v2 = velocity[0,0]
             wt = correction_gain
 
@@ -1845,7 +1886,7 @@ def run_passes():
                 Y[0,0] = force_out[0,0]
                 A[0,0] = force_out[2,0]
                 A[0,1] = -gravity_value*((force_out[2,0]/gravity_value)**2)
-                A[0,2] = -gravity_value*(velocity[0,0]/100.0)**2
+                A[0,2] = -gravity_value*(velocity[0,0]*time_step)**2
                 AT = np.transpose(A)
                 ATA = ATA + np.matmul(AT,A)
                 ATY = ATY + np.matmul(AT,Y)
@@ -1854,21 +1895,21 @@ def run_passes():
                 vsqr = vsqr + v_error**2
                 N = N + 1
                     
-            velocity[0,0] = velocity[0,0] + velocity_dot[0,0]/100.0
+            velocity[0,0] = velocity[0,0] + velocity_dot[0,0]*time_step
             
-            new_distance = new_distance + velocity[0,0]/100.0
+            new_distance = new_distance + velocity[0,0]*time_step
 
             #if (args.d0) :
             #use default if not specified
             if ( new_distance > distance_0/2.0 ) and (new_distance < distance_0) :
-                time_0 = round(float( line_number - start_int)/100.0 + (distance_0 - new_distance)/velocity[0,0],3)
+                time_0 = round(float( times[line_number] - times[start_int])/10000.0 + (distance_0 - new_distance)/velocity[0,0],3)
                 velocity_0 = round(velocity[0,0] + velocity_dot[0,0]*(distance_0 - new_distance)/velocity[0,0],3)              
 
     #if ( args.d0) :
     print("t0:",time_0)
     print("v0:",velocity_0)
     log_file.write(f"\n\ntime from pull to first timing eye = {time_0} seconds.\n\n")
-    log_file.write(f"\n\nvelocity at first timing eye = {velocity_0} seconds.\n\n")
+    log_file.write(f"\n\nvelocity at first timing eye = {velocity_0} feet/sec.\n\n")
 
     aero_factor = 0
     friction_factor = 0
@@ -1967,12 +2008,12 @@ def run_passes():
                 v_error = -max_err
 
             if args_no_kalman:
-                velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0]  + (z_x_cc/gravity_value)*(velocity_dot[2,0]**2) )/100.0
+                velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0]  + (z_x_cc/gravity_value)*(velocity_dot[2,0]**2) )*time_step
             else:
-                velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0] + feedback_gain*v_error + (z_x_cc/gravity_value)*(velocity_dot[2,0]**2) )/100.0
+                velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0] + feedback_gain*v_error + (z_x_cc/gravity_value)*(velocity_dot[2,0]**2) )*time_step
 
 
-            new_distance = new_distance + velocity[0,0]/100.0
+            new_distance = new_distance + velocity[0,0]*time_step
 
             #if args.track_marks_file_name:
                #update_mark_state_with_tr_mdl(omega[2,0],omega[0,0] , roll_out , heading )
@@ -1981,7 +2022,7 @@ def run_passes():
 
     if args.track_marks_file_name:
         if run_end_time > 0.0:
-            alignment_accel = 2.0*((table_end_distance-run_end_distance)/((run_end_time/100.0)**2))
+            alignment_accel = 2.0*((table_end_distance-run_end_distance)/((run_end_time*time_step)**2))
         else:
             alignment_accel = 0.0
         try:
@@ -2182,8 +2223,8 @@ def run_passes():
 
             if line_number >= start_int :
 
-                x_ef = x_ef + velocity[0,0]*(cosine/100.0)
-                y_ef = y_ef + velocity[0,0]*(sine/100.0)
+                x_ef = x_ef + velocity[0,0]*(cosine*time_step)
+                y_ef = y_ef + velocity[0,0]*(sine*time_step)
 
             force_out[0,0] = force_out[0,0] + compliance*(((force_out[2,0]/32.1741)+1.0)*force_out[2,0] )
 
@@ -2208,15 +2249,15 @@ def run_passes():
             velocity_dot[0,0] = velocity_dot[0,0] + compliance*(force_out[2,0]+32.1714)*cos(radians(roll_out) ) - v_error
             
             if line_number >= start_int :                            
-                velocity[0,0] = velocity[0,0] + acc_x_raw/100.0
+                velocity[0,0] = velocity[0,0] + acc_x_raw*time_step
             
-                new_distance = new_distance + velocity[0,0]/100.0
+                new_distance = new_distance + velocity[0,0]*time_step
 
-            aero =  - aero_factor*gravity_value*(velocity[0,0]/100.0)**2
+            aero =  - aero_factor*gravity_value*(velocity[0,0]*time_step)**2
             friction = friction_factor*force_out[2,0] - splay_factor*gravity_value*((force_out[2,0]/gravity_value)**2) + aero
 
-            #local_time = ( line_number -  line_origin )/100.0
-            local_time = times[line_number] - times[line_origin]
+            #local_time = ( line_number -  line_origin )*time_step
+            local_time = float(times[line_number] - times[line_origin])/10000.0
 
             if new_distance < table_end_distance:
 
@@ -2225,10 +2266,10 @@ def run_passes():
                     if args_strmlt:
 
                         if ( mark_state == 0 ) and (abs(previous_state) > 0 ) :
-                            finish_time = round( float(local_time)/10000.0 , 4 )
+                            finish_time = round( local_time , 4 )
                         previous_state = mark_state
 
-                        time_map_100_file.write(f"{round( float(local_time)/10000.0 , 4 )}")
+                        time_map_100_file.write(f"{round( local_time , 4 )}")
                         time_map_100_file.write(f",{mark_number},{mark_state}")
 
                         time_map_100_file.write(f" ,{round(( fx_filt_filt[line_number] ),2)}" )
@@ -2284,7 +2325,7 @@ def run_passes():
                         is_timing_eye = False
                         
                         for timing_eye_time in timing_eye_times :
-                            if abs ( float(local_time)/10000.0 - te0_offset - timing_eye_time ) < 0.006 :
+                            if abs ( local_time - te0_offset - timing_eye_time ) < 0.006 :
                                 is_timing_eye = True                    
                         
                         if is_timing_eye == True :
@@ -2308,7 +2349,7 @@ def run_passes():
 
                         w_mag = sqrt( (wx_filt[line_number])**2 + (wy_filt[line_number])**2 + (wz_filt[line_number])**2 )
 
-                        time_map_100_file.write(f"{round( float(local_time)/10000.0 , 4 )}")
+                        time_map_100_file.write(f"{round( local_time , 4 )}")
                         time_map_100_file.write(f",{mark_number},{mark_state}")
 
                         time_map_100_file.write(f" ,{round(( fx_filt[line_number] ),2)}" )
@@ -2872,7 +2913,7 @@ if __name__ == "__main__":
 
         debug_marks_file = open(file_base_name + "_debug_marks.csv", "w")
         debug_marks_file.write(
-            f"mark_number,roll_is_small,opposite_roll_n_rate,valid_roll_peak,minimum_yaw,,roll,yaw,,,minimum yaw = {yaw_threshold}\n")
+            f"mark_number,roll_is_small,opposite_roll_n_rate,valid_roll_peak,has_minimum_yaw,has_minimum_distance,roll,yaw,,,minimum yaw = {yaw_threshold}\n")
 
         variance_file = open(file_base_name + "_variance.csv", "w")
         output_file = open(file_base_name + "_adjusted.txt", "w")
