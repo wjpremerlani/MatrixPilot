@@ -126,7 +126,8 @@ if __name__ == "__main__":
     parser.add_argument('-b_radius','--b_radius',help="button radius in seconds, must be less than 2.0")
     parser.add_argument('-b_space','--b_space',help="space between button centers, seconds")
     parser.add_argument('-b_range','--b_range',help="search range, seconds, must be less than 2.0")
-    
+    parser.add_argument('-d1','--d1', help="distance from pull to second timeing eye in feet")
+    parser.add_argument('-fcl','--fcl', help="first curve length in feet")
     
     args = parser.parse_args()
 
@@ -186,6 +187,10 @@ if __name__ == "__main__":
                         bat_file.write(f"process_map_st.py -bill -f {data_file_name} -s {data_file_start} -e {elapsed}")
                     else :
                         bat_file.write(f"process_map_st.py -f {data_file_name} -s {data_file_start} -e {elapsed}")
+                    if args.d1:
+                        bat_file.write(f" -d1 {args.d1}")
+                    if args.fcl:
+                        bat_file.write(f" -fcl {args.fcl}")
                     if args_log_time :
                         bat_file.write(f" -log_time")
                     if args_strmlt  :

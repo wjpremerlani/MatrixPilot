@@ -57,6 +57,9 @@ global int_dtpe
 int_dtpe = 180
 global distance_0
 distance_0 = 25.0
+global distance_1
+distance_1 = 100.0
+
 #
 global z_force_plot_limit
 # z_force_plot_limit is used to clip the reported z force
@@ -524,7 +527,6 @@ def two_phase_roll_update_timing_marks(write_requests, roll_rate , roll_out , he
     global minimum_curve , curve_timer , heading_start , yaw_threshold
     global minimum_distance
     global distance_at_efc , efd_recorded
-    minimum_distance = 75.0 
     if ( args.curves ):
         if mark_number == number_of_marks:
             return
@@ -1404,6 +1406,8 @@ def run_passes():
     global file_base_name, run_time, number_of_marks
     global prerun_margin
     global distance_0, velocity_0, time_0
+    global distance_1, velocity_1, time_1
+    
 
     ######################################
     #
@@ -1904,12 +1908,20 @@ def run_passes():
             if ( new_distance > distance_0/2.0 ) and (new_distance < distance_0) :
                 time_0 = round(float( times[line_number] - times[start_int])/10000.0 + (distance_0 - new_distance)/velocity[0,0],3)
                 velocity_0 = round(velocity[0,0] + velocity_dot[0,0]*(distance_0 - new_distance)/velocity[0,0],3)              
+            if ( new_distance > distance_1/2.0 ) and (new_distance < distance_1) :
+                time_1 = round(float( times[line_number] - times[start_int])/10000.0 + (distance_1 - new_distance)/velocity[0,0],3)
+                velocity_1 = round(velocity[0,0] + velocity_dot[0,0]*(distance_1 - new_distance)/velocity[0,0],3)              
 
     #if ( args.d0) :
     print("t0:",time_0)
     print("v0:",velocity_0)
+    print("t1:",time_1)
+    print("v1:",velocity_1)
+    
     log_file.write(f"\n\ntime from pull to first timing eye = {time_0} seconds.\n\n")
     log_file.write(f"\n\nvelocity at first timing eye = {velocity_0} feet/sec.\n\n")
+    log_file.write(f"\n\ntime from pull to second timing eye = {time_1} seconds.\n\n")
+    log_file.write(f"\n\nvelocity at second timing eye = {velocity_1} feet/sec.\n\n")
 
     aero_factor = 0
     friction_factor = 0
@@ -2806,6 +2818,8 @@ def build_arg_parser():
     parser.add_argument('-te', '--te',  help="list of timing eye times")
     parser.add_argument('-dtpe', '--dtpe', help="delta time from peak of pull in seconds")
     parser.add_argument('-d0','--d0', help="distance from pull to first timeing eye in feet")
+    parser.add_argument('-d1','--d1', help="distance from pull to second timeing eye in feet")
+    parser.add_argument('-fcl','--fcl', help="first curve length in feet")
     
     return parser
 
@@ -2850,6 +2864,14 @@ if __name__ == "__main__":
 
     if args.d0:
         distance_0 = float(args.d0)
+
+    if args.d1:
+        distance_1 = float(args.d1)
+
+    if args.fcl:
+        minimum_distance = float(args.fcl)
+    else:
+        minimum_distance = 0.0
 
     if args.yaw_offset:
         yaw_offset = float(args.yaw_offset)
