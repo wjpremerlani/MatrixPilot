@@ -719,58 +719,55 @@ def read_data_test(file):
 def read_data(file):
     global times
     global line_nums , line_numbers , gxs, gys, gzs, yaws, pitches, rolls
-    has_time_stamps_read = False
+    has_time_stamps = False
+    time_stamp = 0
 
     dataStrRead = file.read()
 
-    first_line_read = 1
-    line_number_read = 0
-    previous_stamp_read = 0
-    minimum_delta_read = 50
-    nominal_delta_read = 100
+    first_line = 1
+    line_number = 0
+    previous_stamp = 0
+    minimum_delta = 50
+    nominal_delta = 100
 
     if dataStrRead:
         linesRead = dataStrRead.splitlines(keepends=False)
         for line_read in linesRead:
             columns_read = line_read.split(',')
-            if  ( len(columns_read) < NUM_COLS ) :
-                get_to_this_later = 1.0
-                #output_file.write(line_read+"\r")
-            else :
-                if ( len(columns_read) == NUM_COLS ) or  ( len(columns_read) == NUM_COLS +1 ):
-                    if ( len(columns_read) == NUM_COLS +1 ) :
-                        has_time_stamps_read = True
-                    try:
-                        xa_in_read = - float(columns_read[XA_COL])
-                        ya_in_read = - float(columns_read[YA_COL])
-                        za_in_read = - float(columns_read[ZA_COL])
-                        yaw_in_read = float(columns_read[YAW_COL])
-                        pitch_in_read = float(columns_read[PITCH_COL])
-                        roll_in_read = float(columns_read[ROLL_COL])
-                        
-                        gxs.append(xa_in_read)
-                        gys.append(ya_in_read)
-                        gzs.append(za_in_read)
-                        yaws.append(yaw_in_read)
-                        pitches.append(pitch_in_read)
-                        rolls.append(roll_in_read)
-                                                
-                        if ( has_time_stamps_read ) :
-                            time_stamp_in_read = int(columns_read[TIME_COL])
-                            if time_stamp_in_read - previous_stamp_read > minimum_delta_read :
-                                previous_stamp_read = time_stamp_in_read
-                            else :
-                                time_stamp_in_read = previous_stamp_read + nominal_delta_read
-                                previous_stamp_read = time_stamp_in_read
+            if ( len(columns_read) == NUM_COLS ) or  ( len(columns_read) == NUM_COLS +1 ):
+                if ( len(columns_read) == NUM_COLS +1 ) :
+                    has_time_stamps_read = True
+                try:
+                    xa_in_read = - float(columns_read[XA_COL])
+                    ya_in_read = - float(columns_read[YA_COL])
+                    za_in_read = - float(columns_read[ZA_COL])
+                    yaw_in_read = float(columns_read[YAW_COL])
+                    pitch_in_read = float(columns_read[PITCH_COL])
+                    roll_in_read = float(columns_read[ROLL_COL])
+                    
+                    gxs.append(xa_in_read)
+                    gys.append(ya_in_read)
+                    gzs.append(za_in_read)
+                    yaws.append(yaw_in_read)
+                    pitches.append(pitch_in_read)
+                    rolls.append(roll_in_read)
+                                            
+                    if ( has_time_stamps ) :
+                        time_stamp_in = int(columns_read[TIME_COL])
+                        if time_stamp_in - previous_stamp > minimum_delta :
+                            previous_stamp = time_stamp_in
                         else :
-                            time_stamp_in_read = time_stamp_read
-                            time_stamp_read = time_stamp_read + time_increment_read
-                        #times.append(time_stamp_in)
-                        #line_nums.append(line_number)
-
-                        line_number_read = line_number_read + 1
-                    except:
-                        pass
+                            time_stamp_in = previous_stamp + nominal_delta
+                            previous_stamp = time_stamp_in
+                    else :
+                        time_stamp = time_stamp + nominal_delta
+                    times.append(time_stamp)
+                    line_nums.append(line_number)
+                    if line_number < int(100*start):
+                        line_numbers.append(line_number)
+                    line_number = line_number + 1
+                except:
+                    pass
     file.seek(0)   
 
 def process_data(file):
@@ -868,23 +865,16 @@ def process_data(file):
         Y = np.zeros((1,1))
         ATY = np.matmul(AT,Y)
 
-    
-        for line in lines :
-            columns = line.split(',')
-            if ( len(columns) == NUM_COLS ) or  ( len(columns) == NUM_COLS +1 ) :
-                if ( len(columns) == NUM_COLS +1 ) :
-                    has_time_stamps = True
-                try:
-                    roll_angle = float(columns[ROLL_COL])
-                    if abs(roll_angle) > 45 :
-                        Y[0,0] = float(columns[PITCH_COL])
-                        A[0,0] = 1
-                        A[0,1] = sin(radians(roll_angle))
-                        AT = np.transpose(A)
-                        ATA = ATA + np.matmul(AT,A)
-                        ATY = ATY + np.matmul(AT,Y)
-                except:
-                    pass
+        for line_number in line_nums :
+            roll_angle = rolls[line_number]
+            if abs(roll_angle) > 45 :
+                Y[0,0] = pitches[line_number]
+                A[0,0] = 1
+                A[0,1] = sin(radians(roll_angle))
+                AT = np.transpose(A)
+                ATA = ATA + np.matmul(AT,A)
+                ATY = ATY + np.matmul(AT,Y)
+
         try :
             ATA_INVERSE = np.linalg.inv(ATA)
             cross = np.matmul(ATA_INVERSE,ATY)
@@ -908,25 +898,6 @@ def process_data(file):
          
         for line in lines:
             columns = line.split(',')
-            if ( len(columns) == NUM_COLS ) or  ( len(columns) == NUM_COLS +1 ) :
-                try:
-                    if line_number < int(100*start):
-                        gravity[0,0] = - float(columns[XA_COL])
-                        gravity[1,0] = - float(columns[YA_COL])
-                        gravity[2,0] = - float(columns[ZA_COL])
-                        yaw_in = float(columns[YAW_COL])
-                        pitch_in = float(columns[PITCH_COL])
-                        roll_in = float(columns[ROLL_COL])
-                        line_numbers.append(line_number)
-                        #gxs.append(gravity[0,0])
-                        #gys.append(gravity[1,0])
-                        #gzs.append(gravity[2,0])
-                        #yaws.append(yaw_in)
-                        #pitches.append(pitch_in)
-                        #rolls.append(roll_in)
-                        line_number = line_number+1
-                except ValueError:
-                    pass
             if len(columns) >= NUM_RES_COLUMNS:
                 try:
                     total_valid_samples = total_valid_samples + int (columns[VALID_COLUMN])
@@ -1322,8 +1293,6 @@ def process_data(file):
                         else :
                             time_stamp_in = time_stamp
                             time_stamp = time_stamp + time_increment
-                        times.append(time_stamp_in)
-                        line_nums.append(line_number)
 
                         line_number = line_number + 1
 
@@ -1468,6 +1437,7 @@ def run_passes():
     global prerun_margin
     global distance_0, velocity_0, time_0
     global distance_1, velocity_1, time_1
+    global times
 
     read_data(input_file)
     
@@ -1654,6 +1624,7 @@ def run_passes():
     
 
     number_of_lines = len(line_nums)
+
     if number_of_lines > 1 :
         time_step = ((times[number_of_lines-1] - times[0] ) / float(number_of_lines-1)) / 10000.0
         time_calibration = 100.0 * time_step
