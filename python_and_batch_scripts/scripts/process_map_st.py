@@ -712,7 +712,68 @@ def read_markers(marker_file):
 
 global valid_run
 
+def read_data_test(file):
+    dataStrRead = file.read()
+    file.seek(0)
+
 def read_data(file):
+    global times
+    global line_nums , line_numbers , gxs, gys, gzs, yaws, pitches, rolls
+    has_time_stamps_read = False
+
+    dataStrRead = file.read()
+
+    first_line_read = 1
+    line_number_read = 0
+    previous_stamp_read = 0
+    minimum_delta_read = 50
+    nominal_delta_read = 100
+
+    if dataStrRead:
+        linesRead = dataStrRead.splitlines(keepends=False)
+        for line_read in linesRead:
+            columns_read = line_read.split(',')
+            if  ( len(columns_read) < NUM_COLS ) :
+                get_to_this_later = 1.0
+                #output_file.write(line_read+"\r")
+            else :
+                if ( len(columns_read) == NUM_COLS ) or  ( len(columns_read) == NUM_COLS +1 ):
+                    if ( len(columns_read) == NUM_COLS +1 ) :
+                        has_time_stamps_read = True
+                    try:
+                        xa_in_read = - float(columns_read[XA_COL])
+                        ya_in_read = - float(columns_read[YA_COL])
+                        za_in_read = - float(columns_read[ZA_COL])
+                        yaw_in_read = float(columns_read[YAW_COL])
+                        pitch_in_read = float(columns_read[PITCH_COL])
+                        roll_in_read = float(columns_read[ROLL_COL])
+                        
+                        gxs.append(xa_in_read)
+                        gys.append(ya_in_read)
+                        gzs.append(za_in_read)
+                        yaws.append(yaw_in_read)
+                        pitches.append(pitch_in_read)
+                        rolls.append(roll_in_read)
+                                                
+                        if ( has_time_stamps_read ) :
+                            time_stamp_in_read = int(columns_read[TIME_COL])
+                            if time_stamp_in_read - previous_stamp_read > minimum_delta_read :
+                                previous_stamp_read = time_stamp_in_read
+                            else :
+                                time_stamp_in_read = previous_stamp_read + nominal_delta_read
+                                previous_stamp_read = time_stamp_in_read
+                        else :
+                            time_stamp_in_read = time_stamp_read
+                            time_stamp_read = time_stamp_read + time_increment_read
+                        #times.append(time_stamp_in)
+                        #line_nums.append(line_number)
+
+                        line_number_read = line_number_read + 1
+                    except:
+                        pass
+    file.seek(0)   
+
+def process_data(file):
     global has_time_stamps , time_stamp , time_increment , times
     global roll_threshold
     global line_numbers , gxs, gys, gzs, yaws, pitches, rolls
@@ -857,12 +918,12 @@ def read_data(file):
                         pitch_in = float(columns[PITCH_COL])
                         roll_in = float(columns[ROLL_COL])
                         line_numbers.append(line_number)
-                        gxs.append(gravity[0,0])
-                        gys.append(gravity[1,0])
-                        gzs.append(gravity[2,0])
-                        yaws.append(yaw_in)
-                        pitches.append(pitch_in)
-                        rolls.append(roll_in)
+                        #gxs.append(gravity[0,0])
+                        #gys.append(gravity[1,0])
+                        #gzs.append(gravity[2,0])
+                        #yaws.append(yaw_in)
+                        #pitches.append(pitch_in)
+                        #rolls.append(roll_in)
                         line_number = line_number+1
                 except ValueError:
                     pass
@@ -1407,16 +1468,18 @@ def run_passes():
     global prerun_margin
     global distance_0, velocity_0, time_0
     global distance_1, velocity_1, time_1
+
+    read_data(input_file)
     
 
     ######################################
     #
-    # pass 1 and 2: read input file, estimate offsets and drift,
+    # pass 1 and 2:  estimate offsets and drift,
     # and compensate all data
     #
     ######################################
 
-    read_data(input_file)
+    process_data(input_file)
 
     #####################################
     #
@@ -3007,3 +3070,9 @@ if __name__ == "__main__":
     log_file.write(f"raw timing eye time values.\r\n{timing_eye_times}\r\n")
 
     run_passes()
+
+    log_file.write(f"number of line_nums {len(line_nums)}\n")
+    print("number of line_nums",len(line_nums))
+
+    log_file.write(f"number of line_numbers {len(line_numbers)}\n")
+    print("number of line_numbers",len(line_numbers))
