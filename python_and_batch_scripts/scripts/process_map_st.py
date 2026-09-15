@@ -125,17 +125,27 @@ current_date = current_date_time.date()
 
 NUM_COLS  = 11
 
+VALID_COLUMN = 1
+
 XA_COL = 0
 YA_COL = 1
 ZA_COL = 2
 YAW_COL = 3
 PITCH_COL = 4
 ROLL_COL = 5
+YAW_RATE_COL = 6
+MAX_GYRO_COL = 7
+CPU_COL = 8
+SEQ_COL = 9
+TMPTUR_COL = 10
 TIME_COL = 11
+
+NUM_RES_COLUMNS = 14
 
 global args
 
 global line_numbers , gxs, gys, gzs, yaws, pitches, rolls , times
+global yaw_rates , max_gyros , cpus , seqs , tmpturs
 line_numbers = []
 gxs = []
 gys = []
@@ -144,6 +154,13 @@ yaws = []
 pitches = []
 rolls = []
 times = []
+
+yaw_rates = []
+max_gyros = []
+cpus = []
+seqs = []
+tmpturs = []
+
 
 # output_data = []
 
@@ -719,6 +736,9 @@ def read_data_test(file):
 def read_data(file):
     global times
     global line_nums , line_numbers , gxs, gys, gzs, yaws, pitches, rolls
+    global yaw_rates, max_gyros , cpus , seqs , tmpturs
+    global valid_run
+    global NUM_RES_COLUMNS
     has_time_stamps = False
     time_stamp = 0
 
@@ -730,10 +750,20 @@ def read_data(file):
     minimum_delta = 50
     nominal_delta = 100
 
+    total_valid_samples = 0
+
+    number_exceptions = 0
+
     if dataStrRead:
         linesRead = dataStrRead.splitlines(keepends=False)
         for line_read in linesRead:
             columns_read = line_read.split(',')
+            if len(columns_read) >= NUM_RES_COLUMNS:
+                try:
+                    total_valid_samples = total_valid_samples + int (columns_read[VALID_COLUMN])
+                except ValueError:
+                    pass       
+            
             if ( len(columns_read) == NUM_COLS ) or  ( len(columns_read) == NUM_COLS +1 ):
                 if ( len(columns_read) == NUM_COLS +1 ) :
                     has_time_stamps_read = True
@@ -744,6 +774,11 @@ def read_data(file):
                     yaw_in_read = float(columns_read[YAW_COL])
                     pitch_in_read = float(columns_read[PITCH_COL])
                     roll_in_read = float(columns_read[ROLL_COL])
+                    yaw_rate = float(columns_read[YAW_RATE_COL])
+                    max_gyro = columns_read[MAX_GYRO_COL]
+                    cpu = columns_read[CPU_COL]
+                    seq = columns_read[SEQ_COL]
+                    tmptur = columns_read[TMPTUR_COL]
                     
                     gxs.append(xa_in_read)
                     gys.append(ya_in_read)
@@ -751,6 +786,12 @@ def read_data(file):
                     yaws.append(yaw_in_read)
                     pitches.append(pitch_in_read)
                     rolls.append(roll_in_read)
+
+                    yaw_rates.append(yaw_rate)
+                    max_gyros.append(max_gyro)
+                    cpus.append(cpu)
+                    seqs.append(seq)
+                    tmpturs.append(tmptur)
                                             
                     if ( has_time_stamps ) :
                         time_stamp_in = int(columns_read[TIME_COL])
@@ -767,13 +808,34 @@ def read_data(file):
                         line_numbers.append(line_number)
                     line_number = line_number + 1
                 except:
+                    number_exceptions = number_exceptions + 1
+                    if ( number_exceptions < 10 ) :
+                        print("exception, line:",line_read)
                     pass
-    file.seek(0)   
+
+    try :
+        log_file.write(f"\n\ntotal number of valid samples = {total_valid_samples} \n")
+    except :
+        pass
+
+    if total_valid_samples > MINIMUM_VALID_SAMPLES:
+        valid_run = True
+    else:
+        log_file.write(f"\n\nvalid_run = False, not enough prerun samples\n")
+        log_file.write(f"\ntotal_valid_samples = {total_valid_samples}\n")
+        log_file.write(f"\nMINIMUM_VALID_SAMPLES = {MINIMUM_VALID_SAMPLES}\n")
+        valid_run = False
+     
+    print("inside read data, len line_nums = " , len(line_nums))
+    print("inside read data, len line_numbers = " , len(line_numbers))
+    
+    file.seek(0)
 
 def process_data(file):
     global has_time_stamps , time_stamp , time_increment , times
     global roll_threshold
     global line_numbers , gxs, gys, gzs, yaws, pitches, rolls
+    global yaw_rates , max_gyros , cpus , seqs , tmpturs
     global xa_in, ya_in, za_in , xa_out, ya_out, za_out
     global yaw_in, pitch_in, roll_in, yaw_out, pitch_out, roll_out
     global matrix_out, matrix_in , matrix_out_prev , matrix_in_prev , deter
@@ -840,8 +902,6 @@ def process_data(file):
 
     total_valid_samples = 0
 
-    NUM_RES_COLUMNS = 14
-
     VALID_COLUMN = 1
 
 
@@ -850,7 +910,8 @@ def process_data(file):
     lines = dataStr.splitlines(keepends=False)
     first_line = 1
     line_number = 0
-    if dataStr:
+    if ( True ) :
+    #if dataStr:
     ##################################################################
     #
     #
@@ -896,28 +957,7 @@ def process_data(file):
         except :
             pass 
          
-        for line in lines:
-            columns = line.split(',')
-            if len(columns) >= NUM_RES_COLUMNS:
-                try:
-                    total_valid_samples = total_valid_samples + int (columns[VALID_COLUMN])
-                except ValueError:
-                    pass
-            else:
-                pass
-    try :
-        log_file.write(f"\n\ntotal number of valid samples = {total_valid_samples} \n")
-    except :
-        pass
-
-    if total_valid_samples > MINIMUM_VALID_SAMPLES:
-        valid_run = True
-    else:
-        log_file.write(f"\n\nvalid_run = False, not enough prerun samples\n")
-        log_file.write(f"\ntotal_valid_samples = {total_valid_samples}\n")
-        log_file.write(f"\nMINIMUM_VALID_SAMPLES = {MINIMUM_VALID_SAMPLES}\n")
-        valid_run = False
-
+ 
     N = 0
     gx_sum = 0
     gy_sum = 0
@@ -939,14 +979,17 @@ def process_data(file):
         gx_var = gx_sqr_bar - gx_bar**2
         gy_var = gy_sqr_bar - gy_bar**2
 
-    try:
+    #try:
+    if ( True ) :
+        print("N" , N )
+        print("len line numbers" , len(line_numbers))
         variance_indices = indices(jostle_window)
         gx_variance = windowed_variance(gxs,gx_bar,variance_indices)
         gy_variance = windowed_variance(gys,gy_bar,variance_indices)
         gx_gy_variance = gx_variance + gy_variance
-    except:
-        print("not enough data to compute variance, did you specify -s and -e values?")
-        exit()
+    #except:
+        #print("not enough data to compute variance, did you specify -s and -e values?")
+        #exit()
 
     try:
 
@@ -985,40 +1028,46 @@ def process_data(file):
         for line in lines:
             columns = line.split(',')
             if ( len(columns) == NUM_COLS ) or  ( len(columns) == NUM_COLS +1 ) :
-                try:
-                    gravity[0,0] = - float(columns[XA_COL])
-                    gravity[1,0] = - float(columns[YA_COL])
-                    gravity[2,0] = - float(columns[ZA_COL])
-                    yaw_in = float(columns[YAW_COL])
-                    pitch_in = float(columns[PITCH_COL])
-                    roll_in = float(columns[ROLL_COL])
-                    if  line_number < int(100*start):
-                        pitch_gravity = round(degrees(atan2(-gravity[0,0] , sqrt((gravity[1,0])**2+(gravity[2,0])**2))),2)
-                        roll_gravity = round(degrees(atan2(gravity[1,0],gravity[2,0])),2)
-                        weight = weights[line_number]
-                        weight_sum = weight_sum + weight
-                        N = N + 1
-                        gravity_sum = gravity_sum + weight*gravity
-                        g_sqr_sum = g_sqr_sum + np.vdot(gravity,gravity)*weight
-                        xTx[0,0] = N*N
-                        xTx[1,1] = 1.0
-                        xTx[0,1] = N
-                        xTx[1,0] = N
-                        xTx_sum = xTx_sum + weight*xTx
-                        x_yaw[0,0] = x_yaw[0,0] + N*yaw_in*weight
-                        x_yaw[1,0] = x_yaw[1,0] + yaw_in*weight
-                        x_pitch[0,0] = x_pitch[0,0] + N*(pitch_in-pitch_gravity)*weight
-                        x_pitch[1,0] = x_pitch[1,0] + (pitch_in-pitch_gravity)*weight
-                        x_roll[0,0] = x_roll[0,0] + N*(roll_in-roll_gravity)*weight
-                        x_roll[1,0] = x_roll[1,0] + (roll_in-roll_gravity)*weight
-                        yaw_sqr_sum = yaw_sqr_sum + (yaw_in**2)*weight
-                        pitch_sqr_sum = pitch_sqr_sum + ((pitch_in-pitch_gravity)**2)*weight
-                        roll_sqr_sum = roll_sqr_sum + ((roll_in-roll_gravity)**2)*weight
+                try :
+                    gravity[0,0] = gxs[line_number]
+                    gravity[1,0] = gys[line_number]
+                    gravity[2,0] = gzs[line_number]
+                    yaw_in = yaws[line_number]
+                    pitch_in = pitches[line_number]
+                    roll_in = rolls[line_number]
+                except :
+                    print("out of range line number", line_number)
+                #gravity[0,0] = - float(columns[XA_COL])
+                #gravity[1,0] = - float(columns[YA_COL])
+                #gravity[2,0] = - float(columns[ZA_COL])
+                #yaw_in = float(columns[YAW_COL])
+                #pitch_in = float(columns[PITCH_COL])
+                #roll_in = float(columns[ROLL_COL])
+                if  line_number < int(100*start):
+                    pitch_gravity = round(degrees(atan2(-gravity[0,0] , sqrt((gravity[1,0])**2+(gravity[2,0])**2))),2)
+                    roll_gravity = round(degrees(atan2(gravity[1,0],gravity[2,0])),2)
+                    weight = weights[line_number]
+                    weight_sum = weight_sum + weight
+                    N = N + 1
+                    gravity_sum = gravity_sum + weight*gravity
+                    g_sqr_sum = g_sqr_sum + np.vdot(gravity,gravity)*weight
+                    xTx[0,0] = N*N
+                    xTx[1,1] = 1.0
+                    xTx[0,1] = N
+                    xTx[1,0] = N
+                    xTx_sum = xTx_sum + weight*xTx
+                    x_yaw[0,0] = x_yaw[0,0] + N*yaw_in*weight
+                    x_yaw[1,0] = x_yaw[1,0] + yaw_in*weight
+                    x_pitch[0,0] = x_pitch[0,0] + N*(pitch_in-pitch_gravity)*weight
+                    x_pitch[1,0] = x_pitch[1,0] + (pitch_in-pitch_gravity)*weight
+                    x_roll[0,0] = x_roll[0,0] + N*(roll_in-roll_gravity)*weight
+                    x_roll[1,0] = x_roll[1,0] + (roll_in-roll_gravity)*weight
+                    yaw_sqr_sum = yaw_sqr_sum + (yaw_in**2)*weight
+                    pitch_sqr_sum = pitch_sqr_sum + ((pitch_in-pitch_gravity)**2)*weight
+                    roll_sqr_sum = roll_sqr_sum + ((roll_in-roll_gravity)**2)*weight
 
-                    line_number = line_number + 1
+                line_number = line_number + 1
 
-                except ValueError:
-                    pass
             else:
                 pass
 
@@ -1267,147 +1316,126 @@ def process_data(file):
     previous_stamp = 0
     minimum_delta = 50
     nominal_delta = 100
+    output_file.write("x_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,yaw_rate_xx,max_gyro_xx,cpu_xx,seq_no_xx,tmptur_xx,time_stamps_xx\r")
+    for line_number in line_nums :
+        if ( True ) :
+            if ( True ) :
+                if ( True ) :
+                    xa_in = - gxs[line_number]
+                    ya_in = - gys[line_number]
+                    za_in = - gzs[line_number]
+                    yaw_in = yaws[line_number]
+                    pitch_in = pitches[line_number]
+                    roll_in = rolls[line_number]
+                    time_in = times[line_number]
+ 
+                    if ( True ):
 
-    # lines = dataStr.splitlines(keepends=False)
-    if dataStr:
-        for line in lines:
-            columns = line.split(',')
-            if  ( len(columns) < NUM_COLS ) :
-                output_file.write(line+"\r")
-            else :
-                if ( len(columns) == NUM_COLS ) or  ( len(columns) == NUM_COLS +1 ):
-                    try:
-                        xa_in = float(columns[XA_COL])
-                        ya_in = float(columns[YA_COL])
-                        za_in = float(columns[ZA_COL])
-                        yaw_in = float(columns[YAW_COL])
-                        pitch_in = float(columns[PITCH_COL])
-                        roll_in = float(columns[ROLL_COL])
-                        if ( has_time_stamps ) :
-                            time_stamp_in = int(columns[TIME_COL])
-                            if time_stamp_in - previous_stamp > minimum_delta :
-                                previous_stamp = time_stamp_in
-                            else :
-                                time_stamp_in = previous_stamp + nominal_delta
-                                previous_stamp = time_stamp_in
-                        else :
-                            time_stamp_in = time_stamp
-                            time_stamp = time_stamp + time_increment
-
-                        line_number = line_number + 1
-
-                        if line_number > skip_lines:
-
-                            create_ypr_matrix(yaw_in,pitch_in,roll_in)
-                            matrix_in = ypr_mat
-                            
-                            if first_line == 1 :
-                                matrix_in_prev = matrix_in
-                                matrix_out  = matrix_in
-                                matrix_out_prev = matrix_out
-                            
-                            matrix_update = np.matmul(np.matmul(np.transpose(matrix_in_prev),matrix_in),drift_mat)
-                            matrix_out = np.matmul(matrix_out_prev,matrix_update)
-                            matrix_out_prev = matrix_out
+                        create_ypr_matrix(yaw_in,pitch_in,roll_in)
+                        matrix_in = ypr_mat
+                        
+                        if first_line == 1 :
                             matrix_in_prev = matrix_in
-                                
-                            if line_number == int(100*start):
-                                angles_at_pull = extract_euler(matrix_out)
-                                create_ypr_matrix(yaw_offset,angles_at_pull[1],angles_at_pull[2])
-                                matrix_out = ypr_mat
-                                matrix_out_prev = matrix_out
-
-                            gyro_wp[0,0] = 50.0*degrees(matrix_update[2,1]-matrix_update[1,2])
-                            gyro_wp[1,0] = 50.0*degrees(matrix_update[0,2]-matrix_update[2,0])
-                            gyro_wp[2,0] = 50.0*degrees(matrix_update[1,0]-matrix_update[0,1])
-
-                            omega[0,0] = radians(gyro_wp[0,0])
-                            omega[1,0] = radians(gyro_wp[1,0])
-                            omega[2,0] = radians(gyro_wp[2,0])
-
-                            gyro_sled = np.matmul(ypr_o_mat,gyro_wp)
-
-
-                            deter = np.linalg.det(matrix_out)
-
-                            matrix_adjusted = np.matmul(matrix_out,ypr_o_mat_transpose)
-
-                            yaw_out = round(degrees(atan2(matrix_adjusted[1,0],matrix_adjusted[0,0])),2)
-                            pitch_out = round(degrees(atan2(-matrix_adjusted[2,0], sqrt((matrix_adjusted[2,1])**2+(matrix_adjusted[2,2])**2))),2)
-                            roll_out = round(degrees(atan2(matrix_adjusted[2,1],matrix_adjusted[2,2])),2)
-
-                            force_in[0,0] = xa_in
-                            force_in[1,0] = ya_in
-                            force_in[2,0] = za_in
-
-                            force_out = np.matmul(ypr_o_mat,force_in)
-
-                            xa_out = round(force_out[0,0],2)
-                            ya_out = round(force_out[1,0],2)
-                            za_out = round(force_out[2,0],2)
-
-
-                            if first_line == 1:
-                                first_line = 0
-                                heading = yaw_out
-                                previous_yaw = yaw_out
-                            else:
-                                if abs(yaw_out - previous_yaw) < 90:
-                                    heading = heading + yaw_out - previous_yaw
-                                else:
-                                    if yaw_out - previous_yaw > 0:
-                                        heading = heading + yaw_out - previous_yaw - 360
-                                    else:
-                                        heading = heading + yaw_out - previous_yaw + 360
-                                previous_yaw = yaw_out
-                        else:
-                            xa_out = xa_in
-                            ya_out = ya_in
-                            za_out = za_in
-                            heading = yaw_in
-                            pitch_out = pitch_in
-                            roll_out = roll_in
-
-                        try:
-
-                            output_file.write(str(xa_out)+","+str(ya_out)+","+str(za_out)+",")
-                            output_file.write(str(round(heading,2))+","+str(pitch_out)+","+str(roll_out)+",")
-                            output_file.write(columns[6]+","+columns[7]+","+columns[8]+","+columns[9]+","+columns[10]+","+str(int(time_stamp_in))+"\r")
+                            matrix_out  = matrix_in
+                            matrix_out_prev = matrix_out
+                        
+                        matrix_update = np.matmul(np.matmul(np.transpose(matrix_in_prev),matrix_in),drift_mat)
+                        matrix_out = np.matmul(matrix_out_prev,matrix_update)
+                        matrix_out_prev = matrix_out
+                        matrix_in_prev = matrix_in
                             
-                            compare_file.write(f"{xa_in},{xa_out},{ya_in},{ya_out},{za_in},{za_out},{yaw_in},{round(heading,2)},{pitch_in},{pitch_out},{roll_in},{roll_out}\r")
-                        except:
-                            pass
+                        if line_number == int(100*start):
+                            angles_at_pull = extract_euler(matrix_out)
+                            create_ypr_matrix(yaw_offset,angles_at_pull[1],angles_at_pull[2])
+                            matrix_out = ypr_mat
+                            matrix_out_prev = matrix_out
 
-                        omega_e = np.matmul(matrix_adjusted,omega)
-                        omegas_e_x.append(omega_e[0,0])
-                        omegas_e_y.append(omega_e[1,0])
-                        omegas_e_z.append(omega_e[2,0])
+                        gyro_wp[0,0] = 50.0*degrees(matrix_update[2,1]-matrix_update[1,2])
+                        gyro_wp[1,0] = 50.0*degrees(matrix_update[0,2]-matrix_update[2,0])
+                        gyro_wp[2,0] = 50.0*degrees(matrix_update[1,0]-matrix_update[0,1])
 
-                        wx_list.append(omega[0,0])
-                        wy_list.append(omega[1,0])
-                        wz_list.append(omega[2,0])
+                        omega[0,0] = radians(gyro_wp[0,0])
+                        omega[1,0] = radians(gyro_wp[1,0])
+                        omega[2,0] = radians(gyro_wp[2,0])
 
-                        fx_list.append(force_out[0,0])
-                        fy_list.append(force_out[1,0])
-                        fz_list.append(force_out[2,0])
-
-                        g_force[0,0]=gravity_value*matrix_adjusted[2,0]
-                        g_force[1,0]=gravity_value*matrix_adjusted[2,1]
-                        g_force[2,0]=gravity_value*matrix_adjusted[2,2]
-
-                        gx_list.append(g_force[0,0])
-                        gy_list.append(g_force[1,0])
-                        gz_list.append(g_force[2,0])
-
-                        heading_list.append(heading)
-                        pitch_list.append(pitch_out)
-                        roll_list.append(roll_out)
+                        gyro_sled = np.matmul(ypr_o_mat,gyro_wp)
 
 
-                    except ValueError:
-                        output_file.write("x_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,yaw_rate_xx,x_force_ns_xx,y_force_ns_xx,seq_no_xx,tmptur_xx,time_stamps_xx\r")
-                else:
-                    output_file.write(line+"\r")
+                        deter = np.linalg.det(matrix_out)
+
+                        matrix_adjusted = np.matmul(matrix_out,ypr_o_mat_transpose)
+
+                        yaw_out = round(degrees(atan2(matrix_adjusted[1,0],matrix_adjusted[0,0])),2)
+                        pitch_out = round(degrees(atan2(-matrix_adjusted[2,0], sqrt((matrix_adjusted[2,1])**2+(matrix_adjusted[2,2])**2))),2)
+                        roll_out = round(degrees(atan2(matrix_adjusted[2,1],matrix_adjusted[2,2])),2)
+
+                        force_in[0,0] = xa_in
+                        force_in[1,0] = ya_in
+                        force_in[2,0] = za_in
+
+                        force_out = np.matmul(ypr_o_mat,force_in)
+
+                        xa_out = round(force_out[0,0],2)
+                        ya_out = round(force_out[1,0],2)
+                        za_out = round(force_out[2,0],2)
+
+
+                        if first_line == 1:
+                            first_line = 0
+                            heading = yaw_out
+                            previous_yaw = yaw_out
+                        else:
+                            if abs(yaw_out - previous_yaw) < 90:
+                                heading = heading + yaw_out - previous_yaw
+                            else:
+                                if yaw_out - previous_yaw > 0:
+                                    heading = heading + yaw_out - previous_yaw - 360
+                                else:
+                                    heading = heading + yaw_out - previous_yaw + 360
+                            previous_yaw = yaw_out
+                    else:
+                        xa_out = xa_in
+                        ya_out = ya_in
+                        za_out = za_in
+                        heading = yaw_in
+                        pitch_out = pitch_in
+                        roll_out = roll_in
+
+                    #try:
+                    if ( True ) :
+                        output_file.write(str(xa_out)+","+str(ya_out)+","+str(za_out)+",")
+                        output_file.write(str(round(heading,2))+","+str(pitch_out)+","+str(roll_out)+",")
+                        output_file.write(f"{yaw_rates[line_number]},{max_gyros[line_number]},{cpus[line_number]},{seqs[line_number]},{tmpturs[line_number]},{time_in}\n")
+                        
+                        #compare_file.write(f"{xa_in},{xa_out},{ya_in},{ya_out},{za_in},{za_out},{yaw_in},{round(heading,2)},{pitch_in},{pitch_out},{roll_in},{roll_out}\n")
+                    #except:
+                        #print("exception in output_file write")
+                        #pass
+
+                    omega_e = np.matmul(matrix_adjusted,omega)
+                    omegas_e_x.append(omega_e[0,0])
+                    omegas_e_y.append(omega_e[1,0])
+                    omegas_e_z.append(omega_e[2,0])
+
+                    wx_list.append(omega[0,0])
+                    wy_list.append(omega[1,0])
+                    wz_list.append(omega[2,0])
+
+                    fx_list.append(force_out[0,0])
+                    fy_list.append(force_out[1,0])
+                    fz_list.append(force_out[2,0])
+
+                    g_force[0,0]=gravity_value*matrix_adjusted[2,0]
+                    g_force[1,0]=gravity_value*matrix_adjusted[2,1]
+                    g_force[2,0]=gravity_value*matrix_adjusted[2,2]
+
+                    gx_list.append(g_force[0,0])
+                    gy_list.append(g_force[1,0])
+                    gz_list.append(g_force[2,0])
+
+                    heading_list.append(heading)
+                    pitch_list.append(pitch_out)
+                    roll_list.append(roll_out)
 
     return None
 
