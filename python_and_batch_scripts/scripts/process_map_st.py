@@ -729,9 +729,6 @@ def read_markers(marker_file):
 
 global valid_run
 
-def read_data_test(file):
-    dataStrRead = file.read()
-    file.seek(0)
 
 def read_data(file):
     global times
@@ -828,7 +825,7 @@ def read_data(file):
      
     print("inside read data, len line_nums = " , len(line_nums))
     print("inside read data, len line_numbers = " , len(line_numbers))
-    
+    # just in case we eventually want to reread the file
     file.seek(0)
 
 def process_data(file):
@@ -904,14 +901,9 @@ def process_data(file):
 
     VALID_COLUMN = 1
 
-
-    dataStr = file.read()
-
-    lines = dataStr.splitlines(keepends=False)
     first_line = 1
     line_number = 0
     if ( True ) :
-    #if dataStr:
     ##################################################################
     #
     #
@@ -979,17 +971,14 @@ def process_data(file):
         gx_var = gx_sqr_bar - gx_bar**2
         gy_var = gy_sqr_bar - gy_bar**2
 
-    #try:
-    if ( True ) :
-        print("N" , N )
-        print("len line numbers" , len(line_numbers))
+    
         variance_indices = indices(jostle_window)
         gx_variance = windowed_variance(gxs,gx_bar,variance_indices)
         gy_variance = windowed_variance(gys,gy_bar,variance_indices)
         gx_gy_variance = gx_variance + gy_variance
-    #except:
-        #print("not enough data to compute variance, did you specify -s and -e values?")
-        #exit()
+    else :
+        print("not enough data to compute variance, did you specify -s and -e values?")
+        exit()
 
     try:
 
@@ -1020,30 +1009,21 @@ def process_data(file):
 
     N = 0
     weight_sum = 0
-    # lines = dataStr.splitlines(keepends=False)
     first_line = 1
     line_number = 0
     gravity_sum = np.zeros((3,1))
-    if dataStr:
-        for line in lines:
-            columns = line.split(',')
-            if ( len(columns) == NUM_COLS ) or  ( len(columns) == NUM_COLS +1 ) :
-                try :
-                    gravity[0,0] = gxs[line_number]
-                    gravity[1,0] = gys[line_number]
-                    gravity[2,0] = gzs[line_number]
-                    yaw_in = yaws[line_number]
-                    pitch_in = pitches[line_number]
-                    roll_in = rolls[line_number]
-                except :
-                    print("out of range line number", line_number)
-                #gravity[0,0] = - float(columns[XA_COL])
-                #gravity[1,0] = - float(columns[YA_COL])
-                #gravity[2,0] = - float(columns[ZA_COL])
-                #yaw_in = float(columns[YAW_COL])
-                #pitch_in = float(columns[PITCH_COL])
-                #roll_in = float(columns[ROLL_COL])
-                if  line_number < int(100*start):
+    if ( True ) :
+        for line_number in line_numbers:
+            if ( True ) :
+                
+                gravity[0,0] = gxs[line_number]
+                gravity[1,0] = gys[line_number]
+                gravity[2,0] = gzs[line_number]
+                yaw_in = yaws[line_number]
+                pitch_in = pitches[line_number]
+                roll_in = rolls[line_number]
+                
+                if  ( True ):
                     pitch_gravity = round(degrees(atan2(-gravity[0,0] , sqrt((gravity[1,0])**2+(gravity[2,0])**2))),2)
                     roll_gravity = round(degrees(atan2(gravity[1,0],gravity[2,0])),2)
                     weight = weights[line_number]
@@ -1065,19 +1045,16 @@ def process_data(file):
                     yaw_sqr_sum = yaw_sqr_sum + (yaw_in**2)*weight
                     pitch_sqr_sum = pitch_sqr_sum + ((pitch_in-pitch_gravity)**2)*weight
                     roll_sqr_sum = roll_sqr_sum + ((roll_in-roll_gravity)**2)*weight
-
-                line_number = line_number + 1
-
+        if weight_sum > 0 :
+            g_bar = gravity_sum/weight_sum
+            g_bar_sqr = np.vdot(g_bar,g_bar)
+            g_sqr_bar = g_sqr_sum/weight_sum
+            g_var = g_sqr_bar - g_bar_sqr
+            if g_var > 0:
+                g_std = sqrt(g_var)
             else:
-                pass
-
-        g_bar = gravity_sum/weight_sum
-        g_bar_sqr = np.vdot(g_bar,g_bar)
-        g_sqr_bar = g_sqr_sum/weight_sum
-        g_var = g_sqr_bar - g_bar_sqr
-        if g_var > 0:
-            g_std = sqrt(g_var)
-        else:
+                g_std = 0
+        else :
             g_std = 0
 
         if N > 10:
