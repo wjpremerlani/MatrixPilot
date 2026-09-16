@@ -226,6 +226,9 @@ yaw_drift = 0.0
 pitch_drift = 0.0
 roll_drift = 0.0
 
+global drift_vector
+drift_vector = np.zeros((3,1))
+
 global pitch_zero , roll_zero
 pitch_zero = 0.0
 roll_zero = 0.0
@@ -545,6 +548,12 @@ def phi_to_matrix(phi) :
     result[2,0] = -f1_value*phi[1,0] + f2_value*(phi[2,0]*phi[0,0])
     result[2,1] = f1_value*phi[0,0] + f2_value*(phi[2,0]*phi[1,0])
 
+    return result
+
+def adjust(in_matrix,drift):
+    m_vector = matrix_to_phi(in_matrix)
+    adj_vector = m_vector - drift
+    result = phi_to_matrix(adj_vector)
     return result
 
 def matrix_to_phi(matrix) :
@@ -1232,7 +1241,11 @@ def process_data(file):
             if N < 11:
                 summary_log_file.write(f">>>>>> warning <<<<<<< there were only {N} samples used in drift computations.\n")
 
+            drift_vector[0,0] = radians(roll_drift)/6000.0
+            drift_vector[1,0] = radians(pitch_drift)/6000.0
+
             summary_log_write_adjustements(pitch_offset,roll_offset,pitch_drift,roll_drift)
+            
 
         except:
             pass
@@ -1383,16 +1396,19 @@ def process_data(file):
             matrix_in_prev = matrix_in
             matrix_out  = matrix_in
             matrix_out_prev = matrix_out
-        
-        matrix_update = np.matmul(np.matmul(np.transpose(matrix_in_prev),matrix_in),drift_mat)
+
+        raw_update = np.matmul(np.transpose(matrix_in_prev),matrix_in)
+        matrix_update = adjust(raw_update,drift_vector)
+
         matrix_out = np.matmul(matrix_out_prev,matrix_update)
         matrix_out_prev = matrix_out
         matrix_in_prev = matrix_in
             
-        if line_number == int(100*start):
-            angles_at_pull = extract_euler(matrix_out)
-            create_ypr_matrix(yaw_offset,angles_at_pull[1],angles_at_pull[2])
-            matrix_out = ypr_mat
+        if line_number == int(100*start) :
+            sled_matrix = np.matmul(matrix_out,ypr_o_mat_transpose )
+            angles_at_pull = extract_euler(sled_matrix)
+            create_ypr_matrix(0,angles_at_pull[1],0)
+            matrix_out = np.matmul(ypr_mat,ypr_o_mat)
             matrix_out_prev = matrix_out
 
         gyro_wp[0,0] = 50.0*degrees(matrix_update[2,1]-matrix_update[1,2])
