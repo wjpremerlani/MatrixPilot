@@ -661,7 +661,7 @@ def two_phase_roll_update_timing_marks(write_requests, roll_rate , roll_out , he
         else:
             distance_flag = -2.7
         try:
-            debug_marks_file.write(f"{mark_number},{roll_flag},{roll_sign_flag},{roll_max_flag},{yaw_flag},{distance_flag},,{round(roll_out,2)},{round(heading,2)}\n")
+            debug_marks_file.write(f"{mark_number+10},{roll_flag-20},{roll_sign_flag-20},{roll_max_flag-20},{yaw_flag-20},{distance_flag-20},{round(roll_out/10.0,2)},{round(heading/50.0,2)}\n")
         except:
             pass
 
@@ -880,9 +880,6 @@ def read_data(file):
                         line_numbers.append(line_number)
                     line_number = line_number + 1
                 except:
-                    number_exceptions = number_exceptions + 1
-                    if ( number_exceptions < 10 ) :
-                        print("exception, line:",line_read)
                     pass
 
     try :
@@ -3036,7 +3033,7 @@ if __name__ == "__main__":
 
         debug_marks_file = open(file_base_name + "_debug_marks.csv", "w")
         debug_marks_file.write(
-            f"mark_number,roll_is_small,opposite_roll_n_rate,valid_roll_peak,has_minimum_yaw,has_minimum_distance,,roll,yaw,,,minimum yaw = {yaw_threshold}\n")
+            f"mark_number+10,roll_is_small,opposite_roll_n_rate,valid_roll_peak,has_minimum_yaw,has_minimum_distance,roll/10,yaw/50,,,minimum yaw = {yaw_threshold}\n")
 
         variance_file = open(file_base_name + "_variance.csv", "w")
         output_file = open(file_base_name + "_adjusted.txt", "w")
