@@ -487,6 +487,81 @@ def create_ypr_matrix(yaw,pitch,roll):
     yp_mat = np.matmul(y_mat,p_mat)
     ypr_mat = np.matmul(yp_mat,r_mat)
 
+
+def f1(phi_sqr):
+    result = 1.0 - phi_sqr/6.0 + phi_sqr*phi_sqr/120.0 - phi_sqr*phi_sqr*phi_sqr/5040.0
+    return result
+
+def f2(phi_sqr):
+    result = 0.5 -phi_sqr/24.0 + phi_sqr*phi_sqr/720.0 - phi_sqr*phi_sqr*phi_sqr/40320.0
+    return result
+
+def f3(phi_sqr):
+    result = 1.0/6.0 - phi_sqr/120.0 + phi_sqr*phi_sqr/5040.0 - phi_sqr*phi_sqr*phi_sqr/362880.0
+    return result
+
+def matrix_to_matrix_integral(matrix):
+    angle_axis = matrix_to_phi(matrix)
+    mat_integral = phi_to_matrix_integral(angle_axis)
+    return mat_integral
+
+def phi_to_matrix_integral(phi) :
+    result = np.zeros((3,3))
+    
+    phi_sqr = np.vdot(phi,phi)
+    f2_value = f2(phi_sqr)
+    f3_value = f3(phi_sqr)
+    
+    result[0,0] = 1.0  + f3_value*(phi[0,0]*phi[0,0]-phi_sqr)
+    result[0,1] = -f2_value*phi[2,0] + f3_value*(phi[0,0]*phi[1,0])
+    result[0,2] = f2_value*phi[1,0] + f3_value*(phi[0,0]*phi[2,0])
+
+    result[1,1] = 1.0  + f3_value*(phi[1,0]*phi[1,0]-phi_sqr)
+    result[1,2] = -f2_value*phi[0,0] + f3_value*(phi[1,0]*phi[2,0])
+    result[1,0] = f2_value*phi[2,0] + f3_value*(phi[1,0]*phi[0,0])
+
+    result[2,2] = 1.0  + f3_value*(phi[2,0]*phi[2,0]-phi_sqr)
+    result[2,0] = -f2_value*phi[1,0] + f3_value*(phi[2,0]*phi[0,0])
+    result[2,1] = f2_value*phi[0,0] + f3_value*(phi[2,0]*phi[1,0])
+
+    return result
+
+def phi_to_matrix(phi) :
+    result = np.zeros((3,3))
+    
+    phi_sqr = np.vdot(phi,phi)
+    f1_value = f1(phi_sqr)
+    f2_value = f2(phi_sqr)
+    
+    result[0,0] = 1.0  + f2_value*(phi[0,0]*phi[0,0]-phi_sqr)
+    result[0,1] = -f1_value*phi[2,0] + f2_value*(phi[0,0]*phi[1,0])
+    result[0,2] = f1_value*phi[1,0] + f2_value*(phi[0,0]*phi[2,0])
+
+    result[1,1] = 1.0  + f2_value*(phi[1,0]*phi[1,0]-phi_sqr)
+    result[1,2] = -f1_value*phi[0,0] + f2_value*(phi[1,0]*phi[2,0])
+    result[1,0] = f1_value*phi[2,0] + f2_value*(phi[1,0]*phi[0,0])
+
+    result[2,2] = 1.0  + f2_value*(phi[2,0]*phi[2,0]-phi_sqr)
+    result[2,0] = -f1_value*phi[1,0] + f2_value*(phi[2,0]*phi[0,0])
+    result[2,1] = f1_value*phi[0,0] + f2_value*(phi[2,0]*phi[1,0])
+
+    return result
+
+def matrix_to_phi(matrix) :
+    result = np.zeros((3,1))
+    f1_phi = np.zeros((3,1))
+    f1_phi[0,0] = ( matrix[2,1] - matrix[1,2] )/2.0
+    f1_phi[1,0] = ( matrix[0,2] - matrix[2,0] )/2.0
+    f1_phi[2,0] = ( matrix[1,0] - matrix[0,1] )/2.0
+    sin_phi = sqrt(np.vdot(f1_phi,f1_phi))
+    cos_phi = (np.trace(matrix)-1.0)/2.0
+    phi = np.arctan2(sin_phi,cos_phi)
+    f1_val = f1 ( phi*phi )
+    result[0,0] = (f1_phi[0,0]/f1_val)
+    result[1,0] = (f1_phi[1,0]/f1_val)
+    result[2,0] = (f1_phi[2,0]/f1_val)        
+    return result
+
 #corner_w is the pitch rate in radians per second at which the kalman gain is 0.5
 global corner_w
 corner_w = 1.4
