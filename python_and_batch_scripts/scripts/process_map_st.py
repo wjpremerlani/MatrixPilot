@@ -638,28 +638,28 @@ def two_phase_roll_update_timing_marks(write_requests, roll_rate , roll_out , he
     else:
         roll_max = max(abs(roll_out),roll_max)
         if (abs(roll_out) < roll_ratio*roll_max ):
-            roll_flag = 10.1
+            roll_flag = 10.7
         else:
-            roll_flag = -.1
+            roll_flag = -.7
 
         if ( np.sign(roll_out) != np.sign(roll_rate)):
-            roll_sign_flag = 10.2
+            roll_sign_flag = 11.2
         else:
-            roll_sign_flag = -.2
+            roll_sign_flag = -1.2
 
         if ( roll_max > peak_threshold ):
-            roll_max_flag = 10.3
+            roll_max_flag = 11.7
         else:
-            roll_max_flag = -.3
+            roll_max_flag = -1.7
 
         if (abs(heading - heading_start) > yaw_threshold ):
-            yaw_flag = 10.4
+            yaw_flag = 12.2
         else:
-            yaw_flag = -.4
+            yaw_flag = -2.2
         if ( distance - distance_at_efc > minimum_distance ) :
-            distance_flag = 10.5
+            distance_flag = 12.7
         else:
-            distance_flag = -10.5
+            distance_flag = -2.7
         try:
             debug_marks_file.write(f"{mark_number},{roll_flag},{roll_sign_flag},{roll_max_flag},{yaw_flag},{distance_flag},,{round(roll_out,2)},{round(heading,2)}\n")
         except:
@@ -1370,124 +1370,111 @@ def process_data(file):
     nominal_delta = 100
     output_file.write("x_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,yaw_rate_xx,max_gyro_xx,cpu_xx,seq_no_xx,tmptur_xx,time_stamps_xx\r")
     for line_number in line_nums :
-        if ( True ) :
-            if ( True ) :
-                if ( True ) :
-                    xa_in = - gxs[line_number]
-                    ya_in = - gys[line_number]
-                    za_in = - gzs[line_number]
-                    yaw_in = yaws[line_number]
-                    pitch_in = pitches[line_number]
-                    roll_in = rolls[line_number]
-                    time_in = times[line_number]
- 
-                    if ( True ):
+   
+        xa_in = - gxs[line_number]
+        ya_in = - gys[line_number]
+        za_in = - gzs[line_number]
+        yaw_in = yaws[line_number]
+        pitch_in = pitches[line_number]
+        roll_in = rolls[line_number]
+        time_in = times[line_number]
 
-                        create_ypr_matrix(yaw_in,pitch_in,roll_in)
-                        matrix_in = ypr_mat
-                        
-                        if first_line == 1 :
-                            matrix_in_prev = matrix_in
-                            matrix_out  = matrix_in
-                            matrix_out_prev = matrix_out
-                        
-                        matrix_update = np.matmul(np.matmul(np.transpose(matrix_in_prev),matrix_in),drift_mat)
-                        matrix_out = np.matmul(matrix_out_prev,matrix_update)
-                        matrix_out_prev = matrix_out
-                        matrix_in_prev = matrix_in
-                            
-                        if line_number == int(100*start):
-                            angles_at_pull = extract_euler(matrix_out)
-                            create_ypr_matrix(yaw_offset,angles_at_pull[1],angles_at_pull[2])
-                            matrix_out = ypr_mat
-                            matrix_out_prev = matrix_out
+        create_ypr_matrix(yaw_in,pitch_in,roll_in)
+        matrix_in = ypr_mat
+        
+        if first_line == 1 :
+            matrix_in_prev = matrix_in
+            matrix_out  = matrix_in
+            matrix_out_prev = matrix_out
+        
+        matrix_update = np.matmul(np.matmul(np.transpose(matrix_in_prev),matrix_in),drift_mat)
+        matrix_out = np.matmul(matrix_out_prev,matrix_update)
+        matrix_out_prev = matrix_out
+        matrix_in_prev = matrix_in
+            
+        if line_number == int(100*start):
+            angles_at_pull = extract_euler(matrix_out)
+            create_ypr_matrix(yaw_offset,angles_at_pull[1],angles_at_pull[2])
+            matrix_out = ypr_mat
+            matrix_out_prev = matrix_out
 
-                        gyro_wp[0,0] = 50.0*degrees(matrix_update[2,1]-matrix_update[1,2])
-                        gyro_wp[1,0] = 50.0*degrees(matrix_update[0,2]-matrix_update[2,0])
-                        gyro_wp[2,0] = 50.0*degrees(matrix_update[1,0]-matrix_update[0,1])
+        gyro_wp[0,0] = 50.0*degrees(matrix_update[2,1]-matrix_update[1,2])
+        gyro_wp[1,0] = 50.0*degrees(matrix_update[0,2]-matrix_update[2,0])
+        gyro_wp[2,0] = 50.0*degrees(matrix_update[1,0]-matrix_update[0,1])
 
-                        omega[0,0] = radians(gyro_wp[0,0])
-                        omega[1,0] = radians(gyro_wp[1,0])
-                        omega[2,0] = radians(gyro_wp[2,0])
+        omega[0,0] = radians(gyro_wp[0,0])
+        omega[1,0] = radians(gyro_wp[1,0])
+        omega[2,0] = radians(gyro_wp[2,0])
 
-                        gyro_sled = np.matmul(ypr_o_mat,gyro_wp)
+        gyro_sled = np.matmul(ypr_o_mat,gyro_wp)
 
 
-                        deter = np.linalg.det(matrix_out)
+        deter = np.linalg.det(matrix_out)
 
-                        matrix_adjusted = np.matmul(matrix_out,ypr_o_mat_transpose)
+        matrix_adjusted = np.matmul(matrix_out,ypr_o_mat_transpose)
 
-                        yaw_out = round(degrees(atan2(matrix_adjusted[1,0],matrix_adjusted[0,0])),2)
-                        pitch_out = round(degrees(atan2(-matrix_adjusted[2,0], sqrt((matrix_adjusted[2,1])**2+(matrix_adjusted[2,2])**2))),2)
-                        roll_out = round(degrees(atan2(matrix_adjusted[2,1],matrix_adjusted[2,2])),2)
+        yaw_out = round(degrees(atan2(matrix_adjusted[1,0],matrix_adjusted[0,0])),2)
+        pitch_out = round(degrees(atan2(-matrix_adjusted[2,0], sqrt((matrix_adjusted[2,1])**2+(matrix_adjusted[2,2])**2))),2)
+        roll_out = round(degrees(atan2(matrix_adjusted[2,1],matrix_adjusted[2,2])),2)
 
-                        force_in[0,0] = xa_in
-                        force_in[1,0] = ya_in
-                        force_in[2,0] = za_in
+        force_in[0,0] = xa_in
+        force_in[1,0] = ya_in
+        force_in[2,0] = za_in
 
-                        force_out = np.matmul(ypr_o_mat,force_in)
+        force_out = np.matmul(ypr_o_mat,force_in)
 
-                        xa_out = round(force_out[0,0],2)
-                        ya_out = round(force_out[1,0],2)
-                        za_out = round(force_out[2,0],2)
+        xa_out = round(force_out[0,0],2)
+        ya_out = round(force_out[1,0],2)
+        za_out = round(force_out[2,0],2)
 
 
-                        if first_line == 1:
-                            first_line = 0
-                            heading = yaw_out
-                            previous_yaw = yaw_out
-                        else:
-                            if abs(yaw_out - previous_yaw) < 90:
-                                heading = heading + yaw_out - previous_yaw
-                            else:
-                                if yaw_out - previous_yaw > 0:
-                                    heading = heading + yaw_out - previous_yaw - 360
-                                else:
-                                    heading = heading + yaw_out - previous_yaw + 360
-                            previous_yaw = yaw_out
-                    else:
-                        xa_out = xa_in
-                        ya_out = ya_in
-                        za_out = za_in
-                        heading = yaw_in
-                        pitch_out = pitch_in
-                        roll_out = roll_in
+        if first_line == 1:
+            first_line = 0
+            heading = yaw_out
+            previous_yaw = yaw_out
+        else:
+            if abs(yaw_out - previous_yaw) < 90:
+                heading = heading + yaw_out - previous_yaw
+            else:
+                if yaw_out - previous_yaw > 0:
+                    heading = heading + yaw_out - previous_yaw - 360
+                else:
+                    heading = heading + yaw_out - previous_yaw + 360
+            previous_yaw = yaw_out
 
-                    #try:
-                    if ( True ) :
-                        output_file.write(str(xa_out)+","+str(ya_out)+","+str(za_out)+",")
-                        output_file.write(str(round(heading,2))+","+str(pitch_out)+","+str(roll_out)+",")
-                        output_file.write(f"{yaw_rates[line_number]},{max_gyros[line_number]},{cpus[line_number]},{seqs[line_number]},{tmpturs[line_number]},{time_in}\n")
-                        
-                        #compare_file.write(f"{xa_in},{xa_out},{ya_in},{ya_out},{za_in},{za_out},{yaw_in},{round(heading,2)},{pitch_in},{pitch_out},{roll_in},{roll_out}\n")
-                    #except:
-                        #print("exception in output_file write")
-                        #pass
+        output_file.write(str(xa_out)+","+str(ya_out)+","+str(za_out)+",")
+        output_file.write(str(round(heading,2))+","+str(pitch_out)+","+str(roll_out)+",")
+        output_file.write(f"{yaw_rates[line_number]},{max_gyros[line_number]},{cpus[line_number]},{seqs[line_number]},{tmpturs[line_number]},{time_in}\n")
+        
+        try: 
+            compare_file.write(f"{xa_in},{xa_out},{ya_in},{ya_out},{za_in},{za_out},{yaw_in},{round(heading,2)},{pitch_in},{pitch_out},{roll_in},{roll_out}\n")
+        except:
+            pass
 
-                    omega_e = np.matmul(matrix_adjusted,omega)
-                    omegas_e_x.append(omega_e[0,0])
-                    omegas_e_y.append(omega_e[1,0])
-                    omegas_e_z.append(omega_e[2,0])
+        omega_e = np.matmul(matrix_adjusted,omega)
+        omegas_e_x.append(omega_e[0,0])
+        omegas_e_y.append(omega_e[1,0])
+        omegas_e_z.append(omega_e[2,0])
 
-                    wx_list.append(omega[0,0])
-                    wy_list.append(omega[1,0])
-                    wz_list.append(omega[2,0])
+        wx_list.append(omega[0,0])
+        wy_list.append(omega[1,0])
+        wz_list.append(omega[2,0])
 
-                    fx_list.append(force_out[0,0])
-                    fy_list.append(force_out[1,0])
-                    fz_list.append(force_out[2,0])
+        fx_list.append(force_out[0,0])
+        fy_list.append(force_out[1,0])
+        fz_list.append(force_out[2,0])
 
-                    g_force[0,0]=gravity_value*matrix_adjusted[2,0]
-                    g_force[1,0]=gravity_value*matrix_adjusted[2,1]
-                    g_force[2,0]=gravity_value*matrix_adjusted[2,2]
+        g_force[0,0]=gravity_value*matrix_adjusted[2,0]
+        g_force[1,0]=gravity_value*matrix_adjusted[2,1]
+        g_force[2,0]=gravity_value*matrix_adjusted[2,2]
 
-                    gx_list.append(g_force[0,0])
-                    gy_list.append(g_force[1,0])
-                    gz_list.append(g_force[2,0])
+        gx_list.append(g_force[0,0])
+        gy_list.append(g_force[1,0])
+        gz_list.append(g_force[2,0])
 
-                    heading_list.append(heading)
-                    pitch_list.append(pitch_out)
-                    roll_list.append(roll_out)
+        heading_list.append(heading)
+        pitch_list.append(pitch_out)
+        roll_list.append(roll_out)
 
     return None
 
@@ -3049,7 +3036,7 @@ if __name__ == "__main__":
 
         debug_marks_file = open(file_base_name + "_debug_marks.csv", "w")
         debug_marks_file.write(
-            f"mark_number,roll_is_small,opposite_roll_n_rate,valid_roll_peak,has_minimum_yaw,has_minimum_distance,roll,yaw,,,minimum yaw = {yaw_threshold}\n")
+            f"mark_number,roll_is_small,opposite_roll_n_rate,valid_roll_peak,has_minimum_yaw,has_minimum_distance,,roll,yaw,,,minimum yaw = {yaw_threshold}\n")
 
         variance_file = open(file_base_name + "_variance.csv", "w")
         output_file = open(file_base_name + "_adjusted.txt", "w")
