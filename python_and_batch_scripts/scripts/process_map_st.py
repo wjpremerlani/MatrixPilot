@@ -489,6 +489,7 @@ def create_ypr_matrix(yaw,pitch,roll):
     create_roll_matrix(roll)
     yp_mat = np.matmul(y_mat,p_mat)
     ypr_mat = np.matmul(yp_mat,r_mat)
+    return ypr_mat
 
 
 def f1(phi_sqr):
@@ -1373,12 +1374,50 @@ def process_data(file):
         compare_file.write("x_force_in , x_force_out , y_force_in, y_force_out , z_force_in , z_force_out , yaw_in , yaw_out , pitch_in , pitch_out, roll_in , roll_out\r")
     except:
         pass
+
     first_line = 1
-    line_number = 0
-    previous_stamp = 0
-    minimum_delta = 50
-    nominal_delta = 100
+    #line_number = 0
+    #previous_stamp = 0
+    #minimum_delta = 50
+    #nominal_delta = 100
     output_file.write("x_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,yaw_rate_xx,max_gyro_xx,cpu_xx,seq_no_xx,tmptur_xx,time_stamps_xx\r")
+    if ( True ) :
+        adj_dbug = open(file_base_name+"_adj_dbug.txt", 'w')
+        adj_plot = open(file_base_name+"_adj_plot.csv", 'w')
+
+    mat_outs = []
+    gyro_outs = []
+
+    pull_index = int(100*start)
+
+    pull_yaw_wp = yaws[pull_index]
+    pull_pitch_wp = pitches[pull_index]
+    pull_roll_wp = rolls[pull_index]
+
+    pull_matrix_wp = create_ypr_matrix(pull_yaw_wp,pull_pitch_wp,pull_roll_wp)
+    pull_matrix_sled = np.matmul(pull_matrix_wp,ypr_o_mat_transpose )
+    sled_angles_at_pull = extract_euler(pull_matrix_sled)
+    ref_wp_at_pull = np.matmul(create_ypr_matrix(0,sled_angles_at_pull[1],0),ypr_o_mat)
+
+    wp_yaw0 = yaws[0]
+    wp_pitch0 = pitches[0]
+    wp_roll0 = pitches[0]
+
+    wp_mat0 = create_ypr_matrix(wp_yaw0,wp_pitch0,wp_roll0)
+
+    
+    if ( True ) :
+        adj_dbug.write(f"yaw, pitch and roll wolf pack at pull = {pull_yaw_wp},{pull_pitch_wp},{pull_roll_wp}\n")
+        adj_dbug.write(f"\n")
+        adj_dbug.write(f"wolf pack matrix at pull = {pull_matrix_wp}\n")
+        adj_dbug.write(f"\n")
+        adj_dbug.write(f"reported sled angles at pull = {sled_angles_at_pull}\n")
+        adj_dbug.write(f"\n")
+        adj_dbug.write(f"reference wolf pack orientation at pull = {ref_wp_at_pull}\n")
+        adj_dbug.write(f"\n")
+        adj_dbug.write(f"reported wolf pack rmat at 0 = {wp_mat0}\n")
+        adj_dbug.write(f"\n")              
+    
     for line_number in line_nums :
    
         xa_in = - gxs[line_number]
@@ -1419,8 +1458,7 @@ def process_data(file):
         omega[1,0] = radians(gyro_wp[1,0])
         omega[2,0] = radians(gyro_wp[2,0])
 
-        gyro_sled = np.matmul(ypr_o_mat,gyro_wp)
-
+        #gyro_sled = np.matmul(ypr_o_mat,gyro_wp) #not used, probably wrong
 
         deter = np.linalg.det(matrix_out)
 
