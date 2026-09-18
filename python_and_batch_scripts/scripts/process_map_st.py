@@ -1370,8 +1370,10 @@ def process_data(file):
             summary_log_file.write(f"warning: the sum of the analysis weights is {round(weight_sum,2)} , which is less than the allowed threshold of {weights_min}\n")
         print(">>>*****************************************************<<<")
         print("warning: the sum of the analysis weights is ",round(weight_sum,2),", which is less than the allowed threshold of ",weights_min)
+
+
     try:
-        compare_file.write("x_force_in , x_force_out , y_force_in, y_force_out , z_force_in , z_force_out , yaw_in , yaw_out , pitch_in , pitch_out, roll_in , roll_out\r")
+        compare_file.write(f" x_force_in_{file_base_name} ,  x_force_out_{file_base_name} ,  y_force_in_{file_base_name},  y_force_out_{file_base_name} ,  z_force_in_{file_base_name} ,  z_force_out_{file_base_name} ,  yaw_in_{file_base_name} ,  yaw_out_{file_base_name} ,  pitch_in_{file_base_name} ,  pitch_out_{file_base_name},  roll_in_{file_base_name} ,  roll_out_{file_base_name}\r")
     except:
         pass
 
@@ -1381,7 +1383,7 @@ def process_data(file):
     #minimum_delta = 50
     #nominal_delta = 100
     output_file.write("x_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,yaw_rate_xx,max_gyro_xx,cpu_xx,seq_no_xx,tmptur_xx,time_stamps_xx\r")
-    if ( True ) :
+    if ( False ) :
         adj_dbug = open(file_base_name+"_adj_dbug.txt", 'w')
         adj_plot = open(file_base_name+"_adj_plot.csv", 'w')
 
@@ -1406,7 +1408,7 @@ def process_data(file):
     wp_mat0 = create_ypr_matrix(wp_yaw0,wp_pitch0,wp_roll0)
 
     
-    if ( True ) :
+    if ( False ) :
         adj_dbug.write(f"yaw, pitch and roll wolf pack at pull = {pull_yaw_wp},{pull_pitch_wp},{pull_roll_wp}\n")
         adj_dbug.write(f"\n")
         adj_dbug.write(f"wolf pack matrix at pull = {pull_matrix_wp}\n")
@@ -1444,22 +1446,25 @@ def process_data(file):
     alignment = np.matmul(ref_wp_at_pull,np.transpose(est_wp_at_pull))
     
     print("...")
+    print("reference matrix at pull = " , ref_wp_at_pull )
     print("...")
-    print("reference mat at pull = " , ref_wp_at_pull )
+    print("estimated matrix at pull = " , est_wp_at_pull )
     print("...")
-    print("...")
-    print("estimated mat at pull = " , ref_wp_at_pull )
-    print("...")
-    print("...")
-    print("alignment mat " , alignment )
+    print("alignment matrix " , alignment )
+
+    log_file.write(f"\n\nreference matrix at pull = , {ref_wp_at_pull}\n")
+    log_file.write(f"estimated matrix at pull = , {est_wp_at_pull}\n")
+    log_file.write(f"alignment matrix = , {alignment}\n\n")  
                           
+    if ( False ) :
+        adj_plot.write(f"yaw,pitch,roll\n")
 
-    adj_plot.write(f"yaw,pitch,roll\n")
+    if ( False ) :
 
-    for line_number in line_nums :
-        sled_mat = np.matmul ( np.matmul ( alignment , mat_outs[line_number]) , ypr_o_mat_transpose )
-        e_angles =  extract_euler(sled_mat)
-        adj_plot.write ( f"{round(e_angles[0],3)},{round(e_angles[1],3)},{round(e_angles[2],3)}\n")
+        for line_number in line_nums :
+            sled_mat = np.matmul ( np.matmul ( alignment , mat_outs[line_number]) , ypr_o_mat_transpose )
+            e_angles =  extract_euler(sled_mat)
+            adj_plot.write ( f"{round(e_angles[0],3)},{round(e_angles[1],3)},{round(e_angles[2],3)}\n")
 
     first_line = 1
     
@@ -1468,6 +1473,10 @@ def process_data(file):
         xa_in = - gxs[line_number]
         ya_in = - gys[line_number]
         za_in = - gzs[line_number]
+
+        yaw_in = yaws[line_number]
+        pitch_in = pitches[line_number]
+        roll_in = rolls[line_number]
 
         sled_mat = np.matmul ( np.matmul ( alignment , mat_outs[line_number]) , ypr_o_mat_transpose )
         e_angles =  extract_euler(sled_mat)
