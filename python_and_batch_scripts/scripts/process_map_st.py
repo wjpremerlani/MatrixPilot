@@ -1525,7 +1525,7 @@ def process_data(file):
             previous_yaw = yaw_out
 
         output_file.write(str(xa_out)+","+str(ya_out)+","+str(za_out)+",")
-        output_file.write(str(round(heading,2))+","+str(pitch_out)+","+str(roll_out)+",")
+        output_file.write(str(round(heading,3))+","+str(round(pitch_out,3))+","+str(round(roll_out,3))+",")
         output_file.write(f"{yaw_rates[line_number]},{max_gyros[line_number]},{cpus[line_number]},{seqs[line_number]},{tmpturs[line_number]},{time_in}\n")
         
         try: 
