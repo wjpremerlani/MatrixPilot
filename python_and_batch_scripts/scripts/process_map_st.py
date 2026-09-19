@@ -226,6 +226,9 @@ yaw_drift = 0.0
 pitch_drift = 0.0
 roll_drift = 0.0
 
+global drift_vector
+drift_vector = np.zeros((3,1))
+
 global pitch_zero , roll_zero
 pitch_zero = 0.0
 roll_zero = 0.0
@@ -486,6 +489,7 @@ def create_ypr_matrix(yaw,pitch,roll):
     create_roll_matrix(roll)
     yp_mat = np.matmul(y_mat,p_mat)
     ypr_mat = np.matmul(yp_mat,r_mat)
+    return ypr_mat
 
 
 def f1(phi_sqr):
@@ -545,6 +549,12 @@ def phi_to_matrix(phi) :
     result[2,0] = -f1_value*phi[1,0] + f2_value*(phi[2,0]*phi[0,0])
     result[2,1] = f1_value*phi[0,0] + f2_value*(phi[2,0]*phi[1,0])
 
+    return result
+
+def adjust(in_matrix,drift):
+    m_vector = matrix_to_phi(in_matrix)
+    adj_vector = m_vector - drift
+    result = phi_to_matrix(adj_vector)
     return result
 
 def matrix_to_phi(matrix) :
@@ -1232,7 +1242,11 @@ def process_data(file):
             if N < 11:
                 summary_log_file.write(f">>>>>> warning <<<<<<< there were only {N} samples used in drift computations.\n")
 
+            drift_vector[0,0] = radians(roll_drift)/6000.0
+            drift_vector[1,0] = radians(pitch_drift)/6000.0
+
             summary_log_write_adjustements(pitch_offset,roll_offset,pitch_drift,roll_drift)
+            
 
         except:
             pass
@@ -1295,7 +1309,7 @@ def process_data(file):
         pass
 
     if args_centrifuge_testing:
-        create_ypr_matrix(yaw_offset, pitch_offset , roll_offset)
+        first_mat = create_ypr_matrix(yaw_offset, pitch_offset , roll_offset)
         first_mat = ypr_mat
         create_ypr_matrix(0.0, 0.0 , 0.0)
         ypr_o_mat = ypr_mat
@@ -1356,63 +1370,130 @@ def process_data(file):
             summary_log_file.write(f"warning: the sum of the analysis weights is {round(weight_sum,2)} , which is less than the allowed threshold of {weights_min}\n")
         print(">>>*****************************************************<<<")
         print("warning: the sum of the analysis weights is ",round(weight_sum,2),", which is less than the allowed threshold of ",weights_min)
+
+
     try:
-        compare_file.write("x_force_in , x_force_out , y_force_in, y_force_out , z_force_in , z_force_out , yaw_in , yaw_out , pitch_in , pitch_out, roll_in , roll_out\r")
+        compare_file.write(f" x_force_in_{file_base_name} ,  x_force_out_{file_base_name} ,  y_force_in_{file_base_name},  y_force_out_{file_base_name} ,  z_force_in_{file_base_name} ,  z_force_out_{file_base_name} ,  yaw_in_{file_base_name} ,  yaw_out_{file_base_name} ,  pitch_in_{file_base_name} ,  pitch_out_{file_base_name},  roll_in_{file_base_name} ,  roll_out_{file_base_name}\r")
     except:
         pass
+
     first_line = 1
-    line_number = 0
-    previous_stamp = 0
-    minimum_delta = 50
-    nominal_delta = 100
     output_file.write("x_force_xx,y_force_xx,z_force_xx,yaw_xx,pitch_xx,roll_xx,yaw_rate_xx,max_gyro_xx,cpu_xx,seq_no_xx,tmptur_xx,time_stamps_xx\r")
+    if ( False ) :
+        adj_dbug = open(file_base_name+"_adj_dbug.txt", 'w')
+        adj_plot = open(file_base_name+"_adj_plot.csv", 'w')
+
+    mat_outs = []
+    gyro_outs = []
+
+    pull_index = int(100*start)
+
+    pull_yaw_wp = yaws[pull_index]
+    pull_pitch_wp = pitches[pull_index]
+    pull_roll_wp = rolls[pull_index]
+
+    pull_matrix_wp = create_ypr_matrix(pull_yaw_wp,pull_pitch_wp,pull_roll_wp)
+    pull_matrix_sled = np.matmul(pull_matrix_wp,ypr_o_mat_transpose )
+    sled_angles_at_pull = extract_euler(pull_matrix_sled)
+    ref_wp_at_pull = np.matmul(create_ypr_matrix(0,sled_angles_at_pull[1],0),ypr_o_mat)
+
+    wp_yaw0 = yaws[0]
+    wp_pitch0 = pitches[0]
+    wp_roll0 = pitches[0]
+
+    wp_mat0 = create_ypr_matrix(wp_yaw0,wp_pitch0,wp_roll0)
+
+    
+    if ( False ) :
+        adj_dbug.write(f"yaw, pitch and roll wolf pack at pull = {pull_yaw_wp},{pull_pitch_wp},{pull_roll_wp}\n")
+        adj_dbug.write(f"\n")
+        adj_dbug.write(f"wolf pack matrix at pull = {pull_matrix_wp}\n")
+        adj_dbug.write(f"\n")
+        adj_dbug.write(f"reported sled angles at pull = {sled_angles_at_pull}\n")
+        adj_dbug.write(f"\n")
+        adj_dbug.write(f"reference wolf pack orientation at pull = {ref_wp_at_pull}\n")
+        adj_dbug.write(f"\n")
+        adj_dbug.write(f"reported wolf pack rmat at 0 = {wp_mat0}\n")
+        adj_dbug.write(f"\n")
+
+    mat_in = wp_mat0.copy()
+    mat_in_prev = wp_mat0.copy()
+    mat_out = wp_mat0.copy()
+    mat_out_prev = wp_mat0.copy()
+
+    for line_number in line_nums :
+        yaw_in = yaws[line_number]
+        pitch_in = pitches[line_number]
+        roll_in = rolls[line_number]
+        mat_in = create_ypr_matrix(yaw_in,pitch_in,roll_in)
+        raw_update = np.matmul(np.transpose(mat_in_prev),mat_in)
+        mat_in_prev = mat_in
+        gyro_phi = matrix_to_phi(raw_update)
+        gyro_phi = gyro_phi - drift_vector
+        gyro_outs.append(gyro_phi)
+        adj_update = phi_to_matrix(gyro_phi)
+        mat_out = np.matmul(mat_out_prev,adj_update)
+        mat_outs.append(mat_out)
+        mat_out_prev = mat_out
+
+
+    est_wp_at_pull = mat_outs[pull_index]
+
+    alignment = np.matmul(ref_wp_at_pull,np.transpose(est_wp_at_pull))
+    
+    print("...")
+    print("reference matrix at pull = " , ref_wp_at_pull )
+    print("...")
+    print("estimated matrix at pull = " , est_wp_at_pull )
+    print("...")
+    print("alignment matrix " , alignment )
+
+    log_file.write(f"\n\nreference matrix at pull = , {ref_wp_at_pull}\n")
+    log_file.write(f"estimated matrix at pull = , {est_wp_at_pull}\n")
+    log_file.write(f"alignment matrix = , {alignment}\n\n")  
+                          
+    if ( False ) :
+        adj_plot.write(f"yaw,pitch,roll\n")
+
+    if ( False ) :
+
+        for line_number in line_nums :
+            sled_mat = np.matmul ( np.matmul ( alignment , mat_outs[line_number]) , ypr_o_mat_transpose )
+            e_angles =  extract_euler(sled_mat)
+            adj_plot.write ( f"{round(e_angles[0],3)},{round(e_angles[1],3)},{round(e_angles[2],3)}\n")
+
+    first_line = 1
+    
     for line_number in line_nums :
    
         xa_in = - gxs[line_number]
         ya_in = - gys[line_number]
         za_in = - gzs[line_number]
+
         yaw_in = yaws[line_number]
         pitch_in = pitches[line_number]
         roll_in = rolls[line_number]
+
+        sled_mat = np.matmul ( np.matmul ( alignment , mat_outs[line_number]) , ypr_o_mat_transpose )
+        e_angles =  extract_euler(sled_mat)
+
+        yaw_out = e_angles[0]
+        pitch_out = e_angles[1]
+        roll_out = e_angles[2]
+
+        gyro_in = gyro_outs[line_number]
+        
         time_in = times[line_number]
 
-        create_ypr_matrix(yaw_in,pitch_in,roll_in)
-        matrix_in = ypr_mat
-        
-        if first_line == 1 :
-            matrix_in_prev = matrix_in
-            matrix_out  = matrix_in
-            matrix_out_prev = matrix_out
-        
-        matrix_update = np.matmul(np.matmul(np.transpose(matrix_in_prev),matrix_in),drift_mat)
-        matrix_out = np.matmul(matrix_out_prev,matrix_update)
-        matrix_out_prev = matrix_out
-        matrix_in_prev = matrix_in
-            
-        if line_number == int(100*start):
-            angles_at_pull = extract_euler(matrix_out)
-            create_ypr_matrix(yaw_offset,angles_at_pull[1],angles_at_pull[2])
-            matrix_out = ypr_mat
-            matrix_out_prev = matrix_out
 
-        gyro_wp[0,0] = 50.0*degrees(matrix_update[2,1]-matrix_update[1,2])
-        gyro_wp[1,0] = 50.0*degrees(matrix_update[0,2]-matrix_update[2,0])
-        gyro_wp[2,0] = 50.0*degrees(matrix_update[1,0]-matrix_update[0,1])
+        gyro_wp[0,0] = 100.0*degrees(gyro_in[0,0])
+        gyro_wp[1,0] = 100.0*degrees(gyro_in[1,0])
+        gyro_wp[2,0] = 100.0*degrees(gyro_in[2,0])
+        
 
         omega[0,0] = radians(gyro_wp[0,0])
         omega[1,0] = radians(gyro_wp[1,0])
         omega[2,0] = radians(gyro_wp[2,0])
-
-        gyro_sled = np.matmul(ypr_o_mat,gyro_wp)
-
-
-        deter = np.linalg.det(matrix_out)
-
-        matrix_adjusted = np.matmul(matrix_out,ypr_o_mat_transpose)
-
-        yaw_out = round(degrees(atan2(matrix_adjusted[1,0],matrix_adjusted[0,0])),2)
-        pitch_out = round(degrees(atan2(-matrix_adjusted[2,0], sqrt((matrix_adjusted[2,1])**2+(matrix_adjusted[2,2])**2))),2)
-        roll_out = round(degrees(atan2(matrix_adjusted[2,1],matrix_adjusted[2,2])),2)
 
         force_in[0,0] = xa_in
         force_in[1,0] = ya_in
@@ -1440,7 +1521,7 @@ def process_data(file):
             previous_yaw = yaw_out
 
         output_file.write(str(xa_out)+","+str(ya_out)+","+str(za_out)+",")
-        output_file.write(str(round(heading,2))+","+str(pitch_out)+","+str(roll_out)+",")
+        output_file.write(str(round(heading,3))+","+str(round(pitch_out,3))+","+str(round(roll_out,3))+",")
         output_file.write(f"{yaw_rates[line_number]},{max_gyros[line_number]},{cpus[line_number]},{seqs[line_number]},{tmpturs[line_number]},{time_in}\n")
         
         try: 
@@ -1448,7 +1529,7 @@ def process_data(file):
         except:
             pass
 
-        omega_e = np.matmul(matrix_adjusted,omega)
+        omega_e = np.matmul(sled_mat,omega)
         omegas_e_x.append(omega_e[0,0])
         omegas_e_y.append(omega_e[1,0])
         omegas_e_z.append(omega_e[2,0])
@@ -1461,9 +1542,9 @@ def process_data(file):
         fy_list.append(force_out[1,0])
         fz_list.append(force_out[2,0])
 
-        g_force[0,0]=gravity_value*matrix_adjusted[2,0]
-        g_force[1,0]=gravity_value*matrix_adjusted[2,1]
-        g_force[2,0]=gravity_value*matrix_adjusted[2,2]
+        g_force[0,0]=gravity_value*sled_mat[2,0]
+        g_force[1,0]=gravity_value*sled_mat[2,1]
+        g_force[2,0]=gravity_value*sled_mat[2,2]
 
         gx_list.append(g_force[0,0])
         gy_list.append(g_force[1,0])
