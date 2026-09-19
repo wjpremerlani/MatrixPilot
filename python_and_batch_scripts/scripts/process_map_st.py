@@ -1782,8 +1782,50 @@ def run_passes():
     print("time step = " , time_step)
     print("time calibration = " , time_calibration )
     
+    delta_vx = 0
+    delta_vy = 0
+    delta_vz = 0
+    
+    for line_number in line_nums :
+        if int(100*start) <= line_number <= int(100*end):
+            h_ref = heading_filt[line_number]
+            p_ref = pitch_filt[line_number]
+            r_ref = roll_filt[line_number]
+            
+            create_ypr_matrix( h_ref,p_ref,r_ref)
+            reference_matrix = np.transpose(ypr_mat)
+            create_ypr_matrix( heading_list[line_number],pitch_list[line_number],roll_list[line_number])
+            actual_matrix = ypr_mat
+            delta_matrix = np.matmul(reference_matrix,actual_matrix)
+            
+            force_in[0,0]= fx_list[line_number]
+            force_in[1,0]= fy_list[line_number]
+            force_in[2,0]= fz_list[line_number]
+            force_out = np.matmul(delta_matrix,force_in)
+            
+            delta_force = force_out - force_in
+            delta_force_x = delta_force[0,0]
+            delta_force_y = delta_force[1,0]
+            delta_force_z = delta_force[2,0]
 
+            fx_list[line_number]= fx_list[line_number] + delta_force_x
+            fy_list[line_number]= fy_list[line_number] + delta_force_y
+            fz_list[line_number]= fz_list[line_number] + delta_force_z          
 
+            fx_filt[line_number]=fx_filt[line_number]+delta_force_x
+            fy_filt[line_number]=fy_filt[line_number]+delta_force_y
+            fz_filt[line_number]=fz_filt[line_number]+delta_force_z            
+
+            fx_filt_filt[line_number]=fx_filt_filt[line_number]+delta_force_x
+            fy_filt_filt[line_number]=fy_filt_filt[line_number]+delta_force_y
+            fz_filt_filt[line_number]=fz_filt_filt[line_number]+delta_force_z
+                     
+            
+            delta_angles = extract_euler(delta_matrix)
+            delta_vx = delta_vx + time_step*delta_force_x
+            delta_vy = delta_vy + time_step*delta_force_y
+            delta_vz = delta_vz + time_step*delta_force_z
+            
     for line_number in line_nums:
         try:
             debug_file.write(f"{line_number},")
