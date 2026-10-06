@@ -1433,7 +1433,8 @@ if __name__ == "__main__":
     parser.add_argument('-b_range','--b_range',help="search range, seconds, must be less than 2.0")
     parser.add_argument('-log_var','--log_var',action='store_true',help="report variance values during alignment")
     parser.add_argument('-d0','--d0',help="not used but must be allowed.")
-    
+    parser.add_argument('-d1','--d1',help="not used but must be allowed.")
+    parser.add_argument('-fcl','--fcl',help="not used but must be allowed.")
     
     args = parser.parse_args()
 

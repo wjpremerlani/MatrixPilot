@@ -220,6 +220,8 @@ if __name__ == "__main__":
     parser.add_argument('-skip', '--skip',help="not used but must be allowed.")
     parser.add_argument('-dtpe','--dtpe',help="not used but must be allowed.")
     parser.add_argument('-d0','--d0',help="not used but must be allowed.")
+    parser.add_argument('-d1','--d1',help="not used but must be allowed.")
+    parser.add_argument('-fcl','--fcl',help="not used but must be allowed.")
 
     args = parser.parse_args()
 

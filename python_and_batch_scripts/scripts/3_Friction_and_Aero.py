@@ -100,15 +100,7 @@ if di:
         st.stop()
     (run_coll_group, run_coll) = di.get_current_collection()
 else:
-    if len(sys.argv) > 1:
-        try:
-            slider_name = sys.argv[1]
-            st.set_page_config(layout="wide", page_title=slider_name)
-        except:
-            st.set_page_config(layout="wide")
-
-    else:
-        st.set_page_config(layout="wide")
+    st.set_page_config(layout="wide", page_title="Friction and Aero")
 
 st.markdown("""
     <style>
@@ -590,7 +582,17 @@ if plotlet_file is not None:
     if di:
         di.select_new_runs(run_names)
     else:
-        st.session_state['s_run_names'] = run_names
+        # Offline mode: reset the selected runs whenever a new file is uploaded
+        # so stale run names from a previous file don't linger.
+        file_id = getattr(plotlet_file, 'file_id', None) or (getattr(plotlet_file, 'name', None), getattr(plotlet_file, 'size', None))
+        if file_id != st.session_state.get('s_run_names_file_id'):
+            st.session_state['s_run_names_file_id'] = file_id
+            st.session_state.pop('s_run_names', None)
+            st.session_state.pop('s_run_names_val', None)
+        # Only seed the selection on first load, so the user's choice isn't
+        # overwritten on every rerun by the multiselect callback above.
+        if 's_run_names' not in st.session_state:
+            st.session_state['s_run_names'] = run_names
 
     s_run_names = st.session_state['s_run_names']
     def on_s_run_names_changed():
