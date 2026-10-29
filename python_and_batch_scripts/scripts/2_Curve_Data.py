@@ -324,66 +324,84 @@ def generate_coloring(signal_name, signal_column_name, type_of_coloring):
 
     if FIRST_MAP == True:
         for run_name in run_names:
-            num_tes = 0
-            te_xy_list = []
             x_column = str(" x__" + run_name)
             y_column = str(" y__" + run_name)
             te_column = str(" timing_eye__" + run_name)
-            for line_index in plotlets_df[x_column].index:
-                if plotlets_df.loc[line_index, te_column] == 1:
-                    num_tes = num_tes + 1
-                    x = plotlets_df.loc[line_index, x_column]
-                    y = plotlets_df.loc[line_index, y_column]
-                    te_xy_list.append([x, y])
-                    # debug_file.write(f"run name {run_name}\r\n")
-            # debug_file.write(f"number of tes = {num_tes}\r\n")
+            te_mask = plotlets_df[te_column] == 1
+            num_tes = int(te_mask.sum())
             num_tes_list.append(num_tes)
-            # debug_file.write(f"texylist = {te_xy_list}\r\n")
             num_lines = plotlets_df[x_column].size
             if num_tes > 0:
-                for te_index in range(num_tes):
-                    x = te_xy_list[te_index][0]
-                    y = te_xy_list[te_index][1]
-                    plotlets_df.loc[num_lines - 1 - te_index, x_column] = x
-                    plotlets_df.loc[num_lines - 1 - te_index, y_column] = y
+                # the TEs found top-down are written back-to-front: the k-th
+                # TE found goes to row num_lines - 1 - k
+                te_rows = num_lines - 1 - np.arange(num_tes)
+                te_x = plotlets_df.loc[te_mask, x_column].to_numpy()
+                te_y = plotlets_df.loc[te_mask, y_column].to_numpy()
+                plotlets_df.loc[te_rows, x_column] = te_x
+                plotlets_df.loc[te_rows, y_column] = te_y
 
         # debug_file.write(f"num_tes_list = {num_tes_list}\r\n")
 
     FIRST_MAP = False
 
     run_index = 0
+    gyr = colors_df['GYR'].to_numpy()
     for run_name in run_names:
         col = str(signal_column_name + '__' + run_name)
-        color_list = []
-        prev_curve_number = plotlets_df["curve_number "][0]
-        gap_count = 0
-        for row_index in plotlets_df[col].index:
-            this_curve_number = plotlets_df["curve_number "][row_index]
-            if this_curve_number != prev_curve_number:
-                gap_count = gap
-                prev_curve_number = this_curve_number
-            if gap_count > 0:
-                gap_count = gap_count - 1
-                # color_list.append('#00A0C6')
-                color_list.append('#FFFFFF')
+        s_curve = plotlets_df["curve_number "]
+        shifted = s_curve.shift(1)
+        shifted.iloc[0] = s_curve.iloc[0]
+        # The original row loop compared with Python semantics, where a NaN
+        # curve number differs from everything (including another NaN); pandas
+        # comparisons return False for NaN, so add those rows as change events.
+        curve_changed = (s_curve != shifted) | s_curve.isna() | shifted.isna()
+        in_gap = curve_changed.copy()
+        for i in range(1, gap):
+            in_gap = in_gap | curve_changed.shift(i).fillna(False)
+
+        s_val = plotlets_df[col].to_numpy(dtype=float)
+
+        if type_of_coloring == Z_FORCE_MAP:
+            if abs(value_max - value_min) > 0:
+                raw = 512.0 * (value_max - s_val) / abs(value_max - value_min)
             else:
-                row = plotlets_df[col][row_index]
-                if type_of_coloring == Z_FORCE_MAP:
-                    color_list.append(str(zf_color(-row, -value_min, -value_max)))
-                elif type_of_coloring == ABSOLUTE_MAP:
-                    color_list.append(str(abs_color(row, value_range)))
-                else:
-                    if type_of_coloring > 0:
-                        color_list.append(str(signed_color(row, value_range)))
-                    else:
-                        color_list.append(str(signed_color(-row, value_range)))
+                raw = np.zeros(s_val.shape)
+        elif type_of_coloring == ABSOLUTE_MAP:
+            if value_range > 0:
+                raw = 512.0 * np.abs(s_val) / value_range
+            else:
+                raw = np.zeros(s_val.shape)
+        elif type_of_coloring > 0:
+            if value_range > 0:
+                # the original truncates only the offset term, then adds 255
+                offset = np.nan_to_num(256.0 * s_val / value_range, nan=0.0, posinf=256.0, neginf=-255.0)
+                offset = np.clip(offset, -255, 256).astype(int)
+                raw = 255 + offset
+            else:
+                raw = np.full(s_val.shape, 255.0)
+        else:
+            if value_range > 0:
+                offset = np.nan_to_num(-256.0 * s_val / value_range, nan=0.0, posinf=256.0, neginf=-255.0)
+                offset = np.clip(offset, -255, 256).astype(int)
+                raw = 255 + offset
+            else:
+                raw = np.full(s_val.shape, 255.0)
+
+        # The original computed int(...) per point (truncating toward zero)
+        # and clamped to [0, 511]; NaN/inf (which would have crashed the old
+        # per-point code) map to the clamped bounds / 0 instead.
+        color_index = np.clip(np.nan_to_num(raw, nan=0.0, posinf=511.0, neginf=0.0), 0, 511).astype(int)
+        s_colors = gyr[color_index]
+        s_colors[in_gap.to_numpy()] = '#FFFFFF'
+        color_list = s_colors.tolist()
 
         list_size = len(color_list)
 
         if signal_column_name != ' distance':
             if len(num_tes_list) > 0:
-                for te in range(num_tes_list[run_index]):
-                    color_list[list_size - 1 - te] = '#000000'
+                num_tes = num_tes_list[run_index]
+                if num_tes > 0:
+                    color_list[list_size - num_tes:] = ['#000000'] * num_tes
 
         list_index = list(range(list_size))
         color_series = pd.Series(color_list, name=str(signal_name + "_color__" + run_names[run_index]))
@@ -559,7 +577,7 @@ if di:
                              key='run_coll_id',
                              on_change=coll_changed)
 
-@st.cache_data
+@st.cache_data(max_entries=8)
 def load_and_preprocess_data(file, g_fpsps, f_kph, f_meter):
     df = pd.read_csv(file)
     aero = [c for c in df.columns if c.startswith(" aero__")]
