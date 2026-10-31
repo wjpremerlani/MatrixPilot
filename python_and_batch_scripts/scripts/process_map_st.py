@@ -1787,7 +1787,9 @@ def run_passes():
     delta_vz = 0
     
     for line_number in line_nums :
-        if int(100*start) <= line_number <= int(100*end):
+
+        if int(100*start) <= line_number :
+        #if int(100*start) <= line_number <= int(100*end):
             h_ref = heading_filt[line_number]
             p_ref = pitch_filt[line_number]
             r_ref = roll_filt[line_number]
@@ -1852,8 +1854,8 @@ def run_passes():
             pass
 
         
-        
-        if int(100*start) <= line_number <= int(100*end):
+        if int(100*start) <= line_number :
+        #if int(100*start) <= line_number <= int(100*end):
             heading = heading_list[line_number]
             pitch_out = pitch_list[line_number]
             roll_out = roll_list[line_number]
@@ -2032,8 +2034,9 @@ def run_passes():
     start_int = int(100*start)
 
     for line_number in line_nums:
-
-        if int(100*start) <= line_number <= int(100*end):
+        
+        if int(100*start) <= line_number : 
+        #if int(100*start) <= line_number <= int(100*end):
             heading = heading_list[line_number]
             pitch_out = pitch_list[line_number]
             roll_out = roll_list[line_number]
@@ -2183,93 +2186,6 @@ def run_passes():
         pass
    
 
-    '''
-
-    #################################################################
-    #
-    # pass 5
-    #
-    # 
-    # 
-    ################################################################
-
-
-    mark_state = 0
-    mark_number = 1
-    distance_origin = 0
-    line_origin = int(100*start)
-    new_distance = 0
-    velocity = np.zeros((3,1))
-
-    try:
-        if args.track_marks_file_name:
-            marks_file.write("number,ref_number,state,ref_state,distance,ref_distance,time,ref_time,velocity,ref_velocity\r")
-            marks_file.write("0,0,0,0,0.0,0.0,0.0,0.0,0.0,0.0\r")
-        else:
-            marks_file.write("number,state,distance,time,velocity\r")
-            marks_file.write("0,0,0.0,0.0,0.0\r")
-    except:
-        pass
-
-    for line_number in line_nums:
-
-        if int(100*start) <= line_number <= int(100*end):
-            heading = heading_list[line_number]
-            pitch_out = pitch_list[line_number]
-            roll_out = roll_list[line_number]
-            g_force[0,0]=gx_list[line_number]
-            g_force[1,0]=gy_list[line_number]
-            g_force[2,0]=gz_list[line_number]
-            force_out[0,0]=fx_filt[line_number]
-            force_out[1,0]=fy_filt[line_number]
-            force_out[2,0]=fz_filt[line_number]
-            omega[0,0]=wx_filt[line_number]
-            omega[1,0]=wy_filt[line_number]
-            omega[2,0]=wz_filt[line_number]
-            omega_e[0,0] = omegas_e_f_x[line_number]
-            omega_e[1,0] = omegas_e_f_y[line_number]
-            omega_e[2,0] = omegas_e_f_z[line_number]
-
-            velocity_dot = g_force + force_out
-
-            correction_gain = k_gain(omega[1,0],velocity[0,0],velocity_dot[2,0])
-            v_error = k_error(omega[1,0],velocity[0,0],velocity_dot[2,0],correction_gain)
-
-            if v_error > max_err:
-                v_error = max_err
-            if v_error < -max_err:
-                v_error = -max_err
-
-            if args_no_kalman:
-                velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0]  + (z_x_cc/gravity_value)*(velocity_dot[2,0]**2) )*time_step
-            else:
-                velocity[0,0] = velocity[0,0] + ( velocity_dot[0,0] + feedback_gain*v_error + (z_x_cc/gravity_value)*(velocity_dot[2,0]**2) )*time_step
-
-
-            new_distance = new_distance + velocity[0,0]*time_step
-
-            #if args.track_marks_file_name:
-               #update_mark_state_with_tr_mdl(omega[2,0],omega[0,0] , roll_out , heading )
-            #else:
-               #update_mark_state_no_tr_mdl(omega[2,0],omega[0,0] , roll_out , heading )
-
-    if args.track_marks_file_name:
-        if run_end_time > 0.0:
-            alignment_accel = 2.0*((table_end_distance-run_end_distance)/((run_end_time*time_step)**2))
-        else:
-            alignment_accel = 0.0
-        try:
-            log_file.write(f"\rrun-table alignment parameters:\r")
-            log_file.write(f"run end distance = {run_end_distance}\r")
-            log_file.write(f"table end distance = {table_end_distance}\r")
-            log_file.write(f"run end time = {run_end_time}\r")
-            log_file.write(f"table end time = {table_end_time}\r\r\r")
-            log_file.write(f"alignment acceleration = {round(alignment_accel,3)} ft/sec/sec\r\r")
-        except:
-            pass
-
-    '''
-
     #########################################################
     #
     #  pass 6 compute and store 100 Hz time map
@@ -2280,6 +2196,9 @@ def run_passes():
     first_heading_recorded = 0
     speed = 0
     distance = 0
+    vert_speed = 0
+    vert_distance = 0
+    specific_energy = 0
     x=0
     y=0
     x_ef=0
@@ -2351,6 +2270,8 @@ def run_passes():
             #   time_map_100_file.write(f",yaw_rate_earth_frame_{run_name}")
 
             time_map_100_file.write(f",velocity__{run_name}")
+            time_map_100_file.write(f",vert_velocity__{run_name}")
+            
             time_map_100_file.write(f",x-acceleration__{run_name}")
             time_map_100_file.write(f",friction__{run_name}")
             time_map_100_file.write(f",aero__{run_name}")
@@ -2358,6 +2279,10 @@ def run_passes():
             time_map_100_file.write(f",z_force_filtered__{run_name}")          
             time_map_100_file.write(f",kalman_input__{run_name}")
             time_map_100_file.write(f",distance__{run_name}")
+            time_map_100_file.write(f",vert_distance__{run_name}")
+            time_map_100_file.write(f",specific_energy__{run_name}")
+            
+            
             time_map_100_file.write(f",x__{run_name}")
             time_map_100_file.write(f",y__{run_name}")
             time_map_100_file.write(f",timing_eye__{run_name}")
@@ -2426,7 +2351,9 @@ def run_passes():
     
     for line_number in line_nums:
 
-        if int(100*start) - prerun_margin <= line_number <= int(100*end):
+        
+        if int(100*start) - prerun_margin <= line_number :
+        #if int(100*start) - prerun_margin <= line_number <= int(100*end):
             heading = heading_list[line_number]
             pitch_out = pitch_list[line_number]
             roll_out = roll_list[line_number]
@@ -2481,10 +2408,13 @@ def run_passes():
 
             velocity_dot[0,0] = velocity_dot[0,0] + compliance*(force_out[2,0]+32.1714)*cos(radians(roll_out) ) - v_error
             
-            if line_number >= start_int :                            
+            if line_number >= start_int :
+                vert_speed = sin(radians(pitch_out))*velocity[0,0]
                 velocity[0,0] = velocity[0,0] + acc_x_raw*time_step
             
                 new_distance = new_distance + velocity[0,0]*time_step
+                vert_distance = vert_distance + vert_speed*time_step
+                specific_energy = (0.5*(velocity[0,0]*velocity[0,0]))/32.1714 + vert_distance
 
             aero =  - aero_factor*gravity_value*(velocity[0,0]*time_step)**2
             friction = friction_factor*force_out[2,0] - splay_factor*gravity_value*((force_out[2,0]/gravity_value)**2) + aero
@@ -2542,6 +2472,8 @@ def run_passes():
                         #    time_map_100_file.write(f" ,{round(degrees(omegas_e_f_z[line_number]),2 )}" )   
 
                         time_map_100_file.write(f",{round(( velocity[0,0]   ), 2)}")
+                        time_map_100_file.write(f",{round(( vert_speed   ), 2)}")
+                        
                         time_map_100_file.write(f",{round(( velocity_dot[0,0]   ), 2)}")
                         time_map_100_file.write(f" ,{round(( friction ),4)}" )
                         time_map_100_file.write(f" ,{round(( aero ),4)}" )
@@ -2549,6 +2481,10 @@ def run_passes():
                         time_map_100_file.write(f",{round(( fz_filt_filt[line_number]/ 32.1741  ), 4)}")
                         time_map_100_file.write(f",{round(( v_error   ), 2)}")
                         time_map_100_file.write(f",{round((  new_distance  ), 2)}")
+                        time_map_100_file.write(f",{round((  vert_distance  ), 2)}")
+                        time_map_100_file.write(f",{round((  specific_energy  ), 2)}")
+                        
+                        
                         time_map_100_file.write(f",{round(( x_ef   ), 2)}")
                         time_map_100_file.write(f",{round(( y_ef   ), 2)}")
 
