@@ -2199,6 +2199,7 @@ def run_passes():
     vert_speed = 0
     vert_distance = 0
     specific_energy = 0
+    specific_power = 0
     x=0
     y=0
     x_ef=0
@@ -2281,6 +2282,7 @@ def run_passes():
             time_map_100_file.write(f",distance__{run_name}")
             time_map_100_file.write(f",vert_distance__{run_name}")
             time_map_100_file.write(f",specific_energy__{run_name}")
+            time_map_100_file.write(f",specific_power__{run_name}")
             
             
             time_map_100_file.write(f",x__{run_name}")
@@ -2415,6 +2417,7 @@ def run_passes():
                 new_distance = new_distance + velocity[0,0]*time_step
                 vert_distance = vert_distance + vert_speed*time_step
                 specific_energy = (0.5*(velocity[0,0]*velocity[0,0]))/32.1714 + vert_distance
+                specific_power = (velocity_dot[0,0]*velocity[0,0])/32.1714+vert_speed
 
             aero =  - aero_factor*gravity_value*(velocity[0,0]*time_step)**2
             friction = friction_factor*force_out[2,0] - splay_factor*gravity_value*((force_out[2,0]/gravity_value)**2) + aero
@@ -2483,6 +2486,7 @@ def run_passes():
                         time_map_100_file.write(f",{round((  new_distance  ), 2)}")
                         time_map_100_file.write(f",{round((  vert_distance  ), 2)}")
                         time_map_100_file.write(f",{round((  specific_energy  ), 2)}")
+                        time_map_100_file.write(f",{round((  specific_power  ), 2)}")
                         
                         
                         time_map_100_file.write(f",{round(( x_ef   ), 2)}")
