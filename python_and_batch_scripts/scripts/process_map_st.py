@@ -1226,7 +1226,7 @@ def process_data(file):
                 log_file.write(f"pitch drift {pitch_drift} degrees per minute was specified.\r")
             else:
                 if N > 10:
-                    pitch_drift = round(6000.0*beta_pitch[0,0],2)
+                    pitch_drift = round(6000.0*beta_pitch[0,0],4)
                     log_file.write(f"pitch drift of {pitch_drift} degrees/minute was computed.\r")
                 else:
                     log_file.write(f"default pitch drift of {pitch_drift} degrees/minute was used.\r")
@@ -1235,7 +1235,7 @@ def process_data(file):
                 log_file.write(f"roll drift of {roll_drift} degrees/minute was specified.\r")
             else:
                 if N > 10:
-                    roll_drift = round(6000.0*beta_roll[0,0],2)
+                    roll_drift = round(6000.0*beta_roll[0,0],4)
                     log_file.write(f"roll drift of {roll_drift} degrees/minute was computed.\r")
                 else:
                     log_file.write(f"default roll drift of {roll_drift} degrees/minute was used.\r")
@@ -1283,6 +1283,11 @@ def process_data(file):
         log_file.write("yaw gyro bias  = "+str(yaw_drift)+" degrees per minute.\r")
         log_file.write("pitch gyro bias  = "+str(pitch_drift)+" degrees per minute.\r")
         log_file.write("roll gyro bias  = "+str(roll_drift)+" degrees per minute.\r\r")
+
+        log_file.write("yaw gyro bias  = "+str(round(radians(yaw_drift),5))+" radians per minute.\r")
+        log_file.write("pitch gyro bias  = "+str(round(radians(pitch_drift),5))+" radians per minute.\r")
+        log_file.write("roll gyro bias  = "+str(round(radians(roll_drift),5))+" radians per minute.\r\r")
+
 
         log_file.write("map generation parameters:\r\r")
         log_file.write(f"map rotation = {rotation} degrees\r")
