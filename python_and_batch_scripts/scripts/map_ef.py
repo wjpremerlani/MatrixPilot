@@ -254,6 +254,26 @@ def run_test():
     global acc_off_x , acc_off_y , acc_off_z
     global acc_off_x_a , acc_off_y_a , acc_off_z_a
 
+    file_name_parts = file_name.split('.')
+    file_base_name = file_name_parts[0]
+
+    bias_file = open(file_base_name+"_gyro_bias.txt", 'r')
+
+    bias_data = bias_file.read()
+    bias_line = bias_data.splitlines(keepends=False)
+    bias_columns = bias_line[0].split(',')
+    
+    yaw_bias = float(bias_columns[0])
+    pitch_bias = float(bias_columns[1])
+    roll_bias = float(bias_columns[2])
+    print()
+    print()
+    print()
+    print("yaw, pitch and roll bias = " , yaw_bias , pitch_bias , roll_bias )
+    print()
+    print()
+    print()
+
 
     log_file = open(file_name+".log.txt","w")
 

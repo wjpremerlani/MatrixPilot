@@ -1270,6 +1270,14 @@ def process_data(file):
     print("start map at line " , int(100*start ))
     print("end map at line " , int(100*(start+elapsed) ))
 
+    if True :
+
+        bias_file = open(file_base_name+"_gyro_bias.txt" , 'w' )
+        bias_file.write(f"{radians(yaw_drift)},")
+        bias_file.write(f"{radians(pitch_drift)},")
+        bias_file.write(f"{radians(roll_drift)}\n")
+    
+
     try:
 
         log_file.write("\radjustment parameters:\r\r")
