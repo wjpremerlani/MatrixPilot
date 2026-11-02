@@ -367,7 +367,7 @@ def run_test():
         velocity = velocity + np.multiply ( velocity_dot , 0.01 )
         velocity_bf = np.matmul(np.transpose(rmat),velocity)
         vel_mag_bf = sqrt(np.vdot(velocity_bf,velocity_bf))
-        power = np.vdot(velocity,velocity_dot) - velocity[2,0]*( 32.174 ) 
+        power = np.vdot(velocity,velocity_dot)/32.174 - velocity[2,0] 
         energy = energy + power*0.01
         vel_mag = sqrt(np.vdot(velocity,velocity))     
         dvdt = 100.0 * ( vel_mag - previous_vmag )
@@ -482,7 +482,7 @@ def run_test():
         velocity = velocity + np.multiply ( velocity_dot , 0.01 )
         velocity_bf = np.matmul(np.transpose(rmat),velocity)
         vel_mag_bf = sqrt(np.vdot(velocity_bf,velocity_bf))
-        power = np.vdot(velocity,velocity_dot) - velocity[2,0]*( 32.174 ) 
+        power = np.vdot(velocity,velocity_dot)/32.174 - velocity[2,0] 
         energy = energy + power*0.01
         vel_mag = sqrt(np.vdot(velocity,velocity))     
         #vel_mag = sqrt(velocity[0,0]*velocity[0,0]+velocity[1,0]*velocity[1,0])
