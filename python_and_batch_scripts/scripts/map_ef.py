@@ -257,7 +257,7 @@ def run_test():
     file_name_parts = file_name.split('.')
     file_base_name = file_name_parts[0]
 
-    bias_file = open("bias\\"+file_base_name+"_gyro_bias.txt", 'r')
+    bias_file = open("..\\bias\\"+file_base_name+"_gyro_bias.txt", 'r')
 
     bias_data = bias_file.read()
     bias_line = bias_data.splitlines(keepends=False)
@@ -275,7 +275,7 @@ def run_test():
     print()
 
 
-    log_file = open("output\\"+file_name+".log.txt","w")
+    log_file = open(file_name+".log.txt","w")
 
     log_file.write(f"\n\nFirst pass\n\n")
 
@@ -335,18 +335,22 @@ def run_test():
     energy = 0.0
 
     FS = np.zeros((3,1))
+
+           
+    drift_angle[0] = roll_bias 
+    drift_angle[1] = pitch_bias 
+    drift_angle[2] = yaw_bias 
+    
+    drift_angle = np.multiply(drift_angle , 1.0/6000.0)
+
+    calibration = 1.0
     
     for step_no in range(len(body_forces)):
 
         N = N + 1
         
         time = float(step_no+1)*0.01
-        
-        drift_angle[0] = roll_bias 
-        drift_angle[1] = pitch_bias 
-        drift_angle[2] = yaw_bias 
-    
-        drift_angle = np.multiply(drift_angle , 1.0/6000.0)
+ 
 
         force_vector = body_forces[step_no]
         raw_mat = input_matrices[step_no]
@@ -354,8 +358,13 @@ def run_test():
         previous_raw_mat = raw_mat
         update_angles = matrix_to_phi(update_mat)
         update_angles = update_angles - drift_angle
+        for index in range(3) :
+            if index == 0 :
+                update_angles[index] = calibration*update_angles[index]
         update_mat = phi_to_matrix(update_angles)
         rmat = np.matmul( previous_adj_mat, update_mat )
+        eulers = extract_euler(rmat)
+        pitch = radians(eulers[1])
         previous_adj_mat = rmat 
         integral_mat = matrix_to_matrix_integral(update_mat)
         rotation_angle_bf = matrix_to_phi(update_mat)
@@ -363,11 +372,15 @@ def run_test():
         acceleration = np.matmul(rmat,np.matmul(integral_mat,force_vector))
         #velocity_dot = acceleration
         velocity_dot = np.copy(acceleration)
-        velocity_dot[2,0] = velocity_dot[2,0]+32.174 
+        velocity_dot[2,0] = velocity_dot[2,0] + 32.174
+        #velocity_dot[2,0] = 0
+        #velocity[2,0] = 0
         velocity = velocity + np.multiply ( velocity_dot , 0.01 )
+        #velocity[2,0]= - sqrt(np.vdot(velocity,velocity))*(sin(pitch)/cos(pitch))
         velocity_bf = np.matmul(np.transpose(rmat),velocity)
         vel_mag_bf = sqrt(np.vdot(velocity_bf,velocity_bf))
-        power = np.vdot(velocity,velocity_dot)/32.174 - velocity[2,0] 
+        #power = (np.vdot(velocity,velocity_dot)/32.174)/cos(pitch) - velocity[2,0]
+        power = (np.vdot(velocity,velocity_dot)/32.174) - velocity[2,0]
         energy = energy + power*0.01
         vel_mag = sqrt(np.vdot(velocity,velocity))     
         dvdt = 100.0 * ( vel_mag - previous_vmag )
@@ -464,8 +477,15 @@ def run_test():
         previous_raw_mat = raw_mat
         update_angles = matrix_to_phi(update_mat)
         update_angles = update_angles - drift_angle
+        for index in range(3) :
+            if index == 0 :
+                update_angles[index] = calibration*update_angles[index]
         update_mat = phi_to_matrix(update_angles)
         rmat = np.matmul( previous_adj_mat, update_mat )
+        
+        eulers = extract_euler(rmat)
+        pitch = radians(eulers[1])
+        
         previous_adj_mat = rmat 
         integral_mat = matrix_to_matrix_integral(update_mat)
         rotation_angle_bf = matrix_to_phi(update_mat)
@@ -478,11 +498,18 @@ def run_test():
         velocity_dot[0,0] = velocity_dot[0,0] - dvdtx
         velocity_dot[1,0] = velocity_dot[1,0] - dvdty
         velocity_dot[2,0] = velocity_dot[2,0] + 32.174
+
+        #velocity_dot[2,0] = 0
+        ##velocity[2,0] = 0
         
         velocity = velocity + np.multiply ( velocity_dot , 0.01 )
+
+        #velocity[2,0]= - sqrt(np.vdot(velocity,velocity))*(sin(pitch)/cos(pitch))
+        
         velocity_bf = np.matmul(np.transpose(rmat),velocity)
         vel_mag_bf = sqrt(np.vdot(velocity_bf,velocity_bf))
-        power = np.vdot(velocity,velocity_dot)/32.174 - velocity[2,0] 
+        #power = (np.vdot(velocity,velocity_dot)/32.174)/cos(pitch) - velocity[2,0] 
+        power = (np.vdot(velocity,velocity_dot)/32.174) - velocity[2,0] 
         energy = energy + power*0.01
         vel_mag = sqrt(np.vdot(velocity,velocity))     
         #vel_mag = sqrt(velocity[0,0]*velocity[0,0]+velocity[1,0]*velocity[1,0])
@@ -652,9 +679,9 @@ if __name__ == "__main__":
         file_name = args.f
         print("file name = " , file_name )
         try :
-            input_file = open("runs\\"+file_name,'r')
-            output_file = open("output\\"+file_name+".raw.csv",'w')
-            adjusted_file = open("output\\"+file_name+".adj.csv",'w')
+            input_file = open("..\\runs\\"+file_name,'r')
+            output_file = open("..\\output\\"+file_name+".raw.csv",'w')
+            adjusted_file = open("..\\output\\"+file_name+".adj.csv",'w')
         except :
             print("either unable to open input file or output file is in use.")
             exit()

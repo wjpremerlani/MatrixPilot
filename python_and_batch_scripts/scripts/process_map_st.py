@@ -1244,6 +1244,8 @@ def process_data(file):
 
             drift_vector[0,0] = radians(roll_drift)/6000.0
             drift_vector[1,0] = radians(pitch_drift)/6000.0
+            if N > 10:
+                yaw_drift = round(6000.0*beta_yaw[0,0],4)
 
             summary_log_write_adjustements(pitch_offset,roll_offset,pitch_drift,roll_drift)
             
@@ -1272,7 +1274,7 @@ def process_data(file):
 
     if True :
 
-        bias_file = open(file_base_name+"_gyro_bias.txt" , 'w' )
+        bias_file = open("..\\bias\\"+file_base_name+"_gyro_bias.txt" , 'w' )
         bias_file.write(f"{radians(yaw_drift)},")
         bias_file.write(f"{radians(pitch_drift)},")
         bias_file.write(f"{radians(roll_drift)}\n")
@@ -1337,7 +1339,7 @@ def process_data(file):
 
     print("offset matrix")
     print(ypr_o_mat)
-    create_ypr_matrix(-yaw_drift/6000.0, -pitch_drift/6000.0, -roll_drift/6000.0)
+    create_ypr_matrix(0.0 , -pitch_drift/6000.0, -roll_drift/6000.0)
     drift_mat = ypr_mat
     print("drift matrix")
     print (drift_mat)
@@ -2366,8 +2368,8 @@ def run_passes():
     
     for line_number in line_nums:
 
-        
-        if int(100*start) - prerun_margin <= line_number :
+        if int(100*start) - 3 < line_number :
+        #if int(100*start) - prerun_margin <= line_number :
         #if int(100*start) - prerun_margin <= line_number <= int(100*end):
             heading = heading_list[line_number]
             pitch_out = pitch_list[line_number]
@@ -3093,7 +3095,7 @@ if __name__ == "__main__":
         summary_log_file = None
 
     try:
-        input_file = open(file_name)
+        input_file = open("..\\runs\\"+file_name)
         if ( args.bruce or args.bill or args.all_files ) :
             summary_log_file.write(f"{pad_14(file_base_name)},")
     except:
@@ -3149,12 +3151,12 @@ if __name__ == "__main__":
             log_file = open(file_base_name + "_log.txt", "w")
     else:
         skip_pass_7_and_8 = True
-        output_file = open(file_base_name + "_adjusted.txt", "w")
-        time_map_100_file = open(file_base_name + "_time_map_100_HZ.csv", "w")
+        output_file = open("..\\maps\\"+file_base_name + "_adjusted.txt", "w")
+        time_map_100_file = open("..\\maps\\"+file_base_name + "_time_map_100_HZ.csv", "w")
         if args_no_weights:
-            log_file = open(file_base_name + "_log_no_weights.txt", "w")
+            log_file = open("..\\maps\\"+file_base_name + "_log_no_weights.txt", "w")
         else:
-            log_file = open(file_base_name + "_log.txt", "w")
+            log_file = open("..\\maps\\"+file_base_name + "_log.txt", "w")
 
     if args.track_marks_file_name:
         track_marks_file_name = args.track_marks_file_name
