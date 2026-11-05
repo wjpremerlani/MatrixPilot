@@ -70,7 +70,7 @@ gyro_cal_z = 1.0
 
 
 global column_suffix
-column_suffix = "_truth"
+column_suffix = "_"
 
 global use_gravity
 use_gravity = True
@@ -511,8 +511,8 @@ def run_test():
         #power = (np.vdot(velocity,velocity_dot)/32.174)/cos(pitch) - velocity[2,0] 
         power = (np.vdot(velocity,velocity_dot)/32.174) - velocity[2,0] 
         energy = energy + power*0.01
-        vel_mag = sqrt(np.vdot(velocity,velocity))     
-        #vel_mag = sqrt(velocity[0,0]*velocity[0,0]+velocity[1,0]*velocity[1,0])
+        vel_mag = sqrt(np.vdot(velocity,velocity))
+        vel_h = sqrt(velocity[0,0]*velocity[0,0]+velocity[1,0]*velocity[1,0])
         dvdt = 100.0 * ( vel_mag - previous_vmag )
         previous_vmag = vel_mag 
         acc_mag = sqrt(np.vdot(acceleration,acceleration))
@@ -522,8 +522,8 @@ def run_test():
             if False :
                 column_names = [ "energy" , "dvdt" ,"acc_x" ,"acc_y" , "acc_z" ,  "acc_mag" , "vx" , "vy" , "vz" , "vmag" ]
             if True :
-                column_names = [ "energy" , "vx_b" , "vy_b" , "vz_b" ,  "vmag_b" , "vx_e" , "vy_e" , "vz_e" , "vmag_e" ]
-            write_column_names(adjusted_file , column_names , "_adj" )
+                column_names = [ "energy__ef" , "vxb__ef" , "vyb__ef" , "vzb__ef" ,  "vmagb__ef" , "vx__ef" , "vy__ef" , "vz__ef" , "vh__ef" , "vmag__ef" ]
+            write_column_names(adjusted_file , column_names , column_suffix+file_name_base )
             adjusted_file.write(f"\n")
             labels_have_been_written = True
 
@@ -532,7 +532,7 @@ def run_test():
         if False :
             column_values = [ energy , dvdt, acceleration[0,0] ,acceleration[1,0] ,acceleration[2,0] , acc_mag , velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]      
         if True :
-            column_values = [ energy , velocity_bf[0,0] , velocity_bf[1,0] , velocity_bf[2,0] , vel_mag_bf ,velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]      
+            column_values = [ energy , velocity_bf[0,0] , velocity_bf[1,0] , velocity_bf[2,0] , vel_mag_bf ,velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_h, vel_mag ]      
         
         write_columns(adjusted_file , column_values )
         adjusted_file.write(f"\n")
@@ -677,11 +677,13 @@ if __name__ == "__main__":
 
     if args.f :
         file_name = args.f
+        file_name_parts = file_name.split('.')
+        file_name_base = file_name_parts[0]
         print("file name = " , file_name )
         try :
             input_file = open("..\\runs\\"+file_name,'r')
-            output_file = open("..\\output\\"+file_name+".raw.csv",'w')
-            adjusted_file = open("..\\output\\"+file_name+".adj.csv",'w')
+            output_file = open("..\\output\\"+file_name_base+"_raw.csv",'w')
+            adjusted_file = open("..\\output\\"+file_name_base+"_adj.csv",'w')
         except :
             print("either unable to open input file or output file is in use.")
             exit()
