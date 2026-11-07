@@ -225,12 +225,18 @@ def write_matrix(matrix_values):
             output_file.write(f"{round(matrix_values[row,column],3)},")
 
 def write_column_names(data_file , column_names , suffix ):
-    for column_name in column_names :
-        data_file.write(f"{column_name}{suffix},")
+    number_of_columns = len(column_names)
+    for column_number in range(number_of_columns-1) :
+        data_file.write(f"{column_names[column_number]}{suffix},")
+    data_file.write(f"{column_names[number_of_columns-1]}{suffix}")
+    
 
 def write_columns(data_file , column_values ) :
-    for value in column_values :
-        data_file.write(f"{round(value,4)},")
+    number_of_columns = len(column_values)
+    for column_number in range(number_of_columns-1) :
+        data_file.write(f"{round(column_values[column_number],4)},")
+    data_file.write(f"{round(column_values[number_of_columns-1],4)}")
+    
 
 global output_file , suffix
 global labels_have_been_written
@@ -521,8 +527,11 @@ def run_test():
                 column_names = [ "acc_x" ,"acc_y" , "acc_z" ,  "acc_mag" ]
             if False :
                 column_names = [ "energy" , "dvdt" ,"acc_x" ,"acc_y" , "acc_z" ,  "acc_mag" , "vx" , "vy" , "vz" , "vmag" ]
-            if True :
+            if False :
                 column_names = [ "energy__ef" , "vxb__ef" , "vyb__ef" , "vzb__ef" ,  "vmagb__ef" , "vx__ef" , "vy__ef" , "vz__ef" , "vh__ef" , "vmag__ef" ]
+            if True :
+                column_names = [ "energy__earth" , "vz__earth" , "vh__earth"  ]
+                
             write_column_names(adjusted_file , column_names , column_suffix+file_name_base )
             adjusted_file.write(f"\n")
             labels_have_been_written = True
@@ -531,8 +540,10 @@ def run_test():
             column_values = [ acceleration[0,0] ,acceleration[1,0] ,acceleration[2,0] , acc_mag ]
         if False :
             column_values = [ energy , dvdt, acceleration[0,0] ,acceleration[1,0] ,acceleration[2,0] , acc_mag , velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]      
-        if True :
+        if False :
             column_values = [ energy , velocity_bf[0,0] , velocity_bf[1,0] , velocity_bf[2,0] , vel_mag_bf ,velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_h, vel_mag ]      
+        if True :
+            column_values = [ energy , velocity[2,0] , vel_h ]      
         
         write_columns(adjusted_file , column_values )
         adjusted_file.write(f"\n")
@@ -683,7 +694,7 @@ if __name__ == "__main__":
         try :
             input_file = open("..\\runs\\"+file_name,'r')
             output_file = open("..\\output\\"+file_name_base+"_raw.csv",'w')
-            adjusted_file = open("..\\output\\"+file_name_base+"_adj.csv",'w')
+            adjusted_file = open("..\\output\\"+file_name_base+"_earth.csv",'w')
         except :
             print("either unable to open input file or output file is in use.")
             exit()

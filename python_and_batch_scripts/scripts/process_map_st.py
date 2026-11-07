@@ -2365,10 +2365,14 @@ def run_passes():
 
     previous_state = 0
     finish_time = 0.0
+
+    velocity_file.write(f"energy__track_{file_base_name},")
+    velocity_file.write(f"vz__track_{file_base_name},")
+    velocity_file.write(f"vh__track_{file_base_name}\n")
     
     for line_number in line_nums:
 
-        if int(100*start) - 3 < line_number :
+        if int(100*start) <= line_number :
         #if int(100*start) - prerun_margin <= line_number :
         #if int(100*start) - prerun_margin <= line_number <= int(100*end):
             heading = heading_list[line_number]
@@ -2426,13 +2430,14 @@ def run_passes():
             velocity_dot[0,0] = velocity_dot[0,0] + compliance*(force_out[2,0]+32.1714)*cos(radians(roll_out) ) - v_error
             
             if line_number >= start_int :
-                vert_speed = sin(radians(pitch_out))*velocity[0,0]
+                vert_speed = -sin(radians(pitch_out))*velocity[0,0]
+                horiz_speed = cos(radians(pitch_out))*velocity[0,0]
                 velocity[0,0] = velocity[0,0] + acc_x_raw*time_step
             
                 new_distance = new_distance + velocity[0,0]*time_step
                 vert_distance = vert_distance + vert_speed*time_step
-                specific_energy = (0.5*(velocity[0,0]*velocity[0,0]))/32.1714 + vert_distance
-                specific_power = (velocity_dot[0,0]*velocity[0,0])/32.1714+vert_speed
+                specific_energy = (0.5*(velocity[0,0]*velocity[0,0]))/32.1714 - vert_distance
+                specific_power = (velocity_dot[0,0]*velocity[0,0])/32.1714-vert_speed
 
             aero =  - aero_factor*gravity_value*(velocity[0,0]*time_step)**2
             friction = friction_factor*force_out[2,0] - splay_factor*gravity_value*((force_out[2,0]/gravity_value)**2) + aero
@@ -2443,7 +2448,7 @@ def run_passes():
             if new_distance < table_end_distance:
 
                 try:
-
+            
                     if args_strmlt:
 
                         if ( mark_state == 0 ) and (abs(previous_state) > 0 ) :
@@ -2507,6 +2512,7 @@ def run_passes():
                         time_map_100_file.write(f",{round(( x_ef   ), 2)}")
                         time_map_100_file.write(f",{round(( y_ef   ), 2)}")
 
+                        velocity_file.write(f"{round(( specific_energy   ), 2)} ,{round(( vert_speed   ), 2)},{round(( horiz_speed   ), 2)}\n")
                         
                         te0_offset = time_0
 
@@ -2597,6 +2603,9 @@ def run_passes():
                 map_x_accels.append( ( fx_filt[line_number] ) )
                 map_y_accels.append( ( fy_filt[line_number] ) )
                 map_z_accels.append( ( fz_filt[line_number] ) )
+
+    velocity_file.write(f"{round(( specific_energy   ), 2)} ,{round(( vert_speed   ), 2)},{round(( horiz_speed   ), 2)}\n")
+    velocity_file.write(f"{round(( specific_energy   ), 2)} ,{round(( vert_speed   ), 2)},{round(( horiz_speed   ), 2)}\n")                    
     if wt_sum > 0 :
         velocity_bias = v_error_sum / wt_sum
         velocity_variance = sqrt( v_error_sqr_sum / wt_sqr_sum )
@@ -3096,6 +3105,7 @@ if __name__ == "__main__":
 
     try:
         input_file = open("..\\runs\\"+file_name)
+        velocity_file = open("..\\output\\"+file_base_name+"_track.csv" , "w")
         if ( args.bruce or args.bill or args.all_files ) :
             summary_log_file.write(f"{pad_14(file_base_name)},")
     except:
