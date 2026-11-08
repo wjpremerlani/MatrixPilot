@@ -236,6 +236,32 @@ def write_columns(data_file , column_values ) :
     for column_number in range(number_of_columns-1) :
         data_file.write(f"{round(column_values[column_number],4)},")
     data_file.write(f"{round(column_values[number_of_columns-1],4)}")
+
+def compute_min_max(forces,index,step) :
+    size = 12
+    force = forces[step]
+    minimum_force = force[index,0]
+    maximum_force = minimum_force
+    for sample_number in range(size) :
+        try :
+            force = forces[step+sample_number]
+            minimum_force = min(minimum_force,force[index,0])
+            maximum_force = max(maximum_force,force[index,0])
+        except :
+            pass
+    for sample_number in range(size) :
+        try :
+            force = forces[step-sample_number]
+            minimum_force = min(minimum_force,force[index,0])
+            maximum_force = max(maximum_force,force[index,0])
+        except :
+            pass
+    min_max = minimum_force - maximum_force
+    if min_max <  - 200 :
+        return min_max + 200
+    else :
+        return -.01
+        
     
 
 global output_file , suffix
@@ -350,8 +376,14 @@ def run_test():
     drift_angle = np.multiply(drift_angle , 1.0/6000.0)
 
     calibration = 1.0
+
+    fz_min_max_integral = 0
+    fz_min_max = 0 
     
     for step_no in range(len(body_forces)):
+
+        fz_min_max = compute_min_max(body_forces,2,step_no)
+        fz_min_max_integral = fz_min_max_integral + .01*fz_min_max
 
         N = N + 1
         
@@ -403,7 +435,7 @@ def run_test():
             if False :
                 column_names = [  "acc_x" ,"acc_y" , "acc_z" ,  "acc_mag" , "vx" , "vy" , "vz" , "vmag" ]
             if True :
-                column_names = [ "FS0" , "FS1" , "FS2" , "Vz" , "AccZ" , "energy","vx_b" , "vy_b" , "vz_b" ,  "vmag_b" , "vx_e" , "vy_e" , "vz_e" , "vmag_e" ]
+                column_names = [ "fz_min_max" , "fz_min_max_integral" , "Vz" , "AccZ" , "energy","vx_b" , "vy_b" , "vz_b" ,  "vmag_b" , "vx_e" , "vy_e" , "vz_e" , "vmag_e" ]
             write_column_names(output_file , column_names , "_raw" )
             output_file.write(f"\n")
             labels_have_been_written = True
@@ -413,7 +445,7 @@ def run_test():
         if False :
             column_values = [ acceleration[0,0] ,acceleration[1,0] ,acceleration[2,0] , acc_mag , velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]      
         if True :
-            column_values = [ FS[0,0] ,FS[1,0] , FS[2,0] , velocity[2,0] , acceleration[2,0] , energy, velocity_bf[0,0] , velocity_bf[1,0] , velocity_bf[2,0] , vel_mag_bf ,velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]      
+            column_values = [ fz_min_max , fz_min_max_integral , velocity[2,0] , acceleration[2,0] , energy, velocity_bf[0,0] , velocity_bf[1,0] , velocity_bf[2,0] , vel_mag_bf ,velocity[0,0] , velocity[1,0] , velocity[2,0] , vel_mag ]      
         
         write_columns(output_file , column_values )
         output_file.write(f"\n")
@@ -423,6 +455,7 @@ def run_test():
         dvdtx = velocity[0,0]/time
         dvdty = velocity[1,0]/time
         dvdtz = velocity[2,0]/time
+        dvz = velocity[2,0]
 
     else :
         dvdtx = 0.0
@@ -466,6 +499,8 @@ def run_test():
     
     for step_no in range(len(body_forces)):
 
+        fz_min_max = compute_min_max(body_forces,2,step_no)
+
         N = N + 1
         
         time = float(step_no+1)*0.01
@@ -503,7 +538,7 @@ def run_test():
         
         velocity_dot[0,0] = velocity_dot[0,0] - dvdtx
         velocity_dot[1,0] = velocity_dot[1,0] - dvdty
-        velocity_dot[2,0] = velocity_dot[2,0] + 32.174
+        velocity_dot[2,0] = velocity_dot[2,0] + 32.174 - (dvz*fz_min_max)/fz_min_max_integral
 
         #velocity_dot[2,0] = 0
         ##velocity[2,0] = 0
