@@ -23,15 +23,20 @@
 // Optionally enable the new power saving idle mode of the MCU during mainloop
 #define USE_MCU_IDLE    1
 
+#define SERIAL_PRIORITY
 
-#define INT_PRI_T1      6   // background.c : high priority HEARTBEAT of libUDB
-#define INT_PRI_T2	4   // used for 200 Hz processing
-//#define INT_PRI_T2      ?   // radioIn.c : does not use the timer interrupt
+
+
 //#define INT_PRI_T3      ?   // unused
 #define INT_PRI_T4      7   // servoOut.c : high priority interrupt for pwm
 #define INT_PRI_T5      6   // background.c : high priority, but ISR is very short - used to measure CPU usage.
 #define INT_PRI_T6      3   // background.c : trigger HEARTBEAT processing at a lower priority - NOTE: timer 6 is not actually being used
+#define INT_PRI_T1      6   // background.c : high priority HEARTBEAT of libUDB
+#define INT_PRI_T2	4   // used for 200 Hz processing
+//#define INT_PRI_T2      ?   // radioIn.c : does not use the timer interrupt
 #define INT_PRI_T7      1   // background.c : trigger navigation processing after new data is received from the GPS
+
+
 
 #ifdef SERIAL_PRIORITY
 #define INT_PRI_MPUSPI  6   // mpu6000.c : SPI1 (UDB4 or AUAV3) or SPI2 (UDB4 or UDB5)

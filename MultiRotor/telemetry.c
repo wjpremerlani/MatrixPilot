@@ -479,11 +479,14 @@ extern int16_t z_accel[] ;
 
 void log_z_accel_data(void)
 {
-    serial_output("%i\r\n%i\r\n%i\r\n%i\r\n",
+    serial_output("%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n",
             -z_accel[5*accel_read_buffer_index+1],
             -z_accel[5*accel_read_buffer_index+2],
             -z_accel[5*accel_read_buffer_index+3],
-            -z_accel[5*accel_read_buffer_index+4]          
+            -z_accel[5*accel_read_buffer_index+4],
+            -z_accel[5*accel_read_buffer_index+4],
+            -z_accel[5*accel_read_buffer_index+6],
+            -z_accel[5*accel_read_buffer_index+7]          
             );
 }
 
@@ -1325,22 +1328,65 @@ void send_imu_data(void)
                 
 #ifdef KUFEN
         if(accel_read_buffer_index) {   
-                serial_output("%i,%.2f,%.2f,%u,%u\r\n",
-                -z_accel[5*accel_read_buffer_index],
-#ifndef CONING_CORRECTION
-				yaw_angle , roll_angle ,
-#else
-				yaw_angle_8k , roll_angle_8k ,
-#endif                
-                udb_cpu_load(),record_number ++                  
-			);
+                serial_output("%i,%.2f,%.2f,%u,%u\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n", 
+                -z_accel[20*accel_read_buffer_index],
+                 yaw_angle_8k , roll_angle_8k ,udb_cpu_load(),record_number ++ ,
+                -z_accel[20*accel_read_buffer_index+1],
+                -z_accel[20*accel_read_buffer_index+2],
+                -z_accel[20*accel_read_buffer_index+3],
+                -z_accel[20*accel_read_buffer_index+4],
+                -z_accel[20*accel_read_buffer_index+5],
+                -z_accel[20*accel_read_buffer_index+6],
+                -z_accel[20*accel_read_buffer_index+7],
+                -z_accel[20*accel_read_buffer_index+8],
+                -z_accel[20*accel_read_buffer_index+9],
+                -z_accel[20*accel_read_buffer_index+10],
+                -z_accel[20*accel_read_buffer_index+11],
+                -z_accel[20*accel_read_buffer_index+12],
+                -z_accel[20*accel_read_buffer_index+13],
+                -z_accel[20*accel_read_buffer_index+14],
+                -z_accel[20*accel_read_buffer_index+15],
+                -z_accel[20*accel_read_buffer_index+16],
+                -z_accel[20*accel_read_buffer_index+17],
+                -z_accel[20*accel_read_buffer_index+18],
+                -z_accel[20*accel_read_buffer_index+19]
+                        
+                        
+                        );
+
+				                
+			
         }
         else
         {
-            serial_output("%i\r\n",
-                -z_accel[5*accel_read_buffer_index]);
+          serial_output("%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n", 
+                -z_accel[20*accel_read_buffer_index],
+                -z_accel[20*accel_read_buffer_index+1],
+                -z_accel[20*accel_read_buffer_index+2],
+                -z_accel[20*accel_read_buffer_index+3],
+                -z_accel[20*accel_read_buffer_index+4],
+                -z_accel[20*accel_read_buffer_index+5],
+                -z_accel[20*accel_read_buffer_index+6],
+                -z_accel[20*accel_read_buffer_index+7],
+                -z_accel[20*accel_read_buffer_index+8],
+                -z_accel[20*accel_read_buffer_index+9],
+                -z_accel[20*accel_read_buffer_index+10],
+                -z_accel[20*accel_read_buffer_index+11],
+                -z_accel[20*accel_read_buffer_index+12],
+                -z_accel[20*accel_read_buffer_index+13],
+                -z_accel[20*accel_read_buffer_index+14],
+                -z_accel[20*accel_read_buffer_index+15],
+                -z_accel[20*accel_read_buffer_index+16],
+                -z_accel[20*accel_read_buffer_index+17],
+                -z_accel[20*accel_read_buffer_index+18],
+                -z_accel[20*accel_read_buffer_index+19]
+                        
+                        
+                        );
+
+
         }
-            udb_background_trigger(&log_z_accel_data);            
+                       
 
 #endif // KUFEN
                 
