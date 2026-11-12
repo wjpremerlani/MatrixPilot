@@ -1610,7 +1610,8 @@
 #define SERIAL_NUMBERD1	2
 #define SERIAL_NUMBERD2	0
 #define SERIAL_NUMBERD3 0
-#define ACCEL_RANGE         8
+//#define ACCEL_RANGE         8
+#define ACCEL_RANGE         16
 #define GYRO_RANGE	    1000
 #define LOG_EULER
 #include "options_LUGE7_SN200.h"
