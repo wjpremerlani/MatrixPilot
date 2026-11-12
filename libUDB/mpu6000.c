@@ -448,9 +448,9 @@ int16_t hmu_gz[10] ;
 uint8_t accel_read_buffer_index = 0 ;
 uint8_t accel_write_buffer_index = 0 ;
 int16_t accel_sample_number = 0 ;
-int16_t x_accel[10] ;
-int16_t y_accel[10] ;
-int16_t z_accel[10] ;
+int16_t x_accel[40] ;
+int16_t y_accel[40] ;
+int16_t z_accel[40] ;
 
 #endif // KUFEN
 
@@ -534,14 +534,14 @@ static void process_MPU_data(void)
 #endif // TEST_SLED
 
 #ifdef KUFEN
-    if ( sample_counter%8 == 0 )
+    if ( sample_counter%2 == 0 )
     {
-        accel_sample_number = sample_counter/8 ;
+        accel_sample_number = sample_counter/2 ;
     //    x_accel[5*accel_write_buffer_index+accel_sample_number] = 
      //          XACCEL_SIGN_ORIENTED (mpu_data[xaccel_MPU_channel].BB-udb_xaccel.offset) ;
     //    y_accel[5*accel_write_buffer_index+accel_sample_number] = 
      //          YACCEL_SIGN_ORIENTED (mpu_data[yaccel_MPU_channel].BB-udb_yaccel.offset) ;
-    z_accel[5*accel_write_buffer_index+accel_sample_number] = 
+    z_accel[20*accel_write_buffer_index+accel_sample_number] = 
                  ZACCEL_SIGN_ORIENTED (mpu_data[zaccel_MPU_channel].BB-udb_zaccel.offset) ;
     }
 

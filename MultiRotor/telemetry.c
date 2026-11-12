@@ -479,11 +479,14 @@ extern int16_t z_accel[] ;
 
 void log_z_accel_data(void)
 {
-    serial_output("%i\r\n%i\r\n%i\r\n%i\r\n",
+    serial_output("%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n%i\r\n",
             -z_accel[5*accel_read_buffer_index+1],
             -z_accel[5*accel_read_buffer_index+2],
             -z_accel[5*accel_read_buffer_index+3],
-            -z_accel[5*accel_read_buffer_index+4]          
+            -z_accel[5*accel_read_buffer_index+4],
+            -z_accel[5*accel_read_buffer_index+4],
+            -z_accel[5*accel_read_buffer_index+6],
+            -z_accel[5*accel_read_buffer_index+7]          
             );
 }
 
@@ -909,7 +912,7 @@ void send_imu_data(void)
 #endif // TEST_SLED 
                 
 #ifdef KUFEN
-                serial_output("\r\nz_force_xx,yaw_xx,roll_xx,cpu_xx,seq_no_xx\r\n");
+                serial_output("\r\nz_force_xx, yaw_xx,roll_xx,cpu_xx,zf_max_min_xx, gyro_max_pct_xx, seq_no_xx , time_stamp_xx\n");
 #endif // KUFEN
                 
 #ifdef SPECTRAL_ANALYSIS_CONTINUOUS
@@ -1324,23 +1327,97 @@ void send_imu_data(void)
 #endif // TEST_SLED 
                 
 #ifdef KUFEN
-        if(accel_read_buffer_index) {   
-                serial_output("%i,%.2f,%.2f,%u,%u\r\n",
-                -z_accel[5*accel_read_buffer_index],
-#ifndef CONING_CORRECTION
-				yaw_angle , roll_angle ,
-#else
-				yaw_angle_8k , roll_angle_8k ,
-#endif                
-                udb_cpu_load(),record_number ++                  
-			);
+            int16_t z_min = -z_accel[20*accel_read_buffer_index] ;
+            int16_t z_max = z_min ;
+            int16_t z_value = z_max ;
+            uint16_t z_max_min = 0 ;
+            int sample_offset = 1 ;
+            
+            for ( sample_offset = 1 ; sample_offset <= 19 ; sample_offset++ )
+            {
+                z_value = -z_accel[20*accel_read_buffer_index+sample_offset] ;
+                if ( z_value > z_max ) z_max = z_value ;
+                if ( z_value < z_min ) z_min = z_value ;
+            }
+            
+            z_max_min =(uint16_t) ((z_max-1)/2 - (z_min+1)/2) ;
+            
+            uint16_t g_max_pct = max_gyro/328 ;
+            
+            if ( z_max_min < 500 )
+            {
+                serial_output("%i,%.2f,%.2f,%u,%u,%u,%u\r\n", 
+                        
+                -z_accel[20*accel_read_buffer_index],
+                 yaw_angle_8k , roll_angle_8k ,udb_cpu_load(),
+                 z_max_min ,
+                 g_max_pct ,record_number ++ );
+            }
+            else
+            {
+                if(accel_read_buffer_index) {   
+                serial_output("%i,%.2f,%.2f,%u,%u,%u,%u\r\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n", 
+                        
+                -z_accel[20*accel_read_buffer_index],
+                 yaw_angle_8k , roll_angle_8k ,udb_cpu_load(),
+                 z_max_min ,
+                 max_gyro/328 ,record_number ++ ,
+                -z_accel[20*accel_read_buffer_index+1],
+                -z_accel[20*accel_read_buffer_index+2],
+                -z_accel[20*accel_read_buffer_index+3],
+                -z_accel[20*accel_read_buffer_index+4],
+                -z_accel[20*accel_read_buffer_index+5],
+                -z_accel[20*accel_read_buffer_index+6],
+                -z_accel[20*accel_read_buffer_index+7],
+                -z_accel[20*accel_read_buffer_index+8],
+                -z_accel[20*accel_read_buffer_index+9],
+                -z_accel[20*accel_read_buffer_index+10],
+                -z_accel[20*accel_read_buffer_index+11],
+                -z_accel[20*accel_read_buffer_index+12],
+                -z_accel[20*accel_read_buffer_index+13],
+                -z_accel[20*accel_read_buffer_index+14],
+                -z_accel[20*accel_read_buffer_index+15],
+                -z_accel[20*accel_read_buffer_index+16],
+                -z_accel[20*accel_read_buffer_index+17],
+                -z_accel[20*accel_read_buffer_index+18],
+                -z_accel[20*accel_read_buffer_index+19]
+                        
+                        
+                        );
+
+				                
+			
+                }
+                else
+                {
+                serial_output("%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n", 
+                 -z_accel[20*accel_read_buffer_index],
+                -z_accel[20*accel_read_buffer_index+1],
+                -z_accel[20*accel_read_buffer_index+2],
+                -z_accel[20*accel_read_buffer_index+3],
+                -z_accel[20*accel_read_buffer_index+4],
+                -z_accel[20*accel_read_buffer_index+5],
+                -z_accel[20*accel_read_buffer_index+6],
+                -z_accel[20*accel_read_buffer_index+7],
+                -z_accel[20*accel_read_buffer_index+8],
+                -z_accel[20*accel_read_buffer_index+9],
+                -z_accel[20*accel_read_buffer_index+10],
+                -z_accel[20*accel_read_buffer_index+11],
+                -z_accel[20*accel_read_buffer_index+12],
+                -z_accel[20*accel_read_buffer_index+13],
+                -z_accel[20*accel_read_buffer_index+14],
+                -z_accel[20*accel_read_buffer_index+15],
+                -z_accel[20*accel_read_buffer_index+16],
+                -z_accel[20*accel_read_buffer_index+17],
+                -z_accel[20*accel_read_buffer_index+18],
+                -z_accel[20*accel_read_buffer_index+19]
+                        
+                        
+                        );
+                }
+
         }
-        else
-        {
-            serial_output("%i\r\n",
-                -z_accel[5*accel_read_buffer_index]);
-        }
-            udb_background_trigger(&log_z_accel_data);            
+                       
 
 #endif // KUFEN
                 

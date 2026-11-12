@@ -6,10 +6,15 @@
 #define CALIBRATIONX	1.0134
 #define CALIBRATIONY	1.0134
 #define CALIBRATIONZ	1.0134
-#define CALIB_GRAVITY	4096
-#define CAL_GRAV_X 4101
-#define CAL_GRAV_Y 4099
-#define CAL_GRAV_Z 4075
+//#define CALIB_GRAVITY	4096
+//#define CAL_GRAV_X 4101
+//#define CAL_GRAV_Y 4099
+//#define CAL_GRAV_Z 4075
+
+#define CALIB_GRAVITY	2048
+#define CAL_GRAV_X 2048
+#define CAL_GRAV_Y 2048
+#define CAL_GRAV_Z 2048
 
 
 #endif	/* options_LUGE7_SN200_H */
