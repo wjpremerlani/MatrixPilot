@@ -126,10 +126,18 @@ extern uint16_t no_jostle_count ;
 // when there has not been any jostling for a time period equal to
 // 2*MAX_NO_JOSTLE seconds, the wolf_pac shuts off all power loads.
 // after that it will require the power to be turned off and back on.
+
+#define NEEDED_ZEROS 10000
+int16_t number_of_zeros = 0 ;
+
 void udb_run(void)
 {
-#ifdef NORMAL_RUN
-    if ( no_jostle_count > MAX_NO_JOSTLE ) {
+#ifdef BATTERY_SAVER 
+    if ( _RD8 == 0 )
+    {
+        number_of_zeros ++ ;
+    }
+    if ( ( no_jostle_count > MAX_NO_JOSTLE ) || (number_of_zeros > NEEDED_ZEROS) ){
         gyro_sleep(); // turn off the gyros
         delay_us(320); // wait
         SRbits.IPL = 7 ; // turn off the interrupts
@@ -137,16 +145,9 @@ void udb_run(void)
         LED_GREEN = LED_OFF ;
         _LATD15 = 0; // turn off the ESP32
         Sleep(); // turn off the dsPIC
-    }
-    else
-    {
-        // pause cpu counting timer while not in an ISR
-        indicate_loading_main;
-        Idle();
-    }
-#else
+    }    
+#endif    
     // pause cpu counting timer while not in an ISR
     indicate_loading_main;
     Idle();
-#endif
 }

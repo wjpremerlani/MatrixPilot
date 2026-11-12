@@ -116,6 +116,11 @@ void udb_blink_green(void)
 
 int main (void)
 {
+    
+// configure the battery protection input pin
+    _TRISD8 = 1 ;// input
+    CNPU1bits.CN8PUE = 1 ; // weak pull up
+            
 //	offsets_init();
 	// Set up the libraries
 	if ( GPS_TYPE != GPS_NONE)
@@ -155,6 +160,7 @@ int main (void)
     _TRISD15 = 0;
     _LATD15 = 1;
 #endif
+    
     
 	// Start it up!
 	while(1)
