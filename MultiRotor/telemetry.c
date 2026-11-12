@@ -1340,11 +1340,11 @@ void send_imu_data(void)
                 if ( z_value < z_min ) z_min = z_value ;
             }
             
-            z_max_min =((uint16_t) ((z_max-1)/2 - (z_min+1)/2))*2 ;
+            z_max_min =(uint16_t) ((z_max-1)/2 - (z_min+1)/2) ;
             
             uint16_t g_max_pct = max_gyro/328 ;
             
-            if ( true )
+            if ( z_max_min < 500 )
             {
                 serial_output("%i,%.2f,%.2f,%u,%u,%u,%u\r\n", 
                         
@@ -1356,7 +1356,7 @@ void send_imu_data(void)
             else
             {
                 if(accel_read_buffer_index) {   
-                serial_output("%i,%.2f,%.2f,%u,%u%u,%u\r\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n", 
+                serial_output("%i,%.2f,%.2f,%u,%u,%u,%u\r\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n", 
                         
                 -z_accel[20*accel_read_buffer_index],
                  yaw_angle_8k , roll_angle_8k ,udb_cpu_load(),
