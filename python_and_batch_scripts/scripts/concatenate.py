@@ -65,17 +65,38 @@ def process() :
     global runs
     global output_file
     for file_index in range(len(file_numbers)):
-        is_data = False
         file_number = number_of_files - 1 - file_index
-        print("processing :", file_name_list[file_number])
         run_data = runs[file_number]
         run_rows = run_data.splitlines(keepends=False)
-        for run_row in run_rows :
-            columns = run_row.split(',')
-            if (( (len(columns) == 1 ) or (len(columns) == 5 )) and is_data ) :
+        if file_index == 0 :
+            print("processing :", file_name_list[file_number])
+            for run_row in run_rows :
                 output_file.write(f"{run_row}\n")
-            if columns[0] == str("z_force_xx"):
-                is_data = True
+        else :
+            is_data = False
+            residual_lines = 0 
+            print("processing :", file_name_list[file_number])         
+            for run_row in run_rows :
+                columns = run_row.split(',')
+                if ( len(columns) == 11) :
+                    residual_lines = residual_lines + 1
+                if (( (len(columns) == 1 ) or (len(columns) == 5 )) and is_data ) :
+                    output_file.write(f"{run_row}\n")
+                if columns[0] == str("z_force_xx") :
+                    is_data = True
+                    lost_blocks = residual_lines - 1
+                    for block_number in range(lost_blocks) :
+                        for set_number in range(200) :
+                            for column in range (4 ) :
+                                output_file.write(f"0.0,")
+                            output_file.write(f"0.0\n")
+                            for line_no in range (9) :
+                                output_file.write(f"0.0\n")
+                     
+                     
+
+                     
+                     
             
     return
 
