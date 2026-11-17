@@ -132,8 +132,12 @@ int16_t number_of_zeros = 0 ;
 
 void udb_run(void)
 {
-#ifdef BATTERY_SAVER 
-    if ( _RD8 == 0 )
+#ifdef BATTERY_SAVER
+    // Wait for 1 second after boot before starting to test the battery sensor pin
+    static boolean boot_settled = false;
+    if ( udb_heartbeat_counter > HEARTBEAT_HZ ) boot_settled = true;
+    
+    if ( boot_settled && _RD8 == 0 )
     {
         number_of_zeros ++ ;
     }
