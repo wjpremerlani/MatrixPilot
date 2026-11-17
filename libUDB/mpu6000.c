@@ -53,10 +53,24 @@ int16_t vref_adj;
 
 void gyro_sleep(void)
 {
+    int16_t tries;
+    uint16_t pwr_mgmt_1;
+
     writeMPUSPIreg16(MPUREG_PWR_MGMT_2, 0x3F); // shut off gyros and accelerometers
     delay_ms(60);
-    writeMPUSPIreg16(MPUREG_PWR_MGMT_1, 0x43); // set the sleep bit and the clock mode
-    delay_ms(60); 
+
+    // Verify that the device actually took the sleep command. If that write is
+    // lost, the gyro keeps running at several mA and drains the battery while
+    // the dsPIC sleeps, with no way to notice afterwards. Retry a few times.
+    for (tries = 0; tries < 4; tries++) {
+        writeMPUSPIreg16(MPUREG_PWR_MGMT_1, 0x43); // set the sleep bit and the clock mode
+        delay_ms(60);
+        pwr_mgmt_1 = readMPUSPIreg16(MPUREG_PWR_MGMT_1) & 0xFF;
+        if ((pwr_mgmt_1 & BIT_SLEEP) != 0) {
+            break;
+        }
+        delay_ms(40);
+    }
 }
 
 static callback_fptr_t callback = NULL;
@@ -137,13 +151,13 @@ void MPU6000_init16(callback_fptr_t fptr)
 #endif // BUILD_OFFSET_TABLE	
 #endif // CONING_CORRECTION	
 #if (GYRO_RANGE == 250 )
-	writeMPUSPIreg16(MPUREG_GYRO_CONFIG, BITS_FS_250DPS);  // Gyro scale 250º/s
+	writeMPUSPIreg16(MPUREG_GYRO_CONFIG, BITS_FS_250DPS);  // Gyro scale 250ï¿½/s
 #elif (GYRO_RANGE == 500 )
-	writeMPUSPIreg16(MPUREG_GYRO_CONFIG, BITS_FS_500DPS);  // Gyro scale 500º/s
+	writeMPUSPIreg16(MPUREG_GYRO_CONFIG, BITS_FS_500DPS);  // Gyro scale 500ï¿½/s
 #elif (GYRO_RANGE == 1000 )
-	writeMPUSPIreg16(MPUREG_GYRO_CONFIG, BITS_FS_1000DPS); // Gyro scale 1000º/s
+	writeMPUSPIreg16(MPUREG_GYRO_CONFIG, BITS_FS_1000DPS); // Gyro scale 1000ï¿½/s
 #elif (GYRO_RANGE == 2000 )
-	writeMPUSPIreg16(MPUREG_GYRO_CONFIG, BITS_FS_2000DPS); // Gyro scale 2000º/s
+	writeMPUSPIreg16(MPUREG_GYRO_CONFIG, BITS_FS_2000DPS); // Gyro scale 2000ï¿½/s
 #else
 #error "Invalid GYRO_RANGE"
 #endif // GYRO_RANGE 
@@ -708,11 +722,16 @@ void __attribute__((interrupt, no_auto_psv)) _INT3Interrupt(void)
 #endif
 
 // Used for debugging:
+// Not available on the boards that define BATTERY_SAVER: the printf() pulls
+// in the C library console, which would seize UART1 and take RF2 away from
+// the battery sense pull up supply.
+#if !defined(BATTERY_SAVER)
 void MPU6000_print(void)
 {
 	printf("%06u axyz %06i %06i %06i gxyz %06i %06i %06i t %u\r\n",
 	    mpuCnt,      mpu_data[0].BB, mpu_data[1].BB, mpu_data[2].BB, 
 	    mpu_data[4].BB, mpu_data[5].BB, mpu_data[6].BB, mpu_data[3].BB);
 }
+#endif
 
 #endif // (BOARD_TYPE != UDB4_BOARD)

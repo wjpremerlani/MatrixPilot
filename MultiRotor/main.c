@@ -116,12 +116,6 @@ void udb_blink_green(void)
 
 int main (void)
 {
-    
-// configure the battery protection input pin
-    _TRISD8 = 1 ;// input
-    CNPU1bits.CN8PUE = 1 ; // weak pull up
-            
-//	offsets_init();
 	// Set up the libraries
 	if ( GPS_TYPE != GPS_NONE)
 	{
@@ -131,7 +125,25 @@ int main (void)
 	mcu_init() ;
 	udb_init() ;
 	dcm_init() ;
-	
+
+#ifdef BATTERY_SAVER 
+    // The RD8 pin has no internal weak pull up available. An external pull up 
+    // on RD8 is instead powered from RF2 (U1RX), which is repurposed as a 3.3V
+    // output.  This section must stay after mcu_init(), because that function
+    // overwrites TRISF.
+
+#if (GPS_TYPE != GPS_NONE) || (CONSOLE_UART == 1)
+#error "RF2/U1RX is the battery pull up supply: UART1 must remain disabled"
+#endif
+        
+    _TRISD8 = 1;            // configure the battery protection input pin
+
+    U1MODEbits.UARTEN = 0 ; // make sure the UART is not in control of RF2
+    _LATF2 = 1 ;            // set the latch first, so there is no low glitch
+    _TRISF2 = 0 ;           // RF2 = output, drives the pull up supply high
+
+#endif
+
 #ifdef USE_PACKETIZED_TELEMERTY
 //	udb_serial_set_rate(460800) ;
     udb_serial_set_rate(473933) ;

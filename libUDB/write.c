@@ -4,11 +4,24 @@
 #include <p33Fxxxx.h>
 #endif
 
+#include "options.h"
+
 extern int __C30_UART;
 
 int __attribute__((__weak__, __section__(".libc")))
 write(int handle, void *buffer, unsigned int len) 
 {
+#if defined(BATTERY_SAVER)
+	// The C library routes printf(), puts() and putchar() through this
+	// function, and the code below seizes UART1 the first time it is called.
+	// On the boards that define BATTERY_SAVER, U1RX is RF2, which supplies
+	// the pull up for the battery sense input, so enabling UART1 would take
+	// RF2 back as an input, float that supply, and shut the board down.
+	// Console output is swallowed here so that no future printf() can do it.
+	(void)handle;
+	(void)buffer;
+	return len;
+#else
 	int i;
 	volatile UxMODEBITS *umode = &U1MODEbits;
 	volatile UxSTABITS *ustatus = &U1STAbits;
@@ -85,4 +98,5 @@ write(int handle, void *buffer, unsigned int len)
 		*txreg = *(char*)buffer++;
 	}
 	return len;
+#endif
 }

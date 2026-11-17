@@ -148,7 +148,9 @@
 #define WHOAMI_ICM_20689		0x98
 #define WHOAMI_ICM_20600		0x11
 
+#if !defined(BATTERY_SAVER) // see mpu6000.c: needs the libc console on UART1
 void MPU6000_print(void);
+#endif
 
 typedef void (*callback_fptr_t)(void);
 

@@ -137,16 +137,35 @@ void udb_run(void)
     {
         number_of_zeros ++ ;
     }
-    if ( ( no_jostle_count > MAX_NO_JOSTLE ) || (number_of_zeros > NEEDED_ZEROS) ){
+    if ( ( no_jostle_count > MAX_NO_JOSTLE ) || (number_of_zeros > NEEDED_ZEROS) ) {
+        SRbits.IPL = 7; // turn off the interrupts
+        delay_us(100); // wait for any in-progress communications to stop
         gyro_sleep(); // turn off the gyros
         delay_us(320); // wait
-        SRbits.IPL = 7 ; // turn off the interrupts
-        LED_RED = LED_OFF ; // turn off the LEDS
-        LED_GREEN = LED_OFF ;
+        LED_RED = LED_OFF; // turn off the LEDs
+        LED_GREEN = LED_OFF;
         _LATD15 = 0; // turn off the ESP32
+        _LATF2 = 0; // turn off the supply for the battery sense pull-up
+
+        // Sleep hardening. Do not rely on SRbits.IPL alone to keep the core
+        // asleep: mask every interrupt source, and stop the peripherals that
+        // would otherwise keep driving pins into the powered down loads.
+        U2MODEbits.UARTEN = 0; // UART2 must stop talking to the ESP32
+        U2STAbits.UTXEN = 0;
+        SPI2STATbits.SPIEN = 0; // SPI2 is the IMU bus on the UDB5/luge board
+        AD1CON1bits.ADON = 0; // stop the A/D converter and its DMA front end
+        PMD1 = 0xFFFF; // turn off every peripheral module
+        PMD2 = 0xFFFF;
+        IEC0 = IEC1 = IEC2 = IEC3 = IEC4 = 0; // mask every peripheral interrupt
+        IFS0 = IFS1 = IFS2 = IFS3 = IFS4 = 0; // clear any request that is already pending
+        
         Sleep(); // turn off the dsPIC
-    }    
-#endif    
+        Nop(); // Always put a NOP after sleep
+        
+        // We should never get here, but if we do, don't leave
+        while(1);
+    }
+#endif
     // pause cpu counting timer while not in an ISR
     indicate_loading_main;
     Idle();
