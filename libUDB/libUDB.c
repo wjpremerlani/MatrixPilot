@@ -137,10 +137,13 @@ void udb_run(void)
     static boolean boot_settled = false;
     if ( udb_heartbeat_counter > HEARTBEAT_HZ ) boot_settled = true;
     
+#ifdef LV_DETECTION
+    
     if ( boot_settled && _RD8 == 0 )
     {
         number_of_zeros ++ ;
     }
+#endif
     if ( ( no_jostle_count > MAX_NO_JOSTLE ) || (number_of_zeros > NEEDED_ZEROS) ) {
         SRbits.IPL = 7; // turn off the interrupts
         delay_us(100); // wait for any in-progress communications to stop

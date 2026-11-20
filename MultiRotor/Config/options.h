@@ -51,7 +51,8 @@
 // or if the wolf-pack is not jostled for more than 1 hour
 // do not select this option during new wolf-pac commissioning
 //
-//#define BATTERY_SAVER
+#define BATTERY_SAVER
+#define LV_DETECTION
 //
 //
 //***************************************************************************************
