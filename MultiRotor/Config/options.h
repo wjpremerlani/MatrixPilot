@@ -51,7 +51,7 @@
 // or if the wolf-pack is not jostled for more than 1 hour
 // do not select this option during new wolf-pac commissioning
 //
-#define BATTERY_SAVER
+//#define BATTERY_SAVER
 //
 //
 //***************************************************************************************
@@ -95,6 +95,11 @@
 //#define BUILD_OFFSET_TABLE    // builds gyro temperature compensation table
 //#define ACCEL_AND_GYRO_OFFSETS
 
+// When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
+// non-printable characters are written out, as header bytes for packets.
+#define USE_PACKETIZED_TELEMERTY
+
+
 // the following are special logging options
 //#define SPECTRAL_ANALYSIS_BURST // 5 hz, start at 15, remember to also uncomment the following line
 //#define SAMPLES_PER_BURST 80 
@@ -113,9 +118,6 @@
 #define SERIAL_PRIORITY
 #endif // HELMET_IMU
 
-// When using USE_PACKETIZED_TELEMERTY, baud will be 460800, and some 
-// non-printable characters are written out, as header bytes for packets.
-#define USE_PACKETIZED_TELEMERTY
 
 #define LOG_EULER
 //#define LOG_RATE_AND_EULER
@@ -160,7 +162,7 @@
 //#define LUGE7_SN088
 //#define LUGE7_SN089
 
-#define LUGE7_SN101
+//#define LUGE7_SN101
 //#define LUGE7_SN102
 //#define LUGE7_SN103
 //#define LUGE7_SN104
@@ -268,7 +270,7 @@
 //#define LUGE7_SN197
 //#define LUGE7_SN198
 //#define LUGE7_SN199
-//#define LUGE7_SN200
+#define LUGE7_SN200
 
 
 //#define MINI6_SN4 // SN1, Tucker West
@@ -1636,7 +1638,7 @@
 #define SERIAL_NUMBERD1	0
 #define SERIAL_NUMBERD2	5
 #define SERIAL_NUMBERD3 0
-#define ACCEL_RANGE         8
+#define ACCEL_RANGE         16
 #define GYRO_RANGE	    1000
 #define LOG_EULER
 #include "options_LUGE7_SN050.h"
@@ -1649,7 +1651,7 @@
 #define SERIAL_NUMBERD1	0
 #define SERIAL_NUMBERD2	5
 #define SERIAL_NUMBERD3 1
-#define ACCEL_RANGE         8
+#define ACCEL_RANGE         16
 #define GYRO_RANGE	    1000
 #define LOG_EULER
 #include "options_LUGE7_SN051.h"
