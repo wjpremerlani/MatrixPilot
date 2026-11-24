@@ -127,8 +127,10 @@ extern uint16_t no_jostle_count ;
 // 2*MAX_NO_JOSTLE seconds, the wolf_pac shuts off all power loads.
 // after that it will require the power to be turned off and back on.
 
-#define NEEDED_ZEROS 10000
+#define NEEDED_ZEROS 100
 int16_t number_of_zeros = 0 ;
+boolean is_even = true ;
+uint16_t battery_counter = 0 ;
 
 void udb_run(void)
 {
@@ -139,10 +141,31 @@ void udb_run(void)
     
 #ifdef LV_DETECTION
     
-    if ( boot_settled && _RD8 == 0 )
     {
-        number_of_zeros ++ ;
+        battery_counter = battery_counter + 1 ;
+        if ( battery_counter == HEARTBEAT_HZ)
+        {
+            battery_counter = 0 ;
+            if ( is_even )
+            {
+                if(boot_settled && _RD8 == 0 )
+                {
+                    number_of_zeros ++ ;
+                }
+                _TRISD8 = 0 ;
+                _LATD8 = 1 ;
+                
+            }
+            else
+            {
+                _TRISD8 = 1 ;
+                
+            }
+            is_even = ! is_even ;
+        }
     }
+    
+    
 #endif
     if ( ( no_jostle_count > MAX_NO_JOSTLE ) || (number_of_zeros > NEEDED_ZEROS) ) {
         SRbits.IPL = 7; // turn off the interrupts

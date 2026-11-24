@@ -136,7 +136,8 @@ int main (void)
 #error "RF2/U1RX is the battery pull up supply: UART1 must remain disabled"
 #endif
         
-    _TRISD8 = 1;            // configure the battery protection input pin
+    _TRISD8 = 0;            // configure the battery protection output pin
+    _LATD8 = 1 ;            // energize
 
     U1MODEbits.UARTEN = 0 ; // make sure the UART is not in control of RF2
     _LATF2 = 1 ;            // set the latch first, so there is no low glitch
