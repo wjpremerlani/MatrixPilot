@@ -142,8 +142,7 @@ void udb_run(void)
 #ifdef LV_DETECTION
     
     {
-        battery_counter = battery_counter + 1 ;
-        if ( battery_counter == HEARTBEAT_HZ)
+        if ( battery_counter ++ == HEARTBEAT_HZ)
         {
             battery_counter = 0 ;
             if ( is_even )
@@ -151,6 +150,13 @@ void udb_run(void)
                 if(boot_settled && _RD8 == 0 )
                 {
                     number_of_zeros ++ ;
+                }
+                else
+                {
+                    if ( number_of_zeros > 0 )
+                    {
+                        number_of_zeros -- ;
+                    }
                 }
                 _TRISD8 = 0 ;
                 _LATD8 = 1 ;
