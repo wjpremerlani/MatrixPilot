@@ -232,6 +232,7 @@ boolean start_log = 1 , stop_log = 0 , slide_in_progress = 0 ;
 #endif // EULER_GUI
 uint16_t stop_count = 0 ;
 int16_t is_level = 0 ;
+extern int16_t clipping_counter ;
 void update_slide_detection(void)
 {
 #ifdef BUILD_OFFSET_TABLE
@@ -254,7 +255,7 @@ void update_slide_detection(void)
 #else
         if (is_level == 0 )
 #endif // SIMULATE_TILT
-			if ( stop_count == SLIDE_DET_HZ*TILT_STOP_DELAY)
+			if (( stop_count == SLIDE_DET_HZ*TILT_STOP_DELAY) && ( clipping_counter == 0 ))
 			{
 				stop_log = 1 ;
 				slide_in_progress = 0 ;

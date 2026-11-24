@@ -51,8 +51,8 @@
 // or if the wolf-pack is not jostled for more than 1 hour
 // do not select this option during new wolf-pac commissioning
 //
-#define BATTERY_SAVER
-#define LV_DETECTION
+//#define BATTERY_SAVER
+//#define LV_DETECTION
 //
 //
 //***************************************************************************************
@@ -79,7 +79,7 @@
 #define LOG_IMU_WP2               // logs IMU data during a run for wolf_pac version 2
                                     // you will also need to select a logging format
                                   // such as TEST_SLED or HELMET_IMU, for example
-#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
+//#define NORMAL_RUN // this one must be turned on for normal operation 100 hz
 #define LOG_RESIDUALS         // logs residual offsets between runs and during "turtle testing"
                                 // also used for align gauge
 #define RESIDUAL_LOG_PERIOD 2  // 30 times per minute
@@ -107,7 +107,7 @@
 //#define SPECTRAL_ANALYSIS_CONTINUOUS // also known as the fire hose, define SERIAL_PRIORITY
 //#define SERIAL_PRIORITY
 //#define TEST_SLED // set logging Hz to 200 start at 15
-//#define KUFEN // set logging Hz to 200 and start angle to 30 degrees
+#define KUFEN // set logging Hz to 200 and start angle to 30 degrees
 //#define HELMET_IMU // set logging Hz to 200, start to 15 and stop to 165
 //#define DRIFT_RESEARCH
 
@@ -126,7 +126,7 @@
 
 
 // set the logger hertz, allowable values are 1,2,4,5,10,20,25,40,50,100 or 200
-#define LOGGER_HZ	100
+#define LOGGER_HZ	200
 #define HEADER_HZ	20          // records per second during header logging
 #define SLIDE_DET_HZ	200     // computations per second to detect beginning of a run
 //#define TILT_STOP_DELAY 10      // delay in seconds to allow for a roll over
@@ -134,6 +134,12 @@
 #define TILT_START	15          // normal start 
 //#define TILT_START	30          // tilt angle to start for Kufen or HelmetImu
 #define TILT_STOP	60          // normal tilt angle threshold in degrees to stop recording a run
+#ifdef KUFEN
+#undef TILT_START
+#undef TILT_STOP
+#define TILT_START 25
+#define TILT_STOP 90
+#endif // KUFEN
 //#define TILT_STOP	165         // tilt stop for HelmetImu
 //#define TILT_STOP 135 // centrifuge testing
 // select a wolf_pac by defining its internal label
@@ -145,7 +151,7 @@
 
 
 //#define LUGE7_SN050
-//#define LUGE7_SN051
+#define LUGE7_SN051
 //#define LUGE7_SN052
 //#define LUGE7_SN053
 //#define LUGE7_SN054
@@ -271,7 +277,7 @@
 //#define LUGE7_SN197
 //#define LUGE7_SN198
 //#define LUGE7_SN199
-#define LUGE7_SN200
+//#define LUGE7_SN200
 
 
 //#define MINI6_SN4 // SN1, Tucker West

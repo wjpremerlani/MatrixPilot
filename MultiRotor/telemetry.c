@@ -589,6 +589,9 @@ void send_spectral_data(void)
     }
 }
 #endif // SPECTRAL_ANALYSIS_BURST
+
+int16_t clipping_counter = 0 ;
+
 void send_imu_data(void)
 {
 #if ( RMS_AND_LPF_GUI == 1 )
@@ -910,9 +913,10 @@ void send_imu_data(void)
 #ifdef TEST_SLED
                 serial_output("\r\nx_force_xx,pitch_xx,cpu_xx,seq_no_xx\r\n");
 #endif // TEST_SLED 
+
                 
 #ifdef KUFEN
-                serial_output("\r\nz_force_xx, yaw_xx,roll_xx,cpu_xx,zf_max_min_xx, gyro_max_pct_xx, seq_no_xx , time_stamp_xx\n");
+                serial_output("\r\nz_force_xx, yaw_xx,pitch_xx, roll_xx, cpu_xx ,zf_max_min_xx, gyro_max_pct_xx, seq_no_xx , time_stamp_xx\n");
 #endif // KUFEN
                 
 #ifdef SPECTRAL_ANALYSIS_CONTINUOUS
@@ -1344,22 +1348,30 @@ void send_imu_data(void)
             
             uint16_t g_max_pct = max_gyro/328 ;
             
-            if ( z_max_min < 500 )
+            if ( z_max_min < 1000 )
             {
-                serial_output("%i,%.2f,%.2f,%u,%u,%u,%u\r\n", 
+                if ( clipping_counter > 0)
+                {
+                    clipping_counter = clipping_counter - 1 ;
+                }
+                serial_output("%i,%.2f,%.2f,%.2f,%u,%u,%u,%u\r\n", 
                         
                 -z_accel[20*accel_read_buffer_index],
-                 yaw_angle_8k , roll_angle_8k ,udb_cpu_load(),
+                 yaw_angle_8k , pitch_angle_8k , roll_angle_8k ,udb_cpu_load(),
                  z_max_min ,
                  g_max_pct ,record_number ++ );
             }
             else
             {
+                if ( clipping_counter < 200 )
+                {
+                    clipping_counter = clipping_counter + 1 ;
+                }
                 if(accel_read_buffer_index) {   
-                serial_output("%i,%.2f,%.2f,%u,%u,%u,%u\r\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n", 
+                serial_output("%i,%.2f,%.2f,%.2f,%u,%u,%u,%u\r\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n", 
                         
                 -z_accel[20*accel_read_buffer_index],
-                 yaw_angle_8k , roll_angle_8k ,udb_cpu_load(),
+                 yaw_angle_8k , pitch_angle_8k , roll_angle_8k ,udb_cpu_load(),
                  z_max_min ,
                  max_gyro/328 ,record_number ++ ,
                 -z_accel[20*accel_read_buffer_index+1],
