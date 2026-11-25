@@ -182,6 +182,7 @@ void udb_run(void)
         LED_GREEN = LED_OFF;
         _LATD15 = 0; // turn off the ESP32
         _LATF2 = 0; // turn off the supply for the battery sense pull-up
+        _TRISD8 = 1 ;
 
         // Sleep hardening. Do not rely on SRbits.IPL alone to keep the core
         // asleep: mask every interrupt source, and stop the peripherals that
