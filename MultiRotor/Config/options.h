@@ -1,3 +1,4 @@
+#include "../Bruce/list_of_wolf_pacs.h"
 //#define DATE "Wolf_pac_2 , firmware 5.5, 5/28/2024\r\n"
 // improved continuous gyro bias estimation
 
@@ -277,7 +278,7 @@
 //#define LUGE7_SN197
 //#define LUGE7_SN198
 //#define LUGE7_SN199
-#define LUGE7_SN200
+//#define LUGE7_SN200
 
 
 //#define MINI6_SN4 // SN1, Tucker West
